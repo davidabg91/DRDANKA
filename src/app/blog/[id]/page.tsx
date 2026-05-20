@@ -88,20 +88,20 @@ export default async function BlogPostPage({ params }: PageProps) {
         <div className="bg-white rounded-2xl border border-brand-green/5 p-6 sm:p-10 md:p-12 shadow-sm space-y-8">
           
           {/* Metadata Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-brand-green/5 text-xs sm:text-sm text-brand-dark/50">
-            <div className="flex items-center space-x-6">
-              <span className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-brand-gold" />
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-brand-green/5 text-xs sm:text-sm text-brand-dark/50">
+            <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6">
+              <span className="flex items-center whitespace-nowrap">
+                <Calendar className="h-4 w-4 mr-2 text-brand-gold shrink-0" />
                 Публикувано на: <strong className="ml-1 text-brand-green">{post.date}</strong>
               </span>
-              <span className="flex items-center">
-                <Clock className="h-4 w-4 mr-2 text-brand-gold" />
+              <span className="flex items-center whitespace-nowrap">
+                <Clock className="h-4 w-4 mr-2 text-brand-gold shrink-0" />
                 Време за четене: <strong className="ml-1 text-brand-green">{post.readTime}</strong>
               </span>
             </div>
             
-            <div className="flex items-center text-brand-gold font-semibold uppercase tracking-wider text-xs">
-              <BookOpen className="h-4 w-4 mr-1.5" />
+            <div className="flex items-center text-brand-gold font-semibold uppercase tracking-wider text-xs whitespace-nowrap">
+              <BookOpen className="h-4 w-4 mr-1.5 shrink-0" />
               <span>Д-р Данка Николова</span>
             </div>
           </div>
