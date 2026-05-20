@@ -149,40 +149,93 @@ export default function Home() {
             </div>
 
             {/* Hero Highlight Card */}
-            <div className="lg:col-span-5">
-              <div className="bg-brand-dark/40 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-sm relative shadow-2xl">
-                <div className="absolute top-4 right-4 bg-brand-gold/10 text-brand-gold p-1.5 rounded-full border border-brand-gold/20">
-                  <ShieldCheck className="h-5 w-5" />
+            <div className="lg:col-span-5 relative group">
+              {/* Outer soft glowing background blur */}
+              <div className="absolute -inset-1.5 bg-gradient-to-r from-brand-gold/20 to-emerald-500/20 rounded-3xl blur-2xl opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+              
+              <div className="relative bg-[#081814] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl overflow-hidden">
+                {/* Visual accent glow top right */}
+                <div className="absolute -top-16 -right-16 w-32 h-32 bg-brand-gold/10 rounded-full blur-3xl"></div>
+                
+                {/* Glowing gold badge */}
+                <div className="absolute top-6 right-6 bg-gradient-to-r from-brand-gold to-amber-500 text-brand-dark text-[9px] font-black tracking-widest uppercase py-1 px-3 rounded-full flex items-center gap-1.5 shadow-lg shadow-brand-gold/15">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-dark opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-dark"></span>
+                  </span>
+                  Сигурност
                 </div>
-                <h3 className="font-serif text-lg sm:text-xl font-bold text-white mb-4">
-                  Защитете бизнеса си днес
-                </h3>
-                <p className="text-xs text-white/70 leading-relaxed mb-6">
-                  Инспекциите от БАБХ не трябва да бъдат повод за стрес. С правилно съставена документация и въведени хигиенни процедури, Вашият обект е защитен.
+
+                <div className="flex items-center gap-3.5 mb-5 mt-2">
+                  <div className="bg-[#051a14] p-2 rounded-xl border border-brand-gold/30 shadow-md">
+                    <img
+                      src="/logo-icon.png"
+                      alt="Logo"
+                      className="h-7 w-7 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-brand-gold font-bold tracking-widest uppercase block">
+                      БАБХ Консултации
+                    </span>
+                    <h3 className="font-serif text-xl sm:text-2xl font-bold text-white leading-tight">
+                      Защитете бизнеса си
+                    </h3>
+                  </div>
+                </div>
+
+                <p className="text-xs text-white/70 leading-relaxed mb-6 border-b border-white/10 pb-5">
+                  Инспекциите от БАБХ не трябва да бъдат повод за стрес. С правилно съставена документация и въведени хигиенни процедури, Вашият обект е напълно защитен.
                 </p>
-                <div className="space-y-3.5 mb-8">
-                  <div className="flex items-start text-xs text-white/80">
-                    <CheckCircle className="h-4.5 w-4.5 text-brand-gold mr-3 shrink-0 mt-0.5" />
-                    <span>Индивидуални Системи за самоконтрол (ДПХП)</span>
+
+                <div className="space-y-3 mb-8">
+                  <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-start gap-3 hover:bg-white/10 transition-all duration-300">
+                    <div className="bg-brand-gold/20 p-1.5 rounded-lg shrink-0 mt-0.5">
+                      <CheckCircle className="h-4 w-4 text-brand-gold" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-white block">Системи за самоконтрол (ДПХП)</span>
+                      <span className="text-[10px] text-white/60">Индивидуално разработени съгласно БАБХ</span>
+                    </div>
                   </div>
-                  <div className="flex items-start text-xs text-white/80">
-                    <CheckCircle className="h-4.5 w-4.5 text-brand-gold mr-3 shrink-0 mt-0.5" />
-                    <span>Разработване на технологични карти за рецепти</span>
+
+                  <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-start gap-3 hover:bg-white/10 transition-all duration-300">
+                    <div className="bg-brand-gold/20 p-1.5 rounded-lg shrink-0 mt-0.5">
+                      <CheckCircle className="h-4 w-4 text-brand-gold" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-white block">Технологични карти</span>
+                      <span className="text-[10px] text-white/60">Разработване на рецептурни карти за менюта</span>
+                    </div>
                   </div>
-                  <div className="flex items-start text-xs text-white/80">
-                    <CheckCircle className="h-4.5 w-4.5 text-brand-gold mr-3 shrink-0 mt-0.5" />
-                    <span>Подготовка за отваряне на нови обекти</span>
+
+                  <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-start gap-3 hover:bg-white/10 transition-all duration-300">
+                    <div className="bg-brand-gold/20 p-1.5 rounded-lg shrink-0 mt-0.5">
+                      <CheckCircle className="h-4 w-4 text-brand-gold" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-white block">Подготовка за нови обекти</span>
+                      <span className="text-[10px] text-white/60">Пълно съдействие при стартиране на бизнес</span>
+                    </div>
                   </div>
-                  <div className="flex items-start text-xs text-white/80">
-                    <CheckCircle className="h-4.5 w-4.5 text-brand-gold mr-3 shrink-0 mt-0.5" />
-                    <span>Отговор на предписания в съкратени срокове</span>
+
+                  <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-start gap-3 hover:bg-white/10 transition-all duration-300">
+                    <div className="bg-brand-gold/20 p-1.5 rounded-lg shrink-0 mt-0.5">
+                      <CheckCircle className="h-4 w-4 text-brand-gold" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold text-white block">Предписания и казуси</span>
+                      <span className="text-[10px] text-white/60">Бърза защита при вече наложени предписания</span>
+                    </div>
                   </div>
                 </div>
+
                 <Link
                   href="/contact"
-                  className="w-full text-center block py-3.5 px-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-wider transition-colors duration-300 rounded shadow"
+                  className="w-full text-center flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-brand-gold to-amber-500 hover:from-amber-500 hover:to-brand-gold text-brand-dark font-extrabold text-xs uppercase tracking-wider transition-all duration-300 rounded-xl shadow-xl shadow-brand-gold/20 hover:shadow-brand-gold/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
-                  Заявете индивидуална оферта
+                  <span>Заявете индивидуална оферта</span>
+                  <span className="text-sm font-light">→</span>
                 </Link>
               </div>
             </div>
