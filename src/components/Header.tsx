@@ -120,7 +120,7 @@ export default function Header() {
       <div
         className={`md:hidden fixed inset-0 top-0 z-40 bg-brand-green transition-transform duration-300 transform ${
           isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+        } ${isOpen ? "" : "pointer-events-none invisible"}`}
       >
         <div className="px-4 pb-8 pt-24 space-y-4 flex flex-col h-full justify-between">
           <nav className="flex flex-col space-y-4 border-t border-brand-gold/15 pt-4">
