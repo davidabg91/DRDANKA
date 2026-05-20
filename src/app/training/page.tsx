@@ -293,7 +293,7 @@ export default function Training() {
                 </div>
                 
                 <Link
-                  href={`/contact?subject=live-training-${course.id}`}
+                  href={`/contact?service=${encodeURIComponent(course.title)}`}
                   className="w-full text-center block py-3 px-4 bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider rounded transition-all duration-300 cursor-pointer shadow-md hover:shadow-brand-green/20"
                 >
                   Заяви обучение
