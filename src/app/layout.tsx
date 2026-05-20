@@ -17,8 +17,31 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://drdanka.bg"),
   title: "Д-р Данка Николова | Консултант по безопасност на храните",
   description: "Професионални консултации, внедряване и одит на системи за безопасност на храните (HACCP, ISO 22000, IFS, GMP) от д-р Данка Николова. 27 години опит в хранителния контрол.",
+  openGraph: {
+    title: "Д-р Данка Николова | Консултант по безопасност на храните",
+    description: "Професионални консултации, внедряване и одит на системи за безопасност на храните (HACCP, ISO 22000, IFS, GMP) от д-р Данка Николова. 27 години опит в хранителния контрол.",
+    url: "https://drdanka.bg",
+    siteName: "Д-р Данка Николова",
+    images: [
+      {
+        url: "/fc017c2d-4bb2-4769-b706-1724a43b3a31.png",
+        width: 1200,
+        height: 630,
+        alt: "Д-р Данка Николова - Безопасност на храните",
+      },
+    ],
+    locale: "bg_BG",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Д-р Данка Николова | Консултант по безопасност на храните",
+    description: "Професионални консултации, внедряване и одит на системи за безопасност на храните (HACCP, ISO 22000, IFS, GMP) от д-р Данка Николова. 27 години опит в хранителния контрол.",
+    images: ["/fc017c2d-4bb2-4769-b706-1724a43b3a31.png"],
+  },
 };
 
 export default function RootLayout({
