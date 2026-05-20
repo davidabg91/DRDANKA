@@ -40,6 +40,7 @@ export default function Header() {
     { name: "Консултации", href: "/consultations" },
     { name: "Обучения", href: "/training" },
     { name: "За мен", href: "/about" },
+    { name: "Блог", href: "/blog" },
     { name: "Контакти", href: "/contact" },
   ];
 

@@ -70,6 +70,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/blog" className="text-white/70 hover:text-brand-gold transition-colors duration-200">
+                  Блог и статии
+                </Link>
+              </li>
+              <li>
                 <Link href="/contact" className="text-white/70 hover:text-brand-gold transition-colors duration-200">
                   Контакти
                 </Link>
