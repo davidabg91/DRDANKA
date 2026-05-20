@@ -134,16 +134,21 @@ export default function Footer() {
           <p className="mb-4 md:mb-0">
             &copy; {currentYear} Д-р Данка Николова. Всички права запазени.
           </p>
-          <div className="flex space-x-6">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center md:justify-end items-center">
             <Link href="/privacy" className="hover:text-brand-gold transition-colors">
               Поверителност
             </Link>
             <Link href="/terms" className="hover:text-brand-gold transition-colors">
               Условия за ползване
             </Link>
-            <span>
-              Разработка за безопасност на храните
-            </span>
+            <a
+              href="https://davidax.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-brand-gold transition-colors flex items-center"
+            >
+              Изработка: <span className="font-bold text-white/60 hover:text-brand-gold ml-1 transition-colors">DavidaX</span>
+            </a>
           </div>
         </div>
       </div>
