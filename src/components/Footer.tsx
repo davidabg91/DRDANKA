@@ -15,7 +15,7 @@ export default function Footer() {
               <img
                 src="/logo-icon.png"
                 alt="Д-р Данка Николова Лого"
-                className="h-10 w-10 object-contain rounded-full border border-brand-gold/20 shadow-sm"
+                className="h-14 w-14 object-contain rounded-full border border-brand-gold/20 shadow-sm"
               />
               <div>
                 <span className="font-serif text-lg font-bold text-white block leading-none">

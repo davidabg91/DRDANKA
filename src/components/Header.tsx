@@ -61,7 +61,7 @@ export default function Header() {
             <img
               src="/logo-icon.png"
               alt="Д-р Данка Николова Лого"
-              className="h-10 w-10 object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
+              className="h-14 w-14 object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
             />
             <div>
               <span className="font-serif text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
