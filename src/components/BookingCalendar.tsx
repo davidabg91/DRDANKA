@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react";
 
 interface Package {
@@ -68,6 +68,7 @@ interface BookingCalendarProps {
 }
 
 export default function BookingCalendar({ mode = "consultation", initialPackageId }: BookingCalendarProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const packages = mode === "training" ? TRAINING_PACKAGES : CONSULTATION_PACKAGES;
   const timeSlots = mode === "training" ? TRAINING_TIME_SLOTS : CONSULTATION_TIME_SLOTS;
   const [step, setStep] = useState(1);
@@ -80,6 +81,17 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
     email: "",
     note: "",
   });
+
+  const scrollToContainerTop = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      window.scrollTo({
+        top: rect.top + scrollTop - 100,
+        behavior: "smooth",
+      });
+    }
+  };
 
   // Sync selected package and advance step when initialPackageId changes
   useEffect(() => {
@@ -98,15 +110,18 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
   const getNextDays = () => {
     const days = [];
     const locale = "bg-BG";
+    const today = new Date();
+    
     for (let i = 1; i <= 10; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      if (date.getDay() !== 0) {
-        // Exclude Sunday
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      if (date.getDay() !== 0) { // Exclude Sundays
         const dayName = date.toLocaleDateString(locale, { weekday: "short" });
-        const dayNum = date.getDate();
+        const dayNum = date.getDate().toString();
         const monthName = date.toLocaleDateString(locale, { month: "short" });
         const fullDate = date.toISOString().split("T")[0];
+        
         days.push({ dayName, dayNum, monthName, fullDate });
       }
     }
@@ -115,8 +130,14 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
 
   const nextDays = getNextDays();
 
-  const handleNext = () => setStep((prev) => prev + 1);
-  const handlePrev = () => setStep((prev) => prev - 1);
+  const handleNext = () => {
+    setStep((prev) => prev + 1);
+    scrollToContainerTop();
+  };
+  const handlePrev = () => {
+    setStep((prev) => prev - 1);
+    scrollToContainerTop();
+  };
 
   const handleClientInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -129,10 +150,11 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
       return;
     }
     setStep(4);
+    scrollToContainerTop();
   };
 
   return (
-    <div className="bg-white border border-brand-green/10 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto">
+    <div ref={containerRef} className="bg-white border border-brand-green/10 rounded-2xl shadow-xl overflow-hidden max-w-4xl mx-auto">
       {/* Header Indicator */}
       <div className="bg-brand-green px-6 sm:px-8 py-5 border-b border-brand-gold/20 flex justify-between items-center text-white">
         <div>
