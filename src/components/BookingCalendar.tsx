@@ -72,7 +72,10 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
   const packages = mode === "training" ? TRAINING_PACKAGES : CONSULTATION_PACKAGES;
   const timeSlots = mode === "training" ? TRAINING_TIME_SLOTS : CONSULTATION_TIME_SLOTS;
   const [step, setStep] = useState(1);
-  const [selectedPackage, setSelectedPackage] = useState<Package>(packages[0]);
+  const [selectedPackage, setSelectedPackage] = useState<Package>(() => {
+    const pkgs = mode === "training" ? TRAINING_PACKAGES : CONSULTATION_PACKAGES;
+    return pkgs.find((p) => p.id === "startup") || pkgs[0];
+  });
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [clientInfo, setClientInfo] = useState({
@@ -102,7 +105,8 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
         setStep(2); // Auto-advance to date picker
       }
     } else {
-      setSelectedPackage(packages[0]);
+      const defaultPkg = packages.find((p) => p.id === "startup") || packages[0];
+      setSelectedPackage(defaultPkg);
     }
   }, [initialPackageId, mode, packages]);
 
@@ -197,10 +201,15 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                   }`}
                 >
                   <div>
-                    <div className="flex justify-between items-start mb-2">
+                    <div className="flex justify-between items-start mb-2 gap-2">
                       <h5 className="font-serif text-base font-bold text-brand-green leading-snug">
                         {pkg.name}
                       </h5>
+                      {pkg.id === "startup" && (
+                        <span className="text-[9px] font-bold text-brand-green bg-brand-gold px-2 py-0.5 rounded uppercase tracking-wider whitespace-nowrap shrink-0">
+                          Препоръчано
+                        </span>
+                      )}
                     </div>
                     <div className="flex space-x-3 mb-4 text-xs font-semibold text-brand-dark/50">
                       <span className="flex items-center">
