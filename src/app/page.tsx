@@ -156,18 +156,9 @@ export default function Home() {
               <div className="relative bg-[#081814] border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl overflow-hidden">
                 {/* Visual accent glow top right */}
                 <div className="absolute -top-16 -right-16 w-32 h-32 bg-brand-gold/10 rounded-full blur-3xl"></div>
-                
-                {/* Glowing gold badge */}
-                <div className="absolute top-6 right-6 bg-gradient-to-r from-brand-gold to-amber-500 text-brand-dark text-[9px] font-black tracking-widest uppercase py-1 px-3 rounded-full flex items-center gap-1.5 shadow-lg shadow-brand-gold/15">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-dark opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-dark"></span>
-                  </span>
-                  Сигурност
-                </div>
 
                 <div className="flex items-center gap-3.5 mb-5 mt-2">
-                  <div className="bg-[#051a14] p-2 rounded-xl border border-brand-gold/30 shadow-md">
+                  <div className="bg-[#051a14] p-2 rounded-xl border border-brand-gold/30 shadow-md shrink-0">
                     <img
                       src="/logo-icon.png"
                       alt="Logo"
@@ -175,9 +166,18 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <span className="text-[10px] text-brand-gold font-bold tracking-widest uppercase block">
-                      БАБХ Консултации
-                    </span>
+                    <div className="flex items-center flex-wrap gap-2 mb-1">
+                      <span className="text-[10px] text-brand-gold font-bold tracking-widest uppercase block">
+                        БАБХ Консултации
+                      </span>
+                      <div className="bg-gradient-to-r from-brand-gold to-amber-500 text-brand-dark text-[8px] font-black tracking-widest uppercase py-0.5 px-2 rounded-full flex items-center gap-1 shadow-md shadow-brand-gold/10 shrink-0">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-dark opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-dark"></span>
+                        </span>
+                        Сигурност
+                      </div>
+                    </div>
                     <h3 className="font-serif text-xl sm:text-2xl font-bold text-white leading-tight">
                       Защитете бизнеса си
                     </h3>
