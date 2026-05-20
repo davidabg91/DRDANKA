@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Send, CheckCircle2, AlertCircle } from "lucide-react";
 
@@ -19,16 +19,6 @@ export default function ContactForm() {
 
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
-
-  // Pre-populate message if service query param is present
-  useEffect(() => {
-    if (serviceParam) {
-      setFormData((prev) => ({
-        ...prev,
-        message: prev.message || `Здравейте, интересувам се от оферта за услугата: „${serviceParam}“.`,
-      }));
-    }
-  }, [serviceParam]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -195,11 +185,16 @@ export default function ContactForm() {
         <textarea
           id="message"
           name="message"
-          rows={4}
+          rows={6}
           value={formData.message}
           onChange={handleChange}
-          placeholder="Опишете Вашия казус (напр. нужда от нова HACCP система, актуализация на документи, подготовка за одит...)"
-          className="w-full bg-brand-light/50 border border-brand-green/10 rounded px-4 py-3 text-sm focus:border-brand-gold focus:bg-white focus:outline-none transition-all resize-none"
+          placeholder={`Моля, опишете Вашия обект и казус. За по-точна оферта е полезно да посочите:
+• Населено място (град/село)
+• Приблизителна площ на обекта и дейност (напр. ресторант, склад, магазин)
+• Брой служители
+• Имате ли вече съществуващи HACCP документи или предписания от БАБХ
+• Желан срок за изготвяне на документите`}
+          className="w-full bg-brand-light/50 border border-brand-green/10 rounded px-4 py-3 text-sm focus:border-brand-gold focus:bg-white focus:outline-none transition-all resize-y min-h-[140px]"
         ></textarea>
       </div>
 
