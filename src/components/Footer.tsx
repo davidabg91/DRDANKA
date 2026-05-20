@@ -12,7 +12,11 @@ export default function Footer() {
           {/* Brand Info */}
           <div>
             <div className="flex items-center space-x-3 mb-6">
-              <ShieldCheck className="h-8 w-8 text-brand-gold" />
+              <img
+                src="/logo-icon.png"
+                alt="Д-р Данка Николова Лого"
+                className="h-10 w-10 object-contain rounded"
+              />
               <div>
                 <span className="font-serif text-lg font-bold text-white block leading-none">
                   Д-р Данка Николова

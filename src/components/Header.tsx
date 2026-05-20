@@ -58,19 +58,12 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group shrink-0">
-            <div className="bg-[#051a14] p-2 rounded-lg border border-brand-gold/35 group-hover:border-brand-gold transition-colors duration-300">
-              <svg
-                className="h-8 w-8 text-brand-gold"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="m9 11 2 2 4-4" />
-              </svg>
+            <div className="bg-[#051a14] p-1 rounded-lg border border-brand-gold/35 group-hover:border-brand-gold transition-colors duration-300">
+              <img
+                src="/logo-icon.png"
+                alt="Д-р Данка Николова Лого"
+                className="h-10 w-10 object-contain rounded"
+              />
             </div>
             <div>
               <span className="font-serif text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
