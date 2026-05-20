@@ -57,29 +57,29 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 group">
+          <Link href="/" className="flex items-center space-x-3 group shrink-0">
             <div className="bg-brand-gold/10 p-2 rounded-lg border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300">
               <ShieldCheck className="h-8 w-8 text-brand-gold" />
             </div>
             <div>
-              <span className="font-serif text-xl sm:text-2xl font-bold text-white tracking-wide block leading-none">
+              <span className="font-serif text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
                 Д-р Данка Николова
               </span>
-              <span className="text-xs text-brand-gold font-light tracking-widest uppercase block mt-1">
+              <span className="text-[10px] xl:text-xs text-brand-gold font-light tracking-widest uppercase block mt-1">
                 Хранителен контрол & Сигурност
               </span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          <nav className="hidden md:flex items-center md:space-x-4 lg:space-x-5 xl:space-x-8">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium tracking-wide transition-colors duration-200 uppercase ${
+                  className={`md:text-xs lg:text-[13px] xl:text-sm font-medium tracking-wide transition-colors duration-200 uppercase whitespace-nowrap ${
                     isActive
                       ? "text-brand-gold border-b-2 border-brand-gold pb-1"
                       : "text-white/80 hover:text-brand-gold"
@@ -92,10 +92,10 @@ export default function Header() {
           </nav>
 
           {/* Desktop Call to Action */}
-          <div className="hidden lg:flex items-center">
+          <div className="hidden lg:flex items-center shrink-0">
             <Link
               href="/consultations"
-              className="relative inline-flex items-center justify-center px-6 py-2.5 text-xs font-semibold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light transition-all duration-300 rounded shadow-md hover:shadow-brand-gold/25"
+              className="relative inline-flex items-center justify-center lg:px-4 xl:px-6 py-2.5 text-[11px] xl:text-xs font-semibold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light transition-all duration-300 rounded shadow-md hover:shadow-brand-gold/25 whitespace-nowrap"
             >
               Заяви консултация
             </Link>
