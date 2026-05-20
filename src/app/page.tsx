@@ -14,7 +14,8 @@ import {
   Flame,
   ArrowRight,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Zap
 } from "lucide-react";
 import FAQAccordion from "@/components/FAQAccordion";
 import ContactForm from "@/components/ContactForm";
@@ -30,51 +31,51 @@ export default function Home() {
   const industries = [
     {
       title: "Ресторанти и заведения",
+      desc: "Ресторанти, кафе-сладкарници, пицарии, заведения за бързо хранене, кетъринг компании.",
       icon: ForkKnife,
-      desc: "Ресторанти, механи, пицарии, кафе-барове и бърза храна.",
     },
     {
-      title: "Хранителни цехове & производство",
-      icon: Warehouse,
-      desc: "Фабрики, цехове за пакетиране, консервни фабрики, мандри.",
-    },
-    {
-      title: "Пекарни и сладкарници",
-      icon: Coffee,
-      desc: "Хлебозаводи, пекарни, сладкарски цехове и обекти за закуски.",
-    },
-    {
-      title: "Магазини & супермаркети",
+      title: "Магазини за храни",
+      desc: "Супермаркети, специализирани магазини (месарници, пекарни), павилиони.",
       icon: ShoppingBag,
-      desc: "Супермаркети, минимаркети, плод-зеленчук, месарници.",
     },
     {
-      title: "Кетъринг компании",
+      title: "Производство на храни",
+      desc: "Хлебозаводи, цехове за сладкарски или месни изделия, пакетиращи предприятия.",
+      icon: Coffee,
+    },
+    {
+      title: "Логистика и транспорт",
+      desc: "Специализиран транспорт на храни, хладилни камиони, дистрибуция.",
       icon: Truck,
-      desc: "Кетъринг за събития, доставка на храна за офиси и училища.",
     },
     {
-      title: "Производители на напитки",
+      title: "Складове на едро",
+      desc: "Складови бази за съхранение на храни и суровини, логистични центрове.",
+      icon: Warehouse,
+    },
+    {
+      title: "Хранителни добавки",
+      desc: "Регистрация на обекти за търговия с хранителни добавки, фитнес храни.",
       icon: Flame,
-      desc: "Пивоварни, винарни, бутилиращи предприятия за води и сокове.",
     },
   ];
 
   const steps = [
     {
       num: "01",
-      title: "Предварителен одит",
-      desc: "Извършваме детайлен оглед на място или онлайн анализ на документите и технологичния поток на Вашия обект.",
+      title: "Одит на място / Чертеж",
+      desc: "Анализираме Вашето помещение, потоците на суровини и технологичното оборудване.",
     },
     {
       num: "02",
-      title: "Разработка на документация",
-      desc: "Изготвяме пълния пакет Системи за самоконтрол (ДПХП) и HACCP план, персонализирани изцяло за Вашата дейност.",
+      title: "Разработка на системи",
+      desc: "Съставяме Вашите НАССР планове, Системи за самоконтрол (СУБХ) и технологични карти.",
     },
     {
       num: "03",
-      title: "Внедряване & Обучение",
-      desc: "Обучаваме персонала Ви за правилно водене на дневниците и прилагане на хигиенните изисквания на практика.",
+      title: "Обучение на персонала",
+      desc: "Провеждаме практическо обучение за правилно попълване на дневниците за самоконтрол.",
     },
     {
       num: "04",
@@ -84,10 +85,26 @@ export default function Home() {
   ];
 
   const trustPoints = [
-    "Безкомпромисно качество на документацията – без прекопирани шаблони.",
-    "Бърза реакция при спешни случаи, предписания или актове.",
-    "Експертно познаване на всички наредби на БАБХ и МЗ.",
-    "Поддръжка, одит и актуализация на системите във времето.",
+    {
+      title: "Качество без шаблони",
+      desc: "Безкомпромисно качество на документацията – разработваме всяка система индивидуално спрямо обекта.",
+      icon: FileCheck,
+    },
+    {
+      title: "Светкавична реакция",
+      desc: "Бърза реакция при спешни случаи, предписания или актове от контролните органи.",
+      icon: Zap,
+    },
+    {
+      title: "Експертно познаване",
+      desc: "Дълбоко познаване на всички наредби на БАБХ, МЗ и европейското законодателство.",
+      icon: Award,
+    },
+    {
+      title: "Постоянна актуализация",
+      desc: "Поддръжка, одити и навременна актуализация на системите спрямо промени в закона.",
+      icon: ShieldCheck,
+    },
   ];
 
   return (
@@ -277,14 +294,29 @@ export default function Home() {
                 Безопасността на храните не е просто папка с документи, която стои на рафта. Тя е гаранция за здравето на Вашите клиенти и за сигурността на Вашата инвестиция. Ние не предлагаме генерични шаблони. Всяка система се разработва индивидуално спрямо архитектурата, потока на суровините и спецификата на Вашето меню.
               </p>
               
-              {/* Trust point checks */}
+              {/* Trust point cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
-                {trustPoints.map((point, index) => (
-                  <div key={index} className="flex items-start text-xs sm:text-sm text-brand-dark/90">
-                    <CheckCircle className="h-5 w-5 text-brand-gold mr-3 shrink-0" />
-                    <span>{point}</span>
-                  </div>
-                ))}
+                {trustPoints.map((point, index) => {
+                  const Icon = point.icon;
+                  return (
+                    <div
+                      key={index}
+                      className="bg-white border border-brand-green/5 hover:border-brand-gold/30 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="bg-brand-green/5 group-hover:bg-brand-gold/15 p-2 rounded-lg border border-brand-green/5 group-hover:border-brand-gold/20 inline-block mb-3 transition-colors duration-300">
+                          <Icon className="h-5 w-5 text-brand-green group-hover:text-brand-gold-dark transition-colors duration-300" />
+                        </div>
+                        <h3 className="font-serif text-sm sm:text-base font-bold text-brand-green mb-1.5">
+                          {point.title}
+                        </h3>
+                        <p className="text-xs text-brand-dark/70 leading-relaxed">
+                          {point.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="pt-6">
