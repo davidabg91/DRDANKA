@@ -58,13 +58,11 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group shrink-0">
-            <div className="bg-[#051a14] p-1 rounded-lg border border-brand-gold/35 group-hover:border-brand-gold transition-colors duration-300">
-              <img
-                src="/logo-icon.png"
-                alt="Д-р Данка Николова Лого"
-                className="h-10 w-10 object-contain rounded"
-              />
-            </div>
+            <img
+              src="/logo-icon.png"
+              alt="Д-р Данка Николова Лого"
+              className="h-10 w-10 object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
+            />
             <div>
               <span className="font-serif text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
                 Д-р Данка Николова
