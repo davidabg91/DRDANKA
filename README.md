@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Д-р Данка Николова — Консултант по безопасност на храните
 
-## Getting Started
+Уебсайт на д-р Данка Николова — ветеринарен лекар с над 27 години реален опит в държавния контрол и безопасността на храните. Платформата служи за представяне на професионални консултантски услуги, заявяване на одити и закупуване на готови практически наръчници за бизнес обекти, подлежащи на регистрация от БАБХ.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠️ Технологичен стек
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Проектът е изграден по съвременни стандарти за уеб разработка:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+* **Рамка (Framework):** [Next.js](https://nextjs.org/) (с App Router структуриране)
+* **Библиотека за интерфейс:** [React](https://react.dev/) & [TypeScript](https://www.typescriptlang.org/)
+* **Стилизиране:** [Tailwind CSS v4](https://tailwindcss.com/)
+* **Икони:** [Lucide React](https://lucide.dev/)
+* **Картографско вграждане:** Интерактивен Google Maps модул за офиса в Плевен.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🧭 Структура на сайта
 
-To learn more about Next.js, take a look at the following resources:
+* **Начална страница (`/`):** Представяне на д-р Николова, ключови статистически данни и бърз достъп до услугите.
+* **За мен (`/about`):** Подробна биография на ветеринарния лекар, професионален път в контролните органи и отзиви на реални клиенти.
+* **Услуги (`/services`):** Каталог с предлаганите консултации — HACCP разработка, БАБХ документация, одити и актуализации.
+* **Консултации (`/consultations`):** Интерактивна система за избор на дата и запазване на час за онлайн консултация.
+* **Обучения & Книжарница (`/training`):** Дигитална книжарница за готови видео лекции и писмени наръчници (пакети Basic, Standard, Premium) с интегрирана количка и стъпки за фактуриране.
+* **Контакти (`/contact`):** Форма за връзка, интерактивна карта на локацията и адрес на офиса в гр. Плевен.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 Стартиране на проекта локално
 
-## Deploy on Vercel
+За да стартирате и тествате проекта на собствената си машина, следвайте следните стъпки:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Инсталирайте зависимостите:**
+   ```bash
+   npm install
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Стартирайте сървъра за разработка:**
+   ```bash
+   npm run dev
+   ```
+   *След стартиране отворете [http://localhost:3000](http://localhost:3000) в браузъра си.*
+
+3. **Компилиране за продукция:**
+   ```bash
+   npm run build
+   ```
+
+---
+
+## 📬 Контакти за поддръжка
+* **Адрес:** гр. Плевен, ул. „Данаил Попов“ 12, ет. 2
+* **Имейл:** [d.nikolova.haccp@gmail.com](mailto:d.nikolova.haccp@gmail.com)
