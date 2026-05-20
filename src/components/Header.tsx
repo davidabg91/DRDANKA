@@ -72,14 +72,14 @@ export default function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-x-3 lg:gap-x-5 xl:gap-x-8">
+          <nav className="hidden md:flex items-center gap-x-2 lg:gap-x-4 xl:gap-x-6 md:mx-4 lg:mx-8 xl:mx-auto">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`md:text-xs lg:text-[13px] xl:text-sm font-medium tracking-wide transition-colors duration-200 uppercase whitespace-nowrap ${
+                  className={`md:text-[11px] lg:text-xs xl:text-[13px] font-bold tracking-wider transition-colors duration-200 uppercase whitespace-nowrap ${
                     isActive
                       ? "text-brand-gold border-b-2 border-brand-gold pb-1"
                       : "text-white/80 hover:text-brand-gold"
