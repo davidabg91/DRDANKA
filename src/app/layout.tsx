@@ -62,7 +62,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-brand-light text-brand-dark">
         <Header />
-        <main className="flex-grow">{children}</main>
+        <main className="flex-grow overflow-x-hidden">{children}</main>
         <Footer />
       </body>
     </html>
