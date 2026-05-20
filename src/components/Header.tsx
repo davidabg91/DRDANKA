@@ -58,7 +58,7 @@ export default function Header() {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group shrink-0">
-            <div className="bg-brand-gold/10 p-2 rounded-lg border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300">
+            <div className="bg-brand-green p-2 rounded-lg border border-brand-gold/35 group-hover:border-brand-gold transition-colors duration-300">
               <ShieldCheck className="h-8 w-8 text-brand-gold" />
             </div>
             <div>
