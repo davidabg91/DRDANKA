@@ -379,7 +379,7 @@ export default function Home() {
                 {/* Accent line */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-brand-green group-hover:bg-brand-gold transition-colors"></div>
                 
-                <span className="font-serif text-4xl font-extrabold text-brand-gold/15 group-hover:text-brand-gold/35 block mb-4 transition-colors">
+                <span className="font-serif text-5xl font-black text-brand-gold/40 group-hover:text-brand-gold block mb-4 transition-colors duration-300">
                   {step.num}
                 </span>
                 <h3 className="font-serif text-base sm:text-lg font-bold text-brand-green mb-3">
