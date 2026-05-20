@@ -1,5 +1,6 @@
 import ContactForm from "@/components/ContactForm";
 import { Mail, Clock, MapPin, ShieldCheck, HelpCircle } from "lucide-react";
+import { Suspense } from "react";
 
 export default function Contact() {
   const contactDetails = [
@@ -112,7 +113,9 @@ export default function Contact() {
 
           {/* Form */}
           <div className="lg:col-span-7">
-            <ContactForm />
+            <Suspense fallback={<div className="text-center py-12 text-brand-dark/55">Зареждане на формата...</div>}>
+              <ContactForm />
+            </Suspense>
           </div>
 
         </div>

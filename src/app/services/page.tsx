@@ -182,7 +182,7 @@ export default function Services() {
                       Заяви Консултация
                     </Link>
                     <Link
-                      href="/contact"
+                      href={`/contact?service=${encodeURIComponent(srv.title)}`}
                       className="text-xs font-bold text-brand-gold hover:text-brand-gold-dark tracking-wide uppercase transition-colors flex items-center"
                     >
                       Попитай за оферта
@@ -205,7 +205,7 @@ export default function Services() {
           </p>
           <div className="pt-2">
             <Link
-              href="/contact"
+              href={`/contact?service=${encodeURIComponent("Безплатен първоначален одит")}`}
               className="inline-flex items-center px-8 py-3.5 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest transition-colors rounded shadow-lg"
             >
               Свържете се за безплатен одит

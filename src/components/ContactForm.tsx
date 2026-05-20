@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Send, CheckCircle2, AlertCircle } from "lucide-react";
 
 export default function ContactForm() {
+  const searchParams = useSearchParams();
+  const serviceParam = searchParams ? searchParams.get("service") : null;
+
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
@@ -15,6 +19,16 @@ export default function ContactForm() {
 
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Pre-populate message if service query param is present
+  useEffect(() => {
+    if (serviceParam) {
+      setFormData((prev) => ({
+        ...prev,
+        message: prev.message || `Здравейте, интересувам се от оферта за услугата: „${serviceParam}“.`,
+      }));
+    }
+  }, [serviceParam]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -87,6 +101,13 @@ export default function ContactForm() {
       <p className="text-xs text-brand-dark/60 uppercase tracking-widest font-semibold mb-8">
         Защитете бизнеса си преди следващата проверка от БАБХ
       </p>
+
+      {serviceParam && (
+        <div className="bg-brand-gold/10 border border-brand-gold/25 rounded-xl p-4 mb-8 text-brand-dark/95 text-xs flex flex-wrap items-center gap-2">
+          <span className="font-bold text-brand-green">Избрана услуга за запитване:</span>
+          <span className="bg-brand-green/10 text-brand-green font-semibold px-2 py-0.5 rounded border border-brand-green/5">{serviceParam}</span>
+        </div>
+      )}
 
       {status === "error" && (
         <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-r flex items-start text-sm">

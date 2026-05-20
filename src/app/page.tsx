@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import FAQAccordion from "@/components/FAQAccordion";
 import ContactForm from "@/components/ContactForm";
+import { Suspense } from "react";
 
 export default function Home() {
   const stats = [
@@ -248,7 +249,7 @@ export default function Home() {
                 </div>
 
                 <Link
-                  href="/contact"
+                  href={`/contact?service=${encodeURIComponent("Индивидуална оферта (Начална страница)")}`}
                   className="w-full text-center flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-brand-gold to-amber-500 hover:from-amber-500 hover:to-brand-gold text-brand-dark font-extrabold text-xs uppercase tracking-wider transition-all duration-300 rounded-xl shadow-xl shadow-brand-gold/20 hover:shadow-brand-gold/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
                   <span>Заявете индивидуална оферта</span>
@@ -481,7 +482,9 @@ export default function Home() {
 
             {/* Contact Form Wrapper */}
             <div className="lg:col-span-7">
-              <ContactForm />
+              <Suspense fallback={<div className="text-center py-12 text-white/50">Зареждане на формата...</div>}>
+                <ContactForm />
+              </Suspense>
             </div>
           </div>
         </div>
