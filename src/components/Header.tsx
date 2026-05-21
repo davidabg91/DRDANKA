@@ -41,6 +41,7 @@ export default function Header() {
     { name: "Обучения", href: "/training" },
     { name: "За мен", href: "/about" },
     { name: "Блог", href: "/blog" },
+    { name: "Портал", href: "/profile" },
     { name: "Контакти", href: "/contact" },
   ];
 
@@ -75,14 +76,14 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-x-2 lg:gap-x-4 xl:gap-x-6 md:mx-4 lg:mx-8 xl:mx-auto">
+            <nav className="hidden lg:flex items-center justify-center flex-grow gap-x-2.5 xl:gap-x-5 px-4 xl:px-8">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`md:text-[11px] lg:text-xs xl:text-[13px] font-bold tracking-wider transition-colors duration-200 uppercase whitespace-nowrap ${
+                    className={`lg:text-[11px] xl:text-[13px] font-bold tracking-wider transition-colors duration-200 uppercase whitespace-nowrap ${
                       isActive
                         ? "text-brand-gold border-b-2 border-brand-gold pb-1"
                         : "text-white/80 hover:text-brand-gold"
@@ -95,7 +96,7 @@ export default function Header() {
             </nav>
 
             {/* Desktop Call to Action */}
-            <div className="hidden xl:flex items-center shrink-0">
+            <div className="hidden lg:flex items-center shrink-0">
               <Link
                 href="/consultations"
                 className="relative inline-flex items-center justify-center xl:px-6 lg:px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light transition-all duration-300 rounded shadow-md hover:shadow-brand-gold/25 whitespace-nowrap"
@@ -105,7 +106,7 @@ export default function Header() {
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden flex items-center">
+            <div className="lg:hidden flex items-center">
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="text-white hover:text-brand-gold focus:outline-none p-1.5 rounded-lg hover:bg-brand-gold/10 transition-colors"
@@ -120,7 +121,7 @@ export default function Header() {
 
       {/* Mobile Drawer Navigation */}
       <div
-        className={`md:hidden fixed inset-0 top-0 z-40 bg-brand-green transition-all duration-300 transform ${
+        className={`lg:hidden fixed inset-0 top-0 z-40 bg-brand-green transition-all duration-300 transform ${
           isOpen
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-10 pointer-events-none invisible"

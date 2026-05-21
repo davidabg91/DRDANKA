@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { 
   GraduationCap, 
   CheckCircle, 
@@ -78,6 +79,7 @@ interface MaterialPackage {
   description: string;
   features: string[];
   badge?: string;
+  image?: string;
 }
 
 const MATERIAL_PACKAGES: MaterialPackage[] = [
@@ -119,9 +121,40 @@ const MATERIAL_PACKAGES: MaterialPackage[] = [
       "Безплатни актуализации на материалите за 12 месеца",
     ],
   },
+  {
+    id: "pkg-meat-registration",
+    name: "Наръчник „Регистрация на обект с месо“ (Специализиран)",
+    price: "10 €",
+    description: "Практическо ръководство за обекти с месо и месни продукти. Как да избегнеш отказ, забавяне и излишни разходи.",
+    badge: "Ново",
+    features: [
+      "Въведение & специфики за обекти с месо",
+      "Анализ на Регламент 852/2004 and Регламент 853/2004",
+      "Чек-лист: производство на място и животински произход",
+      "Практически стъпки за избягване на грешки при БАБХ",
+      "Важни нормативни насоки за строг хранителен контрол",
+    ],
+  },
+  {
+    id: "pkg-labeling-rules",
+    name: "Наръчник „15 златни правила за етикетиране на храните“",
+    price: "10 €",
+    description: "Практично ръководство за по-малко грешки, повече яснота и по-сигурен бизнес при изготвянето на етикети за храни.",
+    badge: "Ново",
+    features: [
+      "Яснота какво ЗАДЪЛЖИТЕЛНО трябва да има на етикета",
+      "15 практични правила, приложими веднага",
+      "Как да избегнеш копиране на грешни чужди етикети",
+      "Преодоляване на неясни изисквания и риск от санкции",
+      "Кратко въведение и чек-лист за финална проверка",
+    ],
+  },
 ];
 
-export default function Training() {
+function TrainingContent() {
+  const searchParams = useSearchParams();
+  const selectParam = searchParams ? searchParams.get("select") : null;
+
   const [selectedPkg, setSelectedPkg] = useState<MaterialPackage | null>(null);
   const [orderStep, setOrderStep] = useState(1); // 1 = Selection, 2 = Form, 3 = Success
   const [checkoutInfo, setCheckoutInfo] = useState({
@@ -132,6 +165,19 @@ export default function Training() {
     eik: "",
     needInvoice: false,
   });
+
+  useEffect(() => {
+    if (selectParam) {
+      const pkg = MATERIAL_PACKAGES.find((p) => p.id === selectParam);
+      if (pkg) {
+        setSelectedPkg(pkg);
+        setOrderStep(2);
+        setTimeout(() => {
+          document.getElementById("checkout-form-section")?.scrollIntoView({ behavior: "smooth" });
+        }, 300);
+      }
+    }
+  }, [selectParam]);
 
   const handleSelectPackage = (pkg: MaterialPackage) => {
     setSelectedPkg(pkg);
@@ -303,6 +349,80 @@ export default function Training() {
           </div>
         </div>
 
+        {/* Special Food Labeling Promotion Panel */}
+        <div className="bg-white border border-brand-gold/30 rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden mb-16">
+          {/* Decorative badge */}
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-brand-gold/5 blur-2xl pointer-events-none"></div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Content Column */}
+            <div className="lg:col-span-7 space-y-6">
+              <span className="inline-flex items-center px-3 py-1 rounded bg-brand-gold/15 border border-brand-gold/30 text-[10px] sm:text-xs font-bold text-brand-gold-dark uppercase tracking-wider">
+                Специално практическо обучение
+              </span>
+              <h3 className="font-serif text-2xl sm:text-4xl font-bold text-brand-green leading-tight">
+                Обучение за Етикетиране на Храни
+              </h3>
+              <p className="text-sm sm:text-base text-brand-dark/80 leading-relaxed">
+                Научете се да съставяте напълно легални и съобразени с изискванията етикети за Вашите продукти. Обучението покрива изискванията на Регламент (ЕС) № 1169/2011, правилното деклариране на съставки, подчертаването на алергени и изчисляването на хранителни стойности.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm text-brand-dark/90">
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-brand-gold mr-3 shrink-0" />
+                  <span>БАБХ признат лектор и нормативна точност</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-brand-gold mr-3 shrink-0" />
+                  <span>Включва Сертификат за преминати обучения</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-brand-gold mr-3 shrink-0" />
+                  <span>Реални казуси от практиката</span>
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="h-5 w-5 text-brand-gold mr-3 shrink-0" />
+                  <span>Индивидуални насоки за Вашите продукти</span>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-col sm:flex-row gap-4 items-center">
+                <Link
+                  href={`/contact?service=${encodeURIComponent("Обучение по Етикетиране на Храни")}`}
+                  className="w-full sm:w-auto px-8 py-4 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest transition-colors rounded-xl shadow-lg shadow-brand-green/10 text-center cursor-pointer"
+                >
+                  Заяви обучение
+                </Link>
+                <div className="flex items-center text-xs text-brand-dark/60 font-semibold">
+                  <Award className="h-5 w-5 text-brand-gold mr-2" />
+                  <span>Официален Сертификат при успешно завършване</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Certificate Image Column */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center">
+              <div className="relative group max-w-sm w-full">
+                <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20 px-3 py-1 rounded-full bg-brand-gold text-[10px] font-extrabold text-brand-dark uppercase tracking-widest shadow-lg">
+                  Образец на Сертификата
+                </span>
+                
+                {/* Certificate border glow */}
+                <div className="absolute -inset-2 bg-brand-gold/25 rounded-2xl blur-lg opacity-40 group-hover:opacity-75 transition duration-500"></div>
+                
+                {/* Certificate Frame */}
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-brand-green/10 bg-white p-2 transition-transform duration-500 group-hover:scale-[1.02]">
+                  <img
+                    src="/viber_image_2026-05-20_23-01-44-208.jpg"
+                    alt="Сертификат за преминати обучения по Етикетиране на Храни"
+                    className="w-full h-auto rounded-lg object-contain"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Corporate Group Inquiry Banner */}
         <div className="bg-brand-green text-white border border-brand-gold/20 rounded-2xl p-8 sm:p-12 shadow-2xl relative overflow-hidden mb-28">
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-brand-gold/5 blur-3xl pointer-events-none"></div>
@@ -353,7 +473,7 @@ export default function Training() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             {MATERIAL_PACKAGES.map((pkg) => (
               <div
                 key={pkg.id}
@@ -370,7 +490,17 @@ export default function Training() {
                 )}
                 
                 <div className="space-y-6">
-                  <div>
+                  {pkg.image && (
+                    <div className="relative aspect-[3/4] w-full max-w-[140px] mx-auto rounded-lg shadow-md overflow-hidden border border-brand-gold/25 bg-brand-green mb-2">
+                      <img
+                        src={pkg.image}
+                        alt={pkg.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-black/30 to-transparent"></div>
+                    </div>
+                  )}
+                  <div className="min-h-[160px] md:min-h-[140px] lg:min-h-[180px] xl:min-h-[220px]">
                     <h3 className="font-serif text-lg font-bold text-brand-green mb-2 leading-snug">
                       {pkg.name}
                     </h3>
@@ -379,10 +509,26 @@ export default function Training() {
                     </p>
                   </div>
 
-                  <div className="flex items-baseline space-x-1.5 py-4 border-y border-brand-green/5">
-                    <span className="text-3xl font-bold text-brand-green">{pkg.price}</span>
-                    <span className="text-[10px] text-brand-dark/40 font-semibold uppercase tracking-wider">Еднократно плащане</span>
-                  </div>
+                  {(() => {
+                    const priceParts = pkg.price.split(" ");
+                    const priceNum = priceParts[0];
+                    const priceSymbol = priceParts[1] || "";
+                    return (
+                      <div className="flex items-baseline justify-between py-4 border-y border-brand-green/5 whitespace-nowrap">
+                        <div className="flex items-start text-brand-green">
+                          <span className="text-3xl font-bold leading-none">{priceNum}</span>
+                          {priceSymbol && (
+                            <span className="text-sm font-bold ml-0.5 leading-none -mt-0.5">
+                              {priceSymbol}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[9px] text-brand-dark/45 font-bold uppercase tracking-wider">
+                          Еднократно
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   <div className="space-y-3">
                     <h4 className="text-[10px] font-bold uppercase tracking-wider text-brand-dark mb-1">
@@ -723,5 +869,13 @@ export default function Training() {
 
       </section>
     </div>
+  );
+}
+
+export default function Training() {
+  return (
+    <Suspense fallback={<div className="text-center py-20 text-brand-dark/50 font-serif">Зареждане на обучението...</div>}>
+      <TrainingContent />
+    </Suspense>
   );
 }

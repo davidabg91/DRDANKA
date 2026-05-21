@@ -186,24 +186,24 @@ export default function Home() {
                   <div>
                     <div className="flex items-center flex-wrap gap-2 mb-1">
                       <span className="text-[10px] text-brand-gold font-bold tracking-widest uppercase block">
-                        БАБХ Консултации
+                        АБОНАМЕНТ „БАБХ СПОКОЙСТВИЕ“
                       </span>
                       <div className="bg-gradient-to-r from-brand-gold to-amber-500 text-brand-dark text-[8px] font-black tracking-widest uppercase py-0.5 px-2 rounded-full flex items-center gap-1 shadow-md shadow-brand-gold/10 shrink-0">
                         <span className="relative flex h-1.5 w-1.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-dark opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-dark"></span>
                         </span>
-                        Сигурност
+                        ПАРТНЬОРСТВО
                       </div>
                     </div>
                     <h3 className="font-serif text-xl sm:text-2xl font-bold text-white leading-tight">
-                      Защитете бизнеса си
+                      Цялостна система и защита
                     </h3>
                   </div>
                 </div>
 
                 <p className="text-xs text-white/70 leading-relaxed mb-6 border-b border-white/10 pb-5">
-                  Инспекциите от БАБХ не трябва да бъдат повод за стрес. С правилно съставена документация и въведени хигиенни процедури, Вашият обект е напълно защитен.
+                  Забравете за хаоса с дневниците по самоконтрол и постоянния страх от проверки. Нашата абонаментна услуга съчетава пълна дигитална система с постоянна подкрепа и лична защита от д-р Данка Николова.
                 </p>
 
                 <div className="space-y-3 mb-8">
@@ -212,8 +212,8 @@ export default function Home() {
                       <CheckCircle className="h-4 w-4 text-brand-gold" />
                     </div>
                     <div>
-                      <span className="text-[11px] font-bold text-white block">Системи за самоконтрол (ДПХП)</span>
-                      <span className="text-[10px] text-white/60">Индивидуално разработени съгласно БАБХ</span>
+                      <span className="text-[11px] font-bold text-white block">Дигитална платформа за дневници</span>
+                      <span className="text-[10px] text-white/60">Попълване на дневниците онлайн и лесен печат при инспекция</span>
                     </div>
                   </div>
 
@@ -222,8 +222,8 @@ export default function Home() {
                       <CheckCircle className="h-4 w-4 text-brand-gold" />
                     </div>
                     <div>
-                      <span className="text-[11px] font-bold text-white block">Технологични карти</span>
-                      <span className="text-[10px] text-white/60">Разработване на рецептурни карти за менюта</span>
+                      <span className="text-[11px] font-bold text-white block">Автоматичен HACCP генератор</span>
+                      <span className="text-[10px] text-white/60">Индивидуални системи за самоконтрол съобразно Вашата ниша</span>
                     </div>
                   </div>
 
@@ -232,8 +232,8 @@ export default function Home() {
                       <CheckCircle className="h-4 w-4 text-brand-gold" />
                     </div>
                     <div>
-                      <span className="text-[11px] font-bold text-white block">Подготовка за нови обекти</span>
-                      <span className="text-[10px] text-white/60">Пълно съдействие при стартиране на бизнес</span>
+                      <span className="text-[11px] font-bold text-white block">Правно и експертно представителство</span>
+                      <span className="text-[10px] text-white/60">Директно представителство и защита от д-р Николова пред БАБХ</span>
                     </div>
                   </div>
 
@@ -242,17 +242,17 @@ export default function Home() {
                       <CheckCircle className="h-4 w-4 text-brand-gold" />
                     </div>
                     <div>
-                      <span className="text-[11px] font-bold text-white block">Предписания и казуси</span>
-                      <span className="text-[10px] text-white/60">Бърза защита при вече наложени предписания</span>
+                      <span className="text-[11px] font-bold text-white block">24/7 Дежурна експертна линия</span>
+                      <span className="text-[10px] text-white/60">Бърза консултация при спешни случаи, проверки и актове</span>
                     </div>
                   </div>
                 </div>
 
                 <Link
-                  href={`/contact?service=${encodeURIComponent("Индивидуална оферта (Начална страница)")}`}
+                  href={`/contact?service=${encodeURIComponent("Абонамент БАБХ Спокойствие")}`}
                   className="w-full text-center flex items-center justify-center gap-2 py-4 px-6 bg-gradient-to-r from-brand-gold to-amber-500 hover:from-amber-500 hover:to-brand-gold text-brand-dark font-extrabold text-xs uppercase tracking-wider transition-all duration-300 rounded-xl shadow-xl shadow-brand-gold/20 hover:shadow-brand-gold/30 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
-                  <span>Заявете индивидуална оферта</span>
+                  <span>Заявете Месечен Абонамент</span>
                   <span className="text-sm font-light">→</span>
                 </Link>
               </div>
