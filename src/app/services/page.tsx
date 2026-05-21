@@ -165,41 +165,39 @@ export default function Services() {
                 key={index}
                 className={`border rounded-2xl p-6 sm:p-10 transition-all duration-300 flex flex-col justify-between ${
                   isVip
-                    ? "bg-gradient-to-br from-[#0F382B] via-[#0b2b20] to-[#04120d] border-brand-gold/60 shadow-[0_15px_40px_rgba(207,175,99,0.18)] lg:col-span-2 relative overflow-hidden text-white border-2"
+                    ? "bg-gradient-to-br from-[#FBF5E6] via-[#F2DFAC] to-[#DCBF7A] border-brand-gold shadow-[0_15px_35px_rgba(220,191,122,0.25)] relative overflow-hidden text-brand-dark border-2 hover:shadow-xl"
                     : "bg-white border-brand-green/5 text-brand-dark shadow-lg shadow-brand-green/5 hover:border-brand-gold/30 hover:shadow-xl"
                 }`}
               >
                 {isVip && (
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-12 -translate-y-12"></div>
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -z-10 pointer-events-none translate-x-12 -translate-y-12"></div>
                 )}
                 <div>
                   {/* Top row */}
                   <div className="flex justify-between items-start mb-6">
                     <div className={`p-3 rounded-lg border ${
                       isVip 
-                        ? "bg-brand-gold/10 border-brand-gold/30 text-brand-gold" 
+                        ? "bg-brand-green/10 border-brand-green/20 text-brand-green" 
                         : "bg-brand-green/5 border-brand-green/10 text-brand-green"
                     }`}>
                       <Icon className="h-6 w-6" />
                     </div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider border px-3 py-1.5 rounded-full ${
                       isVip 
-                        ? "text-brand-gold border-brand-gold/40 bg-brand-gold/10 font-extrabold flex items-center gap-1.5 animate-pulse" 
+                        ? "text-brand-green border-brand-green/30 bg-brand-green/10 font-extrabold flex items-center gap-1.5 animate-pulse" 
                         : "text-brand-gold border-brand-gold/20 bg-brand-gold/5"
                     }`}>
-                      {isVip && <span className="w-1.5 h-1.5 rounded-full bg-brand-gold"></span>}
+                      {isVip && <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>}
                       {srv.badge}
                     </span>
                   </div>
 
                   {/* Title and description */}
-                  <h2 className={`font-serif text-xl sm:text-3xl font-bold mb-4 ${
-                    isVip ? "text-brand-gold" : "text-brand-green"
-                  }`}>
+                  <h2 className={`font-serif text-xl sm:text-2xl font-bold mb-4 text-brand-green`}>
                     {srv.title}
                   </h2>
                   <p className={`text-xs sm:text-sm leading-relaxed mb-6 ${
-                    isVip ? "text-white/80" : "text-brand-dark/70"
+                    isVip ? "text-brand-dark/90" : "text-brand-dark/70"
                   }`}>
                     {srv.desc}
                   </p>
@@ -207,15 +205,17 @@ export default function Services() {
                   {/* Scope / list */}
                   <div className="mb-6">
                     <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${
-                      isVip ? "text-brand-gold" : "text-brand-dark"
+                      isVip ? "text-brand-green" : "text-brand-dark"
                     }`}>
                       Обхват на услугата:
                     </h3>
                     <ul className="space-y-2.5">
                       {srv.scope.map((item, idx) => (
                         <li key={idx} className="flex items-start text-xs">
-                          <Check className="h-4 w-4 text-brand-gold mr-2.5 shrink-0 mt-0.5" />
-                          <span className={isVip ? "text-white/95" : "text-brand-dark/80"}>{item}</span>
+                          <Check className={`h-4 w-4 mr-2.5 shrink-0 mt-0.5 ${
+                            isVip ? "text-brand-green" : "text-brand-gold"
+                          }`} />
+                          <span className={isVip ? "text-brand-dark/95" : "text-brand-dark/80"}>{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -224,31 +224,27 @@ export default function Services() {
 
                 {/* Bottom section (benefit + CTA) */}
                 <div className={`border-t pt-6 mt-6 space-y-5 ${
-                  isVip ? "border-brand-gold/15" : "border-brand-green/5"
+                  isVip ? "border-brand-green/10" : "border-brand-green/5"
                 }`}>
                   <div className={`p-3.5 rounded border text-xs flex items-start ${
                     isVip 
-                      ? "bg-brand-gold/10 border-brand-gold/25 text-white/90" 
+                      ? "bg-white/50 border-brand-green/10 text-brand-green" 
                       : "bg-brand-light border-brand-green/5 text-brand-green"
                   }`}>
-                    <span className={`font-bold mr-1.5 shrink-0 ${isVip ? "text-brand-gold" : ""}`}>Полза за бизнеса:</span>
-                    <span>{srv.benefits}</span>
+                    <span className="font-bold mr-1.5 shrink-0">Полза за бизнеса:</span>
+                    <span className={isVip ? "text-brand-dark/90" : "text-brand-dark/80"}>{srv.benefits}</span>
                   </div>
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <Link
-                      href="/consultations"
-                      className={`w-full sm:w-auto text-center px-8 py-3.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer ${
-                        isVip 
-                          ? "bg-brand-gold hover:bg-brand-gold-light text-brand-dark shadow-lg shadow-brand-gold/10 font-black" 
-                          : "bg-brand-green text-white hover:bg-brand-green/90"
-                      }`}
+                      href={isVip ? "/profile" : "/consultations"}
+                      className="w-full sm:w-auto text-center px-8 py-3.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer bg-brand-green text-white hover:bg-brand-green/90 shadow-md"
                     >
                       {isVip ? "Влез в Абонамента" : "Заяви Консултация"}
                     </Link>
                     <Link
                       href={`/contact?service=${encodeURIComponent(srv.title)}`}
                       className={`text-xs font-bold tracking-wide uppercase transition-colors flex items-center ${
-                        isVip ? "text-white hover:text-brand-gold" : "text-brand-gold hover:text-brand-gold-dark"
+                        isVip ? "text-brand-green hover:text-brand-green/80" : "text-brand-gold hover:text-brand-gold-dark"
                       }`}
                     >
                       Попитай за оферта
