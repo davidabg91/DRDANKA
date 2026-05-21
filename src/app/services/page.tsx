@@ -234,20 +234,34 @@ export default function Services() {
                     <span className="font-bold mr-1.5 shrink-0">Полза за бизнеса:</span>
                     <span className={isVip ? "text-brand-dark/90" : "text-brand-dark/80"}>{srv.benefits}</span>
                   </div>
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <Link
-                      href={isVip ? "/profile" : "/consultations"}
-                      className="w-full sm:w-auto text-center px-8 py-3.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green hover:text-white shadow-sm"
-                    >
-                      {isVip ? "Влез в Абонамента" : "Заяви Консултация"}
-                    </Link>
-                    <Link
-                      href={`/contact?service=${encodeURIComponent(srv.title)}`}
-                      className="w-full sm:w-auto text-center px-8 py-3.5 text-xs font-black uppercase tracking-wider rounded transition-colors cursor-pointer bg-brand-gold hover:bg-brand-gold-light text-brand-dark shadow-lg shadow-brand-gold/15"
-                    >
-                      Попитай за оферта
-                    </Link>
-                  </div>
+                  {isVip ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Link
+                        href="/profile"
+                        className="w-full text-center px-8 py-4 text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer bg-brand-green hover:bg-brand-green/90 text-white shadow-lg"
+                      >
+                        Кандидатствай за Абонамент
+                      </Link>
+                      <p className="text-[10px] text-brand-dark/50 text-center italic leading-relaxed">
+                        * Броят на местата е ограничен, за да гарантираме индивидуално внимание и качествено обслужване на всеки клиент.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                      <Link
+                        href="/consultations"
+                        className="w-full sm:w-auto text-center px-8 py-3.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green hover:text-white shadow-sm"
+                      >
+                        Заяви Консултация
+                      </Link>
+                      <Link
+                        href={`/contact?service=${encodeURIComponent(srv.title)}`}
+                        className="w-full sm:w-auto text-center px-8 py-3.5 text-xs font-black uppercase tracking-wider rounded transition-colors cursor-pointer bg-brand-gold hover:bg-brand-gold-light text-brand-dark shadow-lg shadow-brand-gold/15"
+                      >
+                        Попитай за оферта
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             );
