@@ -48,7 +48,7 @@ export default function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${
+        className={`sticky top-0 z-50 transition-all duration-300 print:hidden ${
           isOpen
             ? "bg-brand-green py-3 border-b border-brand-gold/20"
             : isScrolled

@@ -40,17 +40,33 @@ export default function About() {
   return (
     <div className="bg-brand-light pb-24">
       {/* Page Header */}
-      <section className="bg-brand-green py-20 text-center relative overflow-hidden border-b border-brand-gold/15">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-gold/5 via-transparent to-transparent opacity-75 pointer-events-none"></div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-4">
-          <span className="text-xs font-bold uppercase text-brand-gold tracking-widest block">
-            ЕКСПЕРТИЗА И ДОВЕРИЕ
+      <section className="bg-brand-green py-12 sm:py-16 text-center relative overflow-hidden border-b border-brand-gold/20">
+        {/* Luxury Radial Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-gold/15 via-brand-green/95 to-brand-green pointer-events-none"></div>
+        {/* Subtle grid overlay for texture */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(197,168,128,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(197,168,128,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
+        
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-4">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-gold/10 border border-brand-gold/30 rounded-full text-[9px] sm:text-[10px] font-black uppercase text-brand-gold tracking-[0.2em] shadow-sm">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-gold opacity-75"></span>
+              <span className="relative rounded-full h-1.5 w-1.5 bg-brand-gold"></span>
+            </span>
+            ЗА МЕН · ЕКСПЕРТИЗА И ДОВЕРИЕ
           </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white tracking-tight">
-            За Д-р Данка Николова
+          
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight max-w-4xl mx-auto">
+            За <span className="text-brand-gold italic font-medium font-serif block sm:inline-block hover:scale-[1.01] transition-transform duration-300">Д-р Данка Николова</span>
           </h1>
-          <p className="text-sm sm:text-base text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Повече от четвърт век отдаденост на безопасността на храните, защитата на здравето и подкрепата на българския хранителен бизнес.
+
+          <div className="flex items-center justify-center gap-3 py-1">
+            <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-brand-gold/45"></div>
+            <div className="w-1 h-1 rounded-full bg-brand-gold"></div>
+            <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-brand-gold/45"></div>
+          </div>
+
+          <p className="font-serif text-xs sm:text-sm lg:text-base text-white/95 max-w-2xl mx-auto leading-relaxed font-light italic text-pretty">
+            „Повече от четвърт век отдаденост на безопасността на храните, защитата на здравето и подкрепата на българския хранителен бизнес.“
           </p>
         </div>
       </section>

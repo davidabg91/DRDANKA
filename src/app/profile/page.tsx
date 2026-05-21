@@ -161,10 +161,24 @@ export default function ProfilePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirmPassword, setRegConfirmPassword] = useState("");
+
+  // Application form states (now merged with registration)
+  const [applyFirmName, setApplyFirmName] = useState("");
+  const [applyEik, setApplyEik] = useState("");
+  const [applyContact, setApplyContact] = useState("");
+  const [applyPhone, setApplyPhone] = useState("");
+  const [applyNiche, setApplyNiche] = useState("Заведение за хранене");
+  const [applyDesc, setApplyDesc] = useState("");
+  const [applySuccess, setApplySuccess] = useState(false);
+
+  // Approval flow states
+  const [isPendingApproval, setIsPendingApproval] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [pendingFirmName, setPendingFirmName] = useState("");
 
   // User details states
   const [firmInfo, setFirmInfo] = useState({
@@ -273,6 +287,20 @@ export default function ProfilePage() {
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     if (authEmail && authPassword) {
+      // Check if there is a pending user in localstorage
+      const pendingUserStr = localStorage.getItem("danka_pending_user");
+      if (pendingUserStr) {
+        const pendingUser = JSON.parse(pendingUserStr);
+        if (pendingUser.email === authEmail && pendingUser.password === authPassword) {
+          if (pendingUser.status === "pending") {
+            setPendingEmail(authEmail);
+            setPendingFirmName(pendingUser.firmName);
+            setIsPendingApproval(true);
+            return;
+          }
+        }
+      }
+
       localStorage.setItem("danka_auth_logged", "true");
       setIsLoggedIn(true);
       
@@ -296,30 +324,60 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle mock registration
-  const handleRegister = (e: React.FormEvent) => {
+  // Handle mock registration & application (unified form)
+  const handleRegisterAndApply = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regEmail || !regPassword) {
-      alert("Моля, попълнете всички полета.");
+    if (!regEmail || !regPassword || !applyFirmName || !applyContact || !applyPhone || !applyDesc) {
+      alert("Моля, попълнете всички полета с червена звездичка (*).");
       return;
     }
     if (regPassword !== regConfirmPassword) {
       alert("Паролите не съвпадат.");
       return;
     }
-    localStorage.setItem("danka_auth_logged", "true");
-    setIsLoggedIn(true);
-    const newFirm = {
-      name: "",
-      eik: "",
-      address: "",
-      manager: "",
-      niche: "Заведение за хранене"
+
+    const pendingUser = {
+      email: regEmail,
+      password: regPassword,
+      firmName: applyFirmName,
+      eik: applyEik,
+      contact: applyContact,
+      phone: applyPhone,
+      niche: applyNiche,
+      desc: applyDesc,
+      status: "pending"
     };
-    localStorage.setItem("danka_firm_info", JSON.stringify(newFirm));
-    setFirmInfo(newFirm);
-    setActiveTab("settings");
-    alert("Успешна регистрация! Сега попълнете профила на Вашата фирма.");
+
+    localStorage.setItem("danka_pending_user", JSON.stringify(pendingUser));
+    setPendingEmail(regEmail);
+    setPendingFirmName(applyFirmName);
+    setIsPendingApproval(true);
+  };
+
+  // Handle demo simulation approval
+  const handleSimulateApproval = () => {
+    const pendingUserStr = localStorage.getItem("danka_pending_user");
+    if (pendingUserStr) {
+      const pendingUser = JSON.parse(pendingUserStr);
+      pendingUser.status = "approved";
+      localStorage.setItem("danka_pending_user", JSON.stringify(pendingUser));
+      
+      // Seed firm info
+      const firmData = {
+        name: pendingUser.firmName,
+        eik: pendingUser.eik || "Няма въведен",
+        address: "гр. София, ул. Дизайнерска 8",
+        manager: pendingUser.contact,
+        niche: pendingUser.niche
+      };
+      localStorage.setItem("danka_firm_info", JSON.stringify(firmData));
+      setFirmInfo(firmData);
+      
+      // Auto login
+      localStorage.setItem("danka_auth_logged", "true");
+      setIsLoggedIn(true);
+      setIsPendingApproval(false);
+    }
   };
 
   // Handle Logout
@@ -472,121 +530,346 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* 2. AUTHENTICATION SCREENS (LOGIN / REGISTER) - Hidden on print */}
+      {/* 2. AUTHENTICATION SCREENS (LOGIN / REGISTER / APPLY) - Hidden on print */}
       {!isLoggedIn && (
-        <div className="max-w-md mx-auto mt-16 px-4 print:hidden">
-          <div className="bg-white border border-brand-green/10 p-8 rounded-2xl shadow-xl space-y-6">
-            <div className="text-center space-y-2">
-              <div className="inline-flex p-3 bg-brand-gold/10 rounded-full border border-brand-gold/20 text-brand-gold">
-                <Lock className="h-6 w-6" />
+        <div className="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 print:hidden animate-fade-in">
+          {isPendingApproval ? (
+            <div className="max-w-xl mx-auto bg-white border border-brand-gold/30 p-8 rounded-2xl shadow-xl space-y-6 text-center animate-fade-in">
+              <div className="relative w-16 h-16 mx-auto">
+                <div className="absolute inset-0 rounded-full bg-brand-gold/10 animate-ping"></div>
+                <div className="relative w-16 h-16 rounded-full bg-brand-gold/25 text-brand-gold flex items-center justify-center border border-brand-gold/45">
+                  <Clock className="h-8 w-8 animate-spin" style={{ animationDuration: '6s' }} />
+                </div>
               </div>
-              <h2 className="font-serif text-2xl font-bold text-brand-green">
-                {isRegisterMode ? "Регистрирайте обект" : "Вход в портала"}
-              </h2>
-              <p className="text-xs text-brand-dark/60">
-                {isRegisterMode 
-                  ? "Създайте профил за Вашата фирма за автоматично съответствие" 
-                  : "Въведете акаунта си, за да управлявате БАБХ папките и дневниците"}
-              </p>
+              
+              <div className="space-y-2">
+                <h2 className="font-serif text-2xl font-bold text-brand-green">Профилът Ви чака одобрение</h2>
+                <p className="text-xs text-brand-gold font-bold uppercase tracking-widest">Статус: В процес на разглеждане</p>
+                <p className="text-sm text-brand-dark/75 max-w-md mx-auto leading-relaxed pt-2">
+                  Заявлението за обект <span className="font-bold text-brand-green">{pendingFirmName || "Вашия обект"}</span> е регистрирано успешно с имейл <code className="bg-brand-light px-1.5 py-0.5 rounded border font-mono text-xs">{pendingEmail}</code>.
+                </p>
+                <p className="text-xs text-brand-dark/65 max-w-sm mx-auto leading-normal">
+                  За да се гарантира съответствието на НАССР документацията, д-р Данка Николова трябва лично да прегледа описаната дейност на обекта и да активира акаунта Ви. Това обикновено отнема до 24 часа.
+                </p>
+              </div>
+
+              {/* Visual Process Timeline */}
+              <div className="grid grid-cols-3 gap-2 py-4 relative">
+                <div className="absolute top-1/2 left-[15%] right-[15%] h-[1px] bg-brand-green/10 -z-10"></div>
+                <div className="space-y-1.5">
+                  <div className="w-6 h-6 rounded-full bg-brand-green text-white flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-green">✓</div>
+                  <span className="text-[9px] font-bold uppercase block text-brand-dark/50">1. Кандидатстване</span>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="w-6 h-6 rounded-full bg-brand-gold text-brand-dark flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-gold animate-pulse">2</div>
+                  <span className="text-[9px] font-bold uppercase block text-brand-green">2. Преглед</span>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="w-6 h-6 rounded-full bg-brand-light text-brand-dark/45 flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-green/15">3</div>
+                  <span className="text-[9px] font-bold uppercase block text-brand-dark/45">3. Одобрение & Вход</span>
+                </div>
+              </div>
+
+              {/* Demo Simulation Action */}
+              <div className="bg-brand-light p-4 rounded-xl border border-brand-gold/20 flex flex-col items-center justify-center">
+                <button
+                  onClick={handleSimulateApproval}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-brand-gold hover:bg-amber-500 text-brand-dark font-bold text-xs uppercase tracking-wider transition-colors rounded-lg shadow-md cursor-pointer"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Одобри профила от д-р Николова
+                </button>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => { setIsPendingApproval(false); setAuthMode("login"); }}
+                  className="text-xs text-brand-dark/50 hover:text-brand-green underline"
+                >
+                  ← Обратно към Вход
+                </button>
+              </div>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {/* Left Column: What to expect from the system */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-green/5 border border-brand-green/20 rounded-full text-[10px] font-black uppercase text-brand-green tracking-[0.15em]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
+                  ДИГИТАЛЕН ПОРТАЛ
+                </span>
+                
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green leading-tight">
+                  Какво Ви дава дигиталният портал <span className="text-brand-gold font-semibold">„БАБХ Спокойствие“</span>?
+                </h2>
+                
+                <p className="text-xs sm:text-sm text-brand-dark/75 leading-relaxed">
+                  Това е пълна платформа за ресторанти, магазини, фурни, цехове и други обекти в хранителния сектор. Чрез нея премахвате хаотичните папки и сте напълно подготвени за държавни проверки.
+                </p>
 
-            {/* Simulated Credentials Tip */}
-            {!isRegisterMode && (
-              <div className="bg-brand-gold/10 border border-brand-gold/25 p-3 rounded-lg text-[11px] text-brand-dark/95 flex items-start gap-2">
-                <Sparkles className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold block">Бърз достъп за тестване:</span>
-                  Въведете произволен имейл и парола (напр. <code className="bg-white px-1 rounded border">test@test.com</code> / <code className="bg-white px-1 rounded border">123</code>) за демонстрация.
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
+                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">1. Автоматичен НАССР & ДХП</h4>
+                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
+                      Генериране на персонализирани системи за самоконтрол, ДХП процедури, мерки за алергени и ДДД програми според профила на фирмата Ви.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
+                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">2. Дигитални Дневници</h4>
+                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
+                      Входящ контрол на храни, хладилни температури, ежедневна хигиена и здраве на персонала. Попълвате бързо онлайн и печат при проверка.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
+                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">3. Вградени Обучения</h4>
+                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
+                      Достъп до лицензирани практически наръчници за правила при етикетиране и хигиенни норми, написани лично от д-р Данка Николова.
+                    </p>
+                  </div>
+
+                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
+                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">4. Интелигентен Тракер</h4>
+                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
+                      Калкулатор за срок на годност на отворени храни и напомняния за изтичащи договори с ДДД фирми, здравни книжки и воден анализ.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-brand-light p-4 rounded-xl border border-brand-gold/20 flex gap-3 items-start">
+                  <div className="p-1 bg-brand-green/10 text-brand-green rounded">
+                    <Sparkles className="h-4 w-4 text-brand-gold" />
+                  </div>
+                  <div className="space-y-1">
+                    <h5 className="text-[11px] font-bold text-brand-green uppercase tracking-wide">Пълна защита от глоби и актове</h5>
+                    <p className="text-[11px] text-brand-dark/80 leading-relaxed">
+                      Всички документи и логика на системата са съобразени с актуалните изисквания на Закона за храните и БАБХ, което Ви гарантира 100% нормативно съответствие.
+                    </p>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
+            
+            {/* Right Column: Forms Box */}
+            <div className="lg:col-span-5">
+              <div className="bg-white border border-brand-green/10 p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
+                
+                {/* Form Tabs Switcher */}
+                <div className="flex bg-brand-light p-1 rounded-xl border border-brand-green/5">
+                  <button 
+                    onClick={() => setAuthMode("login")}
+                    className={`flex-1 text-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${authMode === "login" ? "bg-brand-green text-white shadow" : "text-brand-dark hover:bg-brand-green/5"}`}
+                  >
+                    Вход
+                  </button>
+                  <button 
+                    onClick={() => setAuthMode("register")}
+                    className={`flex-1 text-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${authMode === "register" ? "bg-brand-green text-white shadow" : "text-brand-dark hover:bg-brand-green/5"}`}
+                  >
+                    Регистрация & Кандидатстване
+                  </button>
+                </div>
 
-            {isRegisterMode ? (
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Имейл адрес</label>
-                  <input 
-                    type="email" 
-                    required 
-                    value={regEmail} 
-                    onChange={(e) => setRegEmail(e.target.value)} 
-                    placeholder="name@business.com" 
-                    className="w-full text-sm px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Парола</label>
-                  <input 
-                    type="password" 
-                    required 
-                    value={regPassword} 
-                    onChange={(e) => setRegPassword(e.target.value)} 
-                    placeholder="••••••••" 
-                    className="w-full text-sm px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Повторете парола</label>
-                  <input 
-                    type="password" 
-                    required 
-                    value={regConfirmPassword} 
-                    onChange={(e) => setRegConfirmPassword(e.target.value)} 
-                    placeholder="••••••••" 
-                    className="w-full text-sm px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
-                  />
-                </div>
-                <button 
-                  type="submit" 
-                  className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer"
-                >
-                  Регистрация и Настройки
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Имейл адрес</label>
-                  <input 
-                    type="email" 
-                    required 
-                    value={authEmail} 
-                    onChange={(e) => setAuthEmail(e.target.value)} 
-                    placeholder="name@business.com" 
-                    className="w-full text-sm px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Парола</label>
-                  <input 
-                    type="password" 
-                    required 
-                    value={authPassword} 
-                    onChange={(e) => setAuthPassword(e.target.value)} 
-                    placeholder="••••••••" 
-                    className="w-full text-sm px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
-                  />
-                </div>
-                <button 
-                  type="submit" 
-                  className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer"
-                >
-                  Влизане в системата
-                </button>
-              </form>
-            )}
+                {authMode === "login" && (
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="font-serif text-lg font-bold text-brand-green">Вход в портала</h3>
+                      <p className="text-[11px] text-brand-dark/60">Въведете акаунта си за достъп до Вашите БАБХ дневници и папки.</p>
+                    </div>
+                    {/* Simulated Credentials Tip */}
+                    <div className="bg-brand-gold/10 border border-brand-gold/25 p-3 rounded-lg text-[10px] text-brand-dark/95 flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-bold block">Бърз достъп за тестване:</span>
+                        Въведете произволен имейл/парола за демонстрация.
+                      </div>
+                    </div>
+                    <form onSubmit={handleSignIn} className="space-y-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Имейл адрес</label>
+                        <input 
+                          type="email" 
+                          required 
+                          value={authEmail} 
+                          onChange={(e) => setAuthEmail(e.target.value)} 
+                          placeholder="name@business.com" 
+                          className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Парола</label>
+                        <input 
+                          type="password" 
+                          required 
+                          value={authPassword} 
+                          onChange={(e) => setAuthPassword(e.target.value)} 
+                          placeholder="••••••••" 
+                          className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
+                        />
+                      </div>
+                      <button 
+                        type="submit" 
+                        className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer"
+                      >
+                        Влизане в системата
+                      </button>
+                    </form>
+                  </div>
+                )}
 
-            <div className="text-center">
-              <button 
-                onClick={() => setIsRegisterMode(!isRegisterMode)} 
-                className="text-xs text-brand-gold hover:underline font-bold"
-              >
-                {isRegisterMode ? "Вече имате профил? Влезте оттук" : "Нямате профил? Регистрирайте обекта си сега"}
-              </button>
+                {authMode === "register" && (
+                  <div className="space-y-4">
+                    <div className="space-y-1">
+                      <h3 className="font-serif text-lg font-bold text-brand-green">Регистрация и Кандидатстване</h3>
+                      <p className="text-[11px] text-brand-dark/60">
+                        Попълнете акаунта и данните за обекта. Заявлението ще бъде прегледано от д-р Данка Николова за одобрение.
+                      </p>
+                    </div>
+                    
+                    <form onSubmit={handleRegisterAndApply} className="space-y-3">
+                      {/* Section: Account Info */}
+                      <div className="bg-brand-light p-3 rounded-lg border border-brand-green/5 space-y-2.5">
+                        <span className="text-[9px] font-extrabold text-brand-green uppercase tracking-wider block">1. Данни за Профила</span>
+                        
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Имейл адрес *</label>
+                          <input 
+                            type="email" 
+                            required 
+                            value={regEmail} 
+                            onChange={(e) => setRegEmail(e.target.value)} 
+                            placeholder="name@business.com" 
+                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Парола *</label>
+                            <input 
+                              type="password" 
+                              required 
+                              value={regPassword} 
+                              onChange={(e) => setRegPassword(e.target.value)} 
+                              placeholder="••••••••" 
+                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Повторете парола *</label>
+                            <input 
+                              type="password" 
+                              required 
+                              value={regConfirmPassword} 
+                              onChange={(e) => setRegConfirmPassword(e.target.value)} 
+                              placeholder="••••••••" 
+                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Section: Business Activity Info */}
+                      <div className="bg-brand-light p-3 rounded-lg border border-brand-green/5 space-y-2.5">
+                        <span className="text-[9px] font-extrabold text-brand-green uppercase tracking-wider block">2. Данни за Обекта & Кандидатстване</span>
+                        
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Име на Обект / Фирма *</label>
+                          <input 
+                            type="text" 
+                            required 
+                            value={applyFirmName} 
+                            onChange={(e) => setApplyFirmName(e.target.value)} 
+                            placeholder="напр. Ресторант Витоша" 
+                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">ЕИК / Булстат</label>
+                            <input 
+                              type="text" 
+                              value={applyEik} 
+                              onChange={(e) => setApplyEik(e.target.value)} 
+                              placeholder="207654321" 
+                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white font-mono"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Дейност / Ниша</label>
+                            <select 
+                              value={applyNiche} 
+                              onChange={(e) => setApplyNiche(e.target.value)} 
+                              className="w-full text-xs px-2 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+                            >
+                              <option value="Заведение за хранене">Заведение за хранене</option>
+                              <option value="Магазин за храни">Магазин за храни</option>
+                              <option value="Производствен цех">Производствен цех</option>
+                              <option value="Склад на едро">Склад на едро</option>
+                              <option value="Кухня-майка">Кухня-майка</option>
+                              <option value="Друго">Друга дейност</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Лице за контакт *</label>
+                            <input 
+                              type="text" 
+                              required 
+                              value={applyContact} 
+                              onChange={(e) => setApplyContact(e.target.value)} 
+                              placeholder="Иван Петров" 
+                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Телефон *</label>
+                            <input 
+                              type="tel" 
+                              required 
+                              value={applyPhone} 
+                              onChange={(e) => setApplyPhone(e.target.value)} 
+                              placeholder="0888123456" 
+                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Опишете дейността си *</label>
+                          <textarea 
+                            required
+                            value={applyDesc} 
+                            onChange={(e) => setApplyDesc(e.target.value)} 
+                            placeholder="Опишете накратко обекта: брой места, специфично меню (месо, риба, млечни), капацитет, оборудване и специфични нужди..." 
+                            rows={3.5}
+                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white leading-relaxed resize-none"
+                          />
+                        </div>
+                      </div>
+
+                      <button 
+                        type="submit" 
+                        className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer mt-2"
+                      >
+                        Изпрати Заявление & Регистрирай обект
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    )}
 
       {/* 3. LOGGED-IN DASHBOARD */}
       {isLoggedIn && (

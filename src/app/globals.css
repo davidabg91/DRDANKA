@@ -52,3 +52,128 @@ html {
   perspective: 1000px;
 }
 
+@media print {
+  /* Hide headers, footers, sidebars, buttons, control panels */
+  header, 
+  footer, 
+  aside, 
+  .print\:hidden,
+  button,
+  .print-hidden,
+  [class*="print:hidden"] {
+    display: none !important;
+  }
+
+  /* Force main content area to full page width */
+  html, body, #__next, main, [class*="max-w-"], .lg\:col-span-9, .lg\:col-span-12 {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  /* Official table styles for БАБХ */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
+  }
+
+  th, td {
+    border: 1px solid #1a1a1a !important;
+    padding: 5px 8px !important;
+    color: #000000 !important;
+    font-size: 9.5pt !important;
+    background: transparent !important;
+  }
+
+  th {
+    font-weight: bold !important;
+    background-color: #f2f2f2 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Input fields override to look like normal text on print */
+  input[type="text"], 
+  input[type="number"], 
+  textarea, 
+  select {
+    border: none !important;
+    background: transparent !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    color: #000000 !important;
+    font-size: 9.5pt !important;
+    font-family: inherit !important;
+    box-shadow: none !important;
+    outline: none !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  /* Style check boxes for clean print view */
+  input[type="checkbox"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    width: 14px !important;
+    height: 14px !important;
+    border: 1px solid #000000 !important;
+    border-radius: 2px !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    position: relative !important;
+    background: #ffffff !important;
+    cursor: default !important;
+  }
+
+  input[type="checkbox"]:checked::after {
+    content: "✔" !important;
+    position: absolute !important;
+    top: -2.5px !important;
+    left: 1px !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    color: #000000 !important;
+  }
+
+  /* Hide default selects dropdown arrows on print */
+  select {
+    background-image: none !important;
+  }
+
+  /* Container cards override for official document look */
+  .bg-white, 
+  .bg-brand-light, 
+  .bg-brand-light\/40, 
+  .bg-brand-green\/5 {
+    background: transparent !important;
+    border: 1px solid #cccccc !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    padding: 15px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .border-brand-green\/5 {
+    border-color: #cccccc !important;
+  }
+
+  .text-brand-green {
+    color: #000000 !important;
+  }
+
+  /* Break page layout cleanly */
+  .break-inside-avoid {
+    page-break-inside: avoid !important;
+  }
+}
+
