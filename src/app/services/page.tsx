@@ -166,7 +166,7 @@ export default function Services() {
                 className={`border rounded-2xl p-6 sm:p-10 transition-all duration-300 flex flex-col justify-between ${
                   isVip
                     ? "bg-gradient-to-br from-[#FBF5E6] via-[#F2DFAC] to-[#DCBF7A] border-brand-gold shadow-[0_15px_35px_rgba(220,191,122,0.25)] relative overflow-hidden text-brand-dark border-2 hover:shadow-xl"
-                    : "bg-white border-brand-green/5 text-brand-dark shadow-lg shadow-brand-green/5 hover:border-brand-gold/30 hover:shadow-xl"
+                    : "bg-gradient-to-br from-[#F8F9FA] via-[#E9ECEF] to-[#DEE2E6] border-[#CED4DA] text-brand-dark shadow-lg shadow-black/5 hover:border-brand-gold/30 hover:shadow-xl"
                 }`}
               >
                 {isVip && (
