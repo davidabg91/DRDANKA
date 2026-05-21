@@ -226,10 +226,10 @@ export default function Services() {
                 <div className={`border-t pt-6 mt-6 space-y-5 ${
                   isVip ? "border-brand-green/10" : "border-brand-green/5"
                 }`}>
-                  <div className={`p-3.5 rounded border text-xs flex items-start ${
+                  <div className={`p-3.5 rounded-lg border text-xs flex items-start ${
                     isVip 
-                      ? "bg-white/50 border-brand-green/10 text-brand-green" 
-                      : "bg-brand-light border-brand-green/5 text-brand-green"
+                      ? "bg-white/60 border-brand-green/15 text-brand-green backdrop-blur-sm" 
+                      : "bg-white/70 border-black/5 text-brand-green backdrop-blur-sm"
                   }`}>
                     <span className="font-bold mr-1.5 shrink-0">Полза за бизнеса:</span>
                     <span className={isVip ? "text-brand-dark/90" : "text-brand-dark/80"}>{srv.benefits}</span>
