@@ -237,18 +237,15 @@ export default function Services() {
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <Link
                       href={isVip ? "/profile" : "/consultations"}
-                      className="w-full sm:w-auto text-center px-8 py-3.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer bg-brand-green text-white hover:bg-brand-green/90 shadow-md"
+                      className="w-full sm:w-auto text-center px-8 py-3.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green hover:text-white shadow-sm"
                     >
                       {isVip ? "Влез в Абонамента" : "Заяви Консултация"}
                     </Link>
                     <Link
                       href={`/contact?service=${encodeURIComponent(srv.title)}`}
-                      className={`text-xs font-bold tracking-wide uppercase transition-colors flex items-center ${
-                        isVip ? "text-brand-green hover:text-brand-green/80" : "text-brand-gold hover:text-brand-gold-dark"
-                      }`}
+                      className="w-full sm:w-auto text-center px-8 py-3.5 text-xs font-black uppercase tracking-wider rounded transition-colors cursor-pointer bg-brand-gold hover:bg-brand-gold-light text-brand-dark shadow-lg shadow-brand-gold/15"
                     >
                       Попитай за оферта
-                      <ChevronRight className="h-4 w-4 ml-1" />
                     </Link>
                   </div>
                 </div>
