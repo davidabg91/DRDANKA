@@ -24,8 +24,56 @@ import {
   FileCheck, 
   Sparkles,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  MessageSquare,
+  Send,
+  Users,
+  Search,
+  PlusCircle,
+  Eye,
+  XCircle
 } from "lucide-react";
+
+export interface AssignedMaterial {
+  id: string;
+  title: string;
+  content: string;
+  type: 'document' | 'test';
+  assignedAt: string;
+  questions?: Array<{
+    id: string;
+    text: string;
+    options: string[];
+    correctIdx: number;
+  }>;
+  userAnswers?: number[];
+  score?: number; // percentage
+  status: 'pending' | 'completed';
+}
+
+export interface Message {
+  id: string;
+  sender: 'user' | 'admin';
+  text: string;
+  sentAt: string;
+}
+
+export interface DankaUser {
+  email: string;
+  password: string;
+  firmName: string;
+  eik: string;
+  contact: string;
+  phone: string;
+  niche: string;
+  desc: string;
+  address: string;
+  manager: string;
+  status: 'pending' | 'approved' | 'expired';
+  role: 'user' | 'admin';
+  assignedDocs: AssignedMaterial[];
+  messages: Message[];
+}
 
 // Mock templates for HACCP/DHP document generator
 const DOCUMENT_TEMPLATES = {
@@ -166,6 +214,50 @@ export default function ProfilePage() {
   const [regPassword, setRegPassword] = useState("");
   const [regConfirmPassword, setRegConfirmPassword] = useState("");
 
+  // Multi-user & Admin state variables
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+  const [userRole, setUserRole] = useState<"user" | "admin">("user");
+  const [usersList, setUsersList] = useState<DankaUser[]>([]);
+  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "users" | "materials" | "messages" | "logs">("candidates");
+
+  // Admin Materials form states
+  const [materialType, setMaterialType] = useState<"document" | "test">("document");
+  const [newMaterialTitle, setNewMaterialTitle] = useState("");
+  const [newMaterialContent, setNewMaterialContent] = useState("");
+  const [newMaterialTarget, setNewMaterialTarget] = useState("all");
+  const [newTestQuestions, setNewTestQuestions] = useState<Array<{ id: string; text: string; options: string[]; correctIdx: number }>>([]);
+  
+  // Draft Question builder states
+  const [draftQuestionText, setDraftQuestionText] = useState("");
+  const [draftQuestionOpt1, setDraftQuestionOpt1] = useState("");
+  const [draftQuestionOpt2, setDraftQuestionOpt2] = useState("");
+  const [draftQuestionOpt3, setDraftQuestionOpt3] = useState("");
+  const [draftQuestionCorrect, setDraftQuestionCorrect] = useState(0);
+
+  // Admin Chat state
+  const [adminActiveChatEmail, setAdminActiveChatEmail] = useState("");
+  const [adminChatMessageText, setAdminChatMessageText] = useState("");
+
+  // Admin Logs Auditor state
+  const [auditUserEmail, setAuditUserEmail] = useState("");
+  const [auditSelectedDate, setAuditSelectedDate] = useState("");
+  const [auditLogs, setAuditLogs] = useState<any>({
+    incoming: [],
+    fridges: [],
+    hygiene: { desinfection: false, surfaces: false, floors: false, waste: false },
+    staff: { checkPassed: false, healthy: true },
+    thermal: [],
+    fryer: { fryerUsed: false, oilQualityOk: true, oilChanged: false }
+  });
+
+  // Admin User search/filter state
+  const [usersSearchQuery, setUsersSearchQuery] = useState("");
+
+  // User assigned materials states
+  const [activeAssignedMaterial, setActiveAssignedMaterial] = useState<AssignedMaterial | null>(null);
+  const [userTestAnswers, setUserTestAnswers] = useState<number[]>([]);
+  const [userChatMessageText, setUserChatMessageText] = useState("");
+
   // Application form states (now merged with registration)
   const [applyFirmName, setApplyFirmName] = useState("");
   const [applyEik, setApplyEik] = useState("");
@@ -190,7 +282,7 @@ export default function ProfilePage() {
   });
 
   // Navigation tabs in profile
-  const [activeTab, setActiveTab] = useState("logs"); // logs, haccp, courses, tools, settings
+  const [activeTab, setActiveTab] = useState("logs"); // logs, haccp, assigned, courses, chat, tools, settings
 
   // Daily logs state
   const [selectedDate, setSelectedDate] = useState("");
@@ -234,27 +326,143 @@ export default function ProfilePage() {
   // Course modal reader
   const [activeCourseKey, setActiveCourseKey] = useState<string | null>(null);
 
-  // Load state and initial date on client mount
+      // Load state and initial date on client mount
   useEffect(() => {
-    // Current date default
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
 
+    // Initialize danka_users if not present
+    let users: DankaUser[] = [];
+    const storedUsers = localStorage.getItem("danka_users");
+    if (storedUsers) {
+      users = JSON.parse(storedUsers);
+    } else {
+      users = [
+        {
+          email: "d.nikolova.haccp@gmail.com",
+          password: "davida9166",
+          firmName: "БАБХ Спокойствие",
+          eik: "123456789",
+          contact: "д-р Данка Николова",
+          phone: "0888888888",
+          niche: "Консултации",
+          desc: "Администратор на системата",
+          address: "гр. София, ул. БАБХ 1",
+          manager: "д-р Данка Николова",
+          status: "approved",
+          role: "admin",
+          assignedDocs: [],
+          messages: []
+        },
+        {
+          email: "kristian.cafe@gmail.com",
+          password: "password123",
+          firmName: "Кофи Шоп ЕООД",
+          eik: "207554321",
+          contact: "Кристиан Иванов",
+          phone: "0877123456",
+          niche: "Заведение за хранене",
+          desc: "Уютно квартално кафене със 20 места на закрито. Предлагаме кафе, чай, сладкиши, сандвичи.",
+          address: "гр. София, ул. Шипка 12",
+          manager: "Кристиан Иванов",
+          status: "pending",
+          role: "user",
+          assignedDocs: [],
+          messages: []
+        },
+        {
+          email: "danka_client@gmail.com",
+          password: "password123",
+          firmName: "Вкусни Мигове ЕООД",
+          eik: "207654321",
+          contact: "Георги Георгиев",
+          phone: "0888123456",
+          niche: "Заведение за хранене",
+          desc: "Ресторант с българска национална кухня, 50 места.",
+          address: "гр. София, бул. Витоша 45",
+          manager: "Георги Георгиев",
+          status: "approved",
+          role: "user",
+          assignedDocs: [
+            {
+              id: "dhp-initial",
+              title: "Инструкция за хигиена на персонала",
+              content: "Персоналът е длъжен да спазва строга лична хигиена. Работното облекло се сменя ежедневно. Ръцете се мият и дезинфекцират при всяко влизане в работната зона.",
+              type: "document",
+              assignedAt: today,
+              status: "pending"
+            }
+          ],
+          messages: [
+            {
+              id: "msg-1",
+              sender: "user",
+              text: "Здравейте д-р Николова, имам въпрос относно дневника за хладилници.",
+              sentAt: new Date(Date.now() - 3600000).toISOString()
+            },
+            {
+              id: "msg-2",
+              sender: "admin",
+              text: "Здравейте! Разбира се, с какво мога да помогна?",
+              sentAt: new Date(Date.now() - 1800000).toISOString()
+            }
+          ]
+        }
+      ];
+      localStorage.setItem("danka_users", JSON.stringify(users));
+    }
+
+    // Ensure the admin user is always in the users array
+    const adminExists = users.some(u => u.email.toLowerCase().trim() === "d.nikolova.haccp@gmail.com");
+    if (!adminExists) {
+      const adminUser: DankaUser = {
+        email: "d.nikolova.haccp@gmail.com",
+        password: "davida9166",
+        firmName: "БАБХ Спокойствие",
+        eik: "123456789",
+        contact: "д-р Данка Николова",
+        phone: "0888888888",
+        niche: "Консултации",
+        desc: "Администратор на системата",
+        address: "гр. София, ул. БАБХ 1",
+        manager: "д-р Данка Николова",
+        status: "approved",
+        role: "admin",
+        assignedDocs: [],
+        messages: []
+      };
+      users = [adminUser, ...users];
+      localStorage.setItem("danka_users", JSON.stringify(users));
+    }
+
+    setUsersList(users);
+
     // Simulated check auth
     const storedAuth = localStorage.getItem("danka_auth_logged");
-    if (storedAuth === "true") {
-      setIsLoggedIn(true);
-      const storedFirm = localStorage.getItem("danka_firm_info");
-      if (storedFirm) {
-        setFirmInfo(JSON.parse(storedFirm));
+    const storedEmail = localStorage.getItem("danka_current_user_email") || "";
+    if (storedAuth === "true" && storedEmail) {
+      const loggedUser = users.find(u => u.email.toLowerCase().trim() === storedEmail.toLowerCase().trim());
+      if (loggedUser) {
+        setIsLoggedIn(true);
+        setCurrentUserEmail(loggedUser.email);
+        setUserRole(loggedUser.role);
+        if (loggedUser.role === "user") {
+          setFirmInfo({
+            name: loggedUser.firmName,
+            eik: loggedUser.eik,
+            address: loggedUser.address,
+            manager: loggedUser.manager || loggedUser.contact,
+            niche: loggedUser.niche
+          });
+        }
       }
     }
   }, []);
 
   // Sync date-based logs when selectedDate changes or when user details change
   useEffect(() => {
-    if (!isLoggedIn || !selectedDate) return;
-    const key = `danka_logs_${selectedDate}`;
+    if (!isLoggedIn || !selectedDate || userRole !== "user" || !currentUserEmail) return;
+    const key = `danka_logs_${currentUserEmail.replace("@", "_").replace(".", "_")}_${selectedDate}`;
     const storedLogs = localStorage.getItem(key);
     if (storedLogs) {
       const parsed = JSON.parse(storedLogs);
@@ -281,50 +489,235 @@ export default function ProfilePage() {
       ]);
       setLogFryer({ fryerUsed: false, oilQualityOk: true, oilChanged: false });
     }
-  }, [selectedDate, isLoggedIn]);
+  }, [selectedDate, isLoggedIn, userRole, currentUserEmail]);
 
-  // Handle mock sign in
-  const handleSignIn = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (authEmail && authPassword) {
-      // Check if there is a pending user in localstorage
-      const pendingUserStr = localStorage.getItem("danka_pending_user");
-      if (pendingUserStr) {
-        const pendingUser = JSON.parse(pendingUserStr);
-        if (pendingUser.email === authEmail && pendingUser.password === authPassword) {
-          if (pendingUser.status === "pending") {
-            setPendingEmail(authEmail);
-            setPendingFirmName(pendingUser.firmName);
-            setIsPendingApproval(true);
-            return;
-          }
-        }
-      }
-
-      localStorage.setItem("danka_auth_logged", "true");
-      setIsLoggedIn(true);
-      
-      // Seed default firm info if empty
-      const storedFirm = localStorage.getItem("danka_firm_info");
-      if (!storedFirm) {
-        const defaultFirm = {
-          name: "Вкусни Мигове ЕООД",
-          eik: "207654321",
-          address: "гр. София, бул. Витоша 45",
-          manager: "Георги Георгиев",
-          niche: "Заведение за хранене"
-        };
-        localStorage.setItem("danka_firm_info", JSON.stringify(defaultFirm));
-        setFirmInfo(defaultFirm);
-      } else {
-        setFirmInfo(JSON.parse(storedFirm));
-      }
+  // Sync audited logs when auditor selects another user/date
+  useEffect(() => {
+    if (userRole !== "admin" || !auditUserEmail || !auditSelectedDate) return;
+    const key = `danka_logs_${auditUserEmail.replace("@", "_").replace(".", "_")}_${auditSelectedDate}`;
+    const storedLogs = localStorage.getItem(key);
+    if (storedLogs) {
+      setAuditLogs(JSON.parse(storedLogs));
     } else {
-      alert("Моля, попълнете имейл и парола.");
+      setAuditLogs({
+        incoming: [],
+        fridges: [],
+        hygiene: { desinfection: false, surfaces: false, floors: false, waste: false },
+        staff: { checkPassed: false, healthy: true },
+        thermal: [],
+        fryer: { fryerUsed: false, oilQualityOk: true, oilChanged: false }
+      });
+    }
+  }, [auditUserEmail, auditSelectedDate, userRole]);
+
+  // Print helper writing to a hidden iframe to prevent printing the whole page
+  const handlePrintText = (title: string, content: string) => {
+    let iframe = document.getElementById("print-iframe") as HTMLIFrameElement;
+    if (!iframe) {
+      iframe = document.createElement("iframe");
+      iframe.id = "print-iframe";
+      iframe.style.position = "absolute";
+      iframe.style.width = "0px";
+      iframe.style.height = "0px";
+      iframe.style.border = "none";
+      document.body.appendChild(iframe);
+    }
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(`
+        <html>
+          <head>
+            <title>${title}</title>
+            <style>
+              body {
+                font-family: 'Courier New', Courier, monospace;
+                padding: 40px;
+                color: #000;
+                line-height: 1.5;
+                font-size: 14px;
+                white-space: pre-wrap;
+              }
+              @media print {
+                body { padding: 0; margin: 0; }
+              }
+            </style>
+          </head>
+          <body>${content}</body>
+        </html>
+      `);
+      doc.close();
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      }, 250);
     }
   };
 
-  // Handle mock registration & application (unified form)
+  // Print label helper writing to a hidden iframe
+  const handlePrintLabel = (product: string, opened: string, expiry: string) => {
+    let iframe = document.getElementById("print-iframe") as HTMLIFrameElement;
+    if (!iframe) {
+      iframe = document.createElement("iframe");
+      iframe.id = "print-iframe";
+      iframe.style.position = "absolute";
+      iframe.style.width = "0px";
+      iframe.style.height = "0px";
+      iframe.style.border = "none";
+      document.body.appendChild(iframe);
+    }
+
+    const doc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      doc.write(`
+        <html>
+          <head>
+            <style>
+              body {
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                margin: 0;
+                padding: 15px;
+                text-align: center;
+                color: #000;
+              }
+              .label-card {
+                border: 2px solid #000;
+                padding: 10px;
+                border-radius: 5px;
+                display: inline-block;
+                width: 250px;
+              }
+              .title { font-weight: bold; font-size: 16px; margin-bottom: 5px; text-transform: uppercase; }
+              .detail { font-size: 12px; margin: 3px 0; }
+              .highlight { font-weight: bold; font-size: 13px; }
+            </style>
+          </head>
+          <body>
+            <div class="label-card">
+              <div class="title">ЕТИКЕТ ЗА ОТВОРЕНА ХРАНА</div>
+              <div class="detail">Продукт: <span class="highlight">${product}</span></div>
+              <div class="detail">Отворен на: ${opened}</div>
+              <div class="detail">Годен до: <span class="highlight">${expiry}</span></div>
+              <div class="detail" style="margin-top: 10px; font-size: 10px; border-top: 1px dashed #000; padding-top: 5px;">
+                Контрол по НАССР / БАБХ Спокойствие
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      doc.close();
+      setTimeout(() => {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      }, 250);
+    }
+  };
+
+      // Sign In handler checking local users array
+  const handleSignIn = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authEmail || !authPassword) {
+      alert("Моля, попълнете имейл и парола.");
+      return;
+    }
+
+    const cleanEmail = authEmail.trim().toLowerCase();
+    const cleanPassword = authPassword.trim();
+
+    // Direct Admin check
+    if (cleanEmail === "d.nikolova.haccp@gmail.com" && cleanPassword === "davida9166") {
+      setIsLoggedIn(true);
+      setCurrentUserEmail("d.nikolova.haccp@gmail.com");
+      setUserRole("admin");
+      localStorage.setItem("danka_auth_logged", "true");
+      localStorage.setItem("danka_current_user_email", "d.nikolova.haccp@gmail.com");
+      return;
+    }
+
+    const emailExists = usersList.some(u => u.email.trim().toLowerCase() === cleanEmail);
+    const matchedUser = usersList.find(u => u.email.trim().toLowerCase() === cleanEmail && u.password === cleanPassword);
+
+    if (matchedUser) {
+      if (matchedUser.status === "pending") {
+        setPendingEmail(matchedUser.email);
+        setPendingFirmName(matchedUser.firmName);
+        setIsPendingApproval(true);
+        return;
+      } else if (matchedUser.status === "expired") {
+        alert("Абонаментът на този профил е изтекъл. Моля свържете се с администратор.");
+        return;
+      }
+
+      setIsLoggedIn(true);
+      setCurrentUserEmail(matchedUser.email);
+      setUserRole(matchedUser.role);
+      setFirmInfo({
+        name: matchedUser.firmName,
+        eik: matchedUser.eik,
+        address: matchedUser.address,
+        manager: matchedUser.manager || matchedUser.contact,
+        niche: matchedUser.niche
+      });
+      localStorage.setItem("danka_auth_logged", "true");
+      localStorage.setItem("danka_current_user_email", matchedUser.email);
+      
+      // Load their settings if present
+      localStorage.setItem("danka_firm_info", JSON.stringify({
+        name: matchedUser.firmName,
+        eik: matchedUser.eik,
+        address: matchedUser.address,
+        manager: matchedUser.manager || matchedUser.contact,
+        niche: matchedUser.niche
+      }));
+    } else if (emailExists) {
+      alert("Грешна парола за този имейл адрес.");
+    } else {
+      // Create auto approved demo user if not existing to preserve legacy testing experience
+      const newUser: DankaUser = {
+        email: cleanEmail,
+        password: cleanPassword,
+        firmName: "Нов Демо Обект",
+        eik: "207999999",
+        contact: "Демо Потребител",
+        phone: "0899000000",
+        niche: "Заведение за хранене",
+        desc: "Автоматично генериран тестов профил.",
+        address: "гр. София, ул. Примерна 1",
+        manager: "Демо Потребител",
+        status: "approved",
+        role: "user",
+        assignedDocs: [],
+        messages: []
+      };
+      const updatedList = [...usersList, newUser];
+      setUsersList(updatedList);
+      localStorage.setItem("danka_users", JSON.stringify(updatedList));
+
+      setIsLoggedIn(true);
+      setCurrentUserEmail(cleanEmail);
+      setUserRole("user");
+      setFirmInfo({
+        name: newUser.firmName,
+        eik: newUser.eik,
+        address: newUser.address,
+        manager: newUser.manager,
+        niche: newUser.niche
+      });
+      localStorage.setItem("danka_auth_logged", "true");
+      localStorage.setItem("danka_current_user_email", cleanEmail);
+      localStorage.setItem("danka_firm_info", JSON.stringify({
+        name: newUser.firmName,
+        eik: newUser.eik,
+        address: newUser.address,
+        manager: newUser.manager,
+        niche: newUser.niche
+      }));
+    }
+  };
+
+  // Register & Apply handler
   const handleRegisterAndApply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!regEmail || !regPassword || !applyFirmName || !applyContact || !applyPhone || !applyDesc) {
@@ -336,67 +729,475 @@ export default function ProfilePage() {
       return;
     }
 
-    const pendingUser = {
+    // Check duplicate
+    if (usersList.some(u => u.email.toLowerCase() === regEmail.toLowerCase())) {
+      alert("Този имейл вече е регистриран.");
+      return;
+    }
+
+    const pendingUser: DankaUser = {
       email: regEmail,
       password: regPassword,
       firmName: applyFirmName,
-      eik: applyEik,
+      eik: applyEik || "Няма въведен",
       contact: applyContact,
       phone: applyPhone,
       niche: applyNiche,
       desc: applyDesc,
-      status: "pending"
+      address: "Не е въведен",
+      manager: applyContact,
+      status: "pending",
+      role: "user",
+      assignedDocs: [],
+      messages: []
     };
 
-    localStorage.setItem("danka_pending_user", JSON.stringify(pendingUser));
+    const updatedList = [...usersList, pendingUser];
+    setUsersList(updatedList);
+    localStorage.setItem("danka_users", JSON.stringify(updatedList));
+
     setPendingEmail(regEmail);
     setPendingFirmName(applyFirmName);
     setIsPendingApproval(true);
   };
 
-  // Handle demo simulation approval
+  // Simulate approval
   const handleSimulateApproval = () => {
-    const pendingUserStr = localStorage.getItem("danka_pending_user");
-    if (pendingUserStr) {
-      const pendingUser = JSON.parse(pendingUserStr);
-      pendingUser.status = "approved";
-      localStorage.setItem("danka_pending_user", JSON.stringify(pendingUser));
-      
-      // Seed firm info
-      const firmData = {
-        name: pendingUser.firmName,
-        eik: pendingUser.eik || "Няма въведен",
-        address: "гр. София, ул. Дизайнерска 8",
-        manager: pendingUser.contact,
-        niche: pendingUser.niche
-      };
-      localStorage.setItem("danka_firm_info", JSON.stringify(firmData));
-      setFirmInfo(firmData);
-      
-      // Auto login
-      localStorage.setItem("danka_auth_logged", "true");
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === pendingEmail.toLowerCase()) {
+        return { ...u, status: "approved" as const };
+      }
+      return u;
+    });
+
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+
+    const approvedUser = updatedUsers.find(u => u.email.toLowerCase() === pendingEmail.toLowerCase());
+    if (approvedUser) {
       setIsLoggedIn(true);
+      setCurrentUserEmail(approvedUser.email);
+      setUserRole("user");
+      setFirmInfo({
+        name: approvedUser.firmName,
+        eik: approvedUser.eik,
+        address: approvedUser.address,
+        manager: approvedUser.manager,
+        niche: approvedUser.niche
+      });
+      localStorage.setItem("danka_auth_logged", "true");
+      localStorage.setItem("danka_current_user_email", approvedUser.email);
+      localStorage.setItem("danka_firm_info", JSON.stringify({
+        name: approvedUser.firmName,
+        eik: approvedUser.eik,
+        address: approvedUser.address,
+        manager: approvedUser.manager,
+        niche: approvedUser.niche
+      }));
       setIsPendingApproval(false);
     }
   };
 
-  // Handle Logout
+  // Logout handler
   const handleLogout = () => {
     localStorage.removeItem("danka_auth_logged");
+    localStorage.removeItem("danka_current_user_email");
     setIsLoggedIn(false);
+    setCurrentUserEmail("");
+    setUserRole("user");
     setActiveTab("logs");
   };
 
-  // Save firm settings
+  // Admin approves candidate
+  const handleApproveCandidate = (email: string) => {
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === email.toLowerCase()) {
+        return { ...u, status: "approved" as const };
+      }
+      return u;
+    });
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    alert(`Обектът с имейл ${email} беше успешно одобрен!`);
+  };
+
+  // Admin toggles user active/expired status
+  const handleToggleUserStatus = (email: string, currentStatus: string) => {
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === email.toLowerCase()) {
+        const nextStatus = currentStatus === "approved" ? "expired" as const : "approved" as const;
+        return { ...u, status: nextStatus };
+      }
+      return u;
+    });
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+  };
+
+  // Admin deletes user
+  const handleDeleteUser = (email: string) => {
+    if (!confirm(`Сигурни ли сте, че искате да изтриете потребител ${email}?`)) return;
+    const updatedUsers = usersList.filter(u => u.email.toLowerCase() !== email.toLowerCase());
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+  };
+
   const handleSaveFirm = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentUserEmail) return;
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === currentUserEmail.toLowerCase()) {
+        return {
+          ...u,
+          firmName: firmInfo.name,
+          eik: firmInfo.eik,
+          address: firmInfo.address,
+          manager: firmInfo.manager,
+          niche: firmInfo.niche
+        };
+      }
+      return u;
+    });
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
     localStorage.setItem("danka_firm_info", JSON.stringify(firmInfo));
-    alert("Данните за фирмата бяха запазени успешно!");
+    alert("Фирмените настройки бяха успешно запазени!");
+  };
+
+  // Admin assigns document
+  const handleAssignDocument = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMaterialTitle || !newMaterialContent) {
+      alert("Моля попълнете заглавие и съдържание.");
+      return;
+    }
+
+    const newDoc: AssignedMaterial = {
+      id: "doc_" + Date.now(),
+      title: newMaterialTitle,
+      content: newMaterialContent,
+      type: "document",
+      assignedAt: new Date().toISOString().split("T")[0],
+      status: "pending"
+    };
+
+    const updatedUsers = usersList.map(u => {
+      if (u.role === "user" && (newMaterialTarget === "all" || u.email.toLowerCase() === newMaterialTarget.toLowerCase())) {
+        return {
+          ...u,
+          assignedDocs: [...u.assignedDocs, newDoc]
+        };
+      }
+      return u;
+    });
+
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    
+    // Reset inputs
+    setNewMaterialTitle("");
+    setNewMaterialContent("");
+    alert("Документът беше успешно изпратен!");
+  };
+
+  // Admin adds question draft to new test
+  const handleAddQuestion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!draftQuestionText || !draftQuestionOpt1 || !draftQuestionOpt2 || !draftQuestionOpt3) {
+      alert("Моля попълнете текста на въпроса и трите опции.");
+      return;
+    }
+
+    const newQ = {
+      id: "q_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5),
+      text: draftQuestionText,
+      options: [draftQuestionOpt1, draftQuestionOpt2, draftQuestionOpt3],
+      correctIdx: draftQuestionCorrect
+    };
+
+    setNewTestQuestions([...newTestQuestions, newQ]);
+    
+    // Clear question builder fields
+    setDraftQuestionText("");
+    setDraftQuestionOpt1("");
+    setDraftQuestionOpt2("");
+    setDraftQuestionOpt3("");
+    setDraftQuestionCorrect(0);
+  };
+
+  // Admin deletes question draft
+  const handleDeleteDraftQuestion = (idx: number) => {
+    const updated = [...newTestQuestions];
+    updated.splice(idx, 1);
+    setNewTestQuestions(updated);
+  };
+
+  // Admin assigns test
+  const handleAssignTest = () => {
+    if (!newMaterialTitle) {
+      alert("Моля въведете заглавие на теста.");
+      return;
+    }
+    if (newTestQuestions.length === 0) {
+      alert("Моля добавете поне един въпрос.");
+      return;
+    }
+
+    const newTest: AssignedMaterial = {
+      id: "test_" + Date.now(),
+      title: newMaterialTitle,
+      content: "Интерактивен тест с избор на отговори.",
+      type: "test",
+      assignedAt: new Date().toISOString().split("T")[0],
+      questions: newTestQuestions,
+      status: "pending"
+    };
+
+    const updatedUsers = usersList.map(u => {
+      if (u.role === "user" && (newMaterialTarget === "all" || u.email.toLowerCase() === newMaterialTarget.toLowerCase())) {
+        return {
+          ...u,
+          assignedDocs: [...u.assignedDocs, newTest]
+        };
+      }
+      return u;
+    });
+
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    
+    setNewMaterialTitle("");
+    setNewTestQuestions([]);
+    alert("Тестът беше успешно изпратен!");
+  };
+
+  // Admin deletes an assigned material from a user's record
+  const handleDeleteAssignedMaterial = (userEmail: string, materialId: string) => {
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === userEmail.toLowerCase()) {
+        return {
+          ...u,
+          assignedDocs: u.assignedDocs.filter(d => d.id !== materialId)
+        };
+      }
+      return u;
+    });
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+  };
+
+  // Admin sends chat message
+  const handleSendAdminMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminActiveChatEmail || !adminChatMessageText.trim()) return;
+
+    const newMsg: Message = {
+      id: "msg_" + Date.now(),
+      sender: "admin",
+      text: adminChatMessageText.trim(),
+      sentAt: new Date().toISOString()
+    };
+
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === adminActiveChatEmail.toLowerCase()) {
+        return {
+          ...u,
+          messages: [...u.messages, newMsg]
+        };
+      }
+      return u;
+    });
+
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    setAdminChatMessageText("");
+  };
+
+  // User sends chat message
+  const handleSendUserMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUserEmail || !userChatMessageText.trim()) return;
+
+    const newMsg: Message = {
+      id: "msg_" + Date.now(),
+      sender: "user",
+      text: userChatMessageText.trim(),
+      sentAt: new Date().toISOString()
+    };
+
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === currentUserEmail.toLowerCase()) {
+        return {
+          ...u,
+          messages: [...u.messages, newMsg]
+        };
+      }
+      return u;
+    });
+
+    setUsersList(updatedUsers);
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    setUserChatMessageText("");
+  };
+
+  // User solves an assigned test
+  const handleSolveTest = () => {
+    if (!activeAssignedMaterial || !activeAssignedMaterial.questions || !currentUserEmail) return;
+    
+    const questions = activeAssignedMaterial.questions;
+    let correctCount = 0;
+    questions.forEach((q, idx) => {
+      if (userTestAnswers[idx] === q.correctIdx) {
+        correctCount++;
+      }
+    });
+
+    const scorePercent = Math.round((correctCount / questions.length) * 100);
+
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === currentUserEmail.toLowerCase()) {
+        const updatedDocs = u.assignedDocs.map(doc => {
+          if (doc.id === activeAssignedMaterial.id) {
+            return {
+              ...doc,
+              status: "completed" as const,
+              userAnswers: userTestAnswers,
+              score: scorePercent
+            };
+          }
+          return doc;
+        });
+        return {
+          ...u,
+          assignedDocs: updatedDocs
+        };
+      }
+      return u;
+    });
+
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    setUsersList(updatedUsers);
+    
+    alert(`Тестът е решен успешно! Вашият резултат е: ${scorePercent}% (${correctCount}/${questions.length} верни отговора).`);
+    setActiveAssignedMaterial(null);
+    setUserTestAnswers([]);
+  };
+
+  // Mark assigned document as completed (read)
+  const handleCompleteDocument = (materialId: string) => {
+    if (!currentUserEmail) return;
+    
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === currentUserEmail.toLowerCase()) {
+        const updatedDocs = u.assignedDocs.map(doc => {
+          if (doc.id === materialId) {
+            return {
+              ...doc,
+              status: "completed" as const
+            };
+          }
+          return doc;
+        });
+        return {
+          ...u,
+          assignedDocs: updatedDocs
+        };
+      }
+      return u;
+    });
+
+    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    setUsersList(updatedUsers);
+    alert("Документът е отбелязан като прочетен!");
+  };
+
+  // Print a clean, formatted report of the audited user's logs
+  const handlePrintAuditedLogs = () => {
+    if (!auditUserEmail || !auditSelectedDate) return;
+    const user = usersList.find(u => u.email.toLowerCase() === auditUserEmail.toLowerCase());
+    if (!user) return;
+
+    let text = `====================================================
+ОФИЦИАЛЕН БАБХ ОДИТ НА САМОКОНТРОЛНИ ДНЕВНИЦИ
+====================================================
+Обект: ${user.firmName}
+ЕИК: ${user.eik}
+МОЛ: ${user.manager || user.contact}
+Адрес: ${user.address || "Не е посочен"}
+Дата на одит: ${auditSelectedDate}
+----------------------------------------------------\n\n`;
+
+    // 1. Входящ контрол
+    text += `1. ДНЕВНИК ЗА ВХОДЯЩ КОНТРОЛ НА ХРАНИ:\n`;
+    if (!auditLogs.incoming || auditLogs.incoming.length === 0) {
+      text += `Няма записани доставки.\n`;
+    } else {
+      auditLogs.incoming.forEach((row: any, i: number) => {
+        text += ` - Доставка #${i+1}: Продукт: ${row.product} | Доставчик: ${row.supplier} | Партида: ${row.batch} | t: ${row.temp}°C | Годен до: ${row.expiry} | Опаковка: ${row.compliant ? "ИЗРЯДНА" : "БРАК"}\n`;
+      });
+    }
+    text += `\n`;
+
+    // 2. Хладилници
+    text += `2. ТЕМПЕРАТУРЕН ДНЕВНИК НА ХЛАДИЛНИЦИ:\n`;
+    if (!auditLogs.fridges || auditLogs.fridges.length === 0) {
+      text += `Няма записани хладилни температури.\n`;
+    } else {
+      auditLogs.fridges.forEach((row: any) => {
+        text += ` - Съоръжение: ${row.name} | t° Сутрин: ${row.tempAm || "-"}°C | t° Вечер: ${row.tempPm || "-"}°C\n`;
+      });
+    }
+    text += `\n`;
+
+    // 3. Хигиена
+    text += `3. ДЕЗИНФЕКЦИЯ И ХИГИЕНЕН РЕЖИМ:\n`;
+    text += ` - Дезинфекция на инвентар: ${auditLogs.hygiene?.desinfection ? "ИЗВЪРШЕНО" : "НЕ Е ОТБЕЛЯЗАНО"}\n`;
+    text += ` - Почистване на работни плотове: ${auditLogs.hygiene?.surfaces ? "ИЗВЪРШЕНО" : "НЕ Е ОТБЕЛЯЗАНО"}\n`;
+    text += ` - Измиване на подове: ${auditLogs.hygiene?.floors ? "ИЗВЪРШЕНО" : "НЕ Е ОТБЕЛЯЗАНО"}\n`;
+    text += ` - Извозване на отпадъци: ${auditLogs.hygiene?.waste ? "ИЗВЪРШЕНО" : "НЕ Е ОТБЕЛЯЗАНО"}\n`;
+    text += `\n`;
+
+    // 4. Персонал
+    text += `4. ЛИЧНА ХИГИЕНА И ЗДРАВЕН СТАТУС:\n`;
+    text += ` - Входящ филтър на смяна: ${auditLogs.staff?.checkPassed ? "ИЗВЪРШЕН" : "НЕ Е ОТБЕЛЯЗАНО"}\n`;
+    text += ` - Здравословен статус на екипа: ${auditLogs.staff?.healthy ? "ИЗРЯДЕН (ВСИЧКИ ЗДРАВИ)" : "ИМА ОТСТРАНЕНИ СЛУЖИТЕЛИ"}\n`;
+    text += `\n`;
+
+    // 5. Термична обработка
+    if (user.niche === "Заведение за хранене" || user.niche === "Пекарна или производство") {
+      text += `5. ДНЕВНИК ЗА ТЕРМИЧНА ОБРАБОТКА (ГОТВЕНЕ):\n`;
+      if (!auditLogs.thermal || auditLogs.thermal.length === 0) {
+        text += `Няма записани топлинни обработки.\n`;
+      } else {
+        auditLogs.thermal.forEach((row: any, i: number) => {
+          text += ` - Ястие #${i+1}: ${row.product} | Час: ${row.time} | t° в ядрото: ${row.tempCook}°C | Бързо охлаждане: ${row.cooled ? "ДА" : "НЕ СЕ ИЗИСКВА"}\n`;
+        });
+      }
+      text += `\n`;
+    }
+
+    // 6. Фритюрник
+    if (user.niche === "Заведение за хранене" || user.niche === "Каравана или павилион") {
+      text += `6. КОНТРОЛ НА ФРИТЮРНА МАЗНИНА:\n`;
+      text += ` - Използвани фритюрници: ${auditLogs.fryer?.fryerUsed ? "ДА" : "НЕ"}\n`;
+      if (auditLogs.fryer?.fryerUsed) {
+        text += ` - Качество на олиото: ${auditLogs.fryer?.oilQualityOk ? "ГОДНО" : "НЕГОДНО (ЗА БРАК)"}\n`;
+        text += ` - Подменено олио: ${auditLogs.fryer?.oilChanged ? "ДА (НАПЪЛНО ПОДМЕНЕНО)" : "НЕ"}\n`;
+      }
+      text += `\n`;
+    }
+
+    text += `----------------------------------------------------\n`;
+    text += `Одитът извършен от: д-р Данка Николова\n`;
+    text += `Подпис: ............................\n`;
+
+    handlePrintText(`Одит_${user.firmName}_${auditSelectedDate}`, text);
   };
 
   // Save current date logbooks
   const handleSaveLogs = () => {
-    const key = `danka_logs_${selectedDate}`;
+    if (!currentUserEmail) return;
+    const key = `danka_logs_${currentUserEmail.replace("@", "_").replace(".", "_")}_${selectedDate}`;
     const logsData = {
       incoming: logIncoming,
       fridges: logFridges,
@@ -520,11 +1321,15 @@ export default function ProfilePage() {
             СИСТЕМА ЗА ХРАНИТЕЛНА БЕЗОПАСНОСТ
           </span>
           <h1 className="font-serif text-2xl sm:text-4xl font-bold text-white tracking-tight">
-            Клиентски Портал и Записи
+            {userRole === "admin" ? "Административен Панел & Управление" : "Клиентски Портал и Записи"}
           </h1>
           {isLoggedIn && (
             <p className="text-xs text-white/80 max-w-2xl mx-auto font-medium">
-              Обект: <span className="text-brand-gold font-bold">{firmInfo.name || "Неконфигуриран"}</span> ({firmInfo.niche})
+              {userRole === "admin" ? (
+                <>Администратор: <span className="text-brand-gold font-bold">д-р Данка Николова</span></>
+              ) : (
+                <>Обект: <span className="text-brand-gold font-bold">{firmInfo.name || "Неконфигуриран"}</span> ({firmInfo.niche})</>
+              )}
             </p>
           )}
         </div>
@@ -871,7 +1676,7 @@ export default function ProfilePage() {
       </div>
     )}
 
-      {/* 3. LOGGED-IN DASHBOARD */}
+                        {/* 3. LOGGED-IN DASHBOARD */}
       {isLoggedIn && (
         <div className="max-w-7xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
           
@@ -881,50 +1686,108 @@ export default function ProfilePage() {
             {/* Left Sidebar Menu - Hidden on print */}
             <aside className="lg:col-span-3 bg-white border border-brand-green/5 rounded-2xl p-5 shadow-md space-y-6 print:hidden">
               <div className="space-y-2">
-                <span className="text-[10px] font-bold uppercase text-brand-dark/45 tracking-widest block">Навигация</span>
-                <nav className="flex flex-col gap-1.5">
-                  <button 
-                    onClick={() => setActiveTab("logs")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left ${activeTab === "logs" ? "bg-brand-green text-white" : "text-brand-dark hover:bg-brand-light"}`}
-                  >
-                    <Calendar className="h-4 w-4" />
-                    БАБХ Дневници
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab("haccp")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left ${activeTab === "haccp" ? "bg-brand-green text-white" : "text-brand-dark hover:bg-brand-light"}`}
-                  >
-                    <FileText className="h-4 w-4" />
-                    НАССР Документи
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab("courses")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left ${activeTab === "courses" ? "bg-brand-green text-white" : "text-brand-dark hover:bg-brand-light"}`}
-                  >
-                    <BookOpen className="h-4 w-4" />
-                    Моите Обучения
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab("tools")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left ${activeTab === "tools" ? "bg-brand-green text-white" : "text-brand-dark hover:bg-brand-light"}`}
-                  >
-                    <Activity className="h-4 w-4" />
-                    Инструменти
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab("settings")}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left ${activeTab === "settings" ? "bg-brand-green text-white" : "text-brand-dark hover:bg-brand-light"}`}
-                  >
-                    <Settings className="h-4 w-4" />
-                    Фирма и Профил
-                  </button>
+                <span className="text-[10px] font-bold uppercase text-brand-dark/45 tracking-widest block">
+                  {userRole === "admin" ? "Админ Меню" : "Навигация"}
+                </span>
+                <nav className="flex flex-col gap-1.5 font-sans">
+                  {userRole === "admin" ? (
+                    <>
+                      <button 
+                        onClick={() => setActiveAdminTab("candidates")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "candidates" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <Clock className="h-4 w-4" />
+                        Кандидати
+                      </button>
+                      <button 
+                        onClick={() => setActiveAdminTab("users")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "users" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <Users className="h-4 w-4" />
+                        Потребители
+                      </button>
+                      <button 
+                        onClick={() => setActiveAdminTab("materials")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "materials" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <FileCheck className="h-4 w-4" />
+                        Материали & Тестове
+                      </button>
+                      <button 
+                        onClick={() => setActiveAdminTab("messages")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Чат с Клиенти
+                      </button>
+                      <button 
+                        onClick={() => setActiveAdminTab("logs")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "logs" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <Search className="h-4 w-4" />
+                        Одит на Дневници
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={() => setActiveTab("logs")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "logs" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <Calendar className="h-4 w-4" />
+                        БАБХ Дневници
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab("haccp")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "haccp" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <FileText className="h-4 w-4" />
+                        НАССР Документи
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab("assigned")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "assigned" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <FileCheck className="h-4 w-4" />
+                        Документи & Тестове
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab("courses")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "courses" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        Моите Обучения
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab("chat")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "chat" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                        Чат с Администратор
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab("tools")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "tools" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <Activity className="h-4 w-4" />
+                        Инструменти
+                      </button>
+                      <button 
+                        onClick={() => setActiveTab("settings")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "settings" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                      >
+                        <Settings className="h-4 w-4" />
+                        Фирма и Профил
+                      </button>
+                    </>
+                  )}
                 </nav>
               </div>
 
               <div className="border-t border-brand-green/5 pt-4">
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold uppercase text-red-600 hover:bg-red-50 transition-colors w-full cursor-pointer"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold uppercase text-red-600 hover:bg-red-50 transition-colors w-full cursor-pointer border-0 bg-transparent text-left font-sans"
                 >
                   <LogOut className="h-4 w-4" />
                   Излизане
@@ -934,8 +1797,827 @@ export default function ProfilePage() {
 
             {/* Right Main Content Area */}
             <main className="lg:col-span-9 space-y-8">
-              
-              {/* TAB 1: DAILY LOGBOOKS (ДНЕВНИЦИ) */}
+              {userRole === "admin" ? (
+                // ==================== ADMIN PANELS ====================
+                <>
+                  {/* ADMIN TAB 1: CANDIDATES */}
+                  {activeAdminTab === "candidates" && (() => {
+                    const pendingCandidates = usersList.filter(u => u.status === "pending" && u.role === "user");
+                    return (
+                      <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
+                        <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
+                          <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                            <Clock className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h2 className="font-serif text-xl font-bold text-brand-green">Кандидати за Абонамент</h2>
+                            <p className="text-xs text-brand-dark/50">Прегледайте и одобрете заявленията за нови обекти</p>
+                          </div>
+                        </div>
+
+                        {pendingCandidates.length === 0 ? (
+                          <div className="text-center py-10 border border-dashed border-brand-green/10 rounded-xl space-y-2">
+                            <CheckCircle className="h-8 w-8 text-green-500 mx-auto" />
+                            <p className="text-xs text-brand-dark/50 italic font-medium">Няма чакащи кандидати за одобрение в момента.</p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-1 gap-6 pt-2 font-sans">
+                            {pendingCandidates.map((candidate) => (
+                              <div 
+                                key={candidate.email} 
+                                className="border border-brand-green/10 rounded-2xl p-5 sm:p-6 bg-brand-light/35 space-y-4 hover:border-brand-gold/45 transition-colors"
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b border-brand-green/5 pb-3">
+                                  <div>
+                                    <span className="text-[9px] font-bold uppercase bg-brand-gold text-brand-dark px-2 py-0.5 rounded-full mb-1 inline-block">
+                                      {candidate.niche}
+                                    </span>
+                                    <h3 className="font-serif text-lg font-bold text-brand-green">{candidate.firmName}</h3>
+                                    <p className="text-[10px] text-brand-dark/50 font-mono">ЕИК: {candidate.eik}</p>
+                                  </div>
+                                  <div className="flex gap-2 shrink-0">
+                                    <button
+                                      onClick={() => handleApproveCandidate(candidate.email)}
+                                      className="px-4 py-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors cursor-pointer shadow flex items-center gap-1 border-0"
+                                    >
+                                      <Check className="h-4 w-4" /> Одобри
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteUser(candidate.email)}
+                                      className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs uppercase tracking-wider rounded-lg transition-colors cursor-pointer border border-red-200 flex items-center gap-1"
+                                    >
+                                      <Trash2 className="h-4 w-4" /> Откажи
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                                  <div className="space-y-1">
+                                    <span className="text-brand-dark/45 font-bold uppercase text-[9px] block">Лице за контакт</span>
+                                    <p className="font-semibold text-brand-dark/95">{candidate.contact}</p>
+                                    <p className="text-brand-dark/70 font-mono">{candidate.phone}</p>
+                                    <p className="text-brand-dark/70 font-mono">{candidate.email}</p>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <span className="text-brand-dark/45 font-bold uppercase text-[9px] block">Адрес на обекта</span>
+                                    <p className="text-brand-dark/80">{candidate.address || "Не е въведен"}</p>
+                                  </div>
+                                  <div className="space-y-1 md:col-span-1">
+                                    <span className="text-brand-dark/45 font-bold uppercase text-[9px] block">Описание на дейността</span>
+                                    <p className="text-brand-dark/80 italic leading-relaxed line-clamp-3">
+                                      „{candidate.desc}“
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* ADMIN TAB 2: ACTIVE USERS */}
+                  {activeAdminTab === "users" && (() => {
+                    const activeUsers = usersList.filter(u => u.role === "user" && (u.status === "approved" || u.status === "expired"));
+                    const filteredUsers = activeUsers.filter(u => 
+                      u.firmName.toLowerCase().includes(usersSearchQuery.toLowerCase()) || 
+                      u.email.toLowerCase().includes(usersSearchQuery.toLowerCase())
+                    );
+                    return (
+                      <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-green/5 pb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                              <Users className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h2 className="font-serif text-xl font-bold text-brand-green">Управление на Клиенти</h2>
+                              <p className="text-xs text-brand-dark/50">Прегледайте абонаментите и управлявайте достъпа на обектите</p>
+                            </div>
+                          </div>
+
+                          {/* Search Input */}
+                          <div className="relative w-full sm:w-64 font-sans">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark/40" />
+                            <input 
+                              type="text" 
+                              value={usersSearchQuery}
+                              onChange={(e) => setUsersSearchQuery(e.target.value)}
+                              placeholder="Търси фирма или имейл..."
+                              className="w-full text-xs pl-10 pr-4 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-brand-light/40"
+                            />
+                          </div>
+                        </div>
+
+                        {filteredUsers.length === 0 ? (
+                          <p className="text-xs text-brand-dark/50 italic text-center py-8">Няма намерени клиенти по зададения критерий.</p>
+                        ) : (
+                          <div className="overflow-x-auto font-sans">
+                            <table className="w-full text-xs text-left border-collapse border border-brand-green/10">
+                              <thead>
+                                <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
+                                  <th className="border border-brand-green/10 p-3">Фирма / Обект</th>
+                                  <th className="border border-brand-green/10 p-3">Контакти</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Статус Абонамент</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Промяна Абонамент</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Изтриване</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredUsers.map((u) => (
+                                  <tr key={u.email} className="hover:bg-brand-light/30 transition-colors">
+                                    <td className="border border-brand-green/10 p-3 space-y-1">
+                                      <span className="font-bold text-brand-green block">{u.firmName}</span>
+                                      <span className="text-[10px] text-brand-dark/50 block font-medium uppercase tracking-wide">{u.niche}</span>
+                                      <span className="text-[10px] text-brand-dark/50 block font-mono">ЕИК: {u.eik}</span>
+                                    </td>
+                                    <td className="border border-brand-green/10 p-3 space-y-0.5">
+                                      <p className="font-semibold">{u.contact}</p>
+                                      <p className="text-brand-dark/60 font-mono">{u.phone}</p>
+                                      <p className="text-brand-dark/60 font-mono">{u.email}</p>
+                                    </td>
+                                    <td className="border border-brand-green/10 p-3 text-center">
+                                      <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${u.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                        {u.status === "approved" ? "Активен" : "Изтекъл"}
+                                      </span>
+                                    </td>
+                                    <td className="border border-brand-green/10 p-3 text-center">
+                                      <button 
+                                        onClick={() => handleToggleUserStatus(u.email, u.status)}
+                                        className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border ${u.status === "approved" ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"}`}
+                                      >
+                                        {u.status === "approved" ? "Спри абонамент" : "Активирай абонамент"}
+                                      </button>
+                                    </td>
+                                    <td className="border border-brand-green/10 p-3 text-center">
+                                      <button 
+                                        onClick={() => handleDeleteUser(u.email)}
+                                        className="text-red-500 hover:text-red-700 transition-colors p-2 cursor-pointer inline-block border-0 bg-transparent"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* ADMIN TAB 3: MATERIALS & TESTS */}
+                  {activeAdminTab === "materials" && (() => {
+                    const activeUsers = usersList.filter(u => u.role === "user" && (u.status === "approved" || u.status === "expired"));
+                    return (
+                      <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
+                        <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
+                          <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                            <FileCheck className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h2 className="font-serif text-xl font-bold text-brand-green">Разпращане на Материали и Тестове</h2>
+                            <p className="text-xs text-brand-dark/50">Изпращайте образователни документи или интерактивни тестове</p>
+                          </div>
+                        </div>
+
+                        {/* Material Type Switcher */}
+                        <div className="flex bg-brand-light p-1 rounded-xl border border-brand-green/5 w-full max-w-sm font-sans">
+                          <button 
+                            onClick={() => setMaterialType("document")}
+                            className={`flex-1 text-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 ${materialType === "document" ? "bg-brand-green text-white shadow" : "text-brand-dark bg-transparent hover:bg-brand-green/5"}`}
+                          >
+                            Нов Документ
+                          </button>
+                          <button 
+                            onClick={() => setMaterialType("test")}
+                            className={`flex-1 text-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 ${materialType === "test" ? "bg-brand-green text-white shadow" : "text-brand-dark bg-transparent hover:bg-brand-green/5"}`}
+                          >
+                            Нов Тест (Куиз)
+                          </button>
+                        </div>
+
+                        {/* Assign form */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start font-sans">
+                          {/* Form controls */}
+                          <div className="lg:col-span-7 space-y-4">
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Получател:</label>
+                              <select 
+                                value={newMaterialTarget}
+                                onChange={(e) => setNewMaterialTarget(e.target.value)}
+                                className="w-full text-xs border border-brand-green/20 rounded-lg p-2.5 bg-brand-light focus:outline-none focus:border-brand-gold font-medium text-brand-dark"
+                              >
+                                <option value="all">Всички одобрени клиенти (глобално)</option>
+                                {activeUsers.map((user) => (
+                                  <option key={user.email} value={user.email}>
+                                    {user.firmName} ({user.email})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Заглавие на материала:</label>
+                              <input 
+                                type="text"
+                                value={newMaterialTitle}
+                                onChange={(e) => setNewMaterialTitle(e.target.value)}
+                                placeholder={materialType === "document" ? "напр. Задължителни ДДД дневници" : "напр. Тест по Добри Хигиенни Практики"}
+                                className="w-full text-xs border border-brand-green/20 rounded-lg p-2.5 bg-brand-light focus:outline-none focus:border-brand-gold font-medium text-brand-dark"
+                              />
+                            </div>
+
+                            {materialType === "document" ? (
+                              <form onSubmit={handleAssignDocument} className="space-y-4">
+                                <div className="space-y-1">
+                                  <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Съдържание на документа:</label>
+                                  <textarea 
+                                    value={newMaterialContent}
+                                    onChange={(e) => setNewMaterialContent(e.target.value)}
+                                    placeholder="Напишете текста на документа или инструкциите..."
+                                    rows={10}
+                                    className="w-full text-xs border border-brand-green/20 rounded-lg p-3 bg-brand-light focus:outline-none focus:border-brand-gold leading-relaxed font-mono text-brand-dark"
+                                  />
+                                </div>
+                                <button 
+                                  type="submit"
+                                  className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer border-0"
+                                >
+                                  Изпрати документа
+                                </button>
+                              </form>
+                            ) : (
+                              // QUIZ / TEST MAKER FORM
+                              <div className="space-y-6">
+                                {/* Visual list of currently added questions */}
+                                <div className="space-y-3">
+                                  <h4 className="text-xs font-bold text-brand-green uppercase tracking-wider border-b border-brand-green/5 pb-2">Добавени въпроси ({newTestQuestions.length})</h4>
+                                  {newTestQuestions.length === 0 ? (
+                                    <p className="text-[11px] text-brand-dark/50 italic font-sans">Все още не сте добавили въпроси към този тест.</p>
+                                  ) : (
+                                    <div className="space-y-2 max-h-56 overflow-y-auto">
+                                      {newTestQuestions.map((q, idx) => (
+                                        <div key={q.id} className="bg-brand-light p-3 rounded-lg border border-brand-green/10 flex items-start justify-between gap-3 text-xs">
+                                          <div className="space-y-1">
+                                            <p className="font-bold text-brand-green">{idx + 1}. {q.text}</p>
+                                            <ul className="list-disc list-inside pl-2 space-y-0.5 text-[11px] text-brand-dark/75">
+                                              {q.options.map((opt, oIdx) => (
+                                                <li key={oIdx} className={oIdx === q.correctIdx ? "text-green-600 font-bold" : ""}>
+                                                  {opt} {oIdx === q.correctIdx && "✓ (верен)"}
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                          <button 
+                                            onClick={() => handleDeleteDraftQuestion(idx)}
+                                            className="text-red-500 hover:text-red-700 transition-colors p-1 border-0 bg-transparent cursor-pointer"
+                                          >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                          </button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Question builder box */}
+                                <form onSubmit={handleAddQuestion} className="bg-brand-light/40 border border-brand-green/10 p-4 rounded-xl space-y-3">
+                                  <span className="text-[10px] font-extrabold text-brand-green uppercase tracking-wide block">Конструктор на Въпрос</span>
+                                  
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Текст на въпроса *</label>
+                                    <input 
+                                      type="text"
+                                      value={draftQuestionText}
+                                      onChange={(e) => setDraftQuestionText(e.target.value)}
+                                      placeholder="напр. При колко градуса се съхранява замразено месо?"
+                                      className="w-full text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-white font-medium text-brand-dark"
+                                    />
+                                  </div>
+
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Опция 1 *</label>
+                                      <input 
+                                        type="text"
+                                        value={draftQuestionOpt1}
+                                        onChange={(e) => setDraftQuestionOpt1(e.target.value)}
+                                        placeholder="Опция А"
+                                        className="w-full text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-white text-brand-dark"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Опция 2 *</label>
+                                      <input 
+                                        type="text"
+                                        value={draftQuestionOpt2}
+                                        onChange={(e) => setDraftQuestionOpt2(e.target.value)}
+                                        placeholder="Опция Б"
+                                        className="w-full text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-white text-brand-dark"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Опция 3 *</label>
+                                      <input 
+                                        type="text"
+                                        value={draftQuestionOpt3}
+                                        onChange={(e) => setDraftQuestionOpt3(e.target.value)}
+                                        placeholder="Опция В"
+                                        className="w-full text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-white text-brand-dark"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center justify-between gap-4 pt-1.5">
+                                    <div className="flex items-center gap-2">
+                                      <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider">Верен отговор:</label>
+                                      <select 
+                                        value={draftQuestionCorrect}
+                                        onChange={(e) => setDraftQuestionCorrect(parseInt(e.target.value))}
+                                        className="text-xs border border-brand-green/20 rounded px-2 py-1 bg-white focus:outline-none focus:border-brand-gold font-bold text-brand-green"
+                                      >
+                                        <option value={0}>Опция 1</option>
+                                        <option value={1}>Опция 2</option>
+                                        <option value={2}>Опция 3</option>
+                                      </select>
+                                    </div>
+
+                                    <button 
+                                      type="submit"
+                                      className="bg-brand-gold hover:bg-amber-500 text-brand-dark font-bold text-[10px] uppercase tracking-wider px-3.5 py-2 rounded transition-colors cursor-pointer shadow-sm border-0"
+                                    >
+                                      Добави въпроса
+                                    </button>
+                                  </div>
+                                </form>
+
+                                <button 
+                                  onClick={handleAssignTest}
+                                  className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer border-0"
+                                >
+                                  Изпрати теста ({newTestQuestions.length} въпроса)
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Right column: active list of assigned items for preview */}
+                          <div className="lg:col-span-5 bg-brand-light/35 p-5 rounded-2xl border border-brand-green/10 space-y-4 font-sans">
+                            <h4 className="text-xs font-bold text-brand-green uppercase tracking-wider border-b border-brand-green/5 pb-2">Преглед на текущи възлагания</h4>
+                            
+                            <div className="space-y-4 max-h-[450px] overflow-y-auto">
+                              {activeUsers.map((user) => {
+                                if (user.assignedDocs.length === 0) return null;
+                                return (
+                                  <div key={user.email} className="space-y-2 bg-white p-3.5 rounded-xl border border-brand-green/5 shadow-sm text-xs">
+                                    <span className="font-bold text-brand-green block leading-tight">{user.firmName}</span>
+                                    <span className="text-[10px] text-brand-dark/50 block font-mono">{user.email}</span>
+                                    
+                                    <div className="space-y-1.5 pt-2 border-t border-brand-green/5">
+                                      {user.assignedDocs.map((doc) => (
+                                        <div key={doc.id} className="flex items-center justify-between text-[11px] gap-2 p-1.5 bg-brand-light/50 rounded">
+                                          <span className="truncate max-w-[150px] font-medium" title={doc.title}>{doc.title}</span>
+                                          <div className="flex items-center gap-1.5 shrink-0">
+                                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full ${doc.status === "completed" ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
+                                              {doc.status === "completed" ? (doc.type === "document" ? "Прочетен" : `${doc.score}%`) : "Чака"}
+                                            </span>
+                                            <button 
+                                              onClick={() => handleDeleteAssignedMaterial(user.email, doc.id)}
+                                              className="text-red-400 hover:text-red-600 transition-colors border-0 bg-transparent cursor-pointer font-bold"
+                                            >
+                                              ×
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                              {activeUsers.every(user => user.assignedDocs.length === 0) && (
+                                <p className="text-[11px] text-brand-dark/50 italic py-4 text-center">Все още няма възложени материали на никой потребител.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ADMIN TAB 4: MESSAGES/CHAT */}
+                  {activeAdminTab === "messages" && (() => {
+                    const chatUsers = usersList.filter(u => u.role === "user" && u.status === "approved");
+                    const activeChatUser = chatUsers.find(u => u.email.toLowerCase() === adminActiveChatEmail.toLowerCase());
+                    return (
+                      <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
+                        <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
+                          <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                            <MessageSquare className="h-6 w-6" />
+                          </div>
+                          <div>
+                            <h2 className="font-serif text-xl font-bold text-brand-green">Чат Център с Клиенти</h2>
+                            <p className="text-xs text-brand-dark/50">Отговаряйте на запитвания и провеждайте консултации</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 border border-brand-green/10 rounded-2xl overflow-hidden h-[550px] bg-brand-light/10 font-sans">
+                          {/* Users List Sidebar */}
+                          <div className="md:col-span-4 border-r border-brand-green/10 flex flex-col h-full bg-white">
+                            <div className="p-4 border-b border-brand-green/5 bg-brand-light/20">
+                              <span className="text-[10px] font-bold text-brand-green uppercase tracking-wide">Активни диалози</span>
+                            </div>
+                            <div className="flex-1 overflow-y-auto divide-y divide-brand-green/5">
+                              {chatUsers.map((user) => {
+                                const lastMsg = user.messages[user.messages.length - 1];
+                                const isSelected = user.email.toLowerCase() === adminActiveChatEmail.toLowerCase();
+                                return (
+                                  <button 
+                                    key={user.email}
+                                    onClick={() => setAdminActiveChatEmail(user.email)}
+                                    className={`w-full text-left p-3.5 flex items-center gap-3 transition-colors cursor-pointer hover:bg-brand-light/40 border-0 bg-transparent ${isSelected ? "bg-brand-light/70 border-l-4 border-brand-gold" : ""}`}
+                                  >
+                                    <div className="w-8 h-8 rounded-full bg-brand-green text-white font-bold flex items-center justify-center text-xs shrink-0">
+                                      {user.contact?.slice(0, 2).toUpperCase() || "КЛ"}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <span className="text-xs font-bold text-brand-green block truncate leading-tight">{user.firmName}</span>
+                                      <span className="text-[10px] text-brand-dark/50 block truncate">{user.contact}</span>
+                                      {lastMsg && (
+                                        <p className="text-[10px] text-brand-dark/65 truncate font-medium mt-0.5">
+                                          {lastMsg.sender === "admin" ? "Вие: " : ""}{lastMsg.text}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                              {chatUsers.length === 0 && (
+                                <p className="text-xs text-brand-dark/50 italic p-4 text-center font-sans">Няма регистрирани клиенти за чат.</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Chat Messages Panel */}
+                          <div className="md:col-span-8 flex flex-col h-full bg-brand-light/5">
+                            {activeChatUser ? (
+                              <>
+                                {/* Header */}
+                                <div className="bg-brand-green px-5 py-3 flex items-center justify-between text-white border-b border-brand-gold/15">
+                                  <div className="flex items-center gap-3 font-sans">
+                                    <div className="w-8 h-8 rounded-full bg-brand-gold text-brand-dark font-bold flex items-center justify-center text-xs shrink-0">
+                                      {activeChatUser.contact?.slice(0, 2).toUpperCase() || "КЛ"}
+                                    </div>
+                                    <div>
+                                      <span className="text-xs font-bold block leading-tight">{activeChatUser.firmName}</span>
+                                      <span className="text-[9px] text-white/70 block">МОЛ: {activeChatUser.contact} ({activeChatUser.phone})</span>
+                                    </div>
+                                  </div>
+                                  <span className="text-[9px] font-bold uppercase tracking-wider bg-white/10 px-2 py-0.5 rounded">
+                                    {activeChatUser.niche}
+                                  </span>
+                                </div>
+
+                                {/* Messages List */}
+                                <div className="flex-1 p-5 overflow-y-auto space-y-4">
+                                  {activeChatUser.messages.length === 0 ? (
+                                    <div className="h-full flex items-center justify-center text-center p-6 text-xs text-brand-dark/50 italic">
+                                      Няма съобщения в този диалог. Изпратете първото съобщение по-долу.
+                                    </div>
+                                  ) : (
+                                    activeChatUser.messages.map((msg) => {
+                                      const isAdmin = msg.sender === "admin";
+                                      return (
+                                        <div 
+                                          key={msg.id}
+                                          className={`flex gap-3 max-w-[85%] ${isAdmin ? "ml-auto flex-row-reverse" : ""}`}
+                                        >
+                                          <div className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center border shrink-0 ${isAdmin ? "bg-brand-gold border-brand-gold text-brand-dark" : "bg-brand-green border-brand-green text-white"}`}>
+                                            {isAdmin ? "ДН" : (activeChatUser.contact?.slice(0, 2).toUpperCase() || "КЛ")}
+                                          </div>
+                                          <div className={`space-y-1 p-3 rounded-2xl shadow-sm text-xs leading-relaxed ${isAdmin ? "bg-brand-green text-white rounded-tr-none" : "bg-white text-brand-dark rounded-tl-none border border-brand-green/5"}`}>
+                                            <p>{msg.text}</p>
+                                            <span className={`text-[8px] block text-right font-mono ${isAdmin ? "text-white/60" : "text-brand-dark/40"}`}>
+                                              {new Date(msg.sentAt).toLocaleTimeString("bg-BG", { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </div>
+
+                                {/* Chat Footer Form */}
+                                <form onSubmit={handleSendAdminMessage} className="bg-white p-3 border-t border-brand-green/10 flex gap-2.5 items-center">
+                                  <input 
+                                    type="text" 
+                                    value={adminChatMessageText}
+                                    onChange={(e) => setAdminChatMessageText(e.target.value)}
+                                    placeholder={`Изпрати съобщение до ${activeChatUser.contact}...`}
+                                    className="flex-1 text-xs px-4 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-brand-light/30 text-brand-dark"
+                                  />
+                                  <button 
+                                    type="submit" 
+                                    className="p-2.5 bg-brand-green hover:bg-brand-green/90 text-white rounded-xl transition-all cursor-pointer border-0 shadow-sm"
+                                  >
+                                    <Send className="h-4 w-4" />
+                                  </button>
+                                </form>
+                              </>
+                            ) : (
+                              <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2 p-6">
+                                <MessageSquare className="h-12 w-12 text-brand-dark/20" />
+                                <h4 className="text-sm font-bold text-brand-green">Няма избран диалог</h4>
+                                <p className="text-xs text-brand-dark/50 max-w-sm">
+                                  Изберете клиент от списъка вляво, за да започнете диалог.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ADMIN TAB 5: LOGS AUDIT */}
+                  {activeAdminTab === "logs" && (() => {
+                    const chatUsers = usersList.filter(u => u.role === "user" && u.status === "approved");
+                    return (
+                      <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
+                        {/* Selection header */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-green/5 pb-4 font-sans">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                              <Search className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h2 className="font-serif text-xl font-bold text-brand-green">Одит на Клиентски Дневници</h2>
+                              <p className="text-xs text-brand-dark/50">Преглеждайте попълнените дневници на одобрените обекти</p>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <label className="text-[11px] font-bold text-brand-dark/70 uppercase">Обект:</label>
+                              <select 
+                                value={auditUserEmail}
+                                onChange={(e) => setAuditUserEmail(e.target.value)}
+                                className="text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-brand-light font-medium text-brand-dark"
+                              >
+                                <option value="">-- Изберете обект --</option>
+                                {chatUsers.map((user) => (
+                                  <option key={user.email} value={user.email}>
+                                    {user.firmName} ({user.email})
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <label className="text-[11px] font-bold text-brand-dark/70 uppercase">Дата:</label>
+                              <input 
+                                type="date" 
+                                value={auditSelectedDate} 
+                                onChange={(e) => setAuditSelectedDate(e.target.value)} 
+                                className="text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-brand-light font-medium text-brand-dark"
+                              />
+                            </div>
+
+                            {auditUserEmail && (
+                              <button 
+                                onClick={handlePrintAuditedLogs}
+                                className="bg-brand-gold hover:bg-amber-500 text-brand-dark font-bold text-xs uppercase px-4 py-2 rounded transition-colors flex items-center gap-1.5 cursor-pointer shadow border-0"
+                              >
+                                <Printer className="h-3.5 w-3.5" />
+                                Одит печат (А4)
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Display audited logs */}
+                        {!auditUserEmail ? (
+                          <div className="text-center py-12 text-xs text-brand-dark/50 italic border border-dashed border-brand-green/10 rounded-xl">
+                            Моля, изберете клиентски обект от падащото меню горе, за да стартирате одит на дневниците.
+                          </div>
+                        ) : (() => {
+                          const targetUserObj = chatUsers.find(u => u.email.toLowerCase() === auditUserEmail.toLowerCase());
+                          return (
+                            <div className="space-y-6">
+                              {/* 1. Входящ Контрол */}
+                              <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10">
+                                <h3 className="font-serif text-sm font-bold text-brand-green">1. Дневник за входящ контрол на суровини</h3>
+                                {(!auditLogs.incoming || auditLogs.incoming.length === 0) ? (
+                                  <p className="text-xs text-brand-dark/50 italic font-sans">Няма записани данни.</p>
+                                ) : (
+                                  <div className="overflow-x-auto font-sans">
+                                    <table className="w-full text-xs text-left border-collapse border border-brand-green/10 bg-white">
+                                      <thead>
+                                        <tr className="bg-brand-green/5 text-[9px] font-bold text-brand-green uppercase">
+                                          <th className="border border-brand-green/10 p-2">Продукт / Суровина</th>
+                                          <th className="border border-brand-green/10 p-2">Доставчик</th>
+                                          <th className="border border-brand-green/10 p-2">Партида</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-16">t° (°C)</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-24">Срок на годност</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-24">Статус</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {auditLogs.incoming.map((row: any, idx: number) => (
+                                          <tr key={idx} className="hover:bg-brand-light/20 text-brand-dark">
+                                            <td className="border border-brand-green/10 p-2 font-medium">{row.product}</td>
+                                            <td className="border border-brand-green/10 p-2">{row.supplier}</td>
+                                            <td className="border border-brand-green/10 p-2 font-mono text-[11px]">{row.batch}</td>
+                                            <td className="border border-brand-green/10 p-2 text-center font-mono">{row.temp}</td>
+                                            <td className="border border-brand-green/10 p-2 text-center font-mono">{row.expiry}</td>
+                                            <td className="border border-brand-green/10 p-2 text-center">
+                                              <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${row.compliant ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                                {row.compliant ? "Изрядна" : "Брак"}
+                                              </span>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* 2. Хладилници */}
+                              <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10">
+                                <h3 className="font-serif text-sm font-bold text-brand-green">2. Дневник за температурния режим на хладилни съоръжения</h3>
+                                {(!auditLogs.fridges || auditLogs.fridges.length === 0) ? (
+                                  <p className="text-xs text-brand-dark/50 italic font-sans">Няма записани данни.</p>
+                                ) : (
+                                  <div className="overflow-x-auto font-sans">
+                                    <table className="w-full text-xs text-left border-collapse border border-brand-green/10 bg-white">
+                                      <thead>
+                                        <tr className="bg-brand-green/5 text-[9px] font-bold text-brand-green uppercase">
+                                          <th className="border border-brand-green/10 p-2">Хладилно съоръжение</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-28">t° Сутрин (°C)</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-28">t° Вечер (°C)</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-32">Статус</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {auditLogs.fridges.map((row: any, idx: number) => {
+                                          const isFreezer = row.name.toLowerCase().includes("фризер");
+                                          const amTemp = parseFloat(row.tempAm);
+                                          const pmTemp = parseFloat(row.tempPm);
+                                          const isAmOk = isFreezer ? (amTemp <= -18) : (amTemp >= 0 && amTemp <= 4);
+                                          const isPmOk = isFreezer ? (pmTemp <= -18) : (pmTemp >= 0 && pmTemp <= 4);
+                                          const isOk = isAmOk && isPmOk;
+                                          return (
+                                            <tr key={idx} className="hover:bg-brand-light/20 text-brand-dark">
+                                              <td className="border border-brand-green/10 p-2 font-medium">{row.name}</td>
+                                              <td className={`border border-brand-green/10 p-2 text-center font-mono ${!isAmOk ? "text-red-600 font-bold" : ""}`}>{row.tempAm}°C</td>
+                                              <td className={`border border-brand-green/10 p-2 text-center font-mono ${!isPmOk ? "text-red-600 font-bold" : ""}`}>{row.tempPm}°C</td>
+                                              <td className="border border-brand-green/10 p-2 text-center">
+                                                <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${isOk ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                                  {isOk ? "Норма" : "Нарушение"}
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* 3 & 4. Hygiene and Staff */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
+                                {/* Hygiene check list */}
+                                <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10 text-xs">
+                                  <h3 className="font-serif text-sm font-bold text-brand-green border-b border-brand-green/5 pb-2">3. Дневник по дезинфекция</h3>
+                                  <div className="space-y-2 pt-1">
+                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+                                      <span>Дезинфекция на инвентар и прибори:</span>
+                                      <span className={`font-bold ${auditLogs.hygiene?.desinfection ? "text-green-600" : "text-brand-dark/40"}`}>
+                                        {auditLogs.hygiene?.desinfection ? "✓ Да" : "✗ Не"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+                                      <span>Почистване на работни повърхности:</span>
+                                      <span className={`font-bold ${auditLogs.hygiene?.surfaces ? "text-green-600" : "text-brand-dark/40"}`}>
+                                        {auditLogs.hygiene?.surfaces ? "✓ Да" : "✗ Не"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+                                      <span>Подобряване и измиване на подове:</span>
+                                      <span className={`font-bold ${auditLogs.hygiene?.floors ? "text-green-600" : "text-brand-dark/40"}`}>
+                                        {auditLogs.hygiene?.floors ? "✓ Да" : "✗ Не"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+                                      <span>Извозване на хранителни отпадъци:</span>
+                                      <span className={`font-bold ${auditLogs.hygiene?.waste ? "text-green-600" : "text-brand-dark/40"}`}>
+                                        {auditLogs.hygiene?.waste ? "✓ Да" : "✗ Не"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Staff Check */}
+                                <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10 text-xs">
+                                  <h3 className="font-serif text-sm font-bold text-brand-green border-b border-brand-green/5 pb-2">4. Лична хигиена и здравен статус</h3>
+                                  <div className="space-y-3 pt-1">
+                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+                                      <span>Извършен входящ филтър:</span>
+                                      <span className={`font-bold ${auditLogs.staff?.checkPassed ? "text-green-600" : "text-brand-dark/40"}`}>
+                                        {auditLogs.staff?.checkPassed ? "✓ Извършен" : "✗ Не"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+                                      <span>Здравословно състояние:</span>
+                                      <span className={`font-bold ${auditLogs.staff?.healthy ? "text-green-600" : "text-red-600"}`}>
+                                        {auditLogs.staff?.healthy ? "Да (Изрядни)" : "Не (Отстранени служители)"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 5. Thermal Cook (optional) */}
+                              {auditLogs.thermal && auditLogs.thermal.length > 0 && (
+                                <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10">
+                                  <h3 className="font-serif text-sm font-bold text-brand-green">5. Дневник за термична обработка (Cooking logs)</h3>
+                                  <div className="overflow-x-auto font-sans">
+                                    <table className="w-full text-xs text-left border-collapse border border-brand-green/10 bg-white">
+                                      <thead>
+                                        <tr className="bg-brand-green/5 text-[9px] font-bold text-brand-green uppercase">
+                                          <th className="border border-brand-green/10 p-2">Ястие / Продукт</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-20">Час</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-28">t° в ядрото (°C)</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-36">Правилно охлаждане</th>
+                                          <th className="border border-brand-green/10 p-2 text-center w-28">Статус</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {auditLogs.thermal.map((row: any, idx: number) => {
+                                          const tempVal = parseFloat(row.tempCook);
+                                          const isTempOk = tempVal >= 75;
+                                          return (
+                                            <tr key={idx} className="hover:bg-brand-light/20 text-brand-dark">
+                                              <td className="border border-brand-green/10 p-2 font-medium">{row.product}</td>
+                                              <td className="border border-brand-green/10 p-2 text-center font-mono">{row.time}</td>
+                                              <td className={`border border-brand-green/10 p-2 text-center font-mono ${!isTempOk ? "text-red-600 font-bold" : ""}`}>{row.tempCook}°C</td>
+                                              <td className="border border-brand-green/10 p-2 text-center font-medium">{row.cooled ? "Да" : "Не се изисква"}</td>
+                                              <td className="border border-brand-green/10 p-2 text-center">
+                                                <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${isTempOk ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                                  {isTempOk ? "Норма" : "Критично (<75°C)"}
+                                                </span>
+                                              </td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* 6. Fryer check (optional) */}
+                              {auditLogs.fryer && auditLogs.fryer.fryerUsed && (
+                                <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10 text-xs font-sans">
+                                  <h3 className="font-serif text-sm font-bold text-brand-green border-b border-brand-green/5 pb-2">6. Дневник за фритюрна мазнина</h3>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1 text-brand-dark">
+                                    <div className="p-2.5 bg-white border border-brand-green/5 rounded flex justify-between items-center">
+                                      <span>Фритюрник използван:</span>
+                                      <span className="font-bold text-brand-green">Да</span>
+                                    </div>
+                                    <div className="p-2.5 bg-white border border-brand-green/5 rounded flex justify-between items-center">
+                                      <span>Качество на мазнината:</span>
+                                      <span className={`font-bold ${auditLogs.fryer.oilQualityOk ? "text-green-600" : "text-red-600"}`}>
+                                        {auditLogs.fryer.oilQualityOk ? "Годна" : "Негодна (Брак)"}
+                                      </span>
+                                    </div>
+                                    <div className="p-2.5 bg-white border border-brand-green/5 rounded flex justify-between items-center">
+                                      <span>Подмяна извършена:</span>
+                                      <span className="font-bold text-green-600">
+                                        {auditLogs.fryer.oilChanged ? "Да" : "Не"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  })()}
+                </>
+              ) : (
+                <>
+                  {(() => {
+                    const currentUser = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+                    return (
+                      <>
+                        {/* TAB 1: DAILY LOGBOOKS (ДНЕВНИЦИ) */}
               {activeTab === "logs" && (
                 <div className="space-y-6">
                   {/* Control panel - Hidden on print */}
@@ -1523,7 +3205,7 @@ export default function ProfilePage() {
                         <h4 className="font-serif text-sm font-bold text-brand-green">Генериран Документ: {(DOCUMENT_TEMPLATES as any)[activeDocKey].title}</h4>
                         <div className="flex gap-2">
                           <button 
-                            onClick={handlePrint}
+                            onClick={() => handlePrintText((DOCUMENT_TEMPLATES as any)[activeDocKey].title, (DOCUMENT_TEMPLATES as any)[activeDocKey].content(firmInfo))}
                             className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-[10px] uppercase px-3 py-1.5 rounded transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             <Printer className="h-3 w-3" /> Принтирай А4
@@ -1546,7 +3228,84 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* TAB 3: MY PURCHASED COURSES */}
+              
+              {/* CLIENT TAB 3: ASSIGNED (ДОКУМЕНТИ & ТЕСТОВЕ) */}
+              {activeTab === "assigned" && (() => {
+                const assignedDocs = currentUser?.assignedDocs || [];
+                return (
+                  <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in font-sans">
+                    <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
+                      <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                        <FileCheck className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h2 className="font-serif text-xl font-bold text-brand-green">Възложени Документи & Тестове</h2>
+                        <p className="text-xs text-brand-dark/50">Преглеждайте и изпълнявайте материалите, изпратени от д-р Николова</p>
+                      </div>
+                    </div>
+
+                    {assignedDocs.length === 0 ? (
+                      <div className="text-center py-10 border border-dashed border-brand-green/10 rounded-xl space-y-2">
+                        <CheckCircle className="h-8 w-8 text-green-500 mx-auto" />
+                        <p className="text-xs text-brand-dark/50 italic font-medium">Нямате нови възложени материали или тестове.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {assignedDocs.map((material) => (
+                          <div 
+                            key={material.id} 
+                            className={`border rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors $${
+                              material.status === "completed" 
+                                ? "bg-green-50/20 border-green-200" 
+                                : "bg-brand-light/30 border-brand-green/10 hover:border-brand-gold/45"
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full $${
+                                material.type === "test" 
+                                  ? "bg-amber-100 text-amber-800" 
+                                  : "bg-blue-100 text-blue-800"
+                              }`}>
+                                {material.type === "test" ? "Тест" : "Документ"}
+                              </span>
+                              <h3 className="font-serif text-base font-bold text-brand-green">{material.title}</h3>
+                              <p className="text-[10px] text-brand-dark/50 font-mono">
+                                Изпратен на: {new Date(material.assignedAt).toLocaleDateString("bg-BG")}
+                              </p>
+                              {material.status === "completed" && material.type === "test" && (
+                                <p className="text-xs font-bold text-green-700">
+                                  Резултат: {material.score}% ({material.userAnswers?.filter((ans, idx) => ans === material.questions?.[idx].correctIdx).length || 0}/{material.questions?.length} верни)
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="shrink-0">
+                              {material.status === "completed" ? (
+                                <span className="inline-flex items-center gap-1 text-xs text-green-600 font-bold bg-green-100/50 px-3 py-1.5 rounded-lg">
+                                  <CheckCircle className="h-4 w-4" /> Изпълнен
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setActiveAssignedMaterial(material);
+                                    if (material.type === "test") {
+                                      setUserTestAnswers(new Array(material.questions?.length || 0).fill(-1));
+                                    }
+                                  }}
+                                  className="px-4 py-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider rounded-lg transition-colors cursor-pointer shadow border-0"
+                                >
+                                  {material.type === "test" ? "Реши Теста" : "Прочети"}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+{/* TAB 3: MY PURCHASED COURSES */}
               {activeTab === "courses" && (
                 <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6">
                   <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
@@ -1613,7 +3372,79 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {/* TAB 4: USEFUL SYSTEM TOOLS (ИНСТРУМЕНТИ) */}
+              
+              {/* CLIENT TAB 5: CHAT (ЧАТ С АДМИНИСТРАТОР) */}
+              {activeTab === "chat" && (() => {
+                const messages = currentUser?.messages || [];
+                return (
+                  <div className="bg-white border border-brand-green/5 rounded-2xl shadow-md overflow-hidden animate-fade-in flex flex-col h-[600px] font-sans">
+                    {/* Header */}
+                    <div className="bg-brand-green px-5 py-4 flex items-center justify-between text-white border-b border-brand-gold/15">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-brand-gold text-brand-dark font-bold flex items-center justify-center text-xs shrink-0">
+                          ДН
+                        </div>
+                        <div>
+                          <h3 className="font-serif text-sm sm:text-base font-bold leading-tight">д-р Данка Николова</h3>
+                          <p className="text-[10px] text-white/70 block">Главен консултант по безопасност на храните</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-bold uppercase tracking-wider bg-white/10 px-2.5 py-0.5 rounded-full">
+                        Администратор
+                      </span>
+                    </div>
+
+                    {/* Messages List */}
+                    <div className="flex-1 p-5 overflow-y-auto bg-brand-light/5 space-y-4">
+                      {messages.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-xs text-brand-dark/50 italic">
+                          <MessageSquare className="h-8 w-8 text-brand-dark/20" />
+                          <p>Нямате предишни съобщения с администратора.</p>
+                          <p className="max-w-xs font-normal">Задайте своите въпроси относно Вашите НАССР системи, дневници или предстоящи БАБХ проверки.</p>
+                        </div>
+                      ) : (
+                        messages.map((msg) => {
+                          const isMe = msg.sender === "user";
+                          return (
+                            <div 
+                              key={msg.id}
+                              className={`flex gap-3 max-w-[85%] $${isMe ? "ml-auto flex-row-reverse" : ""}`}
+                            >
+                              <div className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center border shrink-0 $${isMe ? "bg-brand-green border-brand-green text-white" : "bg-brand-gold border-brand-gold text-brand-dark"}`}>
+                                {isMe ? (currentUser?.contact?.slice(0, 2).toUpperCase() || "КЛ") : "ДН"}
+                              </div>
+                              <div className={`space-y-1 p-3 rounded-2xl shadow-sm text-xs leading-relaxed $${isMe ? "bg-brand-green text-white rounded-tr-none" : "bg-white text-brand-dark rounded-tl-none border border-brand-green/5"}`}>
+                                <p>{msg.text}</p>
+                                <span className={`text-[8px] block text-right font-mono $${isMe ? "text-white/60" : "text-brand-dark/40"}`}>
+                                  {new Date(msg.sentAt).toLocaleTimeString("bg-BG", { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Footer Form */}
+                    <form onSubmit={handleSendUserMessage} className="bg-white p-3 border-t border-brand-green/10 flex gap-2.5 items-center">
+                      <input 
+                        type="text" 
+                        value={userChatMessageText}
+                        onChange={(e) => setUserChatMessageText(e.target.value)}
+                        placeholder="Въведете съобщение към д-р Николова..."
+                        className="flex-1 text-xs px-4 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-brand-light/30 text-brand-dark"
+                      />
+                      <button 
+                        type="submit" 
+                        className="p-2.5 bg-brand-green hover:bg-brand-green/90 text-white rounded-xl transition-all cursor-pointer border-0 shadow-sm"
+                      >
+                        <Send className="h-4 w-4" />
+                      </button>
+                    </form>
+                  </div>
+                );
+              })()}
+{/* TAB 4: USEFUL SYSTEM TOOLS (ИНСТРУМЕНТИ) */}
               {activeTab === "tools" && (
                 <div className="space-y-8">
                   
@@ -1695,7 +3526,7 @@ export default function ProfilePage() {
                       {auditScore !== null && (
                         <div className="flex items-center gap-3 bg-brand-light p-3 rounded-lg border border-brand-green/5">
                           <span className="text-xs font-bold text-brand-dark/70">Резултат:</span>
-                          <span className={`text-xl font-extrabold ${auditScore >= 80 ? "text-green-600" : auditScore >= 50 ? "text-brand-gold" : "text-red-600"}`}>
+                          <span className={`text-xl font-extrabold $${auditScore >= 80 ? "text-green-600" : auditScore >= 50 ? "text-brand-gold" : "text-red-600"}`}>
                             {auditScore}%
                           </span>
                           <span className="text-[10px] text-brand-dark/60 font-medium">
@@ -1816,7 +3647,13 @@ export default function ProfilePage() {
                           </div>
 
                           <button 
-                            onClick={handlePrint}
+                            onClick={() => {
+                              const product = foodType === "milk" ? "Прясно мляко" :
+                                              foodType === "meat" ? "Мляно месо" :
+                                              foodType === "eggs_pasteurised" ? "Яйчен меланж" :
+                                              foodType === "canned_open" ? "Отворена консерва" : "Сготвено ястие";
+                              handlePrintLabel(product, openedTime.replace("T", " "), calculatedExpiry);
+                            }}
                             className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-[10px] uppercase px-4 py-2 rounded transition-colors flex items-center gap-1.5 cursor-pointer mx-auto shadow"
                           >
                             <Printer className="h-3 w-3" /> Принтирай етикет
@@ -1917,6 +3754,12 @@ export default function ProfilePage() {
                 </div>
               )}
 
+            
+                      </>
+                    );
+                  })()}
+                </>
+              )}
             </main>
           </div>
         </div>
