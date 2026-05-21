@@ -10,7 +10,8 @@ import {
   CalendarDays,
   FileSpreadsheet,
   Check,
-  ChevronRight
+  ChevronRight,
+  Sparkles
 } from "lucide-react";
 
 
@@ -21,9 +22,26 @@ interface ServiceItem {
   desc: string;
   scope: string[];
   benefits: string;
+  isVip?: boolean;
 }
 
 const SERVICES: ServiceItem[] = [
+  {
+    title: "ВИП Абонаментна Система „Дигитално Спокойствие“",
+    badge: "Премиум ВИП Услуга",
+    icon: Sparkles,
+    desc: "Пълно дигитално управление на безопасността на храните във Вашия обект. Заменяме всички хартиени папки и досадни дневници с иновативна, автоматизирана платформа. Вие получавате пълно нормативно съответствие и директна денонощна връзка с д-р Данка Николова.",
+    scope: [
+      "Автоматизирано попълване на ежедневните БАБХ дневници (температурен режим, хигиенно състояние, ДДД и входящ контрол) с едно кликване",
+      "Постоянен 24/7 директен чат и консултации с д-р Данка Николова при извънредни казуси или изненадващи проверки",
+      "Вграден генератор на легални БАБХ етикети за отворени продукти с автоматично изчисляване и следене на сроковете за годност",
+      "Приоритетно изготвяне на писмени становища и пълна защита на бизнеса Ви при съставени предписания или актове от БАБХ",
+      "Дигитално обучение за персонала по хигиенни норми с интерактивни тестове и автоматично издаване на валидни сертификати",
+      "Автоматична софтуерна актуализация на НАССР плановете при промяна на меню, персонал, асортимент или държавни закони",
+    ],
+    benefits: "Спестява над 45 часа документална работа месечно, премахва риска от човешка грешка и гарантира 100% защита от глоби.",
+    isVip: true,
+  },
   {
     title: "НАССР Системи (ХАСЕП)",
     badge: "Задължително по Закон",
@@ -141,40 +159,63 @@ export default function Services() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {SERVICES.map((srv, index) => {
             const Icon = srv.icon;
+            const isVip = srv.isVip;
             return (
               <div
                 key={index}
-                className="bg-white border border-brand-green/5 rounded-2xl p-6 sm:p-10 shadow-lg shadow-brand-green/5 hover:border-brand-gold/30 hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                className={`border rounded-2xl p-6 sm:p-10 transition-all duration-300 flex flex-col justify-between ${
+                  isVip
+                    ? "bg-gradient-to-br from-[#0F382B] via-[#0b2b20] to-[#04120d] border-brand-gold/60 shadow-[0_15px_40px_rgba(207,175,99,0.18)] lg:col-span-2 relative overflow-hidden text-white border-2"
+                    : "bg-white border-brand-green/5 text-brand-dark shadow-lg shadow-brand-green/5 hover:border-brand-gold/30 hover:shadow-xl"
+                }`}
               >
+                {isVip && (
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-12 -translate-y-12"></div>
+                )}
                 <div>
                   {/* Top row */}
                   <div className="flex justify-between items-start mb-6">
-                    <div className="bg-brand-green/5 p-3 rounded-lg border border-brand-green/10 text-brand-green">
+                    <div className={`p-3 rounded-lg border ${
+                      isVip 
+                        ? "bg-brand-gold/10 border-brand-gold/30 text-brand-gold" 
+                        : "bg-brand-green/5 border-brand-green/10 text-brand-green"
+                    }`}>
                       <Icon className="h-6 w-6" />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-brand-gold border border-brand-gold/20 px-2.5 py-1 rounded bg-brand-gold/5">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider border px-3 py-1.5 rounded-full ${
+                      isVip 
+                        ? "text-brand-gold border-brand-gold/40 bg-brand-gold/10 font-extrabold flex items-center gap-1.5 animate-pulse" 
+                        : "text-brand-gold border-brand-gold/20 bg-brand-gold/5"
+                    }`}>
+                      {isVip && <span className="w-1.5 h-1.5 rounded-full bg-brand-gold"></span>}
                       {srv.badge}
                     </span>
                   </div>
 
                   {/* Title and description */}
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mb-4">
+                  <h2 className={`font-serif text-xl sm:text-3xl font-bold mb-4 ${
+                    isVip ? "text-brand-gold" : "text-brand-green"
+                  }`}>
                     {srv.title}
                   </h2>
-                  <p className="text-xs sm:text-sm text-brand-dark/70 leading-relaxed mb-6">
+                  <p className={`text-xs sm:text-sm leading-relaxed mb-6 ${
+                    isVip ? "text-white/80" : "text-brand-dark/70"
+                  }`}>
                     {srv.desc}
                   </p>
 
                   {/* Scope / list */}
                   <div className="mb-6">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-brand-dark mb-3">
+                    <h3 className={`text-xs font-bold uppercase tracking-widest mb-3 ${
+                      isVip ? "text-brand-gold" : "text-brand-dark"
+                    }`}>
                       Обхват на услугата:
                     </h3>
                     <ul className="space-y-2.5">
                       {srv.scope.map((item, idx) => (
-                        <li key={idx} className="flex items-start text-xs text-brand-dark/80">
+                        <li key={idx} className="flex items-start text-xs">
                           <Check className="h-4 w-4 text-brand-gold mr-2.5 shrink-0 mt-0.5" />
-                          <span>{item}</span>
+                          <span className={isVip ? "text-white/95" : "text-brand-dark/80"}>{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -182,21 +223,33 @@ export default function Services() {
                 </div>
 
                 {/* Bottom section (benefit + CTA) */}
-                <div className="border-t border-brand-green/5 pt-6 mt-6 space-y-5">
-                  <div className="bg-brand-light p-3 rounded border border-brand-green/5 text-xs text-brand-green flex items-start">
-                    <span className="font-bold mr-1">Полза за бизнеса:</span>
-                    <span className="text-brand-dark/80">{srv.benefits}</span>
+                <div className={`border-t pt-6 mt-6 space-y-5 ${
+                  isVip ? "border-brand-gold/15" : "border-brand-green/5"
+                }`}>
+                  <div className={`p-3.5 rounded border text-xs flex items-start ${
+                    isVip 
+                      ? "bg-brand-gold/10 border-brand-gold/25 text-white/90" 
+                      : "bg-brand-light border-brand-green/5 text-brand-green"
+                  }`}>
+                    <span className={`font-bold mr-1.5 shrink-0 ${isVip ? "text-brand-gold" : ""}`}>Полза за бизнеса:</span>
+                    <span>{srv.benefits}</span>
                   </div>
                   <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                     <Link
                       href="/consultations"
-                      className="w-full sm:w-auto text-center px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors cursor-pointer"
+                      className={`w-full sm:w-auto text-center px-8 py-3.5 text-xs font-bold uppercase tracking-wider rounded transition-colors cursor-pointer ${
+                        isVip 
+                          ? "bg-brand-gold hover:bg-brand-gold-light text-brand-dark shadow-lg shadow-brand-gold/10 font-black" 
+                          : "bg-brand-green text-white hover:bg-brand-green/90"
+                      }`}
                     >
-                      Заяви Консултация
+                      {isVip ? "Влез в Абонамента" : "Заяви Консултация"}
                     </Link>
                     <Link
                       href={`/contact?service=${encodeURIComponent(srv.title)}`}
-                      className="text-xs font-bold text-brand-gold hover:text-brand-gold-dark tracking-wide uppercase transition-colors flex items-center"
+                      className={`text-xs font-bold tracking-wide uppercase transition-colors flex items-center ${
+                        isVip ? "text-white hover:text-brand-gold" : "text-brand-gold hover:text-brand-gold-dark"
+                      }`}
                     >
                       Попитай за оферта
                       <ChevronRight className="h-4 w-4 ml-1" />
