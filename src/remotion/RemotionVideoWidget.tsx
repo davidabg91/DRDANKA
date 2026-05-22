@@ -7,39 +7,36 @@ import Link from "next/link";
 
 export default function RemotionVideoWidget() {
   return (
-    <div className="relative group lg:col-span-5">
+    <div className="relative group lg:col-span-5 h-[650px]">
       {/* Ambient glow */}
       <div className="absolute -inset-1 bg-gradient-to-br from-brand-gold/30 via-amber-400/10 to-emerald-500/20 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition-all duration-700"></div>
 
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/8 bg-gradient-to-br from-[#0a1f17] via-[#0d2b1c] to-[#081410] flex flex-col">
-        {/* Remotion Player inside the card */}
-        <div className="aspect-video w-full bg-black relative border-b border-brand-gold/10">
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/8 bg-gradient-to-br from-[#0a1f17] via-[#0d2b1c] to-[#081410] flex flex-col h-full">
+        {/* Remotion Player inside the card - Transparent UI Animation */}
+        <div className="w-full relative flex-grow min-h-[300px]">
           <Player
             component={SubscriptionVideo}
             durationInFrames={300}
-            compositionWidth={1280}
-            compositionHeight={720}
+            compositionWidth={1000}
+            compositionHeight={800}
             fps={30}
-            style={{ width: "100%", height: "100%" }}
-            controls={true}
+            style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
+            controls={false}
             autoPlay={true}
             loop={true}
           />
         </div>
         
         {/* Card Content & Buttons */}
-        <div className="p-6 sm:p-8 flex flex-col justify-center flex-grow space-y-4">
+        <div className="p-6 sm:p-8 flex flex-col justify-end space-y-4 shrink-0 bg-gradient-to-t from-[#081410] to-transparent relative z-10 -mt-10">
           <div className="text-center mb-2">
-            <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white leading-tight mb-1">
+            <h3 className="font-serif text-xl sm:text-2xl font-bold text-white leading-tight mb-1">
               Абонамент
             </h3>
             <h3 className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold leading-tight">
               „БАБХ Спокойствие“
             </h3>
           </div>
-          <p className="text-sm text-white/65 leading-relaxed text-center mb-4">
-            Забравете за страха от проверки. Ние управляваме цялата Ви БАБХ документация, дневници и юридическа защита — вие се фокусирате върху бизнеса.
-          </p>
           
           <div className="pt-2">
             <Link
