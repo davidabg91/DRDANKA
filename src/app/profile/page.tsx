@@ -1277,6 +1277,32 @@ export default function ProfilePage() {
     setCalculatedExpiry(formatted);
   };
 
+  // Unread Messages Calculation
+  const currentUserObj = usersList.find(u => u.email === currentUserEmail);
+  const hasUnreadUserMessages = currentUserObj?.messages?.some((m: any) => m.sender === "admin" && !m.isRead) || false;
+  const hasUnreadAdminMessages = usersList.some(u => u.messages?.some((m: any) => m.sender === "user" && !m.isRead));
+  
+  const handleOpenUserChat = () => {
+    setActiveTab("chat");
+    if (currentUserObj && currentUserObj.messages?.some((m: any) => m.sender === "admin" && !m.isRead)) {
+      const updatedMessages = currentUserObj.messages.map((m: any) => 
+        m.sender === "admin" ? { ...m, isRead: true } : m
+      );
+      saveUsers(usersList.map(u => u.email === currentUserObj.email ? { ...u, messages: updatedMessages } : u));
+    }
+  };
+
+  const handleOpenAdminUserChat = (email: string) => {
+    setAdminActiveChatEmail(email);
+    const userToUpdate = usersList.find(u => u.email === email);
+    if (userToUpdate && userToUpdate.messages?.some((m: any) => m.sender === "user" && !m.isRead)) {
+      const updatedMessages = userToUpdate.messages.map((m: any) => 
+        m.sender === "user" ? { ...m, isRead: true } : m
+      );
+      saveUsers(usersList.map(u => u.email === email ? { ...u, messages: updatedMessages } : u));
+    }
+  };
+
   return (
     <div className="bg-brand-light min-h-screen pb-20">
       {/* 1. Header Hero Banner - Hidden on print */}
@@ -1671,10 +1697,13 @@ export default function ProfilePage() {
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("messages")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
                       >
                         <MessageSquare className="h-4 w-4" />
                         Чат с Клиенти
+                        {hasUnreadAdminMessages && (
+                          <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
+                        )}
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("logs")}
@@ -1715,11 +1744,14 @@ export default function ProfilePage() {
                         Моите Обучения
                       </button>
                       <button 
-                        onClick={() => setActiveTab("chat")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "chat" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        onClick={handleOpenUserChat}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "chat" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
                       >
                         <MessageSquare className="h-4 w-4" />
                         Чат с Администратор
+                        {hasUnreadUserMessages && (
+                          <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
+                        )}
                       </button>
                       <button 
                         onClick={() => setActiveTab("tools")}
