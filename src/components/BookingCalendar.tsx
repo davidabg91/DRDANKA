@@ -112,7 +112,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
         setStep(2); // Auto-advance to date picker
       }
     } else {
-      const defaultPkg = packages.find((p) => p.id === "startup") || packages[0];
+      const defaultPkg = packages.find((p) => p.id === "free-intro") || packages.find((p) => p.id === "startup") || packages[0];
       setSelectedPackage(defaultPkg);
     }
   }, [initialPackageId, mode, packages]);
@@ -208,7 +208,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                   }`}
                 >
                   <div>
-                    <div className="flex justify-between items-start mb-2 gap-2">
+                    <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-2 gap-2">
                       <div className="flex items-start gap-2.5">
                         <div className={`mt-0.5 shrink-0 transition-colors duration-300 ${selectedPackage.id === pkg.id ? 'text-brand-gold' : 'text-brand-green/20 group-hover:text-brand-gold/50'}`}>
                           <CheckCircle className="h-5 w-5" />
