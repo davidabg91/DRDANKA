@@ -207,21 +207,21 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                       : "border-brand-green/10 bg-white hover:border-brand-gold/50 hover:shadow-xl hover:-translate-y-1"
                   }`}
                 >
+                  {pkg.id === "free-intro" && (
+                    <div className="absolute top-0 right-0 bg-brand-gold text-brand-green px-3 py-1 text-[9px] font-bold uppercase tracking-wider rounded-bl-lg shadow-sm z-10">
+                      Препоръчано
+                    </div>
+                  )}
                   <div>
-                    <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-2 gap-2">
+                    <div className="flex items-start mb-2 mt-2 gap-2">
                       <div className="flex items-start gap-2.5">
                         <div className={`mt-0.5 shrink-0 transition-colors duration-300 ${selectedPackage.id === pkg.id ? 'text-brand-gold' : 'text-brand-green/20 group-hover:text-brand-gold/50'}`}>
                           <CheckCircle className="h-5 w-5" />
                         </div>
-                        <h5 className="font-serif text-base font-bold text-brand-green leading-snug">
+                        <h5 className="font-serif text-base font-bold text-brand-green leading-snug pr-6">
                           {pkg.name}
                         </h5>
                       </div>
-                      {pkg.id === "free-intro" && (
-                        <span className="text-[9px] font-bold text-brand-green bg-brand-gold px-2 py-0.5 rounded uppercase tracking-wider whitespace-nowrap shrink-0">
-                          Препоръчано
-                        </span>
-                      )}
                     </div>
                     <div className="flex space-x-3 mb-4 text-xs font-semibold text-brand-dark/50">
                       <span className="flex items-center">
