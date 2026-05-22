@@ -201,17 +201,22 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                 <div
                   key={pkg.id}
                   onClick={() => setSelectedPackage(pkg)}
-                  className={`border rounded-xl p-5 cursor-pointer transition-all duration-300 flex flex-col justify-between hover:shadow-md ${
+                  className={`relative overflow-hidden border-2 rounded-xl p-5 cursor-pointer transition-all duration-300 flex flex-col justify-between group ${
                     selectedPackage.id === pkg.id
-                      ? "border-brand-gold bg-brand-gold/5 shadow-brand-gold/10"
-                      : "border-brand-green/10 bg-white"
+                      ? "border-brand-gold bg-brand-gold/5 shadow-lg shadow-brand-gold/20 scale-[1.02]"
+                      : "border-brand-green/10 bg-white hover:border-brand-gold/50 hover:shadow-xl hover:-translate-y-1"
                   }`}
                 >
                   <div>
                     <div className="flex justify-between items-start mb-2 gap-2">
-                      <h5 className="font-serif text-base font-bold text-brand-green leading-snug">
-                        {pkg.name}
-                      </h5>
+                      <div className="flex items-start gap-2.5">
+                        <div className={`mt-0.5 shrink-0 transition-colors duration-300 ${selectedPackage.id === pkg.id ? 'text-brand-gold' : 'text-brand-green/20 group-hover:text-brand-gold/50'}`}>
+                          <CheckCircle className="h-5 w-5" />
+                        </div>
+                        <h5 className="font-serif text-base font-bold text-brand-green leading-snug">
+                          {pkg.name}
+                        </h5>
+                      </div>
                       {pkg.id === "free-intro" && (
                         <span className="text-[9px] font-bold text-brand-green bg-brand-gold px-2 py-0.5 rounded uppercase tracking-wider whitespace-nowrap shrink-0">
                           Препоръчано
