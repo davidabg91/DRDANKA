@@ -236,16 +236,21 @@ export default function ProfilePage() {
       if (firebaseUser) {
         setIsLoggedIn(true);
         setCurrentUserEmail(firebaseUser.email || "");
-        const matchedUser = firebaseUsers.find(u => u.email === firebaseUser.email);
-        if (matchedUser) {
-          setUserRole(matchedUser.role);
-          setFirmInfo({
-            name: matchedUser.firmName,
-            eik: matchedUser.eik,
-            address: matchedUser.address,
-            manager: matchedUser.manager,
-            niche: matchedUser.niche
-          });
+        
+        if (firebaseUser.email === "d.nikolova.haccp@gmail.com") {
+          setUserRole("admin");
+        } else {
+          const matchedUser = firebaseUsers.find(u => u.email === firebaseUser.email);
+          if (matchedUser) {
+            setUserRole(matchedUser.role);
+            setFirmInfo({
+              name: matchedUser.firmName,
+              eik: matchedUser.eik,
+              address: matchedUser.address,
+              manager: matchedUser.manager,
+              niche: matchedUser.niche
+            });
+          }
         }
       } else {
         setIsLoggedIn(false);
