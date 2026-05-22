@@ -65,7 +65,7 @@ export default function Consultations() {
         </div>
 
         {/* Booking Calendar Integration */}
-        <div className="space-y-6">
+        <div id="booking" className="space-y-6 scroll-mt-32">
           <div className="text-center max-w-xl mx-auto space-y-2 mb-8">
             <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green">
               Изберете ден и час за среща

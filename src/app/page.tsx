@@ -135,7 +135,7 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 pt-2">
                 <Link
-                  href="/consultations"
+                  href="/consultations#booking"
                   className="px-8 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest transition-all duration-300 rounded shadow-lg shadow-brand-gold/20 flex items-center justify-center cursor-pointer"
                 >
                   Безплатен 10-мин. разговор
