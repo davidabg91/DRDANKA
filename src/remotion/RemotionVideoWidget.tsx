@@ -16,7 +16,7 @@ export default function RemotionVideoWidget() {
         <div className="w-full relative flex-grow min-h-[300px]">
           <Player
             component={SubscriptionVideo}
-            durationInFrames={300}
+            durationInFrames={375}
             compositionWidth={1000}
             compositionHeight={800}
             fps={30}
