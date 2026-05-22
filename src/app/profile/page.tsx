@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useAuth, useDankaUsers } from "@/lib/firebaseHooks";
+import { auth, db } from "@/lib/firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+
 import { 
   User, 
   Building, 
@@ -206,6 +211,50 @@ const COURSE_CONTENTS = {
 
 export default function ProfilePage() {
   // Authentication states
+  const { user: firebaseUser, loading: authLoading } = useAuth();
+  const { users: firebaseUsers, loading: usersLoading, setFullUser, updateUser } = useDankaUsers();
+
+  const saveUsers = (newUsers: DankaUser[]) => {
+    setUsersList(newUsers);
+    // Sync changed users to Firestore
+    newUsers.forEach(nu => {
+      const oldUser = usersList.find(ou => ou.email === nu.email);
+      if (!oldUser || JSON.stringify(oldUser) !== JSON.stringify(nu)) {
+        setFullUser(nu.email, nu);
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (!usersLoading && firebaseUsers.length > 0) {
+      setUsersList(firebaseUsers);
+    }
+  }, [firebaseUsers, usersLoading]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      if (firebaseUser) {
+        setIsLoggedIn(true);
+        setCurrentUserEmail(firebaseUser.email || "");
+        const matchedUser = firebaseUsers.find(u => u.email === firebaseUser.email);
+        if (matchedUser) {
+          setUserRole(matchedUser.role);
+          setFirmInfo({
+            name: matchedUser.firmName,
+            eik: matchedUser.eik,
+            address: matchedUser.address,
+            manager: matchedUser.manager,
+            niche: matchedUser.niche
+          });
+        }
+      } else {
+        setIsLoggedIn(false);
+        setCurrentUserEmail("");
+        setUserRole("user");
+      }
+    }
+  }, [firebaseUser, authLoading, firebaseUsers]);
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -409,7 +458,7 @@ export default function ProfilePage() {
           ]
         }
       ];
-      localStorage.setItem("danka_users", JSON.stringify(users));
+      // localStorage.setItem("danka_users", JSON.stringify(users));
     }
 
     // Ensure the admin user is always in the users array
@@ -432,7 +481,7 @@ export default function ProfilePage() {
         messages: []
       };
       users = [adminUser, ...users];
-      localStorage.setItem("danka_users", JSON.stringify(users));
+      // localStorage.setItem("danka_users", JSON.stringify(users));
     }
 
     setUsersList(users);
@@ -616,109 +665,66 @@ export default function ProfilePage() {
   };
 
       // Sign In handler checking local users array
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authEmail || !authPassword) {
       alert("Моля, попълнете имейл и парола.");
       return;
     }
-
     const cleanEmail = authEmail.trim().toLowerCase();
-    const cleanPassword = authPassword.trim();
 
-    // Direct Admin check
-    if (cleanEmail === "d.nikolova.haccp@gmail.com" && cleanPassword === "davida9166") {
-      setIsLoggedIn(true);
-      setCurrentUserEmail("d.nikolova.haccp@gmail.com");
-      setUserRole("admin");
-      localStorage.setItem("danka_auth_logged", "true");
-      localStorage.setItem("danka_current_user_email", "d.nikolova.haccp@gmail.com");
-      return;
-    }
-
-    const emailExists = usersList.some(u => u.email.trim().toLowerCase() === cleanEmail);
-    const matchedUser = usersList.find(u => u.email.trim().toLowerCase() === cleanEmail && u.password === cleanPassword);
-
-    if (matchedUser) {
-      if (matchedUser.status === "pending") {
-        setPendingEmail(matchedUser.email);
-        setPendingFirmName(matchedUser.firmName);
-        setIsPendingApproval(true);
-        return;
-      } else if (matchedUser.status === "expired") {
-        alert("Абонаментът на този профил е изтекъл. Моля свържете се с администратор.");
+    try {
+      if (cleanEmail === "d.nikolova.haccp@gmail.com" && authPassword === "davida9166") {
+        try {
+          await signInWithEmailAndPassword(auth, cleanEmail, authPassword);
+        } catch (err: any) {
+          if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+             await createUserWithEmailAndPassword(auth, cleanEmail, authPassword);
+             await setDoc(doc(db, "users", cleanEmail), {
+                email: cleanEmail,
+                password: "---",
+                firmName: "БАБХ Спокойствие",
+                eik: "123456789",
+                contact: "д-р Данка Николова",
+                phone: "0888888888",
+                niche: "Консултации",
+                desc: "Администратор на системата",
+                address: "гр. София, ул. БАБХ 1",
+                manager: "д-р Данка Николова",
+                status: "approved",
+                role: "admin",
+                assignedDocs: [],
+                messages: []
+             });
+          } else {
+             alert("Грешка при вход: " + err.message);
+          }
+        }
         return;
       }
 
-      setIsLoggedIn(true);
-      setCurrentUserEmail(matchedUser.email);
-      setUserRole(matchedUser.role);
-      setFirmInfo({
-        name: matchedUser.firmName,
-        eik: matchedUser.eik,
-        address: matchedUser.address,
-        manager: matchedUser.manager || matchedUser.contact,
-        niche: matchedUser.niche
-      });
-      localStorage.setItem("danka_auth_logged", "true");
-      localStorage.setItem("danka_current_user_email", matchedUser.email);
-      
-      // Load their settings if present
-      localStorage.setItem("danka_firm_info", JSON.stringify({
-        name: matchedUser.firmName,
-        eik: matchedUser.eik,
-        address: matchedUser.address,
-        manager: matchedUser.manager || matchedUser.contact,
-        niche: matchedUser.niche
-      }));
-    } else if (emailExists) {
-      alert("Грешна парола за този имейл адрес.");
-    } else {
-      // Create auto approved demo user if not existing to preserve legacy testing experience
-      const newUser: DankaUser = {
-        email: cleanEmail,
-        password: cleanPassword,
-        firmName: "Нов Демо Обект",
-        eik: "207999999",
-        contact: "Демо Потребител",
-        phone: "0899000000",
-        niche: "Заведение за хранене",
-        desc: "Автоматично генериран тестов профил.",
-        address: "гр. София, ул. Примерна 1",
-        manager: "Демо Потребител",
-        status: "approved",
-        role: "user",
-        assignedDocs: [],
-        messages: []
-      };
-      const updatedList = [...usersList, newUser];
-      setUsersList(updatedList);
-      localStorage.setItem("danka_users", JSON.stringify(updatedList));
-
-      setIsLoggedIn(true);
-      setCurrentUserEmail(cleanEmail);
-      setUserRole("user");
-      setFirmInfo({
-        name: newUser.firmName,
-        eik: newUser.eik,
-        address: newUser.address,
-        manager: newUser.manager,
-        niche: newUser.niche
-      });
-      localStorage.setItem("danka_auth_logged", "true");
-      localStorage.setItem("danka_current_user_email", cleanEmail);
-      localStorage.setItem("danka_firm_info", JSON.stringify({
-        name: newUser.firmName,
-        eik: newUser.eik,
-        address: newUser.address,
-        manager: newUser.manager,
-        niche: newUser.niche
-      }));
+      await signInWithEmailAndPassword(auth, cleanEmail, authPassword);
+      const matchedUser = firebaseUsers.find(u => u.email === cleanEmail);
+      if (matchedUser) {
+        if (matchedUser.status === "pending") {
+          setPendingEmail(matchedUser.email);
+          setPendingFirmName(matchedUser.firmName);
+          setIsPendingApproval(true);
+          await signOut(auth);
+          return;
+        } else if (matchedUser.status === "expired") {
+          alert("Абонаментът на този профил е изтекъл. Моля свържете се с администратор.");
+          await signOut(auth);
+          return;
+        }
+      }
+    } catch (err: any) {
+      alert("Грешка при вход. Моля проверете имейл и парола.");
     }
   };
 
   // Register & Apply handler
-  const handleRegisterAndApply = (e: React.FormEvent) => {
+  const handleRegisterAndApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regEmail || !regPassword || !applyFirmName || !applyContact || !applyPhone || !applyDesc) {
       alert("Моля, попълнете всички полета с червена звездичка (*).");
@@ -729,36 +735,39 @@ export default function ProfilePage() {
       return;
     }
 
-    // Check duplicate
-    if (usersList.some(u => u.email.toLowerCase() === regEmail.toLowerCase())) {
-      alert("Този имейл вече е регистриран.");
-      return;
+    try {
+      await createUserWithEmailAndPassword(auth, regEmail, regPassword);
+      const pendingUser: DankaUser = {
+        email: regEmail,
+        password: "---",
+        firmName: applyFirmName,
+        eik: applyEik || "Няма въведен",
+        contact: applyContact,
+        phone: applyPhone,
+        niche: applyNiche,
+        desc: applyDesc,
+        address: "Не е въведен",
+        manager: applyContact,
+        status: "pending",
+        role: "user",
+        assignedDocs: [],
+        messages: []
+      };
+      
+      const updatedList = [...usersList, pendingUser];
+      saveUsers(updatedList);
+      
+      setPendingEmail(regEmail);
+      setPendingFirmName(applyFirmName);
+      setIsPendingApproval(true);
+      await signOut(auth);
+    } catch (err: any) {
+      if (err.code === 'auth/email-already-in-use') {
+        alert("Този имейл вече е регистриран.");
+      } else {
+        alert("Грешка при регистрация: " + err.message);
+      }
     }
-
-    const pendingUser: DankaUser = {
-      email: regEmail,
-      password: regPassword,
-      firmName: applyFirmName,
-      eik: applyEik || "Няма въведен",
-      contact: applyContact,
-      phone: applyPhone,
-      niche: applyNiche,
-      desc: applyDesc,
-      address: "Не е въведен",
-      manager: applyContact,
-      status: "pending",
-      role: "user",
-      assignedDocs: [],
-      messages: []
-    };
-
-    const updatedList = [...usersList, pendingUser];
-    setUsersList(updatedList);
-    localStorage.setItem("danka_users", JSON.stringify(updatedList));
-
-    setPendingEmail(regEmail);
-    setPendingFirmName(applyFirmName);
-    setIsPendingApproval(true);
   };
 
   // Simulate approval
@@ -770,8 +779,7 @@ export default function ProfilePage() {
       return u;
     });
 
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
 
     const approvedUser = updatedUsers.find(u => u.email.toLowerCase() === pendingEmail.toLowerCase());
     if (approvedUser) {
@@ -799,9 +807,8 @@ export default function ProfilePage() {
   };
 
   // Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem("danka_auth_logged");
-    localStorage.removeItem("danka_current_user_email");
+  const handleLogout = async () => {
+    await signOut(auth);
     setIsLoggedIn(false);
     setCurrentUserEmail("");
     setUserRole("user");
@@ -816,8 +823,7 @@ export default function ProfilePage() {
       }
       return u;
     });
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
     alert(`Обектът с имейл ${email} беше успешно одобрен!`);
   };
 
@@ -830,16 +836,14 @@ export default function ProfilePage() {
       }
       return u;
     });
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
   };
 
   // Admin deletes user
   const handleDeleteUser = (email: string) => {
     if (!confirm(`Сигурни ли сте, че искате да изтриете потребител ${email}?`)) return;
     const updatedUsers = usersList.filter(u => u.email.toLowerCase() !== email.toLowerCase());
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
   };
 
   const handleSaveFirm = (e: React.FormEvent) => {
@@ -858,8 +862,7 @@ export default function ProfilePage() {
       }
       return u;
     });
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
     localStorage.setItem("danka_firm_info", JSON.stringify(firmInfo));
     alert("Фирмените настройки бяха успешно запазени!");
   };
@@ -891,8 +894,7 @@ export default function ProfilePage() {
       return u;
     });
 
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
     
     // Reset inputs
     setNewMaterialTitle("");
@@ -963,8 +965,7 @@ export default function ProfilePage() {
       return u;
     });
 
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
     
     setNewMaterialTitle("");
     setNewTestQuestions([]);
@@ -982,8 +983,7 @@ export default function ProfilePage() {
       }
       return u;
     });
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
   };
 
   // Admin sends chat message
@@ -1008,8 +1008,7 @@ export default function ProfilePage() {
       return u;
     });
 
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
     setAdminChatMessageText("");
   };
 
@@ -1035,8 +1034,7 @@ export default function ProfilePage() {
       return u;
     });
 
-    setUsersList(updatedUsers);
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
+    saveUsers(updatedUsers);
     setUserChatMessageText("");
   };
 
@@ -1075,8 +1073,7 @@ export default function ProfilePage() {
       return u;
     });
 
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
-    setUsersList(updatedUsers);
+    saveUsers(updatedUsers);
     
     alert(`Тестът е решен успешно! Вашият резултат е: ${scorePercent}% (${correctCount}/${questions.length} верни отговора).`);
     setActiveAssignedMaterial(null);
@@ -1106,8 +1103,7 @@ export default function ProfilePage() {
       return u;
     });
 
-    localStorage.setItem("danka_users", JSON.stringify(updatedUsers));
-    setUsersList(updatedUsers);
+    saveUsers(updatedUsers);
     alert("Документът е отбелязан като прочетен!");
   };
 
