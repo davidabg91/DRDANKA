@@ -211,6 +211,37 @@ const COURSE_CONTENTS = {
   }
 };
 
+
+function getDefaultLogsForNiche(niche: string) {
+  const sector = getSectorForNiche(niche);
+  let incoming = [];
+  let fridges = [];
+  
+  if (sector.includes("Производство") || sector.includes("Хлебни") || sector.includes("Млечна")) {
+    incoming = [{ product: "Сурово мляко / Брашно", supplier: "Ферма X / Мелница Y", batch: "L102", temp: "4", expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], compliant: true }];
+    fridges = [{ name: "Хладилна камера суровини", tempAm: "2", tempPm: "3" }, { name: "Хладилна камера готова продукция", tempAm: "2", tempPm: "4" }];
+  } else if (sector.includes("Напитки") || sector.includes("Консервирани") || sector.includes("Сладкарски") || sector.includes("Пчелни")) {
+    incoming = [{ product: "Захар / Оцетна киселина / Плодове", supplier: "Склад на едро / Земеделец", batch: "L992", temp: "20", expiry: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], compliant: true }];
+    fridges = [{ name: "Хладилник за суровини", tempAm: "4", tempPm: "5" }];
+  } else if (sector === "Търговия с храни") {
+    incoming = [{ product: "Пакетирани захарни изделия / Млечни", supplier: "Дистрибутор ООД", batch: "L123", temp: "20", expiry: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], compliant: true }];
+    fridges = [{ name: "Хладилна витрина (млечни)", tempAm: "2", tempPm: "4" }, { name: "Фризер (сладолед)", tempAm: "-18", tempPm: "-19" }];
+  } else if (sector === "МТХ – Мобилни търговски обекти") {
+    incoming = [{ product: "Замразени полуфабрикати / Хлебчета", supplier: "Склад на едро", batch: "P29", temp: "-18", expiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], compliant: true }];
+    fridges = [{ name: "Хладилник под плот", tempAm: "3", tempPm: "4" }, { name: "Фризер ракла", tempAm: "-18", tempPm: "-19" }];
+  } else {
+    // Default / Заведения
+    incoming = [{ product: "Охладено пилешко месо", supplier: "Метро Кеш & Кери", batch: "P2981-L", temp: "2", expiry: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], compliant: true }];
+    fridges = [
+      { name: "Хладилна витрина (салати)", tempAm: "3", tempPm: "4" },
+      { name: "Хладилник за месо", tempAm: "1", tempPm: "2" },
+      { name: "Основен фризер", tempAm: "-19", tempPm: "-18" }
+    ];
+  }
+  
+  return { incoming, fridges };
+}
+
 export default function ProfilePage() {
   // Authentication states
   const { user: firebaseUser, loading: authLoading } = useAuth();
@@ -533,14 +564,9 @@ export default function ProfilePage() {
       setLogFryer(parsed.fryer || { fryerUsed: false, oilQualityOk: true, oilChanged: false });
     } else {
       // Default empty structures based on niche
-      setLogIncoming([
-        { product: "Охладено пилешко месо", supplier: "Метро Кеш & Кери", batch: "P2981-L", temp: "2", expiry: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], compliant: true }
-      ]);
-      setLogFridges([
-        { name: "Хладилна витрина (салати)", tempAm: "3", tempPm: "4" },
-        { name: "Хладилник за месо", tempAm: "1", tempPm: "2" },
-        { name: "Основен фризер", tempAm: "-19", tempPm: "-18" }
-      ]);
+            const defaults = getDefaultLogsForNiche(firmInfo.niche);
+      setLogIncoming(defaults.incoming);
+      setLogFridges(defaults.fridges);
       setLogHygiene({ desinfection: false, surfaces: false, floors: false, waste: false });
       setLogStaff({ checkPassed: false, healthy: true });
       setLogThermal([
@@ -839,8 +865,25 @@ export default function ProfilePage() {
       return u;
     });
     saveUsers(updatedUsers);
-    localStorage.setItem("danka_firm_info", JSON.stringify(firmInfo));
-    alert("Фирмените настройки бяха успешно запазени!");
+        localStorage.setItem("danka_firm_info", JSON.stringify(firmInfo));
+    
+    // Automatically reset example logs if they look like the default ones
+    if (logIncoming.length === 1 && (logIncoming[0].product.includes("пилешко месо") || logIncoming[0].product.includes("Захар") || logIncoming[0].product.includes("Брашно") || logIncoming[0].product.includes("Млечни") || logIncoming[0].product.includes("мляко") || logIncoming[0].product.includes("полуфабрикати"))) {
+      const defaults = getDefaultLogsForNiche(firmInfo.niche);
+      setLogIncoming(defaults.incoming);
+      setLogFridges(defaults.fridges);
+      
+      const key = `danka_logs_${currentUserEmail.replace("@", "_").replace(".", "_")}_${selectedDate}`;
+      const storedLogs = localStorage.getItem(key);
+      if (storedLogs) {
+        const parsed = JSON.parse(storedLogs);
+        parsed.incoming = defaults.incoming;
+        parsed.fridges = defaults.fridges;
+        localStorage.setItem(key, JSON.stringify(parsed));
+      }
+    }
+    
+    alert("Фирмените настройки бяха успешно запазени! Примерните данни в дневниците бяха обновени спрямо новия сектор.");
   };
 
   // Admin assigns document
