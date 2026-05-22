@@ -121,7 +121,7 @@ export default function Home() {
             {/* Hero Content */}
             <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
               <span className="inline-flex items-center px-3 py-1 rounded bg-brand-gold/10 border border-brand-gold/30 text-xs font-semibold text-brand-gold uppercase tracking-wider">
-                <Award className="h-3.5 w-3.5 mr-1.5" /> 27 години опит в безопасността на храните
+                <Award className="h-3.5 w-3.5 mr-1.5" /> 27 години практика в контрола и безопасността на храните
               </span>
               
               <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.1] max-w-2xl mx-auto lg:mx-0">
