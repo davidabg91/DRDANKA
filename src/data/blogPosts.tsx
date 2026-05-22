@@ -14,6 +14,93 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    id: "abonamentna-sistema-babh",
+    title: "Първата в България цялостна абонаментна система за безопасност на храните",
+    summary: "Забравете за generic платформите. Представяме ви първата система в България, която съчетава софтуер, обучения и реална човешка експертиза за 100% успеваемост пред БАБХ.",
+    date: "22 май 2026 г.",
+    readTime: "5 мин. четене",
+    image: "/blog_registration.png",
+    tags: ["Иновация", "Абонамент", "БАБХ", "Софтуер"],
+    content: (
+      <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
+        <p>
+          Дигитализацията в хранителния бизнес вече не е просто тенденция – тя е необходимост. Въпреки това, много собственици на заведения и производители се сблъскват с огромен проблем, когато се опитат да внедрят софтуер за управление на безопасността на храните.
+        </p>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Защо масовите платформи се провалят в България?</h3>
+        <p>
+          Пазарът е пълен с различни "универсални" системи за управление, но повечето от тях имат няколко фатални недостатъка:
+        </p>
+        <ul className="list-disc pl-5 space-y-3 mt-4 text-brand-dark/80">
+          <li>Те са <strong>generic (общи)</strong> – направени са да работят навсякъде, което означава, че не работят перфектно никъде.</li>
+          <li><strong>НЕ са съобразени с България</strong> – липсват им специфичните изисквания на родното законодателство.</li>
+          <li><strong>НЕ познават БАБХ</strong> – инспекторите имат конкретни изисквания за начина, по който изглеждат и се водят дневниците, които чуждите софтуери не покриват.</li>
+          <li><strong>НЕ дават човешка консултация</strong> – софтуерът може да Ви напомни да измерите температурата, но няма да Ви каже какво да правите, ако инспекторът е на вратата с предписание.</li>
+        </ul>
+
+        <div className="bg-brand-light border-l-4 border-brand-gold p-6 rounded-r-xl my-8">
+          <h4 className="text-sm font-bold text-brand-green uppercase tracking-wider mb-2 flex items-center">
+            <span className="text-brand-gold text-lg mr-2">🔥</span> Силният differentiator на нашия проект
+          </h4>
+          <ul className="space-y-2 mt-4 text-sm font-medium">
+            <li className="flex items-center"><span className="text-emerald-500 mr-2">🟢</span> Изцяло съобразен с Българското законодателство</li>
+            <li className="flex items-center"><span className="text-emerald-500 mr-2">🟢</span> Разработен от реален експерт с 27 години опит</li>
+            <li className="flex items-center"><span className="text-emerald-500 mr-2">🟢</span> 24/7 човешка консултация и подкрепа</li>
+            <li className="flex items-center"><span className="text-emerald-500 mr-2">🟢</span> Подготовка и защита при реални проверки от БАБХ</li>
+            <li className="flex items-center"><span className="text-emerald-500 mr-2">🟢</span> Генериране на реални, законово признати документи</li>
+            <li className="flex items-center"><span className="text-emerald-500 mr-2">🟢</span> Вградени обучения за Вашия персонал</li>
+          </ul>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Какво реално представлява нашата система? 🧠</h3>
+        <p>
+          Това вече <strong>НЕ е "прост сайт"</strong>. Това е мощна екосистема, която обединява пет различни бизнес инструмента в едно завършено решение:
+        </p>
+        
+        <div className="overflow-x-auto mt-4">
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-brand-green/20">
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tl-lg">Тип платформа</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tr-lg">Какво реално осигурява</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm divide-y divide-brand-green/10">
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">SaaS</td>
+                <td className="py-3 px-4 text-brand-dark/80">Облачен софтуер с automation, dashboard и дигитални дневници.</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">LMS</td>
+                <td className="py-3 px-4 text-brand-dark/80">Система за обучение на персонала с издаване на сертификати.</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">CRM</td>
+                <td className="py-3 px-4 text-brand-dark/80">Управление на клиентите и комуникация чрез вграден чат.</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Compliance platform</td>
+                <td className="py-3 px-4 text-brand-dark/80">Генератор на документи, стриктно спазващ регулациите и законите.</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Consulting</td>
+                <td className="py-3 px-4 text-brand-dark/80">Човешка експертиза на един клик разстояние.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">🚨 Всичко необходимо на едно място</h3>
+        <p>
+          Ако Вашият бизнес се нуждае от автоматизация, интелигентно табло (dashboard), система за обучения със сертификати, управление на дневниците, чат с експерт и генератор на документи – Вие вече имате решението.
+        </p>
+        <p>
+          Не оставяйте бизнеса си на случайността или на неадаптирани чуждестранни софтуери. Изберете системата, която познава Вашия бизнес и Вашите инспектори.
+        </p>
+      </div>
+    )
+  },
+  {
     id: "greshki-registraciya-babh",
     title: "Колко ще Ви струва една грешка при регистрацията на нов обект за храни?",
     summary: "Много бизнеси губят време и пари още преди да започнат. Разберете кои са критичните пропуски при БАБХ проверка и как да ги избегнете.",
