@@ -28,56 +28,6 @@ const features = [
     )
   },
   { 
-    title: "Входящ контрол на суровини", 
-    subtitle: "Проследявайте всяка доставка електронно. Гаранция за качество и безопасност на всяка приета партида.", 
-    icon: (
-      <svg className="w-12 h-12 text-brand-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-      </svg>
-    ),
-    mockup: (
-      <div className="bg-black/60 border border-brand-green/30 rounded-3xl p-6 w-full mt-6 flex flex-col shadow-inner">
-        <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-4">
-          <span className="text-white font-bold text-xl uppercase tracking-wider">Дневник Входящ Контрол</span>
-          <span className="text-sm bg-emerald-500/20 text-emerald-400 px-4 py-1.5 rounded-full uppercase tracking-widest font-bold">Одобрен прием</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-white/80">
-            <thead>
-              <tr className="border-b border-white/5 text-sm text-brand-gold uppercase">
-                <th className="pb-3 font-bold pr-2">Продукт/Суровина</th>
-                <th className="pb-3 font-bold pr-2">Доставчик</th>
-                <th className="pb-3 font-bold pr-2">Партида / №</th>
-                <th className="pb-3 font-bold pr-2">t° трансп.</th>
-                <th className="pb-3 font-bold pr-2">Срок годност</th>
-                <th className="pb-3 font-bold text-center">Изрядност</th>
-              </tr>
-            </thead>
-            <tbody className="text-base">
-              <tr className="border-b border-white/5 bg-white/5">
-                <td className="py-4 px-2 font-bold text-white whitespace-nowrap">Прясно мляко 3%</td>
-                <td className="py-4 px-2 whitespace-nowrap">Бор-Чвор ООД</td>
-                <td className="py-4 px-2 font-mono text-sm">L-40912</td>
-                <td className="py-4 px-2 text-emerald-400 font-bold font-mono">3.5°C</td>
-                <td className="py-4 px-2 text-sm">12.06.2026</td>
-                <td className="py-4 px-2 text-center text-2xl">✅</td>
-              </tr>
-              <tr>
-                <td className="py-4 px-2 font-bold text-white whitespace-nowrap">Свински врат</td>
-                <td className="py-4 px-2 whitespace-nowrap">Месокомбинат</td>
-                <td className="py-4 px-2 font-mono text-sm">L-883A</td>
-                <td className="py-4 px-2 text-emerald-400 font-bold font-mono">-2.0°C</td>
-                <td className="py-4 px-2 text-sm">05.06.2026</td>
-                <td className="py-4 px-2 text-center text-2xl">✅</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    )
-  },
-  { 
     title: "Индивидуална НАССР Система", 
     subtitle: "Изцяло дигитализирани процедури, строго разработени за спецификите на Вашия обект и винаги готови за БАБХ.", 
     icon: (
@@ -149,28 +99,24 @@ export const SubscriptionVideo: React.FC = () => {
   return (
     <AbsoluteFill className="bg-transparent font-sans flex items-center justify-center p-8 relative">
       {features.map((feat, i) => {
-        // We have 5 features, 75 frames each. Total duration is 375.
-        // To make it loop seamlessly, we use circular math.
-        const centerFrame = i * 75;
-        let localFrame = frame - centerFrame;
+        // Since durationInFrames=300 and we have 4 features, each feature gets exactly 75 frames (2.5 seconds)
+        const startFrame = i * 75;
+        const endFrame = startFrame + 75;
         
-        // Wrap around logic for seamless looping
-        if (localFrame < -187.5) localFrame += 375;
-        if (localFrame > 187.5) localFrame -= 375;
+        // Hide features when they are entirely outside their time window, 
+        // but add a tiny buffer for smooth crossfading overlapping.
+        if (frame < startFrame - 5 || frame > endFrame + 5) return null;
         
-        // Hide features when they are entirely outside their time window
-        if (localFrame < -25 || localFrame > 95) return null;
-        
-        // Enter animation happens from localFrame = -15 to 0
+        // Enter animation: slide up and fade in
         const enterProgress = spring({
-          frame: localFrame + 15,
+          frame: frame - startFrame,
           fps,
           config: { damping: 14, mass: 0.8 }
         });
         
-        // Exit animation happens from localFrame = 60 to 75
+        // Exit animation: slide up further and fade out, starting 15 frames before the feature's end time
         const exitProgress = spring({
-          frame: localFrame - 60, 
+          frame: frame - (endFrame - 15), 
           fps,
           config: { damping: 14, mass: 0.8 }
         });
