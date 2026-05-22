@@ -1172,8 +1172,9 @@ export default function ProfilePage() {
       thermal: logThermal,
       fryer: logFryer
     };
-    localStorage.setItem(key, JSON.stringify(logsData));
-    alert(`Ежедневните дневници за дата ${selectedDate} бяха успешно запазени!`);
+    setDoc(doc(db, "logs", key), logsData)
+      .then(() => alert(`Ежедневните дневници за дата ${selectedDate} бяха успешно запазени!`))
+      .catch((err) => alert("Възникна грешка при запазване: " + err.message));
   };
 
   // Print function helper
