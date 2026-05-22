@@ -1593,19 +1593,32 @@ export default function ProfilePage() {
                               className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white font-mono"
                             />
                           </div>
+                                                    <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Основен Сектор</label>
+                            <select 
+                              value={applySector} 
+                              onChange={(e) => {
+                                const newSector = e.target.value;
+                                setApplySector(newSector);
+                                setApplyNiche(BUSINESS_CATEGORIES[newSector][0]);
+                              }} 
+                              className="w-full text-xs px-2 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+                            >
+                              {Object.keys(BUSINESS_CATEGORIES).map(sector => (
+                                <option key={sector} value={sector}>{sector}</option>
+                              ))}
+                            </select>
+                          </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Дейност / Ниша</label>
+                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Специфичен Обект / Категория</label>
                             <select 
                               value={applyNiche} 
                               onChange={(e) => setApplyNiche(e.target.value)} 
                               className="w-full text-xs px-2 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
                             >
-                              <option value="Заведение за хранене">Заведение за хранене</option>
-                              <option value="Магазин за храни">Магазин за храни</option>
-                              <option value="Производствен цех">Производствен цех</option>
-                              <option value="Склад на едро">Склад на едро</option>
-                              <option value="Кухня-майка">Кухня-майка</option>
-                              <option value="Друго">Друга дейност</option>
+                              {BUSINESS_CATEGORIES[applySector]?.map(niche => (
+                                <option key={niche} value={niche}>{niche}</option>
+                              ))}
                             </select>
                           </div>
                         </div>
@@ -3724,17 +3737,31 @@ export default function ProfilePage() {
                           className="w-full text-sm px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
                         />
                       </div>
+                                            <div className="space-y-1">
+                        <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Основен Сектор</label>
+                        <select 
+                          value={getSectorForNiche(firmInfo.niche)} 
+                          onChange={(e) => {
+                            const newSector = e.target.value;
+                            setFirmInfo({...firmInfo, niche: BUSINESS_CATEGORIES[newSector][0]});
+                          }} 
+                          className="w-full text-sm px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50 font-medium"
+                        >
+                          {Object.keys(BUSINESS_CATEGORIES).map(sector => (
+                            <option key={sector} value={sector}>{sector}</option>
+                          ))}
+                        </select>
+                      </div>
                       <div className="space-y-1">
-                        <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Сфера на дейност (Ниша)</label>
+                        <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Специфичен Обект / Категория</label>
                         <select 
                           value={firmInfo.niche} 
                           onChange={(e) => setFirmInfo({...firmInfo, niche: e.target.value})} 
                           className="w-full text-sm px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50 font-medium"
                         >
-                          <option value="Заведение за хранене">Заведение за хранене (Ресторант/Кафе)</option>
-                          <option value="Хранителен магазин">Хранителен магазин / Супермаркет</option>
-                          <option value="Каравана или павилион">Подвижен обект / Каравана</option>
-                          <option value="Пекарна или производство">Пекарна или Хранително Производство</option>
+                          {BUSINESS_CATEGORIES[getSectorForNiche(firmInfo.niche)]?.map(niche => (
+                            <option key={niche} value={niche}>{niche}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
