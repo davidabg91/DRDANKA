@@ -770,41 +770,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Simulate approval
-  const handleSimulateApproval = () => {
-    const updatedUsers = usersList.map(u => {
-      if (u.email.toLowerCase() === pendingEmail.toLowerCase()) {
-        return { ...u, status: "approved" as const };
-      }
-      return u;
-    });
-
-    saveUsers(updatedUsers);
-
-    const approvedUser = updatedUsers.find(u => u.email.toLowerCase() === pendingEmail.toLowerCase());
-    if (approvedUser) {
-      setIsLoggedIn(true);
-      setCurrentUserEmail(approvedUser.email);
-      setUserRole("user");
-      setFirmInfo({
-        name: approvedUser.firmName,
-        eik: approvedUser.eik,
-        address: approvedUser.address,
-        manager: approvedUser.manager,
-        niche: approvedUser.niche
-      });
-      localStorage.setItem("danka_auth_logged", "true");
-      localStorage.setItem("danka_current_user_email", approvedUser.email);
-      localStorage.setItem("danka_firm_info", JSON.stringify({
-        name: approvedUser.firmName,
-        eik: approvedUser.eik,
-        address: approvedUser.address,
-        manager: approvedUser.manager,
-        niche: approvedUser.niche
-      }));
-      setIsPendingApproval(false);
-    }
-  };
 
   // Logout handler
   const handleLogout = async () => {
@@ -1371,16 +1336,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Demo Simulation Action */}
-              <div className="bg-brand-light p-4 rounded-xl border border-brand-gold/20 flex flex-col items-center justify-center">
-                <button
-                  onClick={handleSimulateApproval}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-brand-gold hover:bg-amber-500 text-brand-dark font-bold text-xs uppercase tracking-wider transition-colors rounded-lg shadow-md cursor-pointer"
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  Одобри профила от д-р Николова
-                </button>
-              </div>
 
               <div className="pt-2">
                 <button
