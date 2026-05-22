@@ -9,12 +9,27 @@ export default function RemotionVideoWidget() {
   const playerRef = useRef<PlayerRef>(null);
 
   useEffect(() => {
-    // Force the player to start immediately on mount to bypass some browser autoplay policies
-    playerRef.current?.play();
+    const playVideo = () => {
+      if (playerRef.current) {
+        try {
+          playerRef.current.play();
+        } catch (e) {
+          console.warn("Autoplay blocked by browser", e);
+        }
+      }
+    };
+    
+    // Slight delay to ensure DOM is fully ready
+    const timer = setTimeout(playVideo, 150);
+    return () => clearTimeout(timer);
   }, []);
 
+  const handlePlayClick = () => {
+    playerRef.current?.play();
+  };
+
   return (
-    <div className="relative group lg:col-span-5 h-[650px]">
+    <div className="relative group lg:col-span-5 h-[650px]" onClick={handlePlayClick}>
       {/* Ambient glow */}
       <div className="absolute -inset-1 bg-gradient-to-br from-brand-gold/30 via-amber-400/10 to-emerald-500/20 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition-all duration-700"></div>
 
@@ -32,7 +47,6 @@ export default function RemotionVideoWidget() {
             controls={false}
             autoPlay={true}
             loop={true}
-            clickToPlay={false}
           />
         </div>
         
