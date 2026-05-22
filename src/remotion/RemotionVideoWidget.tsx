@@ -9,8 +9,28 @@ export default function RemotionVideoWidget() {
   const playerRef = useRef<PlayerRef>(null);
 
   useEffect(() => {
-    // Force the player to start immediately on mount to bypass some browser autoplay policies
-    playerRef.current?.play();
+    // Robustly ensure the player starts playing, overcoming strict browser autoplay policies
+    const ensurePlay = () => {
+      if (playerRef.current && !playerRef.current.isPlaying()) {
+        try {
+          playerRef.current.play();
+        } catch (e) {
+          // ignore DOM exceptions
+        }
+      }
+    };
+    
+    // Check multiple times during the initial mount to catch when the player is fully ready
+    ensurePlay();
+    const t1 = setTimeout(ensurePlay, 100);
+    const t2 = setTimeout(ensurePlay, 500);
+    const t3 = setTimeout(ensurePlay, 1000);
+    
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, []);
 
   return (
@@ -32,7 +52,6 @@ export default function RemotionVideoWidget() {
             controls={false}
             autoPlay={true}
             loop={true}
-            clickToPlay={false}
           />
         </div>
         
