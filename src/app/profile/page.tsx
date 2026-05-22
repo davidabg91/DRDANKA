@@ -37,7 +37,8 @@ import {
   Search,
   PlusCircle,
   Eye,
-  XCircle
+  XCircle,
+  X
 } from "lucide-react";
 
 export interface AssignedMaterial {
@@ -550,22 +551,47 @@ export default function ProfilePage() {
     }
   }, []);
 
-  // Sync date-based logs when selectedDate changes or when user details change
+    // Sync date-based logs when selectedDate changes or when user details change
   useEffect(() => {
     if (!isLoggedIn || !selectedDate || userRole !== "user" || !currentUserEmail) return;
     const key = `danka_logs_${currentUserEmail.replace("@", "_").replace(".", "_")}_${selectedDate}`;
     const storedLogs = localStorage.getItem(key);
+    
+    // Determine what defaults should be for this niche
+    const defaults = getDefaultLogsForNiche(firmInfo.niche || "Ресторант/Кафе");
+    
     if (storedLogs) {
       const parsed = JSON.parse(storedLogs);
-      setLogIncoming(parsed.incoming || []);
-      setLogFridges(parsed.fridges || []);
+      
+      // Auto-correct if they have wrong defaults saved (e.g. from before fixing categories)
+      let incoming = parsed.incoming || [];
+      let fridges = parsed.fridges || [];
+      
+      if (incoming.length === 1 && (
+        incoming[0].product.includes("пилешко месо") || 
+        incoming[0].product.includes("Захар") || 
+        incoming[0].product.includes("Брашно") || 
+        incoming[0].product.includes("Млечни") || 
+        incoming[0].product.includes("мляко") || 
+        incoming[0].product.includes("полуфабрикати")
+      ) && incoming[0].product !== defaults.incoming[0]?.product) {
+        // They have a generic default that doesn't match their current sector! Overwrite it!
+        incoming = defaults.incoming;
+        fridges = defaults.fridges;
+        // Optionally save the corrected data back to localStorage immediately
+        parsed.incoming = incoming;
+        parsed.fridges = fridges;
+        localStorage.setItem(key, JSON.stringify(parsed));
+      }
+      
+      setLogIncoming(incoming);
+      setLogFridges(fridges);
       setLogHygiene(parsed.hygiene || { desinfection: false, surfaces: false, floors: false, waste: false });
       setLogStaff(parsed.staff || { checkPassed: false, healthy: true });
       setLogThermal(parsed.thermal || []);
       setLogFryer(parsed.fryer || { fryerUsed: false, oilQualityOk: true, oilChanged: false });
     } else {
       // Default empty structures based on niche
-            const defaults = getDefaultLogsForNiche(firmInfo.niche);
       setLogIncoming(defaults.incoming);
       setLogFridges(defaults.fridges);
       setLogHygiene({ desinfection: false, surfaces: false, floors: false, waste: false });
@@ -575,7 +601,7 @@ export default function ProfilePage() {
       ]);
       setLogFryer({ fryerUsed: false, oilQualityOk: true, oilChanged: false });
     }
-  }, [selectedDate, isLoggedIn, userRole, currentUserEmail]);
+  }, [selectedDate, isLoggedIn, userRole, currentUserEmail, firmInfo.niche]);
 
   // Sync audited logs when auditor selects another user/date
   useEffect(() => {
@@ -3858,6 +3884,100 @@ export default function ProfilePage() {
                 </>
               )}
             </main>
+          </div>
+        </div>
+      )}
+
+      {/* DOCUMENT/TEST MODALS */}
+      {activeAssignedMaterial && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl border border-brand-green/20 relative">
+            <div className="flex justify-between items-start mb-6 border-b border-brand-green/10 pb-4">
+              <div>
+                <h3 className="font-serif text-2xl font-bold text-brand-green">{activeAssignedMaterial.title}</h3>
+                <p className="text-sm text-brand-dark/50 mt-1">
+                  {activeAssignedMaterial.type === "document" ? "Образователен материал" : "Тест за проверка на знанията"}
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setActiveAssignedMaterial(null);
+                  setUserTestAnswers([]);
+                }}
+                className="text-brand-dark/40 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-50 absolute top-6 right-6"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {activeAssignedMaterial.type === "document" && (
+              <div className="space-y-6">
+                <div className="prose prose-sm max-w-none text-brand-dark bg-brand-light/20 p-6 rounded-xl border border-brand-green/5">
+                  {activeAssignedMaterial.content.split("\n").map((para, i) => (
+                    <p key={i} className="mb-4 leading-relaxed">{para}</p>
+                  ))}
+                </div>
+                {activeAssignedMaterial.status !== "completed" && (
+                  <div className="flex justify-end pt-4 border-t border-brand-green/10">
+                    <button
+                      onClick={() => handleCompleteDocument(activeAssignedMaterial.id)}
+                      className="px-6 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-md shadow-brand-green/20"
+                    >
+                      Маркирай като прочетено
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeAssignedMaterial.type === "test" && (
+              <div className="space-y-8">
+                {activeAssignedMaterial.questions?.map((q, qIdx) => (
+                  <div key={qIdx} className="bg-brand-light/30 p-6 rounded-xl border border-brand-green/10">
+                    <h4 className="font-bold text-brand-dark mb-4 text-lg">Въпрос {qIdx + 1}: {q.text}</h4>
+                    <div className="space-y-3">
+                      {q.options.map((opt, optIdx) => (
+                        <label 
+                          key={optIdx} 
+                          className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all border ${userTestAnswers[qIdx] === optIdx ? "bg-brand-green/10 border-brand-green text-brand-green font-bold shadow-sm" : "bg-white border-brand-green/10 hover:border-brand-green/30 hover:bg-brand-light/50"}`}
+                        >
+                          <input 
+                            type="radio" 
+                            name={`q_${qIdx}`}
+                            checked={userTestAnswers[qIdx] === optIdx}
+                            onChange={() => {
+                              const newAns = [...userTestAnswers];
+                              newAns[qIdx] = optIdx;
+                              setUserTestAnswers(newAns);
+                            }}
+                            className="w-4 h-4 text-brand-green border-brand-green/30 focus:ring-brand-green"
+                          />
+                          <span className="text-sm">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                
+                {activeAssignedMaterial.status !== "completed" ? (
+                  <div className="flex justify-end pt-6 border-t border-brand-green/10">
+                    <button
+                      onClick={() => handleSolveTest()}
+                      disabled={userTestAnswers.includes(-1)}
+                      className="px-8 py-3 bg-brand-green hover:bg-brand-green/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-md shadow-brand-green/20"
+                    >
+                      Предай теста
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-brand-gold/10 text-brand-dark p-6 rounded-xl border border-brand-gold/20 flex flex-col items-center justify-center text-center">
+                    <span className="text-3xl mb-2">🎉</span>
+                    <h4 className="font-bold text-lg mb-1">Тестът е успешно завършен!</h4>
+                    <p className="text-sm opacity-75">Вашият резултат е: <strong className="text-brand-green">{activeAssignedMaterial.score}%</strong></p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
