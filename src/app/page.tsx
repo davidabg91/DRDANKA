@@ -20,6 +20,7 @@ import {
 import FAQAccordion from "@/components/FAQAccordion";
 import ContactForm from "@/components/ContactForm";
 import { Suspense } from "react";
+import RemotionVideoWidget from "@/remotion/RemotionVideoWidget";
 
 export default function Home() {
   const stats = [
@@ -185,111 +186,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Hero Highlight Card - АБОНАМЕНТ БАБХ СПОКОЙСТВИЕ */}
-            <div className="lg:col-span-5 relative group">
-              {/* Ambient glow */}
-              <div className="absolute -inset-1 bg-gradient-to-br from-brand-gold/30 via-amber-400/10 to-emerald-500/20 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition-all duration-700"></div>
-
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/8">
-
-                {/* Top gradient header band */}
-                <div className="bg-gradient-to-br from-[#0a1f17] via-[#0d2b1c] to-[#081410] px-5 sm:px-7 pt-6 sm:pt-7 pb-5 sm:pb-6 relative">
-                  {/* Decorative glow orbs */}
-                  <div className="absolute top-0 right-0 w-48 h-48 bg-brand-gold/8 rounded-full blur-3xl pointer-events-none"></div>
-                  <div className="absolute -bottom-6 left-8 w-32 h-32 bg-emerald-500/8 rounded-full blur-2xl pointer-events-none"></div>
-
-                  {/* Badge row */}
-                  <div className="flex flex-wrap items-center justify-center gap-2 mb-5">
-                    <div className="flex items-center gap-1.5 bg-brand-gold/15 border border-brand-gold/30 rounded-full px-3 py-1.5">
-                      <span className="relative flex h-1.5 w-1.5 shrink-0">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-gold opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-gold"></span>
-                      </span>
-                      <span className="text-[9px] font-black text-brand-gold tracking-[0.15em] uppercase whitespace-nowrap">Месечен Абонамент</span>
-                    </div>
-                    <div className="bg-emerald-500/15 border border-emerald-500/25 rounded-full px-3 py-1.5">
-                      <span className="text-[9px] font-bold text-emerald-400 tracking-wider uppercase whitespace-nowrap">Ограничени места</span>
-                    </div>
-                  </div>
-
-                  {/* Main title */}
-                  <div className="text-center">
-                    <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white leading-tight mb-1">
-                      Абонамент
-                    </h3>
-                    <h3 className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold leading-tight mb-4">
-                      „БАБХ Спокойствие“
-                    </h3>
-                    <p className="text-sm text-white/65 leading-relaxed">
-                      Забравете за страха от проверки. Ние управляваме цялата Ви БАБХ документация, дневници и юридическа защита — вие се фокусирате върху бизнеса.
-                    </p>
-                  </div>
-
-
-                </div>
-
-                {/* Features list */}
-                <div className="bg-[#050f0a] px-5 sm:px-7 py-5 space-y-3.5">
-
-                  {/* Feature 1 */}
-                  <div className="flex items-start gap-3.5 group/item cursor-default">
-                    <div className="w-8 h-8 rounded-xl bg-brand-gold/15 border border-brand-gold/20 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-brand-gold/25 transition-colors duration-200">
-                      <CheckCircle className="h-4 w-4 text-brand-gold" />
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-white block leading-snug group-hover/item:text-brand-gold transition-colors duration-200">Дигитални дневници по самоконтрол</span>
-                      <span className="text-[11px] text-white/50 leading-normal">Попълвайте онлайн и печатайте при проверка — без хаос с папки</span>
-                    </div>
-                  </div>
-
-                  {/* Feature 2 */}
-                  <div className="flex items-start gap-3.5 group/item cursor-default">
-                    <div className="w-8 h-8 rounded-xl bg-brand-gold/15 border border-brand-gold/20 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-brand-gold/25 transition-colors duration-200">
-                      <CheckCircle className="h-4 w-4 text-brand-gold" />
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-white block leading-snug group-hover/item:text-brand-gold transition-colors duration-200">Автоматична НАССР / ДХП система</span>
-                      <span className="text-[11px] text-white/50 leading-normal">Персонализирана за Вашия обект — готова за инспекторите от БАБХ</span>
-                    </div>
-                  </div>
-
-                  {/* Feature 3 */}
-                  <div className="flex items-start gap-3.5 group/item cursor-default">
-                    <div className="w-8 h-8 rounded-xl bg-brand-gold/15 border border-brand-gold/20 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-brand-gold/25 transition-colors duration-200">
-                      <CheckCircle className="h-4 w-4 text-brand-gold" />
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-white block leading-snug group-hover/item:text-brand-gold transition-colors duration-200">Лично представителство пред БАБХ</span>
-                      <span className="text-[11px] text-white/50 leading-normal">Д-р Николова защитава Вашия обект при проверки и предписания</span>
-                    </div>
-                  </div>
-
-                  {/* Feature 4 */}
-                  <div className="flex items-start gap-3.5 group/item cursor-default">
-                    <div className="w-8 h-8 rounded-xl bg-brand-gold/15 border border-brand-gold/20 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-brand-gold/25 transition-colors duration-200">
-                      <CheckCircle className="h-4 w-4 text-brand-gold" />
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-white block leading-snug group-hover/item:text-brand-gold transition-colors duration-200">Спешна консултация без доплащане</span>
-                      <span className="text-[11px] text-white/50 leading-normal">Бърз отговор при акт, сигнал или извънредна проверка</span>
-                    </div>
-                  </div>
-
-                  {/* CTA */}
-                  <div className="pt-3">
-                    <Link
-                      href="/profile"
-                      className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-gradient-to-r from-brand-gold via-amber-400 to-brand-gold bg-[length:200%_auto] hover:bg-right-center text-brand-dark font-extrabold text-[11px] uppercase tracking-[0.12em] transition-all duration-500 rounded-xl shadow-lg shadow-brand-gold/25 hover:shadow-brand-gold/40 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-                    >
-                      <span>РЕГИСТРАЦИЯ/ВХОД</span>
-                      <span className="text-base leading-none">→</span>
-                    </Link>
-                    <p className="text-center text-[9px] text-white/30 mt-2.5 tracking-wide">Достъп до НАССР папки и дневници · Сигурна връзка</p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
+            {/* Hero Highlight Card - Remotion Video */}
+            <RemotionVideoWidget />
           </div>
         </div>
       </section>

@@ -1,0 +1,2374 @@
+﻿diff --git a/src/app/profile/page.tsx b/src/app/profile/page.tsx
+index 3f3ee1e..cd5ac04 100644
+--- a/src/app/profile/page.tsx
++++ b/src/app/profile/page.tsx
+@@ -1439,7 +1439,7 @@ export default function ProfilePage() {
+       {!isLoggedIn && (
+         <div className="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 print:hidden animate-fade-in">
+           {isPendingApproval ? (
+-            <div className="max-w-xl mx-auto bg-white border border-brand-gold/30 p-8 rounded-2xl shadow-xl space-y-6 text-center animate-fade-in">
++            <div className="max-w-xl mx-auto bg-white/95 backdrop-blur-md border border-brand-gold/30 p-8 rounded-2xl shadow-2xl space-y-6 text-center animate-fade-in">
+               <div className="relative w-16 h-16 mx-auto">
+                 <div className="absolute inset-0 rounded-full bg-brand-gold/10 animate-ping"></div>
+                 <div className="relative w-16 h-16 rounded-full bg-brand-gold/25 text-brand-gold flex items-center justify-center border border-brand-gold/45">
+@@ -1449,9 +1449,9 @@ export default function ProfilePage() {
+               
+               <div className="space-y-2">
+                 <h2 className="font-serif text-2xl font-bold text-brand-green">╨Я╤А╨╛╤Д╨╕╨╗╤К╤В ╨Т╨╕ ╤З╨░╨║╨░ ╨╛╨┤╨╛╨▒╤А╨╡╨╜╨╕╨╡</h2>
+-                <p className="text-xs text-brand-gold font-bold uppercase tracking-widest">╨б╤В╨░╤В╤Г╤Б: ╨Т ╨┐╤А╨╛╤Ж╨╡╤Б ╨╜╨░ ╤А╨░╨╖╨│╨╗╨╡╨╢╨┤╨░╨╜╨╡</p>
++                <p className="text-[10px] text-brand-gold font-bold uppercase tracking-widest">╨б╤В╨░╤В╤Г╤Б: ╨Т ╨┐╤А╨╛╤Ж╨╡╤Б ╨╜╨░ ╤А╨░╨╖╨│╨╗╨╡╨╢╨┤╨░╨╜╨╡</p>
+                 <p className="text-sm text-brand-dark/75 max-w-md mx-auto leading-relaxed pt-2">
+-                  ╨Ч╨░╤П╨▓╨╗╨╡╨╜╨╕╨╡╤В╨╛ ╨╖╨░ ╨╛╨▒╨╡╨║╤В <span className="font-bold text-brand-green">{pendingFirmName || "╨Т╨░╤И╨╕╤П ╨╛╨▒╨╡╨║╤В"}</span> ╨╡ ╤А╨╡╨│╨╕╤Б╤В╤А╨╕╤А╨░╨╜╨╛ ╤Г╤Б╨┐╨╡╤И╨╜╨╛ ╤Б ╨╕╨╝╨╡╨╣╨╗ <code className="bg-brand-light px-1.5 py-0.5 rounded border font-mono text-xs">{pendingEmail}</code>.
++                  ╨Ч╨░╤П╨▓╨╗╨╡╨╜╨╕╨╡╤В╨╛ ╨╖╨░ ╨╛╨▒╨╡╨║╤В <span className="font-bold text-brand-green">{pendingFirmName || "╨Т╨░╤И╨╕╤П ╨╛╨▒╨╡╨║╤В"}</span> ╨╡ ╤А╨╡╨│╨╕╤Б╤В╤А╨╕╤А╨░╨╜╨╛ ╤Г╤Б╨┐╨╡╤И╨╜╨╛ ╤Б ╨╕╨╝╨╡╨╣╨╗ <code className="bg-brand-light px-1.5 py-0.5 rounded border border-brand-green/10 font-mono text-xs text-brand-green">{pendingEmail}</code>.
+                 </p>
+                 <p className="text-xs text-brand-dark/65 max-w-sm mx-auto leading-normal">
+                   ╨Ч╨░ ╨┤╨░ ╤Б╨╡ ╨│╨░╤А╨░╨╜╤В╨╕╤А╨░ ╤Б╤К╨╛╤В╨▓╨╡╤В╤Б╤В╨▓╨╕╨╡╤В╨╛ ╨╜╨░ ╨Э╨Р╨б╨б╨а ╨┤╨╛╨║╤Г╨╝╨╡╨╜╤В╨░╤Ж╨╕╤П╤В╨░, ╨┤-╤А ╨Ф╨░╨╜╨║╨░ ╨Э╨╕╨║╨╛╨╗╨╛╨▓╨░ ╤В╤А╤П╨▒╨▓╨░ ╨╗╨╕╤З╨╜╨╛ ╨┤╨░ ╨┐╤А╨╡╨│╨╗╨╡╨┤╨░ ╨╛╨┐╨╕╤Б╨░╨╜╨░╤В╨░ ╨┤╨╡╨╣╨╜╨╛╤Б╤В ╨╜╨░ ╨╛╨▒╨╡╨║╤В╨░ ╨╕ ╨┤╨░ ╨░╨║╤В╨╕╨▓╨╕╤А╨░ ╨░╨║╨░╤Г╨╜╤В╨░ ╨Т╨╕. ╨в╨╛╨▓╨░ ╨╛╨▒╨╕╨║╨╜╨╛╨▓╨╡╨╜╨╛ ╨╛╤В╨╜╨╡╨╝╨░ ╨┤╨╛ 24 ╤З╨░╤Б╨░.
+@@ -1460,26 +1460,25 @@ export default function ProfilePage() {
+ 
+               {/* Visual Process Timeline */}
+               <div className="grid grid-cols-3 gap-2 py-4 relative">
+-                <div className="absolute top-1/2 left-[15%] right-[15%] h-[1px] bg-brand-green/10 -z-10"></div>
++                <div className="absolute top-1/2 left-[15%] right-[15%] h-[2px] bg-brand-green/10 -z-10"></div>
+                 <div className="space-y-1.5">
+-                  <div className="w-6 h-6 rounded-full bg-brand-green text-white flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-green">тЬУ</div>
++                  <div className="w-7 h-7 rounded-full bg-brand-green text-white flex items-center justify-center text-xs font-bold mx-auto border-2 border-brand-green shadow-sm">тЬУ</div>
+                   <span className="text-[9px] font-bold uppercase block text-brand-dark/50">1. ╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╤Б╤В╨▓╨░╨╜╨╡</span>
+                 </div>
+                 <div className="space-y-1.5">
+-                  <div className="w-6 h-6 rounded-full bg-brand-gold text-brand-dark flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-gold animate-pulse">2</div>
++                  <div className="w-7 h-7 rounded-full bg-brand-gold text-brand-green flex items-center justify-center text-xs font-bold mx-auto border-2 border-brand-gold shadow-md animate-pulse">2</div>
+                   <span className="text-[9px] font-bold uppercase block text-brand-green">2. ╨Я╤А╨╡╨│╨╗╨╡╨┤</span>
+                 </div>
+                 <div className="space-y-1.5">
+-                  <div className="w-6 h-6 rounded-full bg-brand-light text-brand-dark/45 flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-green/15">3</div>
+-                  <span className="text-[9px] font-bold uppercase block text-brand-dark/45">3. ╨Ю╨┤╨╛╨▒╤А╨╡╨╜╨╕╨╡ & ╨Т╤Е╨╛╨┤</span>
++                  <div className="w-7 h-7 rounded-full bg-white text-brand-dark/30 flex items-center justify-center text-xs font-bold mx-auto border-2 border-brand-green/10">3</div>
++                  <span className="text-[9px] font-bold uppercase block text-brand-dark/40">3. ╨Ю╨┤╨╛╨▒╤А╨╡╨╜╨╕╨╡</span>
+                 </div>
+               </div>
+ 
+-
+               <div className="pt-2">
+                 <button
+                   onClick={() => { setIsPendingApproval(false); setAuthMode("login"); }}
+-                  className="text-xs text-brand-dark/50 hover:text-brand-green underline"
++                  className="text-xs text-brand-dark/50 hover:text-brand-green transition-colors cursor-pointer hover:underline"
+                 >
+                   тЖР ╨Ю╨▒╤А╨░╤В╨╜╨╛ ╨║╤К╨╝ ╨Т╤Е╨╛╨┤
+                 </button>
+@@ -1488,296 +1487,402 @@ export default function ProfilePage() {
+           ) : (
+             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+             
+-            {/* Left Column: What to expect from the system */}
+-            <div className="lg:col-span-7 space-y-6">
+-              <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
+-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-green/5 border border-brand-green/20 rounded-full text-[10px] font-black uppercase text-brand-green tracking-[0.15em]">
+-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
+-                  ╨Ф╨Ш╨У╨Ш╨в╨Р╨Ы╨Х╨Э ╨Я╨Ю╨а╨в╨Р╨Ы
+-                </span>
+-                
+-                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green leading-tight">
+-                  ╨Ъ╨░╨║╨▓╨╛ ╨Т╨╕ ╨┤╨░╨▓╨░ ╨┤╨╕╨│╨╕╤В╨░╨╗╨╜╨╕╤П╤В ╨┐╨╛╤А╤В╨░╨╗ <span className="text-brand-gold font-semibold">тАЮ╨С╨Р╨С╨е ╨б╨┐╨╛╨║╨╛╨╣╤Б╤В╨▓╨╕╨╡тАЬ</span>?
+-                </h2>
+-                
+-                <p className="text-xs sm:text-sm text-brand-dark/75 leading-relaxed">
+-                  ╨в╨╛╨▓╨░ ╨╡ ╨┐╤К╨╗╨╜╨░ ╨┐╨╗╨░╤В╤Д╨╛╤А╨╝╨░ ╨╖╨░ ╤А╨╡╤Б╤В╨╛╤А╨░╨╜╤В╨╕, ╨╝╨░╨│╨░╨╖╨╕╨╜╨╕, ╤Д╤Г╤А╨╜╨╕, ╤Ж╨╡╤Е╨╛╨▓╨╡ ╨╕ ╨┤╤А╤Г╨│╨╕ ╨╛╨▒╨╡╨║╤В╨╕ ╨▓ ╤Е╤А╨░╨╜╨╕╤В╨╡╨╗╨╜╨╕╤П ╤Б╨╡╨║╤В╨╛╤А. ╨з╤А╨╡╨╖ ╨╜╨╡╤П ╨┐╤А╨╡╨╝╨░╤Е╨▓╨░╤В╨╡ ╤Е╨░╨╛╤В╨╕╤З╨╜╨╕╤В╨╡ ╨┐╨░╨┐╨║╨╕ ╨╕ ╤Б╤В╨╡ ╨╜╨░╨┐╤К╨╗╨╜╨╛ ╨┐╨╛╨┤╨│╨╛╤В╨▓╨╡╨╜╨╕ ╨╖╨░ ╨┤╤К╤А╨╢╨░╨▓╨╜╨╕ ╨┐╤А╨╛╨▓╨╡╤А╨║╨╕.
+-                </p>
++              {/* Left Column: SaaS platform visual showcase & features */}
++              <div className="lg:col-span-7 space-y-8 lg:pr-4">
++                <div className="space-y-4">
++                  <span className="inline-flex items-center gap-2 px-3 py-1 bg-brand-green/10 border border-brand-green/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-brand-green">
++                    <span className="relative flex h-2 w-2">
++                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-gold opacity-75"></span>
++                      <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-gold"></span>
++                    </span>
++                    ╨Ш╨Э╨в╨Х╨Ы╨Ш╨У╨Х╨Э╨в╨Э╨Р HACCP ╨Я╨Ы╨Р╨в╨д╨Ю╨а╨Ь╨Р
++                  </span>
++                  
++                  <h2 className="font-serif text-3xl sm:text-4xl font-extrabold text-brand-green leading-tight">
++                    ╨Ф╨╕╨│╨╕╤В╨░╨╗╨╜╨╕╤П╤В ╨┐╨╛╤А╤В╨░╨╗ <br />
++                    <span className="text-brand-gold font-serif italic font-normal">тАЮ╨С╨Р╨С╨е ╨б╨┐╨╛╨║╨╛╨╣╤Б╤В╨▓╨╕╨╡тАЬ</span>
++                  </h2>
++                  
++                  <p className="text-sm text-brand-dark/70 max-w-xl leading-relaxed">
++                    ╨Ь╨╛╨┤╨╡╤А╨╡╨╜ ╤Б╨╛╤Д╤В╤Г╨╡╤А ╨╖╨░ ╤Г╨┐╤А╨░╨▓╨╗╨╡╨╜╨╕╨╡ ╨╜╨░ ╤Е╤А╨░╨╜╨╕╤В╨╡╨╗╨╜╨░╤В╨░ ╨▒╨╡╨╖╨╛╨┐╨░╤Б╨╜╨╛╤Б╤В. ╨Я╨╛╨┐╤К╨╗╨▓╨░╨╣╤В╨╡ ╨┤╨╜╨╡╨▓╨╜╨╕╤Ж╨╕ ╨┐╨╛-╨▒╤К╤А╨╖╨╛, ╨│╨╡╨╜╨╡╤А╨╕╤А╨░╨╣╤В╨╡ ╤Б╨╡╤А╤В╨╕╤Д╨╕╤Ж╨╕╤А╨░╨╜╨╕ ╨Э╨Р╨б╨б╨а ╤Б╨╕╤Б╤В╨╡╨╝╨╕ ╨╕ ╤Б╨╡ ╨┐╤А╨╡╨┤╨┐╨░╨╖╨╡╤В╨╡ ╨╛╤В ╤Б╨░╨╜╨║╤Ж╨╕╨╕ ╤Б ╨╕╨╜╤В╨╡╨╗╨╕╨│╨╡╨╜╤В╨╜╨╛ ╨▓╨░╨╗╨╕╨┤╨╕╤А╨░╨╜╨╡ ╨▓ ╤А╨╡╨░╨╗╨╜╨╛ ╨▓╤А╨╡╨╝╨╡.
++                  </p>
++                </div>
+ 
+-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+-                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
+-                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">1. ╨Р╨▓╤В╨╛╨╝╨░╤В╨╕╤З╨╡╨╜ ╨Э╨Р╨б╨б╨а & ╨Ф╨е╨Я</h4>
+-                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
+-                      ╨У╨╡╨╜╨╡╤А╨╕╤А╨░╨╜╨╡ ╨╜╨░ ╨┐╨╡╤А╤Б╨╛╨╜╨░╨╗╨╕╨╖╨╕╤А╨░╨╜╨╕ ╤Б╨╕╤Б╤В╨╡╨╝╨╕ ╨╖╨░ ╤Б╨░╨╝╨╛╨║╨╛╨╜╤В╤А╨╛╨╗, ╨Ф╨е╨Я ╨┐╤А╨╛╤Ж╨╡╨┤╤Г╤А╨╕, ╨╝╨╡╤А╨║╨╕ ╨╖╨░ ╨░╨╗╨╡╤А╨│╨╡╨╜╨╕ ╨╕ ╨Ф╨Ф╨Ф ╨┐╤А╨╛╨│╤А╨░╨╝╨╕ ╤Б╨┐╨╛╤А╨╡╨┤ ╨┐╤А╨╛╤Д╨╕╨╗╨░ ╨╜╨░ ╤Д╨╕╤А╨╝╨░╤В╨░ ╨Т╨╕.
+-                    </p>
++                {/* SaaS Glassmorphic Mockup */}
++                <div className="relative group">
++                  <div className="absolute -inset-1 bg-gradient-to-r from-brand-gold to-brand-green rounded-2xl blur opacity-15 group-hover:opacity-25 transition duration-1000"></div>
++                  <div className="relative bg-brand-green text-white rounded-2xl p-6 shadow-2xl border border-white/10 space-y-6 overflow-hidden">
++                    {/* Decorative ambient spots */}
++                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-brand-gold/15 rounded-full blur-xl pointer-events-none"></div>
++                    <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-brand-green/30 rounded-full blur-xl pointer-events-none"></div>
++
++                    <div className="flex items-center justify-between border-b border-white/10 pb-4">
++                      <div className="flex items-center gap-2.5">
++                        <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
++                        <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
++                        <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
++                        <span className="text-[10px] font-mono text-white/50 ml-2 tracking-wider uppercase">haccp_live_monitor.exe</span>
++                      </div>
++                      <span className="text-[10px] font-bold bg-brand-gold/25 border border-brand-gold/30 px-2 py-0.5 rounded text-brand-gold uppercase tracking-wider">
++                        ╨Р╨Ъ╨в╨Ш╨Т╨Х╨Э
++                      </span>
++                    </div>
++
++                    {/* Dashboard Widget Layout */}
++                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
++                      {/* Gauge widget */}
++                      <div className="sm:col-span-5 bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center text-center backdrop-blur-sm">
++                        <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest mb-2 block">╨б╨к╨Ю╨в╨Т╨Х╨в╨б╨в╨Т╨Ш╨Х ╨Ф╨Э╨Х╨б</span>
++                        <div className="relative w-24 h-24 flex items-center justify-center">
++                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
++                            <path
++                              className="text-white/10"
++                              strokeWidth="2.5"
++                              stroke="currentColor"
++                              fill="none"
++                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
++                            />
++                            <path
++                              className="text-brand-gold"
++                              strokeWidth="2.5"
++                              strokeDasharray="98, 100"
++                              strokeLinecap="round"
++                              stroke="currentColor"
++                              fill="none"
++                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
++                            />
++                          </svg>
++                          <div className="absolute flex flex-col items-center justify-center">
++                            <span className="text-xl font-extrabold text-white font-mono leading-none">98%</span>
++                            <span className="text-[8px] text-brand-gold font-bold uppercase tracking-wider mt-0.5">╨Ш╨Ч╨а╨п╨Ф╨Х╨Э</span>
++                          </div>
++                        </div>
++                      </div>
++
++                      {/* Progress tracking */}
++                      <div className="sm:col-span-7 space-y-3">
++                        <div className="bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center justify-between text-xs backdrop-blur-sm hover:bg-white/10 transition-colors duration-200">
++                          <div className="flex items-center gap-2">
++                            <div className="p-1 bg-green-500/10 text-green-400 rounded">
++                              <Check className="h-3 w-3" />
++                            </div>
++                            <span className="font-bold text-white/90">╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨в╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╕</span>
++                          </div>
++                          <span className="text-[10px] text-brand-gold font-mono font-bold">╨Ю╨Ъ (3/3 ╨е╨╗╨░╨┤╨╕╨╗╨╜╨╕╨║╨░)</span>
++                        </div>
++                        
++                        <div className="bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center justify-between text-xs backdrop-blur-sm hover:bg-white/10 transition-colors duration-200">
++                          <div className="flex items-center gap-2">
++                            <div className="p-1 bg-green-500/10 text-green-400 rounded">
++                              <Check className="h-3 w-3" />
++                            </div>
++                            <span className="font-bold text-white/90">╨Т╤Е╨╛╨┤╤П╤Й ╨Ъ╨╛╨╜╤В╤А╨╛╨╗ ╤Е╤А╨░╨╜╨╕</span>
++                          </div>
++                          <span className="text-[10px] text-brand-gold font-mono font-bold">╨Т╨к╨Т╨Х╨Ф╨Х╨Э (5 ╨┤╨╛╤Б╤В╨░╨▓╨║╨╕)</span>
++                        </div>
++
++                        <div className="bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center justify-between text-xs backdrop-blur-sm hover:bg-white/10 transition-colors duration-200">
++                          <div className="flex items-center gap-2">
++                            <div className="p-1 bg-green-500/10 text-green-400 rounded">
++                              <Check className="h-3 w-3" />
++                            </div>
++                            <span className="font-bold text-white/90">╨Ы╨╕╤З╨╜╨░ ╨е╨╕╨│╨╕╨╡╨╜╨░ ╨╡╨║╨╕╨┐</span>
++                          </div>
++                          <span className="text-[10px] text-brand-gold font-mono font-bold">╨Ф╨Х╨Ъ╨Ы╨Р╨а╨Ш╨а╨Р╨Э╨Р (╨Ю╨Ъ)</span>
++                        </div>
++                      </div>
++                    </div>
+                   </div>
++                </div>
+ 
+-                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
+-                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">2. ╨Ф╨╕╨│╨╕╤В╨░╨╗╨╜╨╕ ╨Ф╨╜╨╡╨▓╨╜╨╕╤Ж╨╕</h4>
+-                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
+-                      ╨Т╤Е╨╛╨┤╤П╤Й ╨║╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╤Е╤А╨░╨╜╨╕, ╤Е╨╗╨░╨┤╨╕╨╗╨╜╨╕ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╕, ╨╡╨╢╨╡╨┤╨╜╨╡╨▓╨╜╨░ ╤Е╨╕╨│╨╕╨╡╨╜╨░ ╨╕ ╨╖╨┤╤А╨░╨▓╨╡ ╨╜╨░ ╨┐╨╡╤А╤Б╨╛╨╜╨░╨╗╨░. ╨Я╨╛╨┐╤К╨╗╨▓╨░╤В╨╡ ╨▒╤К╤А╨╖╨╛ ╨╛╨╜╨╗╨░╨╣╨╜ ╨╕ ╨┐╨╡╤З╨░╤В ╨┐╤А╨╕ ╨┐╤А╨╛╨▓╨╡╤А╨║╨░.
++                {/* Features list */}
++                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
++                  <div className="bg-white border border-brand-green/5 hover:border-brand-gold/45 p-4 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md group">
++                    <div className="flex items-center gap-3 mb-2">
++                      <div className="p-2 bg-brand-green/5 text-brand-green group-hover:bg-brand-green group-hover:text-white rounded-lg transition-all duration-300">
++                        <FileText className="h-4 w-4" />
++                      </div>
++                      <h4 className="font-serif text-sm font-bold text-brand-green">1. ╨Ф╨╕╨│╨╕╤В╨░╨╗╨╜╨╕ ╨┤╨╜╨╡╨▓╨╜╨╕╤Ж╨╕</h4>
++                    </div>
++                    <p className="text-xs text-brand-dark/70 leading-relaxed">
++                      ╨С╤К╤А╨╖╨╛ ╨▓╤К╨▓╨╡╨╢╨┤╨░╨╜╨╡ ╨╜╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╕, ╨┤╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П ╨╕ ╨┤╨╛╤Б╤В╨░╨▓╨║╨╕. ╨Я╨╛╨┐╤К╨╗╨╜╨╡╨╜╨╕╤В╨╡ ╨┤╨╜╨╡╨▓╨╜╨╕╤Ж╨╕ ╤Б╨╡ ╨┐╨░╨╖╤П╤В ╨▓ ╨╛╨▒╨╗╨░╨║╨░ ╨╕ ╤Б╨╡ ╨│╨╡╨╜╨╡╤А╨╕╤А╨░╤В ╨╖╨░ ╨┐╨╡╤З╨░╤В ╤Б ╨╡╨┤╨╕╨╜ ╨║╨╗╨╕╨║.
+                     </p>
+                   </div>
+ 
+-                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
+-                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">3. ╨Т╨│╤А╨░╨┤╨╡╨╜╨╕ ╨Ю╨▒╤Г╤З╨╡╨╜╨╕╤П</h4>
+-                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
+-                      ╨Ф╨╛╤Б╤В╤К╨┐ ╨┤╨╛ ╨╗╨╕╤Ж╨╡╨╜╨╖╨╕╤А╨░╨╜╨╕ ╨┐╤А╨░╨║╤В╨╕╤З╨╡╤Б╨║╨╕ ╨╜╨░╤А╤К╤З╨╜╨╕╤Ж╨╕ ╨╖╨░ ╨┐╤А╨░╨▓╨╕╨╗╨░ ╨┐╤А╨╕ ╨╡╤В╨╕╨║╨╡╤В╨╕╤А╨░╨╜╨╡ ╨╕ ╤Е╨╕╨│╨╕╨╡╨╜╨╜╨╕ ╨╜╨╛╤А╨╝╨╕, ╨╜╨░╨┐╨╕╤Б╨░╨╜╨╕ ╨╗╨╕╤З╨╜╨╛ ╨╛╤В ╨┤-╤А ╨Ф╨░╨╜╨║╨░ ╨Э╨╕╨║╨╛╨╗╨╛╨▓╨░.
++                  <div className="bg-white border border-brand-green/5 hover:border-brand-gold/45 p-4 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md group">
++                    <div className="flex items-center gap-3 mb-2">
++                      <div className="p-2 bg-brand-green/5 text-brand-green group-hover:bg-brand-green group-hover:text-white rounded-lg transition-all duration-300">
++                        <Activity className="h-4 w-4" />
++                      </div>
++                      <h4 className="font-serif text-sm font-bold text-brand-green">2. ╨Р╨▓╤В╨╛╨╝╨░╤В╨╕╤З╨╡╨╜ HACCP</h4>
++                    </div>
++                    <p className="text-xs text-brand-dark/70 leading-relaxed">
++                      ╨б╨╕╤Б╤В╨╡╨╝╨╕ ╨╖╨░ ╤Б╨░╨╝╨╛╨║╨╛╨╜╤В╤А╨╛╨╗, ╨╝╨╡╤А╨║╨╕ ╨╖╨░ ╨░╨╗╨╡╤А╨│╨╡╨╜╨╕ ╨╕ ╨Ф╨Ф╨Ф ╨┐╨╗╨░╨╜╨╛╨▓╨╡, ╨┐╤А╨╕╨│╨╛╨┤╨╡╨╜╨╕ ╨╕╨╖╤Ж╤П╨╗╨╛ ╨╖╨░ ╨Т╨░╤И╨░╤В╨░ ╨╜╨╕╤И╨░ ╨╕ ╨╛╨┤╨╛╨▒╤А╨╡╨╜╨╕ ╨╛╤В ╨╡╨║╤Б╨┐╨╡╤А╤В╨╕.
+                     </p>
+                   </div>
+ 
+-                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
+-                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">4. ╨Ш╨╜╤В╨╡╨╗╨╕╨│╨╡╨╜╤В╨╡╨╜ ╨в╤А╨░╨║╨╡╤А</h4>
+-                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
+-                      ╨Ъ╨░╨╗╨║╤Г╨╗╨░╤В╨╛╤А ╨╖╨░ ╤Б╤А╨╛╨║ ╨╜╨░ ╨│╨╛╨┤╨╜╨╛╤Б╤В ╨╜╨░ ╨╛╤В╨▓╨╛╤А╨╡╨╜╨╕ ╤Е╤А╨░╨╜╨╕ ╨╕ ╨╜╨░╨┐╨╛╨╝╨╜╤П╨╜╨╕╤П ╨╖╨░ ╨╕╨╖╤В╨╕╤З╨░╤Й╨╕ ╨┤╨╛╨│╨╛╨▓╨╛╤А╨╕ ╤Б ╨Ф╨Ф╨Ф ╤Д╨╕╤А╨╝╨╕, ╨╖╨┤╤А╨░╨▓╨╜╨╕ ╨║╨╜╨╕╨╢╨║╨╕ ╨╕ ╨▓╨╛╨┤╨╡╨╜ ╨░╨╜╨░╨╗╨╕╨╖.
++                  <div className="bg-white border border-brand-green/5 hover:border-brand-gold/45 p-4 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md group">
++                    <div className="flex items-center gap-3 mb-2">
++                      <div className="p-2 bg-brand-green/5 text-brand-green group-hover:bg-brand-green group-hover:text-white rounded-lg transition-all duration-300">
++                        <BookOpen className="h-4 w-4" />
++                      </div>
++                      <h4 className="font-serif text-sm font-bold text-brand-green">3. ╨Т╨│╤А╨░╨┤╨╡╨╜╨╕ ╨╛╨▒╤Г╤З╨╡╨╜╨╕╤П</h4>
++                    </div>
++                    <p className="text-xs text-brand-dark/70 leading-relaxed">
++                      ╨Ы╨╕╤Ж╨╡╨╜╨╖╨╕╤А╨░╨╜╨╕ ╨╜╨░╤А╤К╤З╨╜╨╕╤Ж╨╕ ╨╖╨░ ╤Е╨╕╨│╨╕╨╡╨╜╨░, ╨╡╤В╨╕╨║╨╡╤В╨╕╤А╨░╨╜╨╡ ╨╕ ╨┤╨╛╨▒╤А╨╕ ╨┐╤А╨░╨║╤В╨╕╨║╨╕, ╤А╨░╨╖╤А╨░╨▒╨╛╤В╨╡╨╜╨╕ ╨╗╨╕╤З╨╜╨╛ ╨╛╤В ╨┤-╤А ╨Ф╨░╨╜╨║╨░ ╨Э╨╕╨║╨╛╨╗╨╛╨▓╨░.
+                     </p>
+                   </div>
+-                </div>
+ 
+-                <div className="bg-brand-light p-4 rounded-xl border border-brand-gold/20 flex gap-3 items-start">
+-                  <div className="p-1 bg-brand-green/10 text-brand-green rounded">
+-                    <Sparkles className="h-4 w-4 text-brand-gold" />
+-                  </div>
+-                  <div className="space-y-1">
+-                    <h5 className="text-[11px] font-bold text-brand-green uppercase tracking-wide">╨Я╤К╨╗╨╜╨░ ╨╖╨░╤Й╨╕╤В╨░ ╨╛╤В ╨│╨╗╨╛╨▒╨╕ ╨╕ ╨░╨║╤В╨╛╨▓╨╡</h5>
+-                    <p className="text-[11px] text-brand-dark/80 leading-relaxed">
+-                      ╨Т╤Б╨╕╤З╨║╨╕ ╨┤╨╛╨║╤Г╨╝╨╡╨╜╤В╨╕ ╨╕ ╨╗╨╛╨│╨╕╨║╨░ ╨╜╨░ ╤Б╨╕╤Б╤В╨╡╨╝╨░╤В╨░ ╤Б╨░ ╤Б╤К╨╛╨▒╤А╨░╨╖╨╡╨╜╨╕ ╤Б ╨░╨║╤В╤Г╨░╨╗╨╜╨╕╤В╨╡ ╨╕╨╖╨╕╤Б╨║╨▓╨░╨╜╨╕╤П ╨╜╨░ ╨Ч╨░╨║╨╛╨╜╨░ ╨╖╨░ ╤Е╤А╨░╨╜╨╕╤В╨╡ ╨╕ ╨С╨Р╨С╨е, ╨║╨╛╨╡╤В╨╛ ╨Т╨╕ ╨│╨░╤А╨░╨╜╤В╨╕╤А╨░ 100% ╨╜╨╛╤А╨╝╨░╤В╨╕╨▓╨╜╨╛ ╤Б╤К╨╛╤В╨▓╨╡╤В╤Б╤В╨▓╨╕╨╡.
++                  <div className="bg-white border border-brand-green/5 hover:border-brand-gold/45 p-4 rounded-xl shadow-sm transition-all duration-300 hover:shadow-md group">
++                    <div className="flex items-center gap-3 mb-2">
++                      <div className="p-2 bg-brand-green/5 text-brand-green group-hover:bg-brand-green group-hover:text-white rounded-lg transition-all duration-300">
++                        <Clock className="h-4 w-4" />
++                      </div>
++                      <h4 className="font-serif text-sm font-bold text-brand-green">4. ╨Ш╨╜╤В╨╡╨╗╨╕╨│╨╡╨╜╤В╨╡╨╜ ╤В╤А╨░╨║╨╡╤А</h4>
++                    </div>
++                    <p className="text-xs text-brand-dark/70 leading-relaxed">
++                      ╨Я╤А╨╡╨┤╤Г╨┐╤А╨╡╨╢╨┤╨╡╨╜╨╕╤П ╨╖╨░ ╨╕╨╖╤В╨╕╤З╨░╤Й╨╕ ╨┤╨╛╨│╨╛╨▓╨╛╤А╨╕, ╨╖╨┤╤А╨░╨▓╨╜╨╕ ╨║╨╜╨╕╨╢╨║╨╕ ╨╕ ╨▓╨╛╨┤╨╡╨╜ ╨░╨╜╨░╨╗╨╕╨╖. ╨Ъ╨░╨╗╨║╤Г╨╗╨░╤В╨╛╤А ╨╖╨░ ╨│╨╛╨┤╨╜╨╛╤Б╤В ╨╜╨░ ╨╛╤В╨▓╨╛╤А╨╡╨╜╨╕ ╨┐╤А╨╛╨┤╤Г╨║╤В╨╕.
+                     </p>
+                   </div>
+                 </div>
+               </div>
+-            </div>
+-            
+-            {/* Right Column: Forms Box */}
+-            <div className="lg:col-span-5">
+-              <div className="bg-white border border-brand-green/10 p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
++              
++              {/* Right Column: Forms Box */}
++              <div className="lg:col-span-5 relative">
++                {/* Visual backglow decoration */}
++                <div className="absolute -top-12 -right-12 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+                 
+-                {/* Form Tabs Switcher */}
+-                <div className="flex bg-brand-light p-1 rounded-xl border border-brand-green/5">
+-                  <button 
+-                    onClick={() => setAuthMode("login")}
+-                    className={`flex-1 text-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${authMode === "login" ? "bg-brand-green text-white shadow" : "text-brand-dark hover:bg-brand-green/5"}`}
+-                  >
+-                    ╨Т╤Е╨╛╨┤
+-                  </button>
+-                  <button 
+-                    onClick={() => setAuthMode("register")}
+-                    className={`flex-1 text-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${authMode === "register" ? "bg-brand-green text-white shadow" : "text-brand-dark hover:bg-brand-green/5"}`}
+-                  >
+-                    ╨а╨╡╨│╨╕╤Б╤В╤А╨░╤Ж╨╕╤П & ╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╤Б╤В╨▓╨░╨╜╨╡
+-                  </button>
+-                </div>
++                <div className="bg-white/95 backdrop-blur-md border border-brand-green/10 p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
++                  
++                  {/* Form Tabs Switcher */}
++                  <div className="flex bg-brand-light p-1 rounded-xl border border-brand-green/10">
++                    <button 
++                      onClick={() => setAuthMode("login")}
++                      className={`flex-1 text-center py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-300 cursor-pointer ${authMode === "login" ? "bg-brand-green text-white shadow-lg shadow-brand-green/15" : "text-brand-dark/70 hover:text-brand-green hover:bg-white/50"}`}
++                    >
++                      ╨Т╤Е╨╛╨┤
++                    </button>
++                    <button 
++                      onClick={() => setAuthMode("register")}
++                      className={`flex-1 text-center py-2.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all duration-300 cursor-pointer ${authMode === "register" ? "bg-brand-green text-white shadow-lg shadow-brand-green/15" : "text-brand-dark/70 hover:text-brand-green hover:bg-white/50"}`}
++                    >
++                      ╨а╨╡╨│╨╕╤Б╤В╤А╨░╤Ж╨╕╤П & ╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╤Б╤В╨▓╨░╨╜╨╡
++                    </button>
++                  </div>
+ 
+-                {authMode === "login" && (
+-                  <div className="space-y-4">
+-                    <div className="space-y-1">
+-                      <h3 className="font-serif text-lg font-bold text-brand-green">╨Т╤Е╨╛╨┤ ╨▓ ╨┐╨╛╤А╤В╨░╨╗╨░</h3>
+-                      <p className="text-[11px] text-brand-dark/60">╨Т╤К╨▓╨╡╨┤╨╡╤В╨╡ ╨░╨║╨░╤Г╨╜╤В╨░ ╤Б╨╕ ╨╖╨░ ╨┤╨╛╤Б╤В╤К╨┐ ╨┤╨╛ ╨Т╨░╤И╨╕╤В╨╡ ╨С╨Р╨С╨е ╨┤╨╜╨╡╨▓╨╜╨╕╤Ж╨╕ ╨╕ ╨┐╨░╨┐╨║╨╕.</p>
+-                    </div>
+-                    {/* Simulated Credentials Tip */}
+-                    <div className="bg-brand-gold/10 border border-brand-gold/25 p-3 rounded-lg text-[10px] text-brand-dark/95 flex items-start gap-2">
+-                      <Sparkles className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+-                      <div>
+-                        <span className="font-bold block">╨С╤К╤А╨╖ ╨┤╨╛╤Б╤В╤К╨┐ ╨╖╨░ ╤В╨╡╤Б╤В╨▓╨░╨╜╨╡:</span>
+-                        ╨Т╤К╨▓╨╡╨┤╨╡╤В╨╡ ╨┐╤А╨╛╨╕╨╖╨▓╨╛╨╗╨╡╨╜ ╨╕╨╝╨╡╨╣╨╗/╨┐╨░╤А╨╛╨╗╨░ ╨╖╨░ ╨┤╨╡╨╝╨╛╨╜╤Б╤В╤А╨░╤Ж╨╕╤П.
+-                      </div>
+-                    </div>
+-                    <form onSubmit={handleSignIn} className="space-y-4">
++                  {authMode === "login" && (
++                    <div className="space-y-4 animate-fade-in">
+                       <div className="space-y-1">
+-                        <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ш╨╝╨╡╨╣╨╗ ╨░╨┤╤А╨╡╤Б</label>
+-                        <input 
+-                          type="email" 
+-                          required 
+-                          value={authEmail} 
+-                          onChange={(e) => setAuthEmail(e.target.value)} 
+-                          placeholder="name@business.com" 
+-                          className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
+-                        />
++                        <h3 className="font-serif text-lg font-bold text-brand-green">╨Т╤Е╨╛╨┤ ╨▓ ╨┐╨╛╤А╤В╨░╨╗╨░</h3>
++                        <p className="text-[11px] text-brand-dark/60">╨Т╤К╨▓╨╡╨┤╨╡╤В╨╡ ╨░╨║╨░╤Г╨╜╤В╨░ ╤Б╨╕ ╨╖╨░ ╨┤╨╛╤Б╤В╤К╨┐ ╨┤╨╛ ╨Т╨░╤И╨╕╤В╨╡ ╨С╨Р╨С╨е ╨┤╨╜╨╡╨▓╨╜╨╕╤Ж╨╕ ╨╕ ╨┐╨░╨┐╨║╨╕.</p>
+                       </div>
+-                      <div className="space-y-1">
+-                        <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Я╨░╤А╨╛╨╗╨░</label>
+-                        <input 
+-                          type="password" 
+-                          required 
+-                          value={authPassword} 
+-                          onChange={(e) => setAuthPassword(e.target.value)} 
+-                          placeholder="тАвтАвтАвтАвтАвтАвтАвтАв" 
+-                          className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
+-                        />
++                      
++                      {/* Simulated Credentials Tip */}
++                      <div className="bg-brand-gold/10 border border-brand-gold/25 p-3 rounded-xl text-[10px] text-brand-dark/95 flex items-start gap-2.5">
++                        <Sparkles className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
++                        <div>
++                          <span className="font-bold block text-brand-green">╨С╤К╤А╨╖ ╨┤╨╛╤Б╤В╤К╨┐ ╨╖╨░ ╤В╨╡╤Б╤В╨▓╨░╨╜╨╡:</span>
++                          ╨Т╤К╨▓╨╡╨┤╨╡╤В╨╡ ╨┐╤А╨╛╨╕╨╖╨▓╨╛╨╗╨╡╨╜ ╨╕╨╝╨╡╨╣╨╗ ╨╕ ╨┐╨░╤А╨╛╨╗╨░ ╨╖╨░ ╨░╨▓╤В╨╛╨╝╨░╤В╨╕╤З╨╜╨░ ╨┤╨╡╨╝╨╛╨╜╤Б╤В╤А╨░╤Ж╨╕╤П.
++                        </div>
+                       </div>
+-                      <button 
+-                        type="submit" 
+-                        className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer"
+-                      >
+-                        ╨Т╨╗╨╕╨╖╨░╨╜╨╡ ╨▓ ╤Б╨╕╤Б╤В╨╡╨╝╨░╤В╨░
+-                      </button>
+-                    </form>
+-                  </div>
+-                )}
+-
+-                {authMode === "register" && (
+-                  <div className="space-y-4">
+-                    <div className="space-y-1">
+-                      <h3 className="font-serif text-lg font-bold text-brand-green">╨а╨╡╨│╨╕╤Б╤В╤А╨░╤Ж╨╕╤П ╨╕ ╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╤Б╤В╨▓╨░╨╜╨╡</h3>
+-                      <p className="text-[11px] text-brand-dark/60">
+-                        ╨Я╨╛╨┐╤К╨╗╨╜╨╡╤В╨╡ ╨░╨║╨░╤Г╨╜╤В╨░ ╨╕ ╨┤╨░╨╜╨╜╨╕╤В╨╡ ╨╖╨░ ╨╛╨▒╨╡╨║╤В╨░. ╨Ч╨░╤П╨▓╨╗╨╡╨╜╨╕╨╡╤В╨╛ ╤Й╨╡ ╨▒╤К╨┤╨╡ ╨┐╤А╨╡╨│╨╗╨╡╨┤╨░╨╜╨╛ ╨╛╤В ╨┤-╤А ╨Ф╨░╨╜╨║╨░ ╨Э╨╕╨║╨╛╨╗╨╛╨▓╨░ ╨╖╨░ ╨╛╨┤╨╛╨▒╤А╨╡╨╜╨╕╨╡.
+-                      </p>
+-                    </div>
+-                    
+-                    <form onSubmit={handleRegisterAndApply} className="space-y-3">
+-                      {/* Section: Account Info */}
+-                      <div className="bg-brand-light p-3 rounded-lg border border-brand-green/5 space-y-2.5">
+-                        <span className="text-[9px] font-extrabold text-brand-green uppercase tracking-wider block">1. ╨Ф╨░╨╜╨╜╨╕ ╨╖╨░ ╨Я╤А╨╛╤Д╨╕╨╗╨░</span>
+-                        
++                      
++                      <form onSubmit={handleSignIn} className="space-y-4">
+                         <div className="space-y-1">
+-                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ш╨╝╨╡╨╣╨╗ ╨░╨┤╤А╨╡╤Б *</label>
++                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ш╨╝╨╡╨╣╨╗ ╨░╨┤╤А╨╡╤Б</label>
+                           <input 
+                             type="email" 
+                             required 
+-                            value={regEmail} 
+-                            onChange={(e) => setRegEmail(e.target.value)} 
++                            value={authEmail} 
++                            onChange={(e) => setAuthEmail(e.target.value)} 
+                             placeholder="name@business.com" 
+-                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
++                            className="w-full text-xs px-4 py-3 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all duration-200 bg-brand-light/30"
++                          />
++                        </div>
++                        <div className="space-y-1">
++                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Я╨░╤А╨╛╨╗╨░</label>
++                          <input 
++                            type="password" 
++                            required 
++                            value={authPassword} 
++                            onChange={(e) => setAuthPassword(e.target.value)} 
++                            placeholder="тАвтАвтАвтАвтАвтАвтАвтАв" 
++                            className="w-full text-xs px-4 py-3 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all duration-200 bg-brand-light/30"
+                           />
+                         </div>
++                        <button 
++                          type="submit" 
++                          className="w-full bg-brand-green hover:bg-brand-green/95 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-lg transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-brand-green/20 active:translate-y-[1px]"
++                        >
++                          ╨Т╨╗╨╕╨╖╨░╨╜╨╡ ╨▓ ╤Б╨╕╤Б╤В╨╡╨╝╨░╤В╨░
++                        </button>
++                      </form>
++                    </div>
++                  )}
+ 
+-                        <div className="grid grid-cols-2 gap-2">
+-                          <div className="space-y-1">
+-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Я╨░╤А╨╛╨╗╨░ *</label>
+-                            <input 
+-                              type="password" 
+-                              required 
+-                              value={regPassword} 
+-                              onChange={(e) => setRegPassword(e.target.value)} 
+-                              placeholder="тАвтАвтАвтАвтАвтАвтАвтАв" 
+-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+-                            />
+-                          </div>
++                  {authMode === "register" && (
++                    <div className="space-y-4 animate-fade-in">
++                      <div className="space-y-1">
++                        <h3 className="font-serif text-lg font-bold text-brand-green">╨а╨╡╨│╨╕╤Б╤В╤А╨░╤Ж╨╕╤П & ╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╤Б╤В╨▓╨░╨╜╨╡</h3>
++                        <p className="text-[11px] text-brand-dark/60">
++                          ╨Я╨╛╨┐╤К╨╗╨╜╨╡╤В╨╡ ╨░╨║╨░╤Г╨╜╤В╨░ ╨╕ ╨┤╨░╨╜╨╜╨╕╤В╨╡ ╨╖╨░ ╨╛╨▒╨╡╨║╤В╨░. ╨Ч╨░╤П╨▓╨╗╨╡╨╜╨╕╨╡╤В╨╛ ╤Б╨╡ ╨╕╨╖╨┐╤А╨░╤Й╨░ ╨╖╨░ ╨┐╤А╨╡╨│╨╗╨╡╨┤ ╨╛╤В ╨┤-╤А ╨Ф╨░╨╜╨║╨░ ╨Э╨╕╨║╨╛╨╗╨╛╨▓╨░.
++                        </p>
++                      </div>
++                      
++                      <form onSubmit={handleRegisterAndApply} className="space-y-4">
++                        {/* Section: Account Info */}
++                        <div className="bg-brand-light/50 p-4 rounded-xl border border-brand-green/10 space-y-3">
++                          <span className="text-[9px] font-extrabold text-brand-green uppercase tracking-wider block border-b border-brand-green/10 pb-1">1. ╨Ф╨░╨╜╨╜╨╕ ╨╖╨░ ╨Я╤А╨╛╤Д╨╕╨╗╨░</span>
++                          
+                           <div className="space-y-1">
+-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Я╨╛╨▓╤В╨╛╤А╨╡╤В╨╡ ╨┐╨░╤А╨╛╨╗╨░ *</label>
++                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ш╨╝╨╡╨╣╨╗ ╨░╨┤╤А╨╡╤Б *</label>
+                             <input 
+-                              type="password" 
++                              type="email" 
+                               required 
+-                              value={regConfirmPassword} 
+-                              onChange={(e) => setRegConfirmPassword(e.target.value)} 
+-                              placeholder="тАвтАвтАвтАвтАвтАвтАвтАв" 
+-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
++                              value={regEmail} 
++                              onChange={(e) => setRegEmail(e.target.value)} 
++                              placeholder="name@business.com" 
++                              className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white"
+                             />
+                           </div>
+-                        </div>
+-                      </div>
+ 
+-                      {/* Section: Business Activity Info */}
+-                      <div className="bg-brand-light p-3 rounded-lg border border-brand-green/5 space-y-2.5">
+-                        <span className="text-[9px] font-extrabold text-brand-green uppercase tracking-wider block">2. ╨Ф╨░╨╜╨╜╨╕ ╨╖╨░ ╨Ю╨▒╨╡╨║╤В╨░ & ╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╤Б╤В╨▓╨░╨╜╨╡</span>
+-                        
+-                        <div className="space-y-1">
+-                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ш╨╝╨╡ ╨╜╨░ ╨Ю╨▒╨╡╨║╤В / ╨д╨╕╤А╨╝╨░ *</label>
+-                          <input 
+-                            type="text" 
+-                            required 
+-                            value={applyFirmName} 
+-                            onChange={(e) => setApplyFirmName(e.target.value)} 
+-                            placeholder="╨╜╨░╨┐╤А. ╨а╨╡╤Б╤В╨╛╤А╨░╨╜╤В ╨Т╨╕╤В╨╛╤И╨░" 
+-                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+-                          />
++                          <div className="grid grid-cols-2 gap-2">
++                            <div className="space-y-1">
++                              <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Я╨░╤А╨╛╨╗╨░ *</label>
++                              <input 
++                                type="password" 
++                                required 
++                                value={regPassword} 
++                                onChange={(e) => setRegPassword(e.target.value)} 
++                                placeholder="тАвтАвтАвтАвтАвтАвтАвтАв" 
++                                className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white"
++                              />
++                            </div>
++                            <div className="space-y-1">
++                              <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Я╨╛╨▓╤В╨╛╤А╨╡╤В╨╡ ╨┐╨░╤А╨╛╨╗╨░ *</label>
++                              <input 
++                                type="password" 
++                                required 
++                                value={regConfirmPassword} 
++                                onChange={(e) => setRegConfirmPassword(e.target.value)} 
++                                placeholder="тАвтАвтАвтАвтАвтАвтАвтАв" 
++                                className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white"
++                              />
++                            </div>
++                          </div>
+                         </div>
+ 
+-                        <div className="grid grid-cols-2 gap-2">
++                        {/* Section: Business Activity Info */}
++                        <div className="bg-brand-light/50 p-4 rounded-xl border border-brand-green/10 space-y-3">
++                          <span className="text-[9px] font-extrabold text-brand-green uppercase tracking-wider block border-b border-brand-green/10 pb-1">2. ╨Ф╨░╨╜╨╜╨╕ ╨╖╨░ ╨Ю╨▒╨╡╨║╤В╨░ & ╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╤Б╤В╨▓╨░╨╜╨╡</span>
++                          
+                           <div className="space-y-1">
+-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Х╨Ш╨Ъ / ╨С╤Г╨╗╤Б╤В╨░╤В</label>
++                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ш╨╝╨╡ ╨╜╨░ ╨Ю╨▒╨╡╨║╤В / ╨д╨╕╤А╨╝╨░ *</label>
+                             <input 
+                               type="text" 
+-                              value={applyEik} 
+-                              onChange={(e) => setApplyEik(e.target.value)} 
+-                              placeholder="207654321" 
+-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white font-mono"
++                              required 
++                              value={applyFirmName} 
++                              onChange={(e) => setApplyFirmName(e.target.value)} 
++                              placeholder="╨╜╨░╨┐╤А. ╨а╨╡╤Б╤В╨╛╤А╨░╨╜╤В ╨Т╨╕╤В╨╛╤И╨░" 
++                              className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white"
+                             />
+                           </div>
+-                                                    <div className="space-y-1">
+-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ю╤Б╨╜╨╛╨▓╨╡╨╜ ╨б╨╡╨║╤В╨╛╤А</label>
+-                            <select 
+-                              value={applySector} 
+-                              onChange={(e) => {
+-                                const newSector = e.target.value;
+-                                setApplySector(newSector);
+-                                setApplyNiche(BUSINESS_CATEGORIES[newSector][0]);
+-                              }} 
+-                              className="w-full text-xs px-2 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+-                            >
+-                              {Object.keys(BUSINESS_CATEGORIES).map(sector => (
+-                                <option key={sector} value={sector}>{sector}</option>
+-                              ))}
+-                            </select>
++
++                          <div className="grid grid-cols-2 gap-2">
++                            <div className="space-y-1">
++                              <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Х╨Ш╨Ъ / ╨С╤Г╨╗╤Б╤В╨░╤В</label>
++                              <input 
++                                type="text" 
++                                value={applyEik} 
++                                onChange={(e) => setApplyEik(e.target.value)} 
++                                placeholder="207654321" 
++                                className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white font-mono"
++                              />
++                            </div>
++                            <div className="space-y-1">
++                              <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ю╤Б╨╜╨╛╨▓╨╡╨╜ ╨б╨╡╨║╤В╨╛╤А</label>
++                              <select 
++                                value={applySector} 
++                                onChange={(e) => {
++                                  const newSector = e.target.value;
++                                  setApplySector(newSector);
++                                  setApplyNiche(BUSINESS_CATEGORIES[newSector][0]);
++                                }} 
++                                className="w-full text-xs px-2.5 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white font-bold text-brand-green"
++                              >
++                                {Object.keys(BUSINESS_CATEGORIES).map(sector => (
++                                  <option key={sector} value={sector}>{sector}</option>
++                                ))}
++                              </select>
++                            </div>
+                           </div>
++
+                           <div className="space-y-1">
+                             <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨б╨┐╨╡╤Ж╨╕╤Д╨╕╤З╨╡╨╜ ╨Ю╨▒╨╡╨║╤В / ╨Ъ╨░╤В╨╡╨│╨╛╤А╨╕╤П</label>
+                             <select 
+                               value={applyNiche} 
+                               onChange={(e) => setApplyNiche(e.target.value)} 
+-                              className="w-full text-xs px-2 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
++                              className="w-full text-xs px-2.5 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white font-bold text-brand-green"
+                             >
+                               {BUSINESS_CATEGORIES[applySector]?.map(niche => (
+                                 <option key={niche} value={niche}>{niche}</option>
+                               ))}
+                             </select>
+                           </div>
+-                        </div>
+ 
+-                        <div className="grid grid-cols-2 gap-2">
+-                          <div className="space-y-1">
+-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ы╨╕╤Ж╨╡ ╨╖╨░ ╨║╨╛╨╜╤В╨░╨║╤В *</label>
+-                            <input 
+-                              type="text" 
+-                              required 
+-                              value={applyContact} 
+-                              onChange={(e) => setApplyContact(e.target.value)} 
+-                              placeholder="╨Ш╨▓╨░╨╜ ╨Я╨╡╤В╤А╨╛╨▓" 
+-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+-                            />
++                          <div className="grid grid-cols-2 gap-2">
++                            <div className="space-y-1">
++                              <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ы╨╕╤Ж╨╡ ╨╖╨░ ╨║╨╛╨╜╤В╨░╨║╤В *</label>
++                              <input 
++                                type="text" 
++                                required 
++                                value={applyContact} 
++                                onChange={(e) => setApplyContact(e.target.value)} 
++                                placeholder="╨Ш╨▓╨░╨╜ ╨Я╨╡╤В╤А╨╛╨▓" 
++                                className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white"
++                              />
++                            </div>
++                            <div className="space-y-1">
++                              <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨в╨╡╨╗╨╡╤Д╨╛╨╜ *</label>
++                              <input 
++                                type="tel" 
++                                required 
++                                value={applyPhone} 
++                                onChange={(e) => setApplyPhone(e.target.value)} 
++                                placeholder="0888123456" 
++                                className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white font-mono"
++                              />
++                            </div>
+                           </div>
++
+                           <div className="space-y-1">
+-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨в╨╡╨╗╨╡╤Д╨╛╨╜ *</label>
+-                            <input 
+-                              type="tel" 
+-                              required 
+-                              value={applyPhone} 
+-                              onChange={(e) => setApplyPhone(e.target.value)} 
+-                              placeholder="0888123456" 
+-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white font-mono"
++                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ю╨┐╨╕╤И╨╡╤В╨╡ ╨┤╨╡╨╣╨╜╨╛╤Б╤В╤В╨░ ╤Б╨╕ *</label>
++                            <textarea 
++                              required
++                              value={applyDesc} 
++                              onChange={(e) => setApplyDesc(e.target.value)} 
++                              placeholder="╨Ю╨┐╨╕╤И╨╡╤В╨╡ ╨╜╨░╨║╤А╨░╤В╨║╨╛ ╨╛╨▒╨╡╨║╤В╨░: ╨▒╤А╨╛╨╣ ╨╝╨╡╤Б╤В╨░, ╤Б╨┐╨╡╤Ж╨╕╤Д╨╕╤З╨╜╨╛ ╨╝╨╡╨╜╤О, ╨║╨░╨┐╨░╤Ж╨╕╤В╨╡╤В, ╨╛╨▒╨╛╤А╤Г╨┤╨▓╨░╨╜╨╡..." 
++                              rows={3.5}
++                              className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold transition-all bg-white leading-relaxed resize-none"
+                             />
+                           </div>
+                         </div>
+ 
+-                        <div className="space-y-1">
+-                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">╨Ю╨┐╨╕╤И╨╡╤В╨╡ ╨┤╨╡╨╣╨╜╨╛╤Б╤В╤В╨░ ╤Б╨╕ *</label>
+-                          <textarea 
+-                            required
+-                            value={applyDesc} 
+-                            onChange={(e) => setApplyDesc(e.target.value)} 
+-                            placeholder="╨Ю╨┐╨╕╤И╨╡╤В╨╡ ╨╜╨░╨║╤А╨░╤В╨║╨╛ ╨╛╨▒╨╡╨║╤В╨░: ╨▒╤А╨╛╨╣ ╨╝╨╡╤Б╤В╨░, ╤Б╨┐╨╡╤Ж╨╕╤Д╨╕╤З╨╜╨╛ ╨╝╨╡╨╜╤О (╨╝╨╡╤Б╨╛, ╤А╨╕╨▒╨░, ╨╝╨╗╨╡╤З╨╜╨╕), ╨║╨░╨┐╨░╤Ж╨╕╤В╨╡╤В, ╨╛╨▒╨╛╤А╤Г╨┤╨▓╨░╨╜╨╡ ╨╕ ╤Б╨┐╨╡╤Ж╨╕╤Д╨╕╤З╨╜╨╕ ╨╜╤Г╨╢╨┤╨╕..." 
+-                            rows={3.5}
+-                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white leading-relaxed resize-none"
+-                          />
+-                        </div>
+-                      </div>
+-
+-                      <button 
+-                        type="submit" 
+-                        className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer mt-2"
+-                      >
+-                        ╨Ш╨╖╨┐╤А╨░╤В╨╕ ╨Ч╨░╤П╨▓╨╗╨╡╨╜╨╕╨╡ & ╨а╨╡╨│╨╕╤Б╤В╤А╨╕╤А╨░╨╣ ╨╛╨▒╨╡╨║╤В
+-                      </button>
+-                    </form>
+-                  </div>
+-                )}
++                        <button 
++                          type="submit" 
++                          className="w-full bg-brand-green hover:bg-brand-green/95 text-white font-bold text-xs uppercase tracking-wider py-3.5 rounded-lg transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-brand-green/20 active:translate-y-[1px] mt-2"
++                        >
++                          ╨Ш╨╖╨┐╤А╨░╤В╨╕ ╨Ч╨░╤П╨▓╨╗╨╡╨╜╨╕╨╡ & ╨а╨╡╨│╨╕╤Б╤В╤А╨╕╤А╨░╨╣ ╨╛╨▒╨╡╨║╤В
++                        </button>
++                      </form>
++                    </div>
++                  )}
+ 
++                </div>
+               </div>
+             </div>
+-          </div>
+-        )}
+-      </div>
+-    )}
++          )}
++        </div>
++      )}
+ 
+                         {/* 3. LOGGED-IN DASHBOARD */}
+       {isLoggedIn && (
+@@ -1787,9 +1892,9 @@ export default function ProfilePage() {
+           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+             
+             {/* Left Sidebar Menu - Hidden on print */}
+-            <aside className="lg:col-span-3 bg-white border border-brand-green/5 rounded-2xl p-5 shadow-md space-y-6 print:hidden">
++            <aside className="lg:col-span-3 bg-white border border-brand-green/10 rounded-2xl p-5 shadow-md space-y-6 print:hidden animate-fade-in">
+               <div className="space-y-2">
+-                <span className="text-[10px] font-bold uppercase text-brand-dark/45 tracking-widest block">
++                <span className="text-[10px] font-bold uppercase text-brand-dark/45 tracking-widest block pl-1">
+                   {userRole === "admin" ? "╨Р╨┤╨╝╨╕╨╜ ╨Ь╨╡╨╜╤О" : "╨Э╨░╨▓╨╕╨│╨░╤Ж╨╕╤П"}
+                 </span>
+                 <nav className="flex flex-col gap-1.5 font-sans">
+@@ -1797,96 +1902,178 @@ export default function ProfilePage() {
+                     <>
+                       <button 
+                         onClick={() => setActiveAdminTab("candidates")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "candidates" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeAdminTab === "candidates" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <Clock className="h-4 w-4" />
+-                        ╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╨╕
++                        <Clock className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeAdminTab === "candidates" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨Ъ╨░╨╜╨┤╨╕╨┤╨░╤В╨╕</span>
++                        {activeAdminTab === "candidates" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                       <button 
+                         onClick={() => setActiveAdminTab("users")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "users" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeAdminTab === "users" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <Users className="h-4 w-4" />
+-                        ╨Я╨╛╤В╤А╨╡╨▒╨╕╤В╨╡╨╗╨╕
++                        <Users className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeAdminTab === "users" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨Я╨╛╤В╤А╨╡╨▒╨╕╤В╨╡╨╗╨╕</span>
++                        {activeAdminTab === "users" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                       <button 
+                         onClick={() => setActiveAdminTab("materials")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "materials" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeAdminTab === "materials" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <FileCheck className="h-4 w-4" />
+-                        ╨Ь╨░╤В╨╡╤А╨╕╨░╨╗╨╕ & ╨в╨╡╤Б╤В╨╛╨▓╨╡
++                        <FileCheck className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeAdminTab === "materials" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨Ь╨░╤В╨╡╤А╨╕╨░╨╗╨╕ & ╨в╨╡╤Б╤В╨╛╨▓╨╡</span>
++                        {activeAdminTab === "materials" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                       <button 
+                         onClick={() => setActiveAdminTab("messages")}
+-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeAdminTab === "messages" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <MessageSquare className="h-4 w-4" />
+-                        ╨з╨░╤В ╤Б ╨Ъ╨╗╨╕╨╡╨╜╤В╨╕
+-                        {hasUnreadAdminMessages && (
+-                          <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
+-                        )}
++                        <MessageSquare className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeAdminTab === "messages" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨з╨░╤В ╤Б ╨Ъ╨╗╨╕╨╡╨╜╤В╨╕</span>
++                        {hasUnreadAdminMessages ? (
++                          <span className="absolute right-3.5 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
++                        ) : activeAdminTab === "messages" ? (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        ) : null}
+                       </button>
+                       <button 
+                         onClick={() => setActiveAdminTab("logs")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "logs" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeAdminTab === "logs" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <Search className="h-4 w-4" />
+-                        ╨Ю╨┤╨╕╤В ╨╜╨░ ╨Ф╨╜╨╡╨▓╨╜╨╕╤Ж╨╕
++                        <Search className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeAdminTab === "logs" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨Ю╨┤╨╕╤В ╨╜╨░ ╨Ф╨╜╨╡╨▓╨╜╨╕╤Ж╨╕</span>
++                        {activeAdminTab === "logs" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                     </>
+                   ) : (
+                     <>
+                       <button 
+                         onClick={() => setActiveTab("logs")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "logs" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeTab === "logs" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <Calendar className="h-4 w-4" />
+-                        ╨С╨Р╨С╨е ╨Ф╨╜╨╡╨▓╨╜╨╕╤Ж╨╕
++                        <Calendar className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeTab === "logs" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨С╨Р╨С╨е ╨Ф╨╜╨╡╨▓╨╜╨╕╤Ж╨╕</span>
++                        {activeTab === "logs" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                       <button 
+                         onClick={() => setActiveTab("haccp")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "haccp" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeTab === "haccp" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <FileText className="h-4 w-4" />
+-                        ╨Э╨Р╨б╨б╨а ╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╨╕
++                        <FileText className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeTab === "haccp" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨Э╨Р╨б╨б╨а ╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╨╕</span>
++                        {activeTab === "haccp" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                       <button 
+                         onClick={() => setActiveTab("assigned")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "assigned" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeTab === "assigned" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <FileCheck className="h-4 w-4" />
+-                        ╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╨╕ & ╨в╨╡╤Б╤В╨╛╨▓╨╡
++                        <FileCheck className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeTab === "assigned" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨Ф╨╛╨║╤Г╨╝╨╡╨╜╤В╨╕ & ╨в╨╡╤Б╤В╨╛╨▓╨╡</span>
++                        {activeTab === "assigned" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                       <button 
+                         onClick={() => setActiveTab("courses")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "courses" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeTab === "courses" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <BookOpen className="h-4 w-4" />
+-                        ╨Ь╨╛╨╕╤В╨╡ ╨Ю╨▒╤Г╤З╨╡╨╜╨╕╤П
++                        <BookOpen className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeTab === "courses" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨Ь╨╛╨╕╤В╨╡ ╨Ю╨▒╤Г╤З╨╡╨╜╨╕╤П</span>
++                        {activeTab === "courses" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                       <button 
+                         onClick={handleOpenUserChat}
+-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "chat" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeTab === "chat" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <MessageSquare className="h-4 w-4" />
+-                        ╨з╨░╤В ╤Б ╨Р╨┤╨╝╨╕╨╜╨╕╤Б╤В╤А╨░╤В╨╛╤А
+-                        {hasUnreadUserMessages && (
+-                          <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
+-                        )}
++                        <MessageSquare className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeTab === "chat" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨з╨░╤В ╤Б ╨Р╨┤╨╝╨╕╨╜╨╕╤Б╤В╤А╨░╤В╨╛╤А</span>
++                        {hasUnreadUserMessages ? (
++                          <span className="absolute right-3.5 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
++                        ) : activeTab === "chat" ? (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        ) : null}
+                       </button>
+                       <button 
+                         onClick={() => setActiveTab("tools")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "tools" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeTab === "tools" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <Activity className="h-4 w-4" />
+-                        ╨Ш╨╜╤Б╤В╤А╤Г╨╝╨╡╨╜╤В╨╕
++                        <Activity className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeTab === "tools" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨Ш╨╜╤Б╤В╤А╤Г╨╝╨╡╨╜╤В╨╕</span>
++                        {activeTab === "tools" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                       <button 
+                         onClick={() => setActiveTab("settings")}
+-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "settings" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
++                        className={`group flex items-center gap-3 px-4 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 transform hover:scale-[1.02] active:scale-97 cursor-pointer text-left border w-full ${
++                          activeTab === "settings" 
++                            ? "bg-brand-green text-white border-brand-green shadow-md shadow-brand-green/10" 
++                            : "bg-white text-brand-dark border-brand-green/10 hover:border-brand-gold/30 hover:bg-brand-light/30"
++                        }`}
+                       >
+-                        <Settings className="h-4 w-4" />
+-                        ╨д╨╕╤А╨╝╨░ ╨╕ ╨Я╤А╨╛╤Д╨╕╨╗
++                        <Settings className={`h-4 w-4 transition-transform duration-200 group-hover:scale-110 ${activeTab === "settings" ? "text-brand-gold" : "text-brand-green/70"}`} />
++                        <span className="flex-1">╨д╨╕╤А╨╝╨░ ╨╕ ╨Я╤А╨╛╤Д╨╕╨╗</span>
++                        {activeTab === "settings" && (
++                          <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
++                        )}
+                       </button>
+                     </>
+                   )}
+@@ -1896,9 +2083,9 @@ export default function ProfilePage() {
+               <div className="border-t border-brand-green/5 pt-4">
+                 <button 
+                   onClick={handleLogout}
+-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold uppercase text-red-600 hover:bg-red-50 transition-colors w-full cursor-pointer border-0 bg-transparent text-left font-sans"
++                  className="group flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase text-red-600 hover:bg-red-50 transition-all duration-200 transform hover:scale-[1.02] active:scale-97 w-full cursor-pointer border border-transparent hover:border-red-200 bg-transparent text-left font-sans"
+                 >
+-                  <LogOut className="h-4 w-4" />
++                  <LogOut className="h-4 w-4 text-red-500 transition-transform duration-200 group-hover:-translate-x-0.5" />
+                   ╨Ш╨╖╨╗╨╕╨╖╨░╨╜╨╡
+                 </button>
+               </div>
+@@ -2575,461 +2762,1025 @@ export default function ProfilePage() {
+                                           const isFreezer = row.name.toLowerCase().includes("╤Д╤А╨╕╨╖╨╡╤А");
+                                           const amTemp = parseFloat(row.tempAm);
+                                           const pmTemp = parseFloat(row.tempPm);
+-                                          const isAmOk = isFreezer ? (amTemp <= -18) : (amTemp >= 0 && amTemp <= 4);
+-                                          const isPmOk = isFreezer ? (pmTemp <= -18) : (pmTemp >= 0 && pmTemp <= 4);
+-                                          const isOk = isAmOk && isPmOk;
+-                                          return (
+-                                            <tr key={idx} className="hover:bg-brand-light/20 text-brand-dark">
+-                                              <td className="border border-brand-green/10 p-2 font-medium">{row.name}</td>
+-                                              <td className={`border border-brand-green/10 p-2 text-center font-mono ${!isAmOk ? "text-red-600 font-bold" : ""}`}>{row.tempAm}┬░C</td>
+-                                              <td className={`border border-brand-green/10 p-2 text-center font-mono ${!isPmOk ? "text-red-600 font-bold" : ""}`}>{row.tempPm}┬░C</td>
+-                                              <td className="border border-brand-green/10 p-2 text-center">
+-                                                <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${isOk ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+-                                                  {isOk ? "╨Э╨╛╤А╨╝╨░" : "╨Э╨░╤А╤Г╤И╨╡╨╜╨╕╨╡"}
+-                                                </span>
+-                                              </td>
+-                                            </tr>
+-                                          );
+-                                        })}
+-                                      </tbody>
+-                                    </table>
+-                                  </div>
+-                                )}
++                                          const isAmOk = isFreezer ? (amTemp <= -18)               {activeTab === "logs" && (
++                <div className="space-y-6">
++                  {/* CALCULATE STATS */}
++                  {(() => {
++                    let completedCount = 0;
++                    let totalTasks = 4;
++                    const hasThermal = getSectorForNiche(firmInfo.niche) === "╨Ч╨░╨▓╨╡╨┤╨╡╨╜╨╕╤П ╨╖╨░ ╨╛╨▒╤Й╨╡╤Б╤В╨▓╨╡╨╜╨╛ ╤Е╤А╨░╨╜╨╡╨╜╨╡ (╨Ч╨Ю╨е)" || getSectorForNiche(firmInfo.niche).includes("╨Я╤А╨╛╨╕╨╖╨▓╨╛╨┤╤Б╤В╨▓╨╛") || getSectorForNiche(firmInfo.niche).includes("╨Ъ╨╛╨╜╤Б╨╡╤А╨▓╨╕╤А╨░╨╜╨╕") || getSectorForNiche(firmInfo.niche).includes("╨б╨╗╨░╨┤╨║╨░╤А╤Б╨║╨╕");
++                    const hasFryer = getSectorForNiche(firmInfo.niche) === "╨Ч╨░╨▓╨╡╨┤╨╡╨╜╨╕╤П ╨╖╨░ ╨╛╨▒╤Й╨╡╤Б╤В╨▓╨╡╨╜╨╛ ╤Е╤А╨░╨╜╨╡╨╜╨╡ (╨Ч╨Ю╨е)" || getSectorForNiche(firmInfo.niche) === "╨Ь╨в╨е тАУ ╨Ь╨╛╨▒╨╕╨╗╨╜╨╕ ╤В╤К╤А╨│╨╛╨▓╤Б╨║╨╕ ╨╛╨▒╨╡╨║╤В╨╕";
++
++                    if (hasThermal) totalTasks++;
++                    if (hasFryer && logFryer.fryerUsed) totalTasks++;
++
++                    if (logIncoming.length > 0) completedCount++;
++                    const fridgesFilled = logFridges.length > 0 && logFridges.every(f => f.tempAm !== "" && f.tempPm !== "");
++                    if (fridgesFilled) completedCount++;
++                    const hygieneFilled = logHygiene.desinfection || logHygiene.surfaces || logHygiene.floors || logHygiene.waste;
++                    if (hygieneFilled) completedCount++;
++                    if (logStaff.checkPassed) completedCount++;
++                    if (hasThermal && logThermal.length > 0) completedCount++;
++                    if (hasFryer && logFryer.fryerUsed) completedCount++;
++
++                    let fridgeAnomalies = 0;
++                    logFridges.forEach(f => {
++                      const isFreezer = f.name.toLowerCase().includes("╤Д╤А╨╕╨╖╨╡╤А");
++                      const am = parseFloat(f.tempAm);
++                      const pm = parseFloat(f.tempPm);
++                      if (!isNaN(am)) {
++                        if (isFreezer && am > -18) fridgeAnomalies++;
++                        if (!isFreezer && (am < 0 || am > 4)) fridgeAnomalies++;
++                      }
++                      if (!isNaN(pm)) {
++                        if (isFreezer && pm > -18) fridgeAnomalies++;
++                        if (!isFreezer && (pm < 0 || pm > 4)) fridgeAnomalies++;
++                      }
++                    });
++
++                    const totalDeliveries = logIncoming.length;
++
++                    return (
++                      <>
++                        {/* SCREEN VIEW - print:hidden */}
++                        <div className="print:hidden space-y-6">
++                          {/* Control panel */}
++                          <div className="bg-white border border-brand-green/10 p-5 rounded-2xl shadow-sm flex flex-wrap gap-4 items-center justify-between">
++                            <div className="flex items-center gap-3.5">
++                              <div className="p-2.5 bg-brand-green/10 text-brand-green rounded-xl shadow-inner">
++                                <Calendar className="h-5 w-5" />
++                              </div>
++                              <div>
++                                <h2 className="font-serif text-base font-bold text-brand-green leading-snug">╨Х╨╢╨╡╨┤╨╜╨╡╨▓╨╜╨╕ ╨Ф╨╜╨╡╨▓╨╜╨╕╤Ж╨╕ ╨┐╨╛ ╨б╨░╨╝╨╛╨║╨╛╨╜╤В╤А╨╛╨╗</h2>
++                                <p className="text-[10px] text-brand-dark/60 font-medium">╨Я╨╛╨┐╤К╨╗╨▓╨░╨╣╤В╨╡ ╨╖╨░╨┐╨╕╤Б╨╕ ╨╛╨╜╨╗╨░╨╣╨╜ ╨╕ ╨│╨╕ ╨│╨╡╨╜╨╡╤А╨╕╤А╨░╨╣╤В╨╡ ╨╖╨░ ╨┐╨╡╤З╨░╤В ╨║╤К╨╝ ╨С╨Р╨С╨е</p>
+                               </div>
++                            </div>
+ 
+-                              {/* 3 & 4. Hygiene and Staff */}
+-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans">
+-                                {/* Hygiene check list */}
+-                                <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10 text-xs">
+-                                  <h3 className="font-serif text-sm font-bold text-brand-green border-b border-brand-green/5 pb-2">3. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨┐╨╛ ╨┤╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П</h3>
+-                                  <div className="space-y-2 pt-1">
+-                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+-                                      <span>╨Ф╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П ╨╜╨░ ╨╕╨╜╨▓╨╡╨╜╤В╨░╤А ╨╕ ╨┐╤А╨╕╨▒╨╛╤А╨╕:</span>
+-                                      <span className={`font-bold ${auditLogs.hygiene?.desinfection ? "text-green-600" : "text-brand-dark/40"}`}>
+-                                        {auditLogs.hygiene?.desinfection ? "тЬУ ╨Ф╨░" : "тЬЧ ╨Э╨╡"}
+-                                      </span>
+-                                    </div>
+-                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+-                                      <span>╨Я╨╛╤З╨╕╤Б╤В╨▓╨░╨╜╨╡ ╨╜╨░ ╤А╨░╨▒╨╛╤В╨╜╨╕ ╨┐╨╛╨▓╤К╤А╤Е╨╜╨╛╤Б╤В╨╕:</span>
+-                                      <span className={`font-bold ${auditLogs.hygiene?.surfaces ? "text-green-600" : "text-brand-dark/40"}`}>
+-                                        {auditLogs.hygiene?.surfaces ? "тЬУ ╨Ф╨░" : "тЬЧ ╨Э╨╡"}
+-                                      </span>
+-                                    </div>
+-                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+-                                      <span>╨Я╨╛╨┤╨╛╨▒╤А╤П╨▓╨░╨╜╨╡ ╨╕ ╨╕╨╖╨╝╨╕╨▓╨░╨╜╨╡ ╨╜╨░ ╨┐╨╛╨┤╨╛╨▓╨╡:</span>
+-                                      <span className={`font-bold ${auditLogs.hygiene?.floors ? "text-green-600" : "text-brand-dark/40"}`}>
+-                                        {auditLogs.hygiene?.floors ? "тЬУ ╨Ф╨░" : "тЬЧ ╨Э╨╡"}
+-                                      </span>
+-                                    </div>
+-                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+-                                      <span>╨Ш╨╖╨▓╨╛╨╖╨▓╨░╨╜╨╡ ╨╜╨░ ╤Е╤А╨░╨╜╨╕╤В╨╡╨╗╨╜╨╕ ╨╛╤В╨┐╨░╨┤╤К╤Ж╨╕:</span>
+-                                      <span className={`font-bold ${auditLogs.hygiene?.waste ? "text-green-600" : "text-brand-dark/40"}`}>
+-                                        {auditLogs.hygiene?.waste ? "тЬУ ╨Ф╨░" : "тЬЧ ╨Э╨╡"}
+-                                      </span>
+-                                    </div>
+-                                  </div>
+-                                </div>
++                            <div className="flex items-center gap-4">
++                              <div className="flex items-center gap-2">
++                                <label className="text-[10px] font-bold text-brand-dark/60 uppercase tracking-wider">╨Ш╨╖╨▒╨╡╤А╨╡╤В╨╡ ╨┤╨░╤В╨░:</label>
++                                <input 
++                                  type="date" 
++                                  value={selectedDate} 
++                                  onChange={(e) => setSelectedDate(e.target.value)} 
++                                  className="text-xs border border-brand-green/15 hover:border-brand-green/30 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-brand-gold focus:border-transparent bg-brand-light/40 transition-all font-semibold text-brand-dark"
++                                />
++                              </div>
++                              <button 
++                                onClick={handlePrint}
++                                className="bg-brand-gold hover:bg-brand-gold-light active:scale-98 transform transition-all text-brand-dark font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-sm hover:shadow border border-brand-gold/20"
++                              >
++                                <Printer className="h-3.5 w-3.5 text-brand-dark/80" />
++                                ╨Я╨╡╤З╨░╤В
++                              </button>
++                            </div>
++                          </div>
+ 
+-                                {/* Staff Check */}
+-                                <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10 text-xs">
+-                                  <h3 className="font-serif text-sm font-bold text-brand-green border-b border-brand-green/5 pb-2">4. ╨Ы╨╕╤З╨╜╨░ ╤Е╨╕╨│╨╕╨╡╨╜╨░ ╨╕ ╨╖╨┤╤А╨░╨▓╨╡╨╜ ╤Б╤В╨░╤В╤Г╤Б</h3>
+-                                  <div className="space-y-3 pt-1">
+-                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+-                                      <span>╨Ш╨╖╨▓╤К╤А╤И╨╡╨╜ ╨▓╤Е╨╛╨┤╤П╤Й ╤Д╨╕╨╗╤В╤К╤А:</span>
+-                                      <span className={`font-bold ${auditLogs.staff?.checkPassed ? "text-green-600" : "text-brand-dark/40"}`}>
+-                                        {auditLogs.staff?.checkPassed ? "тЬУ ╨Ш╨╖╨▓╤К╤А╤И╨╡╨╜" : "тЬЧ ╨Э╨╡"}
++                          {/* Stats Bar */}
++                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
++                            {/* Stat 1: Daily Status */}
++                            <div className="bg-white border border-brand-green/10 p-5 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-200 hover:border-brand-green/20">
++                              <div className="space-y-1">
++                                <span className="text-[10px] uppercase font-bold text-brand-dark/50 tracking-wider">╨Ф╨╜╨╡╨▓╨╡╨╜ ╤Б╤В╨░╤В╤Г╤Б</span>
++                                <div className="flex items-center gap-2">
++                                  {completedCount >= 3 ? (
++                                    <>
++                                      <span className="relative flex h-2 w-2">
++                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
++                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                       </span>
+-                                    </div>
+-                                    <div className="flex items-center justify-between p-1.5 bg-white border border-brand-green/5 rounded text-brand-dark">
+-                                      <span>╨Ч╨┤╤А╨░╨▓╨╛╤Б╨╗╨╛╨▓╨╜╨╛ ╤Б╤К╤Б╤В╨╛╤П╨╜╨╕╨╡:</span>
+-                                      <span className={`font-bold ${auditLogs.staff?.healthy ? "text-green-600" : "text-red-600"}`}>
+-                                        {auditLogs.staff?.healthy ? "╨Ф╨░ (╨Ш╨╖╤А╤П╨┤╨╜╨╕)" : "╨Э╨╡ (╨Ю╤В╤Б╤В╤А╨░╨╜╨╡╨╜╨╕ ╤Б╨╗╤Г╨╢╨╕╤В╨╡╨╗╨╕)"}
++                                      <span className="text-sm font-bold text-emerald-700">╨Я╨╛╨┐╤К╨╗╨╜╨╡╨╜</span>
++                                    </>
++                                  ) : (
++                                    <>
++                                      <span className="relative flex h-2 w-2">
++                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
++                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                                       </span>
+-                                    </div>
+-                                  </div>
++                                      <span className="text-sm font-bold text-amber-700">╨з╨░╨║╨░╤Й ╨┐╨╛╨┐╤К╨╗╨▓╨░╨╜╨╡</span>
++                                    </>
++                                  )}
+                                 </div>
++                                <p className="text-[10px] text-brand-dark/40">{completedCount} ╨╛╤В {totalTasks} ╨┤╨╜╨╡╨▓╨╜╨╕╨║╨░ ╨┐╨╛╨┐╤К╨╗╨╜╨╡╨╜╨╕</p>
+                               </div>
++                              <div className={`p-3 rounded-xl ${completedCount >= 3 ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
++                                <CheckCircle className="h-5 w-5" />
++                              </div>
++                            </div>
+ 
+-                              {/* 5. Thermal Cook (optional) */}
+-                              {auditLogs.thermal && auditLogs.thermal.length > 0 && (
+-                                <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10">
+-                                  <h3 className="font-serif text-sm font-bold text-brand-green">5. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤В╨╡╤А╨╝╨╕╤З╨╜╨░ ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨░ (Cooking logs)</h3>
+-                                  <div className="overflow-x-auto font-sans">
+-                                    <table className="w-full text-xs text-left border-collapse border border-brand-green/10 bg-white">
+-                                      <thead>
+-                                        <tr className="bg-brand-green/5 text-[9px] font-bold text-brand-green uppercase">
+-                                          <th className="border border-brand-green/10 p-2">╨п╤Б╤В╨╕╨╡ / ╨Я╤А╨╛╨┤╤Г╨║╤В</th>
+-                                          <th className="border border-brand-green/10 p-2 text-center w-20">╨з╨░╤Б</th>
+-                                          <th className="border border-brand-green/10 p-2 text-center w-28">t┬░ ╨▓ ╤П╨┤╤А╨╛╤В╨╛ (┬░C)</th>
+-                                          <th className="border border-brand-green/10 p-2 text-center w-36">╨Я╤А╨░╨▓╨╕╨╗╨╜╨╛ ╨╛╤Е╨╗╨░╨╢╨┤╨░╨╜╨╡</th>
+-                                          <th className="border border-brand-green/10 p-2 text-center w-28">╨б╤В╨░╤В╤Г╤Б</th>
+-                                        </tr>
+-                                      </thead>
+-                                      <tbody>
+-                                        {auditLogs.thermal.map((row: any, idx: number) => {
+-                                          const tempVal = parseFloat(row.tempCook);
+-                                          const isTempOk = tempVal >= 75;
+-                                          return (
+-                                            <tr key={idx} className="hover:bg-brand-light/20 text-brand-dark">
+-                                              <td className="border border-brand-green/10 p-2 font-medium">{row.product}</td>
+-                                              <td className="border border-brand-green/10 p-2 text-center font-mono">{row.time}</td>
+-                                              <td className={`border border-brand-green/10 p-2 text-center font-mono ${!isTempOk ? "text-red-600 font-bold" : ""}`}>{row.tempCook}┬░C</td>
+-                                              <td className="border border-brand-green/10 p-2 text-center font-medium">{row.cooled ? "╨Ф╨░" : "╨Э╨╡ ╤Б╨╡ ╨╕╨╖╨╕╤Б╨║╨▓╨░"}</td>
+-                                              <td className="border border-brand-green/10 p-2 text-center">
+-                                                <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${isTempOk ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+-                                                  {isTempOk ? "╨Э╨╛╤А╨╝╨░" : "╨Ъ╤А╨╕╤В╨╕╤З╨╜╨╛ (<75┬░C)"}
+-                                                </span>
+-                                              </td>
+-                                            </tr>
+-                                          );
+-                                        })}
+-                                      </tbody>
+-                                    </table>
+-                                  </div>
++                            {/* Stat 2: Active Fridges */}
++                            <div className="bg-white border border-brand-green/10 p-5 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-200 hover:border-brand-green/20">
++                              <div className="space-y-1">
++                                <span className="text-[10px] uppercase font-bold text-brand-dark/50 tracking-wider">╨е╨╗╨░╨┤╨╕╨╗╨╜╨╕ ╤Б╤К╨╛╤А╤К╨╢╨╡╨╜╨╕╤П</span>
++                                <div className="flex items-center gap-2">
++                                  <span className="text-base font-bold text-brand-green">{logFridges.length} ╨╜╨░╨▒╨╗╤О╨┤╨░╨▓╨░╨╜╨╕</span>
++                                  {fridgeAnomalies > 0 && (
++                                    <span className="bg-rose-50 text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-rose-100">
++                                      <AlertTriangle className="h-2.5 w-2.5" />
++                                      {fridgeAnomalies} ╨╛╤В╨║╨╗╨╛╨╜╨╡╨╜╨╕╤П
++                                    </span>
++                                  )}
+                                 </div>
+-                              )}
++                                <p className="text-[10px] text-brand-dark/40">╨Ш╨╖╨▓╤К╨╜ ╨╜╨╛╤А╨╝╨░: ╤Д╤А╨╕╨╖╨╡╤А &gt; -18┬░C, ╤Е╨╗╨░╨┤╨╕╨╗╨╜╨╕╨║ &lt; 0┬░C ╨╕╨╗╨╕ &gt; 4┬░C</p>
++                              </div>
++                              <div className={`p-3 rounded-xl ${fridgeAnomalies > 0 ? 'bg-rose-50 text-rose-600' : 'bg-brand-light text-brand-green'}`}>
++                                <Activity className="h-5 w-5" />
++                              </div>
++                            </div>
+ 
+-                              {/* 6. Fryer check (optional) */}
+-                              {auditLogs.fryer && auditLogs.fryer.fryerUsed && (
+-                                <div className="border border-brand-green/10 rounded-xl p-4 space-y-3 bg-brand-light/10 text-xs font-sans">
+-                                  <h3 className="font-serif text-sm font-bold text-brand-green border-b border-brand-green/5 pb-2">6. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤Д╤А╨╕╤В╤О╤А╨╜╨░ ╨╝╨░╨╖╨╜╨╕╨╜╨░</h3>
+-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1 text-brand-dark">
+-                                    <div className="p-2.5 bg-white border border-brand-green/5 rounded flex justify-between items-center">
+-                                      <span>╨д╤А╨╕╤В╤О╤А╨╜╨╕╨║ ╨╕╨╖╨┐╨╛╨╗╨╖╨▓╨░╨╜:</span>
+-                                      <span className="font-bold text-brand-green">╨Ф╨░</span>
+-                                    </div>
+-                                    <div className="p-2.5 bg-white border border-brand-green/5 rounded flex justify-between items-center">
+-                                      <span>╨Ъ╨░╤З╨╡╤Б╤В╨▓╨╛ ╨╜╨░ ╨╝╨░╨╖╨╜╨╕╨╜╨░╤В╨░:</span>
+-                                      <span className={`font-bold ${auditLogs.fryer.oilQualityOk ? "text-green-600" : "text-red-600"}`}>
+-                                        {auditLogs.fryer.oilQualityOk ? "╨У╨╛╨┤╨╜╨░" : "╨Э╨╡╨│╨╛╨┤╨╜╨░ (╨С╤А╨░╨║)"}
+-                                      </span>
+-                                    </div>
+-                                    <div className="p-2.5 bg-white border border-brand-green/5 rounded flex justify-between items-center">
+-                                      <span>╨Я╨╛╨┤╨╝╤П╨╜╨░ ╨╕╨╖╨▓╤К╤А╤И╨╡╨╜╨░:</span>
+-                                      <span className="font-bold text-green-600">
+-                                        {auditLogs.fryer.oilChanged ? "╨Ф╨░" : "╨Э╨╡"}
+-                                      </span>
+-                                    </div>
+-                                  </div>
++                            {/* Stat 3: Total Deliveries */}
++                            <div className="bg-white border border-brand-green/10 p-5 rounded-2xl shadow-sm flex items-center justify-between transition-all duration-200 hover:border-brand-green/20">
++                              <div className="space-y-1">
++                                <span className="text-[10px] uppercase font-bold text-brand-dark/50 tracking-wider">╨Я╤А╨╕╨╡╤В╨╕ ╨┤╨╛╤Б╤В╨░╨▓╨║╨╕ ╨┤╨╜╨╡╤Б</span>
++                                <div className="flex items-center gap-1.5">
++                                  <span className="text-base font-bold text-brand-green">{totalDeliveries} ╨┐╤А╨╛╨┤╤Г╨║╤В╨░</span>
+                                 </div>
+-                              )}
++                                <p className="text-[10px] text-brand-dark/40">╨Т╤Е╨╛╨┤╤П╤Й ╨║╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╨┐╨░╤А╤В╨╕╨┤╨░, ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░ ╨╕ ╨│╨╛╨┤╨╜╨╛╤Б╤В</p>
++                              </div>
++                              <div className="p-3 bg-brand-light text-brand-gold rounded-xl">
++                                <Download className="h-5 w-5" />
++                              </div>
+                             </div>
+-                          );
+-                        })()}
+-                      </div>
+-                    );
+-                  })()}
+-                </>
+-              ) : (
+-                <>
+-                  {(() => {
+-                    const currentUser = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+-                    return (
+-                      <>
+-                        {/* TAB 1: DAILY LOGBOOKS (╨Ф╨Э╨Х╨Т╨Э╨Ш╨ж╨Ш) */}
+-              {activeTab === "logs" && (
+-                <div className="space-y-6">
+-                  {/* Control panel - Hidden on print */}
+-                  <div className="bg-white border border-brand-green/5 p-5 rounded-2xl shadow-md flex flex-wrap gap-4 items-center justify-between print:hidden">
+-                    <div className="flex items-center gap-3">
+-                      <div className="p-2 bg-brand-green/10 text-brand-green rounded-lg">
+-                        <Calendar className="h-5 w-5" />
+-                      </div>
+-                      <div>
+-                        <h2 className="font-serif text-lg font-bold text-brand-green leading-snug">╨Х╨╢╨╡╨┤╨╜╨╡╨▓╨╜╨╕ ╨Ф╨╜╨╡╨▓╨╜╨╕╤Ж╨╕ ╨┐╨╛ ╨б╨░╨╝╨╛╨║╨╛╨╜╤В╤А╨╛╨╗</h2>
+-                        <p className="text-[10px] text-brand-dark/50">╨Я╨╛╨┐╤К╨╗╨▓╨░╨╣╤В╨╡ ╨╖╨░╨┐╨╕╤Б╨╕ ╨╛╨╜╨╗╨░╨╣╨╜ ╨╕ ╨│╨╕ ╨┐╨╡╤З╨░╤В╨░╨╣╤В╨╡ ╨╖╨░ ╨╕╨╜╤Б╨┐╨╡╨║╤В╨╛╤А╨╕╤В╨╡</p>
+-                      </div>
+-                    </div>
++                          </div>
+ 
+-                    <div className="flex items-center gap-3">
+-                      <div className="flex items-center gap-2">
+-                        <label className="text-[11px] font-bold text-brand-dark/70 uppercase">╨Ш╨╖╨▒╨╡╤А╨╡╤В╨╡ ╨┤╨░╤В╨░:</label>
+-                        <input 
+-                          type="date" 
+-                          value={selectedDate} 
+-                          onChange={(e) => setSelectedDate(e.target.value)} 
+-                          className="text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-brand-light"
+-                        />
+-                      </div>
+-                      <button 
+-                        onClick={handlePrint}
+-                        className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase px-4 py-2 rounded transition-colors flex items-center gap-1.5 cursor-pointer shadow"
+-                      >
+-                        <Printer className="h-3.5 w-3.5" />
+-                        ╨Я╨╡╤З╨░╤В ╨╜╨░ ╨▓╤Б╨╕╤З╨║╨╛
+-                      </button>
+-                    </div>
+-                  </div>
++                          {/* Forms Screen Layout */}
++                          <div className="space-y-6">
++                            
++                            {/* FORM 1: ╨Т╤Е╨╛╨┤╤П╤Й ╨Ъ╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╤Е╤А╨░╨╜╨╕ */}
++                            <div className="bg-white border border-brand-green/10 p-6 rounded-2xl shadow-sm space-y-4">
++                              <div className="flex items-center justify-between border-b border-brand-green/5 pb-3">
++                                <div className="flex items-center gap-3">
++                                  <div className="w-8 h-8 rounded-lg bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-sm">1</div>
++                                  <div>
++                                    <h3 className="font-serif text-sm font-bold text-brand-green">╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╨▓╤Е╨╛╨┤╤П╤Й ╨║╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╤Б╤Г╤А╨╛╨▓╨╕╨╜╨╕</h3>
++                                    <p className="text-[9px] text-brand-dark/50">╨Ъ╨╛╨╜╤В╤А╨╛╨╗ ╨┐╤А╨╕ ╨┐╤А╨╕╨╡╨╝╨░╨╜╨╡ ╨╜╨░ ╤Е╤А╨░╨╜╨╕ ╨╕ ╨┐╤А╨╛╨▓╨╡╤А╨║╨░ ╨╜╨░ ╨║╨░╤З╨╡╤Б╤В╨▓╨╛╤В╨╛</p>
++                                  </div>
++                                </div>
++                                <button 
++                                  onClick={addDeliveryRow}
++                                  className="bg-brand-green hover:bg-brand-green-light active:scale-98 transform transition-all text-white text-[10px] uppercase font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm shadow-brand-green/15"
++                                >
++                                  <Plus className="h-3.5 w-3.5" /> ╨Ф╨╛╨▒╨░╨▓╨╕ ╨┤╨╛╤Б╤В╨░╨▓╨║╨░
++                                </button>
++                              </div>
+ 
+-                  {/* PRINT VIEW HEADER - Visible only on print */}
+-                  <div className="hidden print:block space-y-4 mb-6 border-b-2 border-brand-dark pb-4">
+-                    <div className="flex justify-between items-start">
+-                      <div>
+-                        <h1 className="font-serif text-xl font-bold uppercase">╨Х╨Ц╨Х╨Ф╨Э╨Х╨Т╨Э╨Ш ╨Ч╨Р╨Я╨Ш╨б╨Ш ╨Я╨Ю ╨б╨Ш╨б╨в╨Х╨Ь╨Р╨в╨Р ╨Ч╨Р ╨б╨Р╨Ь╨Ю╨Ъ╨Ю╨Э╨в╨а╨Ю╨Ы</h1>
+-                        <p className="text-xs">╨Ю╨▒╨╡╨║╤В: {firmInfo.name} | ╨Х╨Ш╨Ъ: {firmInfo.eik}</p>
+-                        <p className="text-xs">╨Р╨┤╤А╨╡╤Б: {firmInfo.address} | ╨г╨┐╤А╨░╨▓╨╕╤В╨╡╨╗: {firmInfo.manager}</p>
+-                      </div>
+-                      <div className="text-right">
+-                        <span className="text-sm font-bold block border border-brand-dark px-3 py-1 bg-brand-light">
+-                          ╨Ф╨Р╨в╨Р: {selectedDate}
+-                        </span>
+-                      </div>
+-                    </div>
+-                  </div>
++                              {logIncoming.length === 0 ? (
++                                <div className="flex flex-col items-center justify-center py-8 bg-brand-light/20 rounded-2xl border border-dashed border-brand-green/10">
++                                  <p className="text-xs text-brand-dark/50 italic text-center">╨Э╤П╨╝╨░ ╨▓╤К╨▓╨╡╨┤╨╡╨╜╨╕ ╨┤╨╛╤Б╤В╨░╨▓╤П╨╜╨╕ ╤Е╤А╨░╨╜╨╕ ╨╖╨░ ╤В╨░╨╖╨╕ ╨┤╨░╤В╨░.</p>
++                                  <button 
++                                    onClick={addDeliveryRow} 
++                                    className="mt-3 text-[10px] font-bold text-brand-gold hover:text-brand-gold-dark uppercase tracking-wider flex items-center gap-1 cursor-pointer"
++                                  >
++                                    <Plus className="h-3 w-3" /> ╨Т╤К╨▓╨╡╨┤╨╡╤В╨╡ ╨┐╤К╤А╨▓╨░ ╨┤╨╛╤Б╤В╨░╨▓╨║╨░
++                                  </button>
++                                </div>
++                              ) : (
++                                <div className="overflow-x-auto rounded-xl border border-brand-green/10">
++                                  <table className="w-full text-xs text-left border-collapse bg-white">
++                                    <thead>
++                                      <tr className="bg-brand-green/5 text-[9px] font-bold text-brand-green uppercase tracking-wider border-b border-brand-green/10">
++                                        <th className="p-3">╨Я╤А╨╛╨┤╤Г╨║╤В / ╨б╤Г╤А╨╛╨▓╨╕╨╜╨░</th>
++                                        <th className="p-3">╨Ф╨╛╤Б╤В╨░╨▓╤З╨╕╨║</th>
++                                        <th className="p-3">╨Я╨░╤А╤В╨╕╨┤╨░ / ╨Э╨╛╨╝╨╡╤А</th>
++                                        <th className="p-3 w-24 text-center">t┬░ ╨┐╤А╨╕ ╤В╤А╨░╨╜╤Б╨┐. (┬░C)</th>
++                                        <th className="p-3 w-32 text-center">╨б╤А╨╛╨║ ╨╜╨░ ╨│╨╛╨┤╨╜╨╛╤Б╤В</th>
++                                        <th className="p-3 w-36 text-center">╨Ш╨╖╤А╤П╨┤╨╜╨░ ╨╛╨┐╨░╨║╨╛╨▓╨║╨░</th>
++                                        <th className="p-3 w-12 text-center">╨Ш╨╖╤В╤А╨╕╨╣</th>
++                                      </tr>
++                                    </thead>
++                                    <tbody className="divide-y divide-brand-green/5">
++                                      {logIncoming.map((row, idx) => (
++                                        <tr key={idx} className="hover:bg-brand-light/30 transition-colors">
++                                          <td className="p-2">
++                                            <input 
++                                              type="text" 
++                                              value={row.product} 
++                                              onChange={(e) => updateDeliveryRow(idx, "product", e.target.value)}
++                                              placeholder="╨╜╨░╨┐╤А. ╨Ф╨╛╨╝╨░╤В╨╕" 
++                                              className="w-full px-2.5 py-1.5 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all"
++                                            />
++                                          </td>
++                                          <td className="p-2">
++                                            <input 
++                                              type="text" 
++                                              value={row.supplier} 
++                                              onChange={(e) => updateDeliveryRow(idx, "supplier", e.target.value)}
++                                              placeholder="╨╜╨░╨┐╤А. ╨Ь╨╡╤В╤А╨╛" 
++                                              className="w-full px-2.5 py-1.5 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all"
++                                            />
++                                          </td>
++                                          <td className="p-2">
++                                            <input 
++                                              type="text" 
++                                              value={row.batch} 
++                                              onChange={(e) => updateDeliveryRow(idx, "batch", e.target.value)}
++                                              placeholder="╨╜╨░╨┐╤А. L3981" 
++                                              className="w-full px-2.5 py-1.5 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all font-mono font-bold text-brand-dark/80"
++                                            />
++                                          </td>
++                                          <td className="p-2 text-center">
++                                            <input 
++                                              type="text" 
++                                              value={row.temp} 
++                                              onChange={(e) => updateDeliveryRow(idx, "temp", e.target.value)}
++                                              placeholder="4" 
++                                              className="w-full text-center px-2.5 py-1.5 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all font-bold text-brand-green"
++                                            />
++                                          </td>
++                                          <td className="p-2 text-center">
++                                            <input 
++                                              type="date" 
++                                              value={row.expiry} 
++                                              onChange={(e) => updateDeliveryRow(idx, "expiry", e.target.value)}
++                                              className="w-full text-center px-2.5 py-1.5 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all text-brand-dark font-medium"
++                                            />
++                                          </td>
++                                          <td className="p-2 text-center">
++                                            <div className="flex gap-1 justify-center">
++                                              <button
++                                                type="button"
++                                                onClick={() => updateDeliveryRow(idx, "compliant", true)}
++                                                className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                                  row.compliant 
++                                                    ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/10" 
++                                                    : "bg-emerald-50 text-emerald-600/70 hover:bg-emerald-100/50"
++                                                }`}
++                                              >
++                                                ╨Ф╨░ (╨Ю╨Ъ)
++                                              </button>
++                                              <button
++                                                type="button"
++                                                onClick={() => updateDeliveryRow(idx, "compliant", false)}
++                                                className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                                  !row.compliant 
++                                                    ? "bg-rose-500 text-white shadow-sm shadow-rose-500/10" 
++                                                    : "bg-rose-50 text-rose-600/70 hover:bg-rose-100/50"
++                                                }`}
++                                              >
++                                                ╨С╤А╨░╨║
++                                              </button>
++                                            </div>
++                                          </td>
++                                          <td className="p-2 text-center">
++                                            <button 
++                                              onClick={() => deleteDeliveryRow(idx)}
++                                              className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
++                                            >
++                                              <Trash2 className="h-3.5 w-3.5" />
++                                            </button>
++                                          </td>
++                                        </tr>
++                                      ))}
++                                    </tbody>
++                                  </table>
++                                </div>
++                              )}
++                            </div>
+ 
+-                  {/* Logbook Forms Container */}
+-                  <div className="space-y-8">
+-                    
+-                    {/* FORM 1: ╨Т╤Е╨╛╨┤╤П╤Й ╨Ъ╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╤Е╤А╨░╨╜╨╕ */}
+-                    <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+-                      <div className="flex items-center justify-between border-b border-brand-green/5 pb-3">
+-                        <div className="flex items-center gap-2">
+-                          <CheckCircle className="h-5 w-5 text-brand-gold" />
+-                          <h3 className="font-serif text-base font-bold text-brand-green">1. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╨▓╤Е╨╛╨┤╤П╤Й ╨║╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╤Б╤Г╤А╨╛╨▓╨╕╨╜╨╕</h3>
+-                        </div>
+-                        <button 
+-                          onClick={addDeliveryRow}
+-                          className="bg-brand-green hover:bg-brand-green/90 text-white text-[10px] uppercase font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-1 cursor-pointer print:hidden"
+-                        >
+-                          <Plus className="h-3.5 w-3.5" /> ╨Ф╨╛╨▒╨░╨▓╨╕ ╨┤╨╛╤Б╤В╨░╨▓╨║╨░
+-                        </button>
+-                      </div>
++                            {/* FORM 2: ╨в╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╡╨╜ ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤Е╨╗╨░╨┤╨╕╨╗╨╜╨╕╤Ж╨╕ */}
++                            <div className="bg-white border border-brand-green/10 p-6 rounded-2xl shadow-sm space-y-4">
++                              <div className="border-b border-brand-green/5 pb-3">
++                                <div className="flex items-center gap-3">
++                                  <div className="w-8 h-8 rounded-lg bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-sm">2</div>
++                                  <div>
++                                    <h3 className="font-serif text-sm font-bold text-brand-green">╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╜╨╕╤П ╤А╨╡╨╢╨╕╨╝ ╨╜╨░ ╤Е╨╗╨░╨┤╨╕╨╗╨╜╨╕╤В╨╡ ╤Б╤К╨╛╤А╤К╨╢╨╡╨╜╨╕╤П</h3>
++                                    <p className="text-[9px] text-brand-dark/50">╨Ш╨╖╨╝╨╡╤А╨▓╨░╨╜╨╡ ╨╕ ╨┤╨╛╨║╤Г╨╝╨╡╨╜╤В╨╕╤А╨░╨╜╨╡ ╨╜╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╕╤В╨╡ ╨┤╨▓╨░ ╨┐╤К╤В╨╕ ╨┤╨╜╨╡╨▓╨╜╨╛</p>
++                                  </div>
++                                </div>
++                              </div>
+ 
+-                      {logIncoming.length === 0 ? (
+-                        <p className="text-xs text-brand-dark/50 italic py-2 text-center">╨Э╤П╨╝╨░ ╨▓╤К╨▓╨╡╨┤╨╡╨╜╨╕ ╨┤╨╛╤Б╤В╨░╨▓╤П╨╜╨╕ ╤Е╤А╨░╨╜╨╕ ╨╖╨░ ╤В╨░╨╖╨╕ ╨┤╨░╤В╨░.</p>
+-                      ) : (
+-                        <div className="overflow-x-auto">
+-                          <table className="w-full text-xs text-left border-collapse border border-brand-green/10">
+-                            <thead>
+-                              <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
+-                                <th className="border border-brand-green/10 p-2.5">╨Я╤А╨╛╨┤╤Г╨║╤В / ╨б╤Г╤А╨╛╨▓╨╕╨╜╨░</th>
+-                                <th className="border border-brand-green/10 p-2.5">╨Ф╨╛╤Б╤В╨░╨▓╤З╨╕╨║</th>
+-                                <th className="border border-brand-green/10 p-2.5">╨Я╨░╤А╤В╨╕╨┤╨░ / ╨Э╨╛╨╝╨╡╤А</th>
+-                                <th className="border border-brand-green/10 p-2.5 w-20 text-center">t┬░ ╨┐╤А╨╕ ╤В╤А╨░╨╜╤Б╨┐. (┬░C)</th>
+-                                <th className="border border-brand-green/10 p-2.5 w-28 text-center">╨б╤А╨╛╨║ ╨╜╨░ ╨│╨╛╨┤╨╜╨╛╤Б╤В</th>
+-                                <th className="border border-brand-green/10 p-2.5 w-24 text-center">╨Ш╨╖╤А╤П╨┤╨╜╨░ ╨╛╨┐╨░╨║╨╛╨▓╨║╨░</th>
+-                                <th className="border border-brand-green/10 p-2.5 w-12 text-center print:hidden">╨Ш╨╖╤В╤А╨╕╨╣</th>
+-                              </tr>
+-                            </thead>
+-                            <tbody>
+-                              {logIncoming.map((row, idx) => (
+-                                <tr key={idx} className="hover:bg-brand-light/40 transition-colors">
+-                                  <td className="border border-brand-green/10 p-1.5">
+-                                    <input 
+-                                      type="text" 
+-                                      value={row.product} 
+-                                      onChange={(e) => updateDeliveryRow(idx, "product", e.target.value)}
+-                                      placeholder="╨╜╨░╨┐╤А. ╨Ф╨╛╨╝╨░╤В╨╕" 
+-                                      className="w-full px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
+-                                    />
+-                                  </td>
+-                                  <td className="border border-brand-green/10 p-1.5">
+-                                    <input 
+-                                      type="text" 
+-                                      value={row.supplier} 
+-                                      onChange={(e) => updateDeliveryRow(idx, "supplier", e.target.value)}
+-                                      placeholder="╨╜╨░╨┐╤А. ╨Ь╨╡╤В╤А╨╛" 
+-                                      className="w-full px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
+-                                    />
+-                                  </td>
+-                                  <td className="border border-brand-green/10 p-1.5">
+-                                    <input 
+-                                      type="text" 
+-                                      value={row.batch} 
+-                                      onChange={(e) => updateDeliveryRow(idx, "batch", e.target.value)}
+-                                      placeholder="╨╜╨░╨┐╤А. L3981" 
+-                                      className="w-full px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none font-mono"
+-                                    />
+-                                  </td>
+-                                  <td className="border border-brand-green/10 p-1.5 text-center">
+-                                    <input 
+-                                      type="text" 
+-                                      value={row.temp} 
+-                                      onChange={(e) => updateDeliveryRow(idx, "temp", e.target.value)}
+-                                      placeholder="4" 
+-                                      className="w-full text-center px-1 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
+-                                    />
+-                                  </td>
+-                                  <td className="border border-brand-green/10 p-1.5 text-center">
+-                                    <input 
+-                                      type="date" 
+-                                      value={row.expiry} 
+-                                      onChange={(e) => updateDeliveryRow(idx, "expiry", e.target.value)}
+-                                      className="px-1 py-0.5 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
+-                                    />
+-                                  </td>
+-                                  <td className="border border-brand-green/10 p-1.5 text-center">
+-                                    <select
+-                                      value={row.compliant ? "yes" : "no"}
+-                                      onChange={(e) => updateDeliveryRow(idx, "compliant", e.target.value === "yes")}
+-                                      className="text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none p-1 font-bold text-brand-green"
++                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
++                                {logFridges.map((row, idx) => {
++                                  const isFreezer = row.name.toLowerCase().includes("╤Д╤А╨╕╨╖╨╡╤А");
++                                  const amVal = parseFloat(row.tempAm);
++                                  const pmVal = parseFloat(row.tempPm);
++                                  
++                                  const amAnomalous = !isNaN(amVal) && (isFreezer ? amVal > -18 : (amVal < 0 || amVal > 4));
++                                  const pmAnomalous = !isNaN(pmVal) && (isFreezer ? pmVal > -18 : (pmVal < 0 || pmVal > 4));
++                                  const hasAnomaly = amAnomalous || pmAnomalous;
++
++                                  return (
++                                    <div 
++                                      key={idx} 
++                                      className={`border rounded-2xl p-4.5 transition-all duration-200 flex flex-col justify-between space-y-3.5 relative overflow-hidden ${
++                                        hasAnomaly 
++                                          ? "bg-rose-50/30 border-rose-200 shadow-sm" 
++                                          : "bg-white border-brand-green/10 hover:border-brand-green/20"
++                                      }`}
+                                     >
+-                                      <option value="yes" className="text-green-600 font-bold">╨Ф╨░ (╨Ю╨Ъ)</option>
+-                                      <option value="no" className="text-red-600 font-bold">╨Э╨╡ (╨С╤А╨░╨║)</option>
+-                                    </select>
+-                                  </td>
+-                                  <td className="border border-brand-green/10 p-1.5 text-center print:hidden">
++                                      {hasAnomaly && (
++                                        <div className="absolute top-0 right-0 w-20 h-20 bg-rose-500/5 rounded-full blur-xl pointer-events-none"></div>
++                                      )}
++                                      
++                                      <div className="flex justify-between items-start">
++                                        <span className="font-serif text-xs font-bold text-brand-green leading-snug">{row.name}</span>
++                                        <span className="text-[8px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-brand-light text-brand-dark/60 border border-brand-green/5">
++                                          {isFreezer ? "╨д╤А╨╕╨╖╨╡╤А" : "╨е╨╗╨░╨┤╨╕╨╗╨╜╨╕╨║"}
++                                        </span>
++                                      </div>
++
++                                      <div className="grid grid-cols-2 gap-3.5">
++                                        <div>
++                                          <label className="text-[9px] font-bold text-brand-dark/50 uppercase block mb-1">╨б╤Г╤В╤А╨╕╨╜ t┬░</label>
++                                          <div className="relative">
++                                            <input 
++                                              type="text" 
++                                              value={row.tempAm} 
++                                              onChange={(e) => updateFridgeTemp(idx, "tempAm", e.target.value)}
++                                              placeholder="╨╜╨░╨┐╤А. 2" 
++                                              className={`w-full text-center px-2 py-2 text-xs border rounded-xl bg-transparent focus:outline-none transition-all font-bold ${
++                                                amAnomalous 
++                                                  ? "border-rose-300 focus:ring-2 focus:ring-rose-400 bg-rose-50 text-rose-700" 
++                                                  : "border-brand-green/15 focus:ring-2 focus:ring-brand-gold focus:border-transparent text-brand-green focus:bg-white"
++                                              }`}
++                                            />
++                                            <span className="absolute right-2 top-2 text-[10px] font-bold text-brand-dark/30">┬░C</span>
++                                          </div>
++                                        </div>
++                                        <div>
++                                          <label className="text-[9px] font-bold text-brand-dark/50 uppercase block mb-1">╨Т╨╡╤З╨╡╤А t┬░</label>
++                                          <div className="relative">
++                                            <input 
++                                              type="text" 
++                                              value={row.tempPm} 
++                                              onChange={(e) => updateFridgeTemp(idx, "tempPm", e.target.value)}
++                                              placeholder="╨╜╨░╨┐╤А. 3" 
++                                              className={`w-full text-center px-2 py-2 text-xs border rounded-xl bg-transparent focus:outline-none transition-all font-bold ${
++                                                pmAnomalous 
++                                                  ? "border-rose-300 focus:ring-2 focus:ring-rose-400 bg-rose-50 text-rose-700" 
++                                                  : "border-brand-green/15 focus:ring-2 focus:ring-brand-gold focus:border-transparent text-brand-green focus:bg-white"
++                                              }`}
++                                            />
++                                            <span className="absolute right-2 top-2 text-[10px] font-bold text-brand-dark/30">┬░C</span>
++                                          </div>
++                                        </div>
++                                      </div>
++
++                                      <div className="flex items-center justify-between border-t border-brand-green/5 pt-3">
++                                        <span className="text-[9px] font-medium text-brand-dark/40 italic">
++                                          ╨Э╨╛╤А╨╝╨░: {isFreezer ? "╨┐╨╛╨┤ -18 ┬░C" : "0 ╨┤╨╛ 4 ┬░C"}
++                                        </span>
++                                      </div>
++
++                                      {hasAnomaly && (
++                                        <div className="bg-rose-50 border border-rose-100 rounded-xl p-2 flex items-start gap-1.5">
++                                          <AlertTriangle className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
++                                          <div className="text-[9px] text-rose-700 font-semibold leading-snug">
++                                            ╨Ю╤В╨║╨╗╨╛╨╜╨╡╨╜╨╕╨╡ ╨╛╤В ╤Б╤В╨░╨╜╨┤╨░╤А╤В╨░ ╨╜╨░ ╨С╨Р╨С╨е!
++                                          </div>
++                                        </div>
++                                      )}
++                                    </div>
++                                  );
++                                })}
++                              </div>
++                            </div>
++
++                            {/* TWO-COLUMN GRID FOR HYGIENE AND HEALTH CHECK */}
++                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
++                              
++                              {/* FORM 3: ╨Я╨╛╤З╨╕╤Б╤В╨▓╨░╨╜╨╡ ╨╕ ╨Ф╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П */}
++                              <div className="bg-white border border-brand-green/10 p-6 rounded-2xl shadow-sm space-y-4">
++                                <div className="border-b border-brand-green/5 pb-3">
++                                  <div className="flex items-center gap-3">
++                                    <div className="w-8 h-8 rounded-lg bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-sm">3</div>
++                                    <div>
++                                      <h3 className="font-serif text-sm font-bold text-brand-green">╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨┐╨╛ ╨┤╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П</h3>
++                                      <p className="text-[9px] text-brand-dark/50">╨Я╤А╨╛╤Ж╨╡╨┤╤Г╤А╨╕ ╨╖╨░ ╨┐╨╛╤З╨╕╤Б╤В╨▓╨░╨╜╨╡ ╨╕ ╨┤╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П</p>
++                                    </div>
++                                  </div>
++                                </div>
++
++                                <p className="text-[10px] text-brand-dark/50 italic leading-snug">╨Ь╨░╤А╨║╨╕╤А╨░╨╣╤В╨╡ ╨┐╤А╨╕╨║╨╗╤О╤З╨╡╨╜╨╕╤В╨╡ ╤Б╨░╨╜╨╕╤В╨░╤А╨╜╨╕ ╨┐╤А╨╛╤Ж╨╡╨┤╤Г╤А╨╕ ╨╖╨░ ╨┤╨╜╨╡╤Б:</p>
++                                
++                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
++                                  <div 
++                                    onClick={() => setLogHygiene({...logHygiene, desinfection: !logHygiene.desinfection})}
++                                    className={`border rounded-xl p-3.5 cursor-pointer select-none transition-all duration-200 transform hover:scale-[1.01] active:scale-99 flex flex-col justify-between space-y-2 ${
++                                      logHygiene.desinfection 
++                                        ? "bg-brand-green/5 border-brand-gold shadow-sm" 
++                                        : "bg-white border-brand-green/10 hover:border-brand-green/20"
++                                    }`}
++                                  >
++                                    <div className="flex items-center justify-between">
++                                      <span className="text-[10px] font-bold text-brand-green">╨Ф╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П ╨╜╨░ ╨╕╨╜╨▓╨╡╨╜╤В╨░╤А</span>
++                                      <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${
++                                        logHygiene.desinfection ? "bg-brand-gold text-brand-dark" : "border border-brand-green/20"
++                                      }`}>
++                                        {logHygiene.desinfection && <Check className="h-2.5 w-2.5 stroke-[3]" />}
++                                      </div>
++                                    </div>
++                                    <span className="text-[9px] text-brand-dark/60 leading-tight">╨Ъ╤Г╤Е╨╜╨╡╨╜╤Б╨║╨╕ ╨╕╨╜╨▓╨╡╨╜╤В╨░╤А, ╨╜╨╛╨╢╨╛╨▓╨╡, ╨┤╤К╤Б╨║╨╕ ╨╕ ╨┐╤А╨╕╨▒╨╛╤А╨╕</span>
++                                  </div>
++
++                                  <div 
++                                    onClick={() => setLogHygiene({...logHygiene, surfaces: !logHygiene.surfaces})}
++                                    className={`border rounded-xl p-3.5 cursor-pointer select-none transition-all duration-200 transform hover:scale-[1.01] active:scale-99 flex flex-col justify-between space-y-2 ${
++                                      logHygiene.surfaces 
++                                        ? "bg-brand-green/5 border-brand-gold shadow-sm" 
++                                        : "bg-white border-brand-green/10 hover:border-brand-green/20"
++                                    }`}
++                                  >
++                                    <div className="flex items-center justify-between">
++                                      <span className="text-[10px] font-bold text-brand-green">╨а╨░╨▒╨╛╤В╨╜╨╕ ╨┐╨╗╨╛╤В╨╛╨▓╨╡</span>
++                                      <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${
++                                        logHygiene.surfaces ? "bg-brand-gold text-brand-dark" : "border border-brand-green/20"
++                                      }`}>
++                                        {logHygiene.surfaces && <Check className="h-2.5 w-2.5 stroke-[3]" />}
++                                      </div>
++                                    </div>
++                                    <span className="text-[9px] text-brand-dark/60 leading-tight">╨Я╨╗╨╛╤В╨╛╨▓╨╡ ╨╖╨░ ╨┐╨╛╨┤╨│╨╛╤В╨╛╨▓╨║╨░ ╨╜╨░ ╤Е╤А╨░╨╜╨░ ╨╕ ╨╝╨░╤Б╨╕</span>
++                                  </div>
++
++                                  <div 
++                                    onClick={() => setLogHygiene({...logHygiene, floors: !logHygiene.floors})}
++                                    className={`border rounded-xl p-3.5 cursor-pointer select-none transition-all duration-200 transform hover:scale-[1.01] active:scale-99 flex flex-col justify-between space-y-2 ${
++                                      logHygiene.floors 
++                                        ? "bg-brand-green/5 border-brand-gold shadow-sm" 
++                                        : "bg-white border-brand-green/10 hover:border-brand-green/20"
++                                    }`}
++                                  >
++                                    <div className="flex items-center justify-between">
++                                      <span className="text-[10px] font-bold text-brand-green">╨Я╨╛╨┤╨╛╨▓╨╡ ╨╕ ╤Б╤В╨╡╨╜╨╕</span>
++                                      <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${
++                                        logHygiene.floors ? "bg-brand-gold text-brand-dark" : "border border-brand-green/20"
++                                      }`}>
++                                        {logHygiene.floors && <Check className="h-2.5 w-2.5 stroke-[3]" />}
++                                      </div>
++                                    </div>
++                                    <span className="text-[9px] text-brand-dark/60 leading-tight">╨Ш╨╖╨╝╨╕╨▓╨░╨╜╨╡ ╨╕ ╨┤╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П ╨╜╨░ ╨┐╨╛╨┤╨╛╨▓╨╕ ╨╜╨░╤Б╤В╨╕╨╗╨║╨╕</span>
++                                  </div>
++
++                                  <div 
++                                    onClick={() => setLogHygiene({...logHygiene, waste: !logHygiene.waste})}
++                                    className={`border rounded-xl p-3.5 cursor-pointer select-none transition-all duration-200 transform hover:scale-[1.01] active:scale-99 flex flex-col justify-between space-y-2 ${
++                                      logHygiene.waste 
++                                        ? "bg-brand-green/5 border-brand-gold shadow-sm" 
++                                        : "bg-white border-brand-green/10 hover:border-brand-green/20"
++                                    }`}
++                                  >
++                                    <div className="flex items-center justify-between">
++                                      <span className="text-[10px] font-bold text-brand-green">╨г╨┐╤А╨░╨▓╨╗╨╡╨╜╨╕╨╡ ╨╜╨░ ╨╛╤В╨┐╨░╨┤╤К╤Ж╨╕</span>
++                                      <div className={`w-4 h-4 rounded-full flex items-center justify-center transition-all ${
++                                        logHygiene.waste ? "bg-brand-gold text-brand-dark" : "border border-brand-green/20"
++                                      }`}>
++                                        {logHygiene.waste && <Check className="h-2.5 w-2.5 stroke-[3]" />}
++                                      </div>
++                                    </div>
++                                    <span className="text-[9px] text-brand-dark/60 leading-tight">╨Ш╨╖╨▓╨╛╨╖╨▓╨░╨╜╨╡ ╨╜╨░ ╨▒╨╛╨║╨╗╤Г╨║ ╨╕ ╤Б╨░╨╜╨╕╤А╨░╨╜╨╡ ╨╜╨░ ╨║╨╛╤Д╨╕</span>
++                                  </div>
++                                </div>
++                              </div>
++
++                              {/* FORM 4: ╨Ч╨┤╤А╨░╨▓╨╡╨╜ ╨б╤В╨░╤В╤Г╤Б / ╨Ы╨╕╤З╨╜╨░ ╨е╨╕╨│╨╕╨╡╨╜╨░ */}
++                              <div className="bg-white border border-brand-green/10 p-6 rounded-2xl shadow-sm space-y-4">
++                                <div className="border-b border-brand-green/5 pb-3">
++                                  <div className="flex items-center gap-3">
++                                    <div className="w-8 h-8 rounded-lg bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-sm">4</div>
++                                    <div>
++                                      <h3 className="font-serif text-sm font-bold text-brand-green">╨Ы╨╕╤З╨╜╨░ ╤Е╨╕╨│╨╕╨╡╨╜╨░ ╨╕ ╨╖╨┤╤А╨░╨▓╨╡╨╜ ╤Б╤В╨░╤В╤Г╤Б</h3>
++                                      <p className="text-[9px] text-brand-dark/50">╨Ф╨╡╨║╨╗╨░╤А╨╕╤А╨░╨╜╨╡ ╨╜╨░ ╨▓╤Е╨╛╨┤╤П╤Й ╤Д╨╕╨╗╤В╤К╤А ╨╜╨░ ╤Б╨╗╤Г╨╢╨╕╤В╨╡╨╗╨╕╤В╨╡</p>
++                                    </div>
++                                  </div>
++                                </div>
++
++                                <p className="text-[10px] text-brand-dark/50 italic leading-snug">╨Ф╨╡╨║╨╗╨░╤А╨░╤Ж╨╕╤П ╨╜╨░ ╤Г╨┐╤А╨░╨▓╨╕╤В╨╡╨╗╤П ╨╖╨░ ╨╖╨┤╤А╨░╨▓╨╛╤Б╨╗╨╛╨▓╨╜╨╛ ╤Б╤К╤Б╤В╨╛╤П╨╜╨╕╨╡ ╨╜╨░ ╨╡╨║╨╕╨┐╨░:</p>
++
++                                <div className="space-y-4 bg-brand-light/30 p-4 rounded-2xl border border-brand-green/5">
++                                  <div 
++                                    onClick={() => setLogStaff({...logStaff, checkPassed: !logStaff.checkPassed})}
++                                    className={`border rounded-xl p-3 cursor-pointer select-none transition-all duration-200 flex items-center justify-between ${
++                                      logStaff.checkPassed 
++                                        ? "bg-brand-green/5 border-brand-green/20" 
++                                        : "bg-white border-brand-green/10 hover:border-brand-green/20"
++                                    }`}
++                                  >
++                                    <div className="flex items-center gap-3">
++                                      <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${
++                                        logStaff.checkPassed ? "bg-brand-green text-white" : "border border-brand-green/20"
++                                      }`}>
++                                        {logStaff.checkPassed && <Check className="h-3 w-3" />}
++                                      </div>
++                                      <div>
++                                        <span className="text-xs font-bold text-brand-green block">╨Т╤Е╨╛╨┤╤П╤Й ╤Д╨╕╨╗╤В╤К╤А ╨╜╨░ ╨┐╨╡╤А╤Б╨╛╨╜╨░╨╗╨░</span>
++                                        <span className="text-[9px] text-brand-dark/50">╨б╨╗╤Г╨╢╨╕╤В╨╡╨╗╨╕╤В╨╡ ╤Б╨░ ╨┐╤А╨╛╨▓╨╡╤А╨╡╨╜╨╕ ╨┐╤А╨╡╨┤╨╕ ╨╖╨░╨┐╨╛╤З╨▓╨░╨╜╨╡ ╨╜╨░ ╤Б╨╝╤П╨╜╨░</span>
++                                      </div>
++                                    </div>
++                                  </div>
++
++                                  <div className="flex items-center justify-between border-t border-brand-green/5 pt-3">
++                                    <span className="text-xs font-bold text-brand-dark/70">╨Т╤Б╨╕╤З╨║╨╕ ╤Б╨╗╤Г╨╢╨╕╤В╨╡╨╗╨╕ ╤Б╨░ ╨╖╨┤╤А╨░╨▓╨╕:</span>
++                                    
++                                    <div className="flex gap-1">
++                                      <button
++                                        type="button"
++                                        onClick={() => setLogStaff({...logStaff, healthy: true})}
++                                        className={`px-3 py-1.5 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                          logStaff.healthy 
++                                            ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/10" 
++                                            : "bg-emerald-50 text-emerald-600/70 hover:bg-emerald-100/50"
++                                        }`}
++                                      >
++                                        ╨Т╤Б╨╕╤З╨║╨╕ ╤Б╨░ ╨╖╨┤╤А╨░╨▓╨╕ (╨Ю╨Ъ)
++                                      </button>
++                                      <button
++                                        type="button"
++                                        onClick={() => setLogStaff({...logStaff, healthy: false})}
++                                        className={`px-3 py-1.5 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                          !logStaff.healthy 
++                                            ? "bg-rose-500 text-white shadow-sm shadow-rose-500/10" 
++                                            : "bg-rose-50 text-rose-600/70 hover:bg-rose-100/50"
++                                        }`}
++                                      >
++                                        ╨Ш╨╝╨░ ╨╛╤В╤Б╤В╤А╨░╨╜╨╡╨╜╨╕
++                                      </button>
++                                    </div>
++                                  </div>
++                                </div>
++
++                                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex gap-2.5">
++                                  <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
++                                  <div className="space-y-0.5">
++                                    <span className="text-[10px] font-bold text-amber-800 block">╨б╤В╨░╨╜╨┤╨░╤А╤В ╨╜╨░ ╨С╨Р╨С╨е:</span>
++                                    <p className="text-[9px] text-amber-700 font-medium leading-normal">
++                                      ╨Ы╨╕╤Ж╨░ ╤Б ╨│╨╜╨╛╨╣╨╜╨╕ ╤А╨░╨╜╨╕, ╨║╨╛╨╢╨╜╨╕ ╨╛╨▒╤А╨╕╨▓╨╕ ╨╕╨╗╨╕ ╨│╤А╨╕╨┐╨╛╨┐╨╛╨┤╨╛╨▒╨╜╨╕ ╤Б╨╕╨╝╨┐╤В╨╛╨╝╨╕ ╤Б╨╡ ╨╛╤В╤Б╤В╤А╨░╨╜╤П╨▓╨░╤В ╨╜╨╡╨╖╨░╨▒╨░╨▓╨╜╨╛ ╨╛╤В ╨┤╨╛╨┐╨╕╤А ╤Б ╤Е╤А╨░╨╜╨╕.
++                                    </p>
++                                  </div>
++                                </div>
++                              </div>
++                            </div>
++
++                            {/* FORM 5: ╨в╨╡╤А╨╝╨╕╤З╨╜╨░ ╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ */}
++                            {hasThermal && (
++                              <div className="bg-white border border-brand-green/10 p-6 rounded-2xl shadow-sm space-y-4">
++                                <div className="flex items-center justify-between border-b border-brand-green/5 pb-3">
++                                  <div className="flex items-center gap-3">
++                                    <div className="w-8 h-8 rounded-lg bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-sm">5</div>
++                                    <div>
++                                      <h3 className="font-serif text-sm font-bold text-brand-green">╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╜╨░ (╤В╨╡╤А╨╝╨╕╤З╨╜╨░) ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨░</h3>
++                                      <p className="text-[9px] text-brand-dark/50">╨Ч╨░╨┤╤К╨╗╨╢╨╕╤В╨╡╨╗╨╡╨╜ ╨║╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░╤В╨░ ╨▓ ╤П╨┤╤А╨╛╤В╨╛ ╨┐╤А╨╕ ╤В╨╛╨┐╨╗╨╕╨╜╨╜╨░ ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨░</p>
++                                    </div>
++                                  </div>
++                                  <button 
++                                    onClick={addThermalRow}
++                                    className="bg-brand-green hover:bg-brand-green-light active:scale-98 transform transition-all text-white text-[10px] uppercase font-bold px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm shadow-brand-green/15"
++                                  >
++                                    <Plus className="h-3.5 w-3.5" /> ╨Ф╨╛╨▒╨░╨▓╨╕ ╨╖╨░╨┐╨╕╤Б
++                                  </button>
++                                </div>
++
++                                <p className="text-[10px] text-brand-dark/50 italic leading-snug">╨Ш╨╖╨╕╤Б╨║╨▓╨░╨╜╨╡ ╨╜╨░ ╨С╨Р╨С╨е: ╨Ь╨╕╨╜╨╕╨╝╨░╨╗╨╜╨░╤В╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░ ╨▓ ╤П╨┤╤А╨╛╤В╨╛ ╨╜╨░ ╤Е╤А╨░╨╜╨░╤В╨░ ╨┐╤А╨╕ ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╤В╤А╤П╨▒╨▓╨░ ╨┤╨░ ╨╡ тЙе 75┬░C.</p>
++
++                                {logThermal.length === 0 ? (
++                                  <div className="flex flex-col items-center justify-center py-8 bg-brand-light/20 rounded-2xl border border-dashed border-brand-green/10">
++                                    <p className="text-xs text-brand-dark/50 italic text-center">╨Э╤П╨╝╨░ ╨▓╤К╨▓╨╡╨┤╨╡╨╜╨╕ ╤В╨╛╨┐╨╗╨╕╨╜╨╜╨╕ ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨╕ ╨╖╨░ ╤В╨░╨╖╨╕ ╨┤╨░╤В╨░.</p>
+                                     <button 
+-                                      onClick={() => deleteDeliveryRow(idx)}
+-                                      className="text-red-500 hover:text-red-700 transition-colors p-1"
++                                      onClick={addThermalRow} 
++                                      className="mt-3 text-[10px] font-bold text-brand-gold hover:text-brand-gold-dark uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                                     >
+-                                      <Trash2 className="h-3.5 w-3.5" />
++                                      <Plus className="h-3 w-3" /> ╨Т╤К╨▓╨╡╨┤╨╡╤В╨╡ ╨┐╤К╤А╨▓╨░ ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨░
+                                     </button>
+-                                  </td>
+-                                </tr>
+-                              ))}
+-                            </tbody>
+-                          </table>
+-                        </div>
+-                      )}
+-                    </div>
++                                  </div>
++                                ) : (
++                                  <>
++                                    <div className="overflow-x-auto rounded-xl border border-brand-green/10">
++                                      <table className="w-full text-xs text-left border-collapse bg-white">
++                                        <thead>
++                                          <tr className="bg-brand-green/5 text-[9px] font-bold text-brand-green uppercase tracking-wider border-b border-brand-green/10">
++                                            <th className="p-3">╨Я╤А╨╕╨│╨╛╤В╨▓╨╡╨╜╨╛ ╤П╤Б╤В╨╕╨╡ / ╨Я╤А╨╛╨┤╤Г╨║╤В</th>
++                                            <th className="p-3 w-28 text-center">╨з╨░╤Б</th>
++                                            <th className="p-3 w-36 text-center">t┬░ ╨▓ ╤Ж╨╡╨╜╤В╤К╤А╨░ (┬░C)</th>
++                                            <th className="p-3 w-48 text-center">╨Я╤А╨░╨▓╨╕╨╗╨╜╨╛ ╨╛╤Е╨╗╨░╨╢╨┤╨░╨╜╨╡</th>
++                                            <th className="p-3 w-12 text-center">╨Ш╨╖╤В╤А╨╕╨╣</th>
++                                          </tr>
++                                        </thead>
++                                        <tbody className="divide-y divide-brand-green/5">
++                                          {logThermal.map((row, idx) => {
++                                            const tempVal = parseFloat(row.tempCook);
++                                            const isTempLow = !isNaN(tempVal) && tempVal < 75;
++
++                                            return (
++                                              <tr key={idx} className="hover:bg-brand-light/30 transition-colors">
++                                                <td className="p-2">
++                                                  <input 
++                                                    type="text" 
++                                                    value={row.product} 
++                                                    onChange={(e) => updateThermalRow(idx, "product", e.target.value)}
++                                                    placeholder="╨╜╨░╨┐╤А. ╨Я╨╕╨╗╨╡ ╤Б ╨║╨░╤А╤В╨╛╤Д╨╕" 
++                                                    className="w-full px-2.5 py-1.5 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all"
++                                                  />
++                                                </td>
++                                                <td className="p-2 text-center">
++                                                  <input 
++                                                    type="text" 
++                                                    value={row.time} 
++                                                    onChange={(e) => updateThermalRow(idx, "time", e.target.value)}
++                                                    placeholder="12:00" 
++                                                    className="w-full text-center px-2.5 py-1.5 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all font-medium text-brand-dark/70"
++                                                  />
++                                                </td>
++                                                <td className="p-2 text-center">
++                                                  <input 
++                                                    type="text" 
++                                                    value={row.tempCook} 
++                                                    onChange={(e) => updateThermalRow(idx, "tempCook", e.target.value)}
++                                                    placeholder="78" 
++                                                    className={`w-full text-center px-2.5 py-1.5 text-xs border rounded-lg bg-transparent focus:outline-none transition-all font-bold ${
++                                                      isTempLow 
++                                                        ? "border-rose-300 focus:ring-2 focus:ring-rose-400 bg-rose-50 text-rose-700" 
++                                                        : "border-transparent hover:border-brand-green/15 focus:border-brand-gold text-brand-green focus:bg-white"
++                                                    }`}
++                                                  />
++                                                </td>
++                                                <td className="p-2 text-center">
++                                                  <div className="flex gap-1 justify-center">
++                                                    <button
++                                                      type="button"
++                                                      onClick={() => updateThermalRow(idx, "cooled", true)}
++                                                      className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                                        row.cooled 
++                                                          ? "bg-brand-green text-white shadow-sm" 
++                                                          : "bg-brand-light text-brand-green/70 hover:bg-brand-green/10"
++                                                      }`}
++                                                    >
++                                                      ╨Ф╨░ (╨С╤К╤А╨╖╨╛)
++                                                    </button>
++                                                    <button
++                                                      type="button"
++                                                      onClick={() => updateThermalRow(idx, "cooled", false)}
++                                                      className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                                        !row.cooled 
++                                                          ? "bg-brand-gold text-brand-dark shadow-sm" 
++                                                          : "bg-brand-light text-brand-dark/60 hover:bg-brand-gold/15"
++                                                      }`}
++                                                    >
++                                                      ╨Э╨╡ ╤Б╨╡ ╨╕╨╖╨╕╤Б╨║╨▓╨░
++                                                    </button>
++                                                  </div>
++                                                </td>
++                                                <td className="p-2 text-center">
++                                                  <button 
++                                                    onClick={() => deleteThermalRow(idx)}
++                                                    className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
++                                                  >
++                                                    <Trash2 className="h-3.5 w-3.5" />
++                                                  </button>
++                                                </td>
++                                              </tr>
++                                            );
++                                          })}
++                                        </tbody>
++                                      </table>
++                                    </div>
+ 
+-                    {/* FORM 2: ╨в╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╡╨╜ ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤Е╨╗╨░╨┤╨╕╨╗╨╜╨╕╤Ж╨╕ */}
+-                    <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+-                      <div className="border-b border-brand-green/5 pb-3">
+-                        <div className="flex items-center gap-2">
+-                          <CheckCircle className="h-5 w-5 text-brand-gold" />
+-                          <h3 className="font-serif text-base font-bold text-brand-green">2. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╜╨╕╤П ╤А╨╡╨╢╨╕╨╝ ╨╜╨░ ╤Е╨╗╨░╨┤╨╕╨╗╨╜╨╕╤В╨╡ ╤Б╤К╨╛╤А╤К╨╢╨╡╨╜╨╕╤П</h3>
+-                        </div>
+-                      </div>
++                                    {logThermal.some(row => {
++                                      const v = parseFloat(row.tempCook);
++                                      return !isNaN(v) && v < 75;
++                                    }) && (
++                                      <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 flex gap-3">
++                                        <AlertTriangle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
++                                        <div>
++                                          <span className="text-xs font-bold text-rose-800 block">╨Т╨╜╨╕╨╝╨░╨╜╨╕╨╡: ╨Э╨╡╨┤╨╛╤Б╤В╨╕╨│╨╜╨░╤В╨░ ╨║╤А╨╕╤В╨╕╤З╨╜╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░ ╨▓ ╤П╨┤╤А╨╛╤В╨╛!</span>
++                                          <p className="text-[10px] text-rose-700 leading-relaxed font-semibold">
++                                            ╨Э╤П╨║╨╛╨╕ ╤П╤Б╤В╨╕╤П ╨╕╨╝╨░╤В ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░ ╨╜╨░ ╨│╨╛╤В╨▓╨╡╨╜╨╡ ╨┐╨╛╨┤ 75┬░C. ╨б╨┐╨╛╤А╨╡╨┤ ╤Б╤В╨░╨╜╨┤╨░╤А╤В╨╕╤В╨╡ ╨╜╨░ ╨С╨Р╨С╨е, ╤В╨╛╨▓╨░ ╤Б╨╡ ╤Б╤З╨╕╤В╨░ ╨╖╨░ ╤А╨╕╤Б╨║ ╨╛╤В ╨╜╨╡╨┐╤К╨╗╨╜╨╛ ╤Г╨╜╨╕╤Й╨╛╨╢╨░╨▓╨░╨╜╨╡ ╨╜╨░ ╨┐╨░╤В╨╛╨│╨╡╨╜╨╜╨╕ ╨╝╨╕╨║╤А╨╛╨╛╤А╨│╨░╨╜╨╕╨╖╨╝╨╕. ╨Я╤А╨╡╨┐╨╛╤А╤К╤З╨▓╨░╨╝╨╡ ╨┤╨░ ╨┐╤А╨╛╨┤╤К╨╗╨╢╨╕╤В╨╡ ╤В╨╡╤А╨╝╨╕╤З╨╜╨░╤В╨░ ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╨╕╨╗╨╕ ╨┤╨░ ╨║╨╛╤А╨╕╨│╨╕╤А╨░╤В╨╡ ╤Б╤В╨╛╨╣╨╜╨╛╤Б╤В╨╕╤В╨╡, ╨░╨║╨╛ ╨╡ ╨╜╨░╨┐╤А╨░╨▓╨╡╨╜╨░ ╨│╤А╨╡╤И╨║╨░ ╨┐╤А╨╕ ╨╕╨╖╨╝╨╡╤А╨▓╨░╨╜╨╡╤В╨╛.
++                                          </p>
++                                        </div>
++                                      </div>
++                                    )}
++                                  </>
++                                )}
++                              </div>
++                            )}
+ 
+-                      <div className="overflow-x-auto">
+-                        <table className="w-full text-xs text-left border-collapse border border-brand-green/10">
+-                          <thead>
+-                            <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
+-                              <th className="border border-brand-green/10 p-2.5">╨е╨╗╨░╨┤╨╕╨╗╨╜╨╛ ╤Б╤К╨╛╤А╤К╨╢╨╡╨╜╨╕╨╡ (╨Ш╨╝╨╡ / тДЦ)</th>
+-                              <th className="border border-brand-green/10 p-2.5 w-36 text-center">╨в╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░ ╨б╤Г╤В╤А╨╕╨╜ (┬░C)</th>
+-                              <th className="border border-brand-green/10 p-2.5 w-36 text-center">╨в╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░ ╨Т╨╡╤З╨╡╤А (┬░C)</th>
+-                              <th className="border border-brand-green/10 p-2.5 w-40 text-center">╨Э╨╛╤А╨╝╨░╤В╨╕╨▓ (╨Я╤А╨╡╨┐╨╛╤А╤К╤З╨╕╤В╨╡╨╗╨╜╨╛)</th>
+-                            </tr>
+-                          </thead>
+-                          <tbody>
+-                            {logFridges.map((row, idx) => (
+-                              <tr key={idx} className="hover:bg-brand-light/40 transition-colors">
+-                                <td className="border border-brand-green/10 p-2.5 font-bold text-brand-green">
+-                                  {row.name}
+-                                </td>
+-                                <td className="border border-brand-green/10 p-1.5 text-center">
+-                                  <input 
+-                                    type="text" 
+-                                    value={row.tempAm} 
+-                                    onChange={(e) => updateFridgeTemp(idx, "tempAm", e.target.value)}
+-                                    placeholder="╨╜╨░╨┐╤А. 3" 
+-                                    className="w-full text-center px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
+-                                  />
+-                                </td>
+-                                <td className="border border-brand-green/10 p-1.5 text-center">
+-                                  <input 
+-                                    type="text" 
+-                                    value={row.tempPm} 
+-                                    onChange={(e) => updateFridgeTemp(idx, "tempPm", e.target.value)}
+-                                    placeholder="╨╜╨░╨┐╤А. 4" 
+-                                    className="w-full text-center px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
+-                                  />
+-                                </td>
+-                                <td className="border border-brand-green/10 p-2.5 text-center text-[10px] text-brand-dark/50 italic">
+-                                  {row.name.toLowerCase().includes("╤Д╤А╨╕╨╖╨╡╤А") ? "╨┐╨╛╨┤ -18 ┬░C" : "╨╛╤В 0 ╨┤╨╛ 4 ┬░C"}
+-                                </td>
+-                              </tr>
+-                            ))}
+-                          </tbody>
+-                        </table>
+-                      </div>
+-                    </div>
++                            {/* FORM 6: ╨Ъ╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╤Д╤А╨╕╤В╤О╤А╨╜╨░ ╨╝╨░╨╖╨╜╨╕╨╜╨░ */}
++                            {hasFryer && (
++                              <div className="bg-white border border-brand-green/10 p-6 rounded-2xl shadow-sm space-y-4">
++                                <div className="border-b border-brand-green/5 pb-3">
++                                  <div className="flex items-center gap-3">
++                                    <div className="w-8 h-8 rounded-lg bg-brand-gold/10 text-brand-gold flex items-center justify-center font-bold text-sm">6</div>
++                                    <div>
++                                      <h3 className="font-serif text-sm font-bold text-brand-green">╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤Д╤А╨╕╤В╤О╤А╨╜╨░ ╨╝╨░╨╖╨╜╨╕╨╜╨░</h3>
++                                      <p className="text-[9px] text-brand-dark/50">╨Я╤А╨╛╨▓╨╡╤А╨║╨░ ╨╜╨░ ╨║╨░╤З╨╡╤Б╤В╨▓╨╛╤В╨╛ ╨╕ ╨┐╨╛╨┤╨╝╤П╨╜╨░ ╨╜╨░ ╨╝╨░╨╖╨╜╨╕╨╜╨░╤В╨░ ╨▓╤К╨▓ ╤Д╤А╨╕╤В╤О╤А╨╜╨╕╤Ж╨╕╤В╨╡</p>
++                                    </div>
++                                  </div>
++                                </div>
++
++                                <div className="bg-brand-light/30 p-5 rounded-2xl border border-brand-green/5 space-y-4">
++                                  <div 
++                                    onClick={() => setLogFryer({...logFryer, fryerUsed: !logFryer.fryerUsed})}
++                                    className={`border rounded-xl p-3.5 cursor-pointer select-none transition-all duration-200 flex items-center justify-between ${
++                                      logFryer.fryerUsed 
++                                        ? "bg-brand-green/5 border-brand-green/20" 
++                                        : "bg-white border-brand-green/10 hover:border-brand-green/20"
++                                    }`}
++                                  >
++                                    <div className="flex items-center gap-3">
++                                      <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${
++                                        logFryer.fryerUsed ? "bg-brand-green text-white" : "border border-brand-green/20"
++                                      }`}>
++                                        {logFryer.fryerUsed && <Check className="h-3 w-3" />}
++                                      </div>
++                                      <div>
++                                        <span className="text-xs font-bold text-brand-green block">╨д╤А╨╕╤В╤О╤А╨╜╨╕╤Ж╨╕╤В╨╡ ╤Б╨░ ╨╕╨╖╨┐╨╛╨╗╨╖╨▓╨░╨╜╨╕ ╨┤╨╜╨╡╤Б</span>
++                                        <span className="text-[9px] text-brand-dark/50">╨б╨╗╨╡╨┤╨╡╤В╨╡ ╨╕ ╨▓╨┐╨╕╤Б╨▓╨░╨╣╤В╨╡ ╨│╨╛╨┤╨╜╨╛╤Б╤В╤В╨░ ╨╜╨░ ╨╛╨╗╨╕╨╛╤В╨╛</span>
++                                      </div>
++                                    </div>
++                                  </div>
++
++                                  {logFryer.fryerUsed && (
++                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-brand-green/5 pt-4">
++                                      <div className="bg-white border border-brand-green/10 rounded-xl p-3 flex items-center justify-between">
++                                        <span className="text-xs font-bold text-brand-dark/70">╨Ъ╨░╤З╨╡╤Б╤В╨▓╨╛ ╨╜╨░ ╨╛╨╗╨╕╨╛╤В╨╛:</span>
++                                        <div className="flex gap-1">
++                                          <button
++                                            type="button"
++                                            onClick={() => setLogFryer({...logFryer, oilQualityOk: true})}
++                                            className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                              logFryer.oilQualityOk 
++                                                ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/10" 
++                                                : "bg-emerald-50 text-emerald-600/70 hover:bg-emerald-100/50"
++                                            }`}
++                                          >
++                                            ╨У╨╛╨┤╨╜╨╛ (╨Ю╨Ъ)
++                                          </button>
++                                          <button
++                                            type="button"
++                                            onClick={() => setLogFryer({...logFryer, oilQualityOk: false})}
++                                            className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                              !logFryer.oilQualityOk 
++                                                ? "bg-rose-500 text-white shadow-sm shadow-rose-500/10" 
++                                                : "bg-rose-50 text-rose-600/70 hover:bg-rose-100/50"
++                                            }`}
++                                          >
++                                            ╨Я╨╛╤В╤К╨╝╨╜╤П╨╗╨╛
++                                          </button>
++                                        </div>
++                                      </div>
++
++                                      <div className="bg-white border border-brand-green/10 rounded-xl p-3 flex items-center justify-between">
++                                        <span className="text-xs font-bold text-brand-dark/70">╨Ш╨╖╨▓╤К╤А╤И╨╡╨╜╨░ ╨┐╨╛╨┤╨╝╤П╨╜╨░:</span>
++                                        <div className="flex gap-1">
++                                          <button
++                                            type="button"
++                                            onClick={() => setLogFryer({...logFryer, oilChanged: true})}
++                                            className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                              logFryer.oilChanged 
++                                                ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/10" 
++                                                : "bg-emerald-50 text-emerald-600/70 hover:bg-emerald-100/50"
++                                            }`}
++                                          >
++                                            ╨Ф╨░ (╨Э╨╛╨▓╨╛ ╨╛╨╗╨╕╨╛)
++                                          </button>
++                                          <button
++                                            type="button"
++                                            onClick={() => setLogFryer({...logFryer, oilChanged: false})}
++                                            className={`px-3 py-1 text-[10px] font-bold rounded-full transition-all duration-150 cursor-pointer ${
++                                              !logFryer.oilChanged 
++                                                ? "bg-brand-dark/10 text-brand-dark/85" 
++                                                : "bg-brand-light text-brand-dark/60 hover:bg-brand-dark/5"
++                                            }`}
++                                          >
++                                            ╨Э╨╡
++                                          </button>
++                                        </div>
++                                      </div>
++                                    </div>
++                                  )}
++                                </div>
++                              </div>
++                            )}
+ 
+-                    {/* TWO-COLUMN GRID FOR HYGIENE AND HEALTH CHECK */}
+-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+-                      
+-                      {/* FORM 3: ╨Я╨╛╤З╨╕╤Б╤В╨▓╨░╨╜╨╡ ╨╕ ╨Ф╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П */}
+-                      <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+-                        <div className="border-b border-brand-green/5 pb-3">
+-                          <div className="flex items-center gap-2">
+-                            <CheckCircle className="h-5 w-5 text-brand-gold" />
+-                            <h3 className="font-serif text-base font-bold text-brand-green">3. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨┐╨╛ ╨┤╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П</h3>
++                          </div>
++
++                          {/* Save & Print Action Deck */}
++                          <div className="sticky bottom-4 z-40 bg-white/80 backdrop-blur-md border border-brand-green/10 p-4 rounded-2xl shadow-xl flex items-center justify-between gap-4 max-w-4xl mx-auto">
++                            <div className="hidden sm:block">
++                              <p className="text-[10px] text-brand-dark/50 font-medium">╨Я╨╛╤Б╨╗╨╡╨┤╨╜╨░ ╨┐╤А╨╛╨╝╤П╨╜╨░: ╨╖╨░ ╤Б╤К╤Е╤А╨░╨╜╨╡╨╜╨╕╨╡ ╨▓ ╨╛╨▒╨╗╨░╨║╨░ ╨╜╨░╤В╨╕╤Б╨╜╨╡╤В╨╡ ╨▒╤Г╤В╨╛╨╜╨░</p>
++                              <p className="text-[11px] font-bold text-brand-green uppercase tracking-wide">╨Ф╨░╤В╨░: {selectedDate}</p>
++                            </div>
++                            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
++                              <button 
++                                onClick={handlePrint}
++                                className="bg-white hover:bg-brand-light text-brand-dark border border-brand-green/15 font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-98 cursor-pointer flex items-center gap-1.5 shadow-sm"
++                              >
++                                <Printer className="h-4 w-4 text-brand-dark/70" />
++                                ╨Я╨╡╤З╨░╤В ╨╜╨░ ╨┤╨╜╨╡╨▓╨╜╨╕╤Ж╨╕
++                              </button>
++                              <button 
++                                onClick={handleSaveLogs}
++                                className="flex-1 sm:flex-initial bg-brand-green hover:bg-brand-green-light text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-98 cursor-pointer flex items-center justify-center gap-1.5 shadow-lg shadow-brand-green/10 border-0"
++                              >
++                                <CheckCircle className="h-4 w-4 text-brand-gold" />
++                                ╨Ч╨░╨┐╨░╨╖╨╕ ╨Ф╨╜╨╡╨▓╨╜╨╕╤Ж╨╕
++                              </button>
++                            </div>
+                           </div>
+                         </div>
+ 
+-                        <p className="text-[10px] text-brand-dark/50 italic leading-snug">╨Ю╤В╨▒╨╡╨╗╨╡╨╢╨╡╤В╨╡ ╨╕╨╖╨▓╤К╤А╤И╨╡╨╜╨╕╤В╨╡ ╨╡╨╢╨╡╨┤╨╜╨╡╨▓╨╜╨╕ ╤Е╨╕╨│╨╕╨╡╨╜╨╜╨╕ ╨┐╤А╨╛╤Ж╨╡╨┤╤Г╤А╨╕ ╨▓ ╨╛╨▒╨╡╨║╤В╨░:</p>
+-                        
+-                        <div className="space-y-3.5">
+-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
+-                            <input 
+-                              type="checkbox" 
+-                              checked={logHygiene.desinfection} 
+-                              onChange={(e) => setLogHygiene({...logHygiene, desinfection: e.target.checked})} 
+-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
+-                            />
+-                            <div>
+-                              <span className="font-bold block">╨Ф╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П ╨╜╨░ ╨╕╨╜╨▓╨╡╨╜╤В╨░╤А ╨╕ ╨┐╤А╨╕╨▒╨╛╤А╨╕</span>
+-                              <span className="text-[10px] text-brand-dark/60 block">╨Ю╨▒╤А╨░╨▒╨╛╤В╨║╨░ ╨╜╨░ ╨┤╤К╤Б╨║╨╕, ╨╜╨╛╨╢╨╛╨▓╨╡, ╤В╨╕╨│╨░╨╜╨╕, ╨║╨╛╨╜╤В╨╡╨╣╨╜╨╡╤А╨╕</span>
++                        {/* PRINT ONLY VIEW - hidden print:block */}
++                        <div className="hidden print:block space-y-6">
++                          {/* PRINT VIEW HEADER */}
++                          <div className="border-b-2 border-brand-dark pb-4">
++                            <div className="flex justify-between items-start">
++                              <div>
++                                <h1 className="font-serif text-xl font-bold uppercase">╨Х╨Ц╨Х╨Ф╨Э╨Х╨Т╨Э╨Ш ╨Ч╨Р╨Я╨Ш╨б╨Ш ╨Я╨Ю ╨б╨Ш╨б╨в╨Х╨Ь╨Р╨в╨Р ╨Ч╨Р ╨б╨Р╨Ь╨Ю╨Ъ╨Ю╨Э╨в╨а╨Ю╨Ы</h1>
++                                <p className="text-xs">╨Ю╨▒╨╡╨║╤В: {firmInfo.name} | ╨Х╨Ш╨Ъ: {firmInfo.eik}</p>
++                                <p className="text-xs">╨Р╨┤╤А╨╡╤Б: {firmInfo.address} | ╨г╨┐╤А╨░╨▓╨╕╤В╨╡╨╗: {firmInfo.manager}</p>
++                              </div>
++                              <div className="text-right">
++                                <span className="text-sm font-bold block border border-brand-dark px-3 py-1 bg-brand-light">
++                                  ╨Ф╨Р╨в╨Р: {selectedDate}
++                                </span>
++                              </div>
+                             </div>
+-                          </label>
++                          </div>
+ 
+-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
+-                            <input 
+-                              type="checkbox" 
+-                              checked={logHygiene.surfaces} 
+-                              onChange={(e) => setLogHygiene({...logHygiene, surfaces: e.target.checked})} 
+-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
+-                            />
+-                            <div>
+-                              <span className="font-bold block">╨Я╨╛╤З╨╕╤Б╤В╨▓╨░╨╜╨╡ ╨╜╨░ ╤А╨░╨▒╨╛╤В╨╜╨╕ ╨┐╨╛╨▓╤К╤А╤Е╨╜╨╛╤Б╤В╨╕</span>
+-                              <span className="text-[10px] text-brand-dark/60 block">╨Ф╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤А╨░╨╜╨╡ ╨╜╨░ ╨┐╨╗╨╛╤В╨╛╨▓╨╡ ╨╕ ╨╝╨╡╤В╨░╨╗╨╜╨╕ ╨┐╨╛╨▓╤К╤А╤Е╨╜╨╛╤Б╤В╨╕</span>
++                          {/* Print Form 1 */}
++                          <div className="space-y-3 break-inside-avoid">
++                            <div className="flex items-center gap-2 border-b border-brand-dark/15 pb-1">
++                              <span className="font-bold text-xs">1. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╨▓╤Е╨╛╨┤╤П╤Й ╨║╨╛╨╜╤В╤А╨╛╨╗ ╨╜╨░ ╤Б╤Г╤А╨╛╨▓╨╕╨╜╨╕</span>
+                             </div>
+-                          </label>
++                            {logIncoming.length === 0 ? (
++                              <p className="text-xs text-brand-dark/50 italic py-2 text-center">╨Э╤П╨╝╨░ ╨▓╤К╨▓╨╡╨┤╨╡╨╜╨╕ ╨┤╨╛╤Б╤В╨░╨▓╤П╨╜╨╕ ╤Е╤А╨░╨╜╨╕ ╨╖╨░ ╤В╨░╨╖╨╕ ╨┤╨░╤В╨░.</p>
++                            ) : (
++                              <table className="w-full text-xs text-left border-collapse border border-brand-dark">
++                                <thead>
++                                  <tr className="bg-brand-light text-[10px] font-bold text-brand-dark uppercase border-b border-brand-dark">
++                                    <th className="border border-brand-dark p-2">╨Я╤А╨╛╨┤╤Г╨║╤В / ╨б╤Г╤А╨╛╨▓╨╕╨╜╨░</th>
++                                    <th className="border border-brand-dark p-2">╨Ф╨╛╤Б╤В╨░╨▓╤З╨╕╨║</th>
++                                    <th className="border border-brand-dark p-2">╨Я╨░╤А╤В╨╕╨┤╨░ / ╨Э╨╛╨╝╨╡╤А</th>
++                                    <th className="border border-brand-dark p-2 w-20 text-center">t┬░ ╤В╤А╨░╨╜╤Б╨┐. (┬░C)</th>
++                                    <th className="border border-brand-dark p-2 w-28 text-center">╨б╤А╨╛╨║ ╨╜╨░ ╨│╨╛╨┤╨╜╨╛╤Б╤В</th>
++                                    <th className="border border-brand-dark p-2 w-24 text-center">╨Ш╨╖╤А╤П╨┤╨╜╨░ ╨╛╨┐╨░╨║╨╛╨▓╨║╨░</th>
++                                  </tr>
++                                </thead>
++                                <tbody>
++                                  {logIncoming.map((row, idx) => (
++                                    <tr key={idx}>
++                                      <td className="border border-brand-dark p-2">{row.product}</td>
++                                      <td className="border border-brand-dark p-2">{row.supplier}</td>
++                                      <td className="border border-brand-dark p-2">{row.batch}</td>
++                                      <td className="border border-brand-dark p-2 text-center">{row.temp}</td>
++                                      <td className="border border-brand-dark p-2 text-center">{row.expiry}</td>
++                                      <td className="border border-brand-dark p-2 text-center font-bold">{row.compliant ? "╨Ф╨░ (╨Ю╨Ъ)" : "╨Э╨╡ (╨С╤А╨░╨║)"}</td>
++                                    </tr>
++                                  ))}
++                                </tbody>
++                              </table>
++                            )}
++                          </div>
+ 
+-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
+-                            <input 
+-                              type="checkbox" 
+-                              checked={logHygiene.floors} 
+-                              onChange={(e) => setLogHygiene({...logHygiene, floors: e.target.checked})} 
+-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
+-                            />
+-                            <div>
+-                              <span className="font-bold block">╨Я╨╛╨┤╨╛╨▒╤А╤П╨▓╨░╨╜╨╡ ╨╕ ╨╕╨╖╨╝╨╕╨▓╨░╨╜╨╡ ╨╜╨░ ╨┐╨╛╨┤╨╛╨▓╨╡</span>
+-                              <span className="text-[10px] text-brand-dark/60 block">╨Х╨╢╨╡╨┤╨╜╨╡╨▓╨╜╨╛ ╨╖╨░╨▒╤К╤А╤Б╨▓╨░╨╜╨╡ ╨╕ ╨╕╨╖╨╝╨╕╨▓╨░╨╜╨╡ ╤Б╤К╤Б ╤Б╨░╨╜╨╕╤А╨░╤Й╨╕ ╤А╨░╨╖╤В╨▓╨╛╤А╨╕</span>
++                          {/* Print Form 2 */}
++                          <div className="space-y-3 break-inside-avoid">
++                            <div className="flex items-center gap-2 border-b border-brand-dark/15 pb-1">
++                              <span className="font-bold text-xs">2. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╜╨╕╤П ╤А╨╡╨╢╨╕╨╝ ╨╜╨░ ╤Е╨╗╨░╨┤╨╕╨╗╨╜╨╕╤В╨╡ ╤Б╤К╨╛╤А╤К╨╢╨╡╨╜╨╕╤П</span>
+                             </div>
+-                          </label>
++                            <table className="w-full text-xs text-left border-collapse border border-brand-dark">
++                              <thead>
++                                <tr className="bg-brand-light text-[10px] font-bold text-brand-dark uppercase border-b border-brand-dark">
++                                  <th className="border border-brand-dark p-2">╨е╨╗╨░╨┤╨╕╨╗╨╜╨╛ ╤Б╤К╨╛╤А╤К╨╢╨╡╨╜╨╕╨╡ (╨Ш╨╝╨╡ / тДЦ)</th>
++                                  <th className="border border-brand-dark p-2 w-36 text-center">╨в╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░ ╨б╤Г╤В╤А╨╕╨╜ (┬░C)</th>
++                                  <th className="border border-brand-dark p-2 w-36 text-center">╨в╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨░ ╨Т╨╡╤З╨╡╤А (┬░C)</th>
++                                  <th className="border border-brand-dark p-2 w-40 text-center">╨Э╨╛╤А╨╝╨░╤В╨╕╨▓ (╨Я╤А╨╡╨┐╨╛╤А╤К╤З╨╕╤В╨╡╨╗╨╜╨╛)</th>
++                                </tr>
++                              </thead>
++                              <tbody>
++                                {logFridges.map((row, idx) => (
++                                  <tr key={idx}>
++                                    <td className="border border-brand-dark p-2 font-bold">{row.name}</td>
++                                    <td className="border border-brand-dark p-2 text-center">{row.tempAm}</td>
++                                    <td className="border border-brand-dark p-2 text-center">{row.tempPm}</td>
++                                    <td className="border border-brand-dark p-2 text-center text-[10px] italic">
++                                      {row.name.toLowerCase().includes("╤Д╤А╨╕╨╖╨╡╤А") ? "╨┐╨╛╨┤ -18 ┬░C" : "╨╛╤В 0 ╨┤╨╛ 4 ┬░C"}
++                                    </td>
++                                  </tr>
++                                ))}
++                              </tbody>
++                            </table>
++                          </div>
+ 
+-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
+-                            <input 
+-                              type="checkbox" 
+-                              checked={logHygiene.waste} 
+-                              onChange={(e) => setLogHygiene({...logHygiene, waste: e.target.checked})} 
+-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
+-                            />
+-                            <div>
+-                              <span className="font-bold block">╨Ш╨╖╨▓╨╛╨╖╨▓╨░╨╜╨╡ ╨╜╨░ ╤Е╤А╨░╨╜╨╕╤В╨╡╨╗╨╜╨╕ ╨╛╤В╨┐╨░╨┤╤К╤Ж╨╕</span>
+-                              <span className="text-[10px] text-brand-dark/60 block">╨Ш╨╖╤Е╨▓╤К╤А╨╗╤П╨╜╨╡ ╨╜╨░ ╨║╨╛╤Д╨╕╤В╨╡, ╨┐╨╛╤З╨╕╤Б╤В╨▓╨░╨╜╨╡ ╨╜╨░ ╨║╨╛╨╜╤В╨╡╨╣╨╜╨╡╤А╨╕ ╨╕ ╨┤╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П</span>
++                          {/* Print Form 3 & Form 4 in simple layout */}
++                          <div className="grid grid-cols-2 gap-8 break-inside-avoid">
++                            {/* Print Form 3 */}
++                            <div className="space-y-3">
++                              <div className="flex items-center gap-2 border-b border-brand-dark/15 pb-1">
++                                <span className="font-bold text-xs">3. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨┐╨╛ ╨┤╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П</span>
++                              </div>
++                              <div className="space-y-2 text-xs">
++                                <div className="flex items-center gap-2">
++                                  <span className="font-bold border border-brand-dark w-4 h-4 text-center leading-3 flex items-center justify-center">{logHygiene.desinfection ? "тЬУ" : " "}</span>
++                                  <span>╨Ф╨╡╨╖╨╕╨╜╤Д╨╡╨║╤Ж╨╕╤П ╨╜╨░ ╨╕╨╜╨▓╨╡╨╜╤В╨░╤А ╨╕ ╨┐╤А╨╕╨▒╨╛╤А╨╕</span>
++                                </div>
++                                <div className="flex items-center gap-2">
++                                  <span className="font-bold border border-brand-dark w-4 h-4 text-center leading-3 flex items-center justify-center">{logHygiene.surfaces ? "тЬУ" : " "}</span>
++                                  <span>╨Я╨╛╤З╨╕╤Б╤В╨▓╨░╨╜╨╡ ╨╜╨░ ╤А╨░╨▒╨╛╤В╨╜╨╕ ╨┐╨╛╨▓╤К╤А╤Е╨╜╨╛╤Б╤В╨╕</span>
++                                </div>
++                                <div className="flex items-center gap-2">
++                                  <span className="font-bold border border-brand-dark w-4 h-4 text-center leading-3 flex items-center justify-center">{logHygiene.floors ? "тЬУ" : " "}</span>
++                                  <span>╨Я╨╛╤З╨╕╤Б╤В╨▓╨░╨╜╨╡ ╨╕ ╨╕╨╖╨╝╨╕╨▓╨░╨╜╨╡ ╨╜╨░ ╨┐╨╛╨┤╨╛╨▓╨╡</span>
++                                </div>
++                                <div className="flex items-center gap-2">
++                                  <span className="font-bold border border-brand-dark w-4 h-4 text-center leading-3 flex items-center justify-center">{logHygiene.waste ? "тЬУ" : " "}</span>
++                                  <span>╨Ш╨╖╨▓╨╛╨╖╨▓╨░╨╜╨╡ ╨╜╨░ ╤Е╤А╨░╨╜╨╕╤В╨╡╨╗╨╜╨╕ ╨╛╤В╨┐╨░╨┤╤К╤Ж╨╕</span>
++                                </div>
++                              </div>
+                             </div>
+-                          </label>
+-                        </div>
+-                      </div>
+ 
+-                      {/* FORM 4: ╨Ч╨┤╤А╨░╨▓╨╡╨╜ ╨б╤В╨░╤В╤Г╤Б / ╨Ы╨╕╤З╨╜╨░ ╨е╨╕╨│╨╕╨╡╨╜╨░ */}
+-                      <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+-                        <div className="border-b border-brand-green/5 pb-3">
+-                          <div className="flex items-center gap-2">
+-                            <CheckCircle className="h-5 w-5 text-brand-gold" />
+-                            <h3 className="font-serif text-base font-bold text-brand-green">4. ╨Ы╨╕╤З╨╜╨░ ╤Е╨╕╨│╨╕╨╡╨╜╨░ ╨╕ ╨╖╨┤╤А╨░╨▓╨╡╨╜ ╤Б╤В╨░╤В╤Г╤Б</h3>
++                            {/* Print Form 4 */}
++                            <div className="space-y-3">
++                              <div className="flex items-center gap-2 border-b border-brand-dark/15 pb-1">
++                                <span className="font-bold text-xs">4. ╨Ы╨╕╤З╨╜╨░ ╤Е╨╕╨│╨╕╨╡╨╜╨░ ╨╕ ╨╖╨┤╤А╨░╨▓╨╡╨╜ ╤Б╤В╨░╤В╤Г╤Б</span>
++                              </div>
++                              <div className="space-y-2 text-xs">
++                                <div className="flex items-center gap-2">
++                                  <span className="font-bold border border-brand-dark w-4 h-4 text-center leading-3 flex items-center justify-center">{logStaff.checkPassed ? "тЬУ" : " "}</span>
++                                  <span>╨Ш╨╖╨▓╤К╤А╤И╨╡╨╜ ╨▓╤Е╨╛╨┤╤П╤Й ╤Д╨╕╨╗╤В╤К╤А ╨╜╨░ ╨┐╨╡╤А╤Б╨╛╨╜╨░╨╗╨░</span>
++                                </div>
++                                <div className="flex justify-between border-t border-brand-dark/10 pt-2">
++                                  <span>╨Я╨╡╤А╤Б╨╛╨╜╨░╨╗╤К╤В ╨╡ ╨╖╨┤╤А╨░╨▓ ╨╕ ╨╕╨╖╤А╤П╨┤╨╡╨╜:</span>
++                                  <span className="font-bold">{logStaff.healthy ? "╨Ф╨░" : "╨Э╨╡ (╨Ш╨╝╨░ ╨╛╤В╤Б╤В╤А╨░╨╜╨╡╨╜╨╕)"}</span>
++                                </div>
++                              </div>
++                            </div>
+                           </div>
+-                        </div>
+ 
+-                        <p className="text-[10px] text-brand-dark/50 italic leading-snug">╨Ф╨╡╨║╨╗╨░╤А╨░╤Ж╨╕╤П ╨╜╨░ ╤Г╨┐╤А╨░╨▓╨╕╤В╨╡╨╗╤П ╨╖╨░ ╨╖╨┤╤А╨░╨▓╨╛╤Б╨╗╨╛╨▓╨╜╨╛ ╤Б╤К╤Б╤В╨╛╤П╨╜╨╕╨╡ ╨╜╨░ ╨╡╨║╨╕╨┐╨░:</p>
++                          {/* Print Form 5 */}
++                          {hasThermal && (
++                            <div className="space-y-3 break-inside-avoid">
++                              <div className="flex items-center gap-2 border-b border-brand-dark/15 pb-1">
++                                <span className="font-bold text-xs">5. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤В╨╡╨╝╨┐╨╡╤А╨░╤В╤Г╤А╨╜╨░ (╤В╨╡╤А╨╝╨╕╤З╨╜╨░) ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨░</span>
++                              </div>
++                              {logThermal.length === 0 ? (
++                                <p className="text-xs text-brand-dark/50 italic py-2 text-center">╨Э╤П╨╝╨░ ╨▓╤К╨▓╨╡╨┤╨╡╨╜╨╕ ╤В╨╛╨┐╨╗╨╕╨╜╨╜╨╕ ╨╛╨▒╤А╨░╨▒╨╛╤В╨║╨╕ ╨╖╨░ ╤В╨░╨╖╨╕ ╨┤╨░╤В╨░.</p>
++                              ) : (
++                                <table className="w-full text-xs text-left border-collapse border border-brand-dark">
++                                  <thead>
++                                    <tr className="bg-brand-light text-[10px] font-bold text-brand-dark uppercase border-b border-brand-dark">
++                                      <th className="border border-brand-dark p-2">╨Я╤А╨╕╨│╨╛╤В╨▓╨╡╨╜╨╛ ╤П╤Б╤В╨╕╨╡ / ╨Я╤А╨╛╨┤╤Г╨║╤В</th>
++                                      <th className="border border-brand-dark p-2 w-24 text-center">╨з╨░╤Б</th>
++                                      <th className="border border-brand-dark p-2 w-36 text-center">t┬░ ╨▓ ╤Ж╨╡╨╜╤В╤К╤А╨░ (┬░C)</th>
++                                      <th className="border border-brand-dark p-2 w-40 text-center">╨Я╤А╨░╨▓╨╕╨╗╨╜╨╛ ╨╛╤Е╨╗╨░╨╢╨┤╨░╨╜╨╡</th>
++                                    </tr>
++                                  </thead>
++                                  <tbody>
++                                    {logThermal.map((row, idx) => (
++                                      <tr key={idx}>
++                                        <td className="border border-brand-dark p-2">{row.product}</td>
++                                        <td className="border border-brand-dark p-2 text-center">{row.time}</td>
++                                        <td className="border border-brand-dark p-2 text-center">{row.tempCook}</td>
++                                        <td className="border border-brand-dark p-2 text-center">{row.cooled ? "╨Ф╨░" : "╨Э╨╡ ╤Б╨╡ ╨╕╨╖╨╕╤Б╨║╨▓╨░"}</td>
++                                      </tr>
++                                    ))}
++                                  </tbody>
++                                </table>
++                              )}
++                            </div>
++                          )}
+ 
+-                        <div className="space-y-4 bg-brand-light/40 p-4 rounded-xl border border-brand-green/5">
+-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
+-                            <input 
+-                              type="checkbox" 
+-                              checked={logStaff.checkPassed} 
+-                              onChange={(e) => setLogStaff({...logStaff, checkPassed: e.target.checked})} 
+-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
+-                            />
++                          {/* Print Form 6 */}
++                          {hasFryer && (
++                            <div className="space-y-3 break-inside-avoid">
++                              <div className="flex items-center gap-2 border-b border-brand-dark/15 pb-1">
++                                <span className="font-bold text-xs">6. ╨Ф╨╜╨╡╨▓╨╜╨╕╨║ ╨╖╨░ ╤Д╤А╨╕╤В╤О╤А╨╜╨░ ╨╝╨░╨╖╨╜╨╕╨╜╨░</span>
++                              </div>
++                              <div className="space-y-2 text-xs border border-brand-dark p-3">
++                                <div className="flex items-center gap-2">
++                                  <span className="font-bold border border-brand-dark w-4 h-4 text-center leading-3 flex items-center justify-center">{logFryer.fryerUsed ? "тЬУ" : " "}</span>
++                                  <span>╨д╤А╨╕╤В╤О╤А╨╜╨╕╤Ж╨╕╤В╨╡ ╤Б╨░ ╨╕╨╖╨┐╨╛╨╗╨╖╨▓╨░╨╜╨╕ ╨╜╨░ ╤В╨░╨╖╨╕ ╨┤╨░╤В╨░</span>
++                                </div>
++                                {logFryer.fryerUsed && (
++                                  <div className="grid grid-cols-2 gap-4 border-t border-brand-dark/10 pt-2 mt-2">
++                                    <div className="flex justify-between">
++                                      <span>╨Ъ╨░╤З╨╡╤Б╤В╨▓╨╛ ╨╜╨░ ╨╝╨░╨╖╨╜╨╕╨╜╨░╤В╨░:</span>
++                                      <span className="font-bold">{logFryer.oilQualityOk ? "╨У╨╛╨┤╨╜╨░" : "╨Э╨╡╨│╨╛╨┤╨╜╨░"}</span>
++                                    </div>
++                                    <div className="flex justify-between">
++                                      <span>╨Ш╨╖╨▓╤К╤А╤И╨╡╨╜╨░ ╨┐╨╛╨┤╨╝╤П╨╜╨░:</span>
++                                      <span className="font-bold">{logFryer.oilChanged ? "╨Ф╨░" : "╨Э╨╡"}</span>
++                                    </div>
++                                  </div>
++                                )}
++                              </div>
++                            </div>
++                          )}
++
++                          {/* SIGNATURE FIELDS */}
++                          <div className="grid grid-cols-2 gap-12 mt-12 pt-8 border-t border-dashed border-brand-dark/40 text-[10px]">
+                             <div>
+-                              <span className="font-bold block text-brand-green">╨Ш╨╖╨▓╤К╤А╤И╨╡╨╜ ╨▓╤Е╨╛╨┤╤П╤Й ╤Д╨╕╨╗╤В╤К╤А ╨╜╨░ ╨┐╨╡╤А╤Б╨╛╨╜╨░╨╗╨░</span>
+-                              <span className="text-[10px] text-brand-dark/60 block">╨б╨╗╤Г╨╢╨╕╤В╨╡╨╗╨╕╤В╨╡ ╤Б╨░ ╨┐╤А╨╛╨▓╨╡╤А╨╡╨╜╨╕ ╨┐╤А╨╡╨┤╨╕ ╨╖╨░╨┐╨╛╤З╨▓╨░╨╜╨╡ ╨╜╨░ ╤Б╨╝╤П╨╜╨░</span>
++                              <p className="font-bold">╨Я╨Ю╨Ф╨Я╨Ш╨б ╨Э╨Р ╨Ш╨Ч╨Т╨к╨а╨и╨Ш╨Ы ╨Ъ╨Ю╨Э╨в╨а╨Ю╨Ы╨Р:</p>
++                              <p className="mt-8 border-b border-brand-dark w-48"></p>
+                             </div>
+-                          </label>
++                            <div className="text-right">
++                              <p className="font-bold">╨Я╨Ю╨Ф╨Я╨Ш╨б ╨Э╨Р ╨г╨Я╨а╨Р╨Т╨Ш╨в╨Х╨Ы / ╨Ю╨в╨У╨Ю╨Т╨Ю╨а╨Э╨Ш╨Ъ:</p>
++                              <p className="mt-8 border-b border-brand-dark w-48 ml-auto"></p>
++                            </div>
++                          </div>
++                        </div>
++                      </>
++                    );
++                  })()}
++                </div>
++              )}           </label>
+ 
+                           <div className="flex items-center justify-between border-t border-brand-green/5 pt-3">
+                             <span className="text-xs font-bold">╨Я╨╡╤А╤Б╨╛╨╜╨░╨╗╤К╤В ╨╡ ╨╖╨┤╤А╨░╨▓ ╨╕ ╨╕╨╖╤А╤П╨┤╨╡╨╜:</span>
