@@ -264,6 +264,7 @@ export default function ProfilePage() {
     }
   }, [firebaseUsers, usersLoading]);
 
+
   useEffect(() => {
     if (!authLoading) {
       if (firebaseUser) {
@@ -809,6 +810,37 @@ export default function ProfilePage() {
 
 
   // Logout handler
+
+  // Auto-mark messages as read when viewing chat
+  useEffect(() => {
+    let changed = false;
+    let newUsers = [...usersList];
+
+    if (userRole === "admin" && activeAdminTab === "messages" && adminActiveChatEmail) {
+      const uIndex = newUsers.findIndex(u => u.email === adminActiveChatEmail);
+      if (uIndex !== -1 && newUsers[uIndex].messages?.some((m: any) => m.sender === "user" && !m.isRead)) {
+        newUsers[uIndex] = {
+          ...newUsers[uIndex],
+          messages: newUsers[uIndex].messages.map((m: any) => m.sender === "user" ? { ...m, isRead: true } : m)
+        };
+        changed = true;
+      }
+    } else if (userRole !== "admin" && activeTab === "chat" && currentUserEmail) {
+      const uIndex = newUsers.findIndex(u => u.email === currentUserEmail);
+      if (uIndex !== -1 && newUsers[uIndex].messages?.some((m: any) => m.sender === "admin" && !m.isRead)) {
+        newUsers[uIndex] = {
+          ...newUsers[uIndex],
+          messages: newUsers[uIndex].messages.map((m: any) => m.sender === "admin" ? { ...m, isRead: true } : m)
+        };
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      saveUsers(newUsers);
+    }
+  }, [usersList, userRole, activeAdminTab, adminActiveChatEmail, activeTab, currentUserEmail]);
+
   const handleLogout = async () => {
     await signOut(auth);
     setIsLoggedIn(false);
@@ -2287,7 +2319,7 @@ export default function ProfilePage() {
                                 return (
                                   <button 
                                     key={user.email}
-                                    onClick={() => setAdminActiveChatEmail(user.email)}
+                                    onClick={() => handleOpenAdminUserChat(user.email)}
                                     className={`w-full text-left p-3.5 flex items-center gap-3 transition-colors cursor-pointer hover:bg-brand-light/40 border-0 bg-transparent ${isSelected ? "bg-brand-light/70 border-l-4 border-brand-gold" : ""}`}
                                   >
                                     <div className="w-8 h-8 rounded-full bg-brand-green text-white font-bold flex items-center justify-center text-xs shrink-0">
