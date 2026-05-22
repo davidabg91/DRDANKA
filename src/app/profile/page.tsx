@@ -1517,8 +1517,8 @@ export default function ProfilePage() {
                 </p>
                 <div className="flex items-center justify-center gap-6 pt-2">
                   <div className="text-center">
-                    <span className="block text-2xl font-black text-brand-gold font-sans">1,200+</span>
-                    <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Активни обекта</span>
+                    <span className="block text-2xl font-black text-brand-gold font-sans">24/7</span>
+                    <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Смарт Контрол</span>
                   </div>
                   <div className="w-px h-8 bg-white/10"></div>
                   <div className="text-center">
