@@ -1421,9 +1421,17 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="bg-brand-light min-h-screen pb-20">
+    <div className={!isLoggedIn ? "bg-[#0A100D] min-h-screen pb-20 relative overflow-hidden" : "bg-brand-light min-h-screen pb-20"}>
+      {/* SaaS Grid Background for Unauthenticated State */}
+      {!isLoggedIn && (
+        <>
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_0%,transparent_0%,rgba(10,16,13,0.9)_100%)] pointer-events-none"></div>
+        </>
+      )}
+      
       {/* 1. Header Hero Banner - Hidden on print */}
-      <section className="bg-brand-green py-10 text-center relative overflow-hidden border-b border-brand-gold/15 print:hidden">
+      <section className={`${!isLoggedIn ? "bg-transparent border-b border-white/5" : "bg-brand-green border-b border-brand-gold/15"} py-10 text-center relative overflow-hidden print:hidden`}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-gold/5 via-transparent to-transparent opacity-75 pointer-events-none"></div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 space-y-2">
           <span className="text-[10px] font-bold uppercase text-brand-gold tracking-widest block">
@@ -1497,10 +1505,10 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             
               {/* Left Column: Premium SaaS Feature Showcase */}
-              <div className="lg:col-span-7 bg-brand-green text-white rounded-3xl p-8 lg:p-12 shadow-2xl relative overflow-hidden flex flex-col justify-between border border-brand-gold/15">
+              <div className="lg:col-span-7 bg-white/[0.03] backdrop-blur-3xl text-white rounded-3xl p-8 lg:p-12 shadow-2xl relative overflow-hidden flex flex-col justify-between border border-white/10">
                 {/* Decorative gradients */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-light/5 rounded-full blur-3xl -ml-20 -mb-20"></div>
+                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/20 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#00ffcc]/10 rounded-full blur-[100px] -ml-20 -mb-20 pointer-events-none"></div>
                 
                 <div className="relative z-10 space-y-8">
                   <div className="flex items-center gap-2">
@@ -1904,11 +1912,11 @@ export default function ProfilePage() {
               
               {/* Right Column: Premium Frosted Glass Form Card */}
               <div className="lg:col-span-5 flex flex-col justify-center relative z-10">
-                <div className="bg-brand-green text-white p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 relative overflow-hidden border border-brand-gold/15">
+                <div className="bg-white/[0.03] backdrop-blur-3xl text-white p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 relative overflow-hidden border border-white/10">
                   
                   {/* Decorative gradients */}
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-light/5 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/20 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#00ffcc]/10 rounded-full blur-[80px] -ml-20 -mb-20 pointer-events-none"></div>
 
                   <div className="relative z-10 space-y-6">
                     {/* Form Tabs Switcher */}
