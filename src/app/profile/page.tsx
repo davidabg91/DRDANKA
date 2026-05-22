@@ -1914,9 +1914,9 @@ export default function ProfilePage() {
                          <div className="text-[9px] text-white/90 leading-relaxed">Здравейте! Виждам, че днес имате инспекция от БАБХ. Нуждаете ли се от съдействие?</div>
                          <div className="text-[7px] text-white/40 text-right mt-1">10:42 ч.</div>
                        </div>
-                       <div className="bg-brand-gold/20 border border-brand-gold/30 p-3 rounded-2xl rounded-tr-sm w-[85%] ml-auto">
-                         <div className="text-[9px] text-brand-dark font-medium leading-relaxed">Да, проверяват ни температурите в момента. Всичко е в дневниците!</div>
-                         <div className="text-[7px] text-brand-dark/50 text-right mt-1">10:45 ч.</div>
+                       <div className="bg-brand-gold border border-brand-gold/80 p-3 rounded-2xl rounded-tr-sm w-[85%] ml-auto shadow-md">
+                         <div className="text-[9px] text-brand-dark font-bold leading-relaxed">Да, проверяват ни температурите в момента. Всичко е в дневниците!</div>
+                         <div className="text-[7px] text-brand-dark/70 font-semibold text-right mt-1">10:45 ч.</div>
                        </div>
                     </div>
                   </div>
