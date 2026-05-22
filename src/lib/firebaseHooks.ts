@@ -68,8 +68,9 @@ export function useDankaUsers() {
     try {
       const userRef = doc(db, "users", email);
       await setDoc(userRef, data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error setting user:", error);
+      alert("Грешка при запис в базата данни (Firebase): " + error.message + "\n\nМоля, проверете вашите Firestore Security Rules в Firebase Console!");
     }
   };
 
