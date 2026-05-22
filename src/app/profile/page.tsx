@@ -299,6 +299,15 @@ export default function ProfilePage() {
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
+
+  // Interactive Showcase states
+  const [showcaseTab, setShowcaseTab] = useState<"logbooks" | "haccp" | "audit" | "tests">("logbooks");
+  const [mockDeliveryStatus, setMockDeliveryStatus] = useState<"pending" | "approved" | "rejected">("pending");
+  const [mockTempAm, setMockTempAm] = useState("4.2");
+  const [mockTempPm, setMockTempPm] = useState("3.8");
+  const [mockTestSelected, setMockTestSelected] = useState<number | null>(null);
+  const [mockTestSubmitted, setMockTestSubmitted] = useState(false);
+
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
   const [regConfirmPassword, setRegConfirmPassword] = useState("");
@@ -1475,7 +1484,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-
               <div className="pt-2">
                 <button
                   onClick={() => { setIsPendingApproval(false); setAuthMode("login"); }}
@@ -1486,300 +1494,655 @@ export default function ProfilePage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             
-            {/* Left Column: What to expect from the system */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
-                <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-brand-green/5 border border-brand-green/20 rounded-full text-[10px] font-black uppercase text-brand-green tracking-[0.15em]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
-                  ДИГИТАЛЕН ПОРТАЛ
-                </span>
+              {/* Left Column: Premium SaaS Feature Showcase */}
+              <div className="lg:col-span-7 bg-brand-green text-white rounded-3xl p-8 lg:p-12 shadow-2xl relative overflow-hidden flex flex-col justify-between border border-brand-gold/15">
+                {/* Decorative gradients */}
+                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-light/5 rounded-full blur-3xl -ml-20 -mb-20"></div>
                 
-                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green leading-tight">
-                  Какво Ви дава дигиталният портал <span className="text-brand-gold font-semibold">„БАБХ Спокойствие“</span>?
-                </h2>
-                
-                <p className="text-xs sm:text-sm text-brand-dark/75 leading-relaxed">
-                  Това е пълна платформа за ресторанти, магазини, фурни, цехове и други обекти в хранителния сектор. Чрез нея премахвате хаотичните папки и сте напълно подготвени за държавни проверки.
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
-                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">1. Автоматичен НАССР & ДХП</h4>
-                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
-                      Генериране на персонализирани системи за самоконтрол, ДХП процедури, мерки за алергени и ДДД програми според профила на фирмата Ви.
-                    </p>
+                <div className="relative z-10 space-y-8">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3.5 py-1.5 bg-brand-gold/20 border border-brand-gold/30 rounded-full text-[10px] font-black uppercase text-brand-gold tracking-[0.15em] flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
+                      Дигитална Система
+                    </span>
+                    <span className="text-xs font-bold text-white/60">v2.1</span>
                   </div>
 
-                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
-                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">2. Дигитални Дневници</h4>
-                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
-                      Входящ контрол на храни, хладилни температури, ежедневна хигиена и здраве на персонала. Попълвате бързо онлайн и печат при проверка.
-                    </p>
-                  </div>
-
-                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
-                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">3. Вградени Обучения</h4>
-                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
-                      Достъп до лицензирани практически наръчници за правила при етикетиране и хигиенни норми, написани лично от д-р Данка Николова.
-                    </p>
-                  </div>
-
-                  <div className="space-y-1.5 border-l-2 border-brand-gold pl-4">
-                    <h4 className="font-serif text-xs sm:text-sm font-bold text-brand-green">4. Интелигентен Тракер</h4>
-                    <p className="text-[11px] sm:text-xs text-brand-dark/75 leading-relaxed">
-                      Калкулатор за срок на годност на отворени храни и напомняния за изтичащи договори с ДДД фирми, здравни книжки и воден анализ.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-brand-light p-4 rounded-xl border border-brand-gold/20 flex gap-3 items-start">
-                  <div className="p-1 bg-brand-green/10 text-brand-green rounded">
-                    <Sparkles className="h-4 w-4 text-brand-gold" />
-                  </div>
-                  <div className="space-y-1">
-                    <h5 className="text-[11px] font-bold text-brand-green uppercase tracking-wide">Пълна защита от глоби и актове</h5>
-                    <p className="text-[11px] text-brand-dark/80 leading-relaxed">
-                      Всички документи и логика на системата са съобразени с актуалните изисквания на Закона за храните и БАБХ, което Ви гарантира 100% нормативно съответствие.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Right Column: Forms Box */}
-            <div className="lg:col-span-5">
-              <div className="bg-white border border-brand-green/10 p-6 sm:p-8 rounded-2xl shadow-xl space-y-6">
-                
-                {/* Form Tabs Switcher */}
-                <div className="flex bg-brand-light p-1 rounded-xl border border-brand-green/5">
-                  <button 
-                    onClick={() => setAuthMode("login")}
-                    className={`flex-1 text-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${authMode === "login" ? "bg-brand-green text-white shadow" : "text-brand-dark hover:bg-brand-green/5"}`}
-                  >
-                    Вход
-                  </button>
-                  <button 
-                    onClick={() => setAuthMode("register")}
-                    className={`flex-1 text-center py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${authMode === "register" ? "bg-brand-green text-white shadow" : "text-brand-dark hover:bg-brand-green/5"}`}
-                  >
-                    Регистрация & Кандидатстване
-                  </button>
-                </div>
-
-                {authMode === "login" && (
                   <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="font-serif text-lg font-bold text-brand-green">Вход в портала</h3>
-                      <p className="text-[11px] text-brand-dark/60">Въведете акаунта си за достъп до Вашите БАБХ дневници и папки.</p>
-                    </div>
-                    {/* Simulated Credentials Tip */}
-                    <div className="bg-brand-gold/10 border border-brand-gold/25 p-3 rounded-lg text-[10px] text-brand-dark/95 flex items-start gap-2">
-                      <Sparkles className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                      <div>
-                        <span className="font-bold block">Бърз достъп за тестване:</span>
-                        Въведете произволен имейл/парола за демонстрация.
-                      </div>
-                    </div>
-                    <form onSubmit={handleSignIn} className="space-y-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Имейл адрес</label>
-                        <input 
-                          type="email" 
-                          required 
-                          value={authEmail} 
-                          onChange={(e) => setAuthEmail(e.target.value)} 
-                          placeholder="name@business.com" 
-                          className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Парола</label>
-                        <input 
-                          type="password" 
-                          required 
-                          value={authPassword} 
-                          onChange={(e) => setAuthPassword(e.target.value)} 
-                          placeholder="••••••••" 
-                          className="w-full text-xs px-4 py-2.5 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-brand-light/50"
-                        />
-                      </div>
-                      <button 
-                        type="submit" 
-                        className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer"
+                    <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-white">
+                      Вашият сигурен вход към <span className="text-brand-gold underline decoration-brand-gold/40 underline-offset-4 decoration-2">спокойни</span> БАБХ проверки
+                    </h2>
+                    <p className="text-xs sm:text-sm text-white/80 leading-relaxed max-w-xl font-medium">
+                      Забравете за дебелите хартиени папки и хаотичните записки. „БАБХ Спокойствие“ дигитализира целия Ви HACCP архив, ДХП дневници и обучения в едно модерно уеб приложение.
+                    </p>
+                  </div>
+
+                  {/* Premium Interactive Systems Showcase */}
+                  <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-inner space-y-6">
+                    {/* Glowing Accent Orbs */}
+                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-brand-gold/15 rounded-full blur-2xl pointer-events-none"></div>
+                    <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-brand-gold/10 rounded-full blur-2xl pointer-events-none"></div>
+
+                    {/* Showcase Tabs */}
+                    <div className="flex border-b border-white/10 pb-3 gap-1 overflow-x-auto scrollbar-none">
+                      <button
+                        type="button"
+                        onClick={() => setShowcaseTab("logbooks")}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border-0 cursor-pointer shrink-0 ${
+                          showcaseTab === "logbooks"
+                            ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25"
+                            : "text-white/70 hover:text-white hover:bg-white/5"
+                        }`}
                       >
-                        Влизане в системата
+                        Дневници
                       </button>
-                    </form>
-                  </div>
-                )}
-
-                {authMode === "register" && (
-                  <div className="space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="font-serif text-lg font-bold text-brand-green">Регистрация и Кандидатстване</h3>
-                      <p className="text-[11px] text-brand-dark/60">
-                        Попълнете акаунта и данните за обекта. Заявлението ще бъде прегледано от д-р Данка Николова за одобрение.
-                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowcaseTab("haccp")}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border-0 cursor-pointer shrink-0 ${
+                          showcaseTab === "haccp"
+                            ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25"
+                            : "text-white/70 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        HACCP Монитор
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowcaseTab("audit")}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border-0 cursor-pointer shrink-0 ${
+                          showcaseTab === "audit"
+                            ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25"
+                            : "text-white/70 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        БАБХ Одит
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowcaseTab("tests")}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border-0 cursor-pointer shrink-0 ${
+                          showcaseTab === "tests"
+                            ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25"
+                            : "text-white/70 hover:text-white hover:bg-white/5"
+                        }`}
+                      >
+                        Тестове & Обучения
+                      </button>
                     </div>
-                    
-                    <form onSubmit={handleRegisterAndApply} className="space-y-3">
-                      {/* Section: Account Info */}
-                      <div className="bg-brand-light p-3 rounded-lg border border-brand-green/5 space-y-2.5">
-                        <span className="text-[9px] font-extrabold text-brand-green uppercase tracking-wider block">1. Данни за Профила</span>
-                        
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Имейл адрес *</label>
-                          <input 
-                            type="email" 
-                            required 
-                            value={regEmail} 
-                            onChange={(e) => setRegEmail(e.target.value)} 
-                            placeholder="name@business.com" 
-                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
-                          />
+
+                    {/* Tab Contents */}
+                    {showcaseTab === "logbooks" && (
+                      <div className="space-y-4 animate-fade-in text-left">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
+                            Хладилници и Входящ Контрол (Демо)
+                          </span>
+                          <span className="text-[9px] text-white/50 font-mono">Днес, 08:30ч</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        {/* Temp logger mock */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-2">
+                            <span className="text-[9px] text-white/60 font-bold block uppercase tracking-wider">Сутрешен Контрол (t°)</span>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={mockTempAm}
+                                onChange={(e) => setMockTempAm(e.target.value)}
+                                className="w-16 bg-white/10 text-white border border-white/10 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                              />
+                              <span className="text-[11px] text-white/80">°C</span>
+                            </div>
+                            <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider block">✓ В норма (0-4°C)</span>
+                          </div>
+
+                          <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-2">
+                            <span className="text-[9px] text-white/60 font-bold block uppercase tracking-wider">Вечерен Контрол (t°)</span>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={mockTempPm}
+                                onChange={(e) => setMockTempPm(e.target.value)}
+                                className="w-16 bg-white/10 text-white border border-white/10 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-gold"
+                              />
+                              <span className="text-[11px] text-white/80">°C</span>
+                            </div>
+                            <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider block">✓ В норма (0-4°C)</span>
+                          </div>
+                        </div>
+
+                        {/* Interactive Delivery Approver */}
+                        <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-3">
+                          <div className="flex justify-between items-center">
+                            <div className="space-y-0.5">
+                              <h5 className="text-[11px] font-bold text-white">Доставка #127: Млечни продукти</h5>
+                              <p className="text-[9px] text-white/50">Партида: L230491 | Доставчик: Лакто ЕАД</p>
+                            </div>
+                            <div className="flex gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setMockDeliveryStatus("approved")}
+                                className={`px-2 py-1 rounded text-[9px] font-black uppercase transition-all duration-200 border-0 cursor-pointer ${
+                                  mockDeliveryStatus === "approved"
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-white/5 hover:bg-emerald-500/20 text-emerald-400"
+                                }`}
+                              >
+                                Одобри
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setMockDeliveryStatus("rejected")}
+                                className={`px-2 py-1 rounded text-[9px] font-black uppercase transition-all duration-200 border-0 cursor-pointer ${
+                                  mockDeliveryStatus === "rejected"
+                                    ? "bg-rose-500 text-white"
+                                    : "bg-white/5 hover:bg-rose-500/20 text-rose-400"
+                                }`}
+                              >
+                                Брак
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[9px] border-t border-white/5 pt-2">
+                            <span className="text-white/60">Статус в Дневника:</span>
+                            {mockDeliveryStatus === "pending" && (
+                              <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold uppercase tracking-wider">
+                                Изчаква оценка
+                              </span>
+                            )}
+                            {mockDeliveryStatus === "approved" && (
+                              <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold uppercase tracking-wider">
+                                Внесено: Изрядна опаковка, t = 3.6°C
+                              </span>
+                            )}
+                            {mockDeliveryStatus === "rejected" && (
+                              <span className="px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold uppercase tracking-wider">
+                                Внесено: Бракувана доставка
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {showcaseTab === "haccp" && (
+                      <div className="space-y-4 animate-fade-in text-left">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
+                            <Activity className="h-3.5 w-3.5" />
+                            Критични Контролни Точки (ККТ) & Мониторинг
+                          </span>
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand-gold/20 text-brand-gold font-bold">ОПТИМАЛНО</span>
+                        </div>
+
+                        {/* CCP stats and visual representation */}
+                        <div className="flex gap-4 items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                          {/* Radial Progress */}
+                          <div className="relative w-12 h-12 shrink-0">
+                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                              <path
+                                className="text-white/10"
+                                strokeWidth="3.5"
+                                stroke="currentColor"
+                                fill="none"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              />
+                              <path
+                                className="text-brand-gold"
+                                strokeWidth="3.5"
+                                strokeDasharray="98, 100"
+                                strokeLinecap="round"
+                                stroke="currentColor"
+                                fill="none"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-[10px] font-black text-white font-mono">98%</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-0.5">
+                            <h5 className="text-[11px] font-bold text-brand-gold">HACCP Индекс на Съвместимост</h5>
+                            <p className="text-[9px] text-white/70 leading-normal">
+                              Автоматични проверки на критични граници. Всички контролирани точки (ККТ-1 Входящ, ККТ-2 Термична обработка, ККТ-3 Хладилно съхранение) са в зеления сектор.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Interactive corrective actions simulation */}
+                        <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl space-y-1">
+                          <div className="flex items-center gap-2">
+                            <ShieldAlert className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                            <span className="text-[9px] font-bold text-rose-300 uppercase tracking-wider">Симулация на Коригиращо Действие</span>
+                          </div>
+                          <p className="text-[9px] text-white/80 leading-normal">
+                            Ако t° на хладилник се покачи над 4°C за повече от 2 часа, системата автоматично Ви изпраща предупреждение и Ви води стъпка по стъпка през документирането на коригиращото действие за пред БАБХ.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {showcaseTab === "audit" && (
+                      <div className="space-y-4 animate-fade-in text-left">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
+                            <FileCheck className="h-3.5 w-3.5" />
+                            БАБХ Проверка & Одит
+                          </span>
+                          <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                            Готовност 100%
+                          </span>
+                        </div>
+
+                        {/* Audit Log Card */}
+                        <div className="bg-white/5 p-3.5 rounded-xl border border-white/5 space-y-3 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-16 h-16 bg-brand-gold/5 rounded-full border border-brand-gold/15 rotate-12 flex items-center justify-center text-[8px] text-brand-gold font-bold font-serif">
+                            ОДОБРЕН
+                          </div>
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Парола *</label>
+                            <span className="text-[8px] text-white/40 font-bold uppercase tracking-wider block">Държавен Инспектор БАБХ вижда:</span>
+                            <h5 className="text-[11px] font-bold text-white">„Обектът разполага с пълна дигитална HACCP система.“</h5>
+                          </div>
+                          <ul className="text-[9px] text-white/70 space-y-1 pl-1 list-none">
+                            <li className="flex items-center gap-1.5">
+                              <Check className="h-3 w-3 text-emerald-400" /> ДХП дневници: Попълнени и хронологично точни
+                            </li>
+                            <li className="flex items-center gap-1.5">
+                              <Check className="h-3 w-3 text-emerald-400" /> Обучения на персонал: Сертифицирани и валидни
+                            </li>
+                            <li className="flex items-center gap-1.5">
+                              <Check className="h-3 w-3 text-emerald-400" /> Проследимост на храните: Документирана с 1 клик
+                            </li>
+                          </ul>
+                        </div>
+
+                        {/* PDF printing simulation */}
+                        <button
+                          type="button"
+                          onClick={() => alert("Симулация: Експортиране на пълно БАБХ досие за 2026г. в официален PDF формат с електронен подпис.")}
+                          className="w-full bg-white/10 hover:bg-white/15 text-white border border-white/10 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99]"
+                        >
+                          <Printer className="h-3.5 w-3.5 text-brand-gold" />
+                          Свали HACCP Досие за Инспектора
+                        </button>
+                      </div>
+                    )}
+
+                    {showcaseTab === "tests" && (
+                      <div className="space-y-4 animate-fade-in text-left">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                          <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
+                            <BookOpen className="h-3.5 w-3.5" />
+                            Обучение и Изпит на Служителите (Демо)
+                          </span>
+                          <span className="text-[9px] text-white/50">Въпрос 3 от 10</span>
+                        </div>
+
+                        {/* Interactive Quiz simulation */}
+                        <div className="space-y-3">
+                          <p className="text-[11px] font-bold text-white leading-normal">
+                            Колко време се пази проба от готвено ястие за изследване?
+                          </p>
+
+                          <div className="flex flex-col gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (mockTestSubmitted) return;
+                                setMockTestSelected(0);
+                              }}
+                              className={`w-full text-left p-2.5 rounded-xl border text-[10px] transition-all duration-200 cursor-pointer ${
+                                mockTestSelected === 0
+                                  ? mockTestSubmitted
+                                    ? "bg-rose-500/20 border-rose-500 text-rose-300"
+                                    : "bg-brand-gold/20 border-brand-gold text-brand-gold"
+                                  : "bg-white/5 border-white/5 text-white/80 hover:bg-white/10"
+                              }`}
+                            >
+                              А) 12 часа
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (mockTestSubmitted) return;
+                                setMockTestSelected(1);
+                              }}
+                              className={`w-full text-left p-2.5 rounded-xl border text-[10px] transition-all duration-200 cursor-pointer ${
+                                mockTestSelected === 1
+                                  ? mockTestSubmitted
+                                    ? "bg-rose-500/20 border-rose-500 text-rose-300"
+                                    : "bg-brand-gold/20 border-brand-gold text-brand-gold"
+                                  : "bg-white/5 border-white/5 text-white/80 hover:bg-white/10"
+                              }`}
+                            >
+                              Б) 24 часа
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (mockTestSubmitted) return;
+                                setMockTestSelected(2);
+                              }}
+                              className={`w-full text-left p-2.5 rounded-xl border text-[10px] transition-all duration-200 cursor-pointer ${
+                                mockTestSelected === 2
+                                  ? mockTestSubmitted
+                                    ? "bg-emerald-500/20 border-emerald-500 text-emerald-300"
+                                    : "bg-brand-gold/20 border-brand-gold text-brand-gold"
+                                  : mockTestSubmitted && mockTestSelected !== 2
+                                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                  : "bg-white/5 border-white/5 text-white/80 hover:bg-white/10"
+                              }`}
+                            >
+                              В) 48 часа (Верен отговор)
+                            </button>
+                          </div>
+
+                          {!mockTestSubmitted ? (
+                            <button
+                              type="button"
+                              disabled={mockTestSelected === null}
+                              onClick={() => setMockTestSubmitted(true)}
+                              className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer border-0 ${
+                                mockTestSelected === null
+                                  ? "bg-white/10 text-white/45 cursor-not-allowed"
+                                  : "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/20 hover:scale-[1.01] active:scale-[0.99]"
+                              }`}
+                            >
+                              Потвърди избора
+                            </button>
+                          ) : (
+                            <div className="space-y-2">
+                              <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl text-[9px] text-white/90 leading-relaxed">
+                                <span className="font-bold text-emerald-400 block mb-0.5">Правилен отговор!</span>
+                                Съгласно изискванията на БАБХ, пробите се съхраняват в хладилник при t = 0-4°C за 48 часа. Системата автоматично издава сертификат за успешно проведено обучение на служителя.
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMockTestSelected(null);
+                                  setMockTestSubmitted(false);
+                                }}
+                                className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/5 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer"
+                              >
+                                Нов въпрос (Нулиране)
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Micro metrics */}
+                <div className="pt-8 border-t border-white/10 grid grid-cols-3 gap-2 mt-8 text-center sm:text-left">
+                  <div>
+                    <span className="block text-lg font-black text-brand-gold font-sans">1,200+</span>
+                    <span className="text-[9px] uppercase tracking-wider text-white/50 font-bold">Активни обекта</span>
+                  </div>
+                  <div>
+                    <span className="block text-lg font-black text-brand-gold font-sans">99.8%</span>
+                    <span className="text-[9px] uppercase tracking-wider text-white/50 font-bold">Одобрени дневници</span>
+                  </div>
+                  <div>
+                    <span className="block text-lg font-black text-brand-gold font-sans">100%</span>
+                    <span className="text-[9px] uppercase tracking-wider text-white/50 font-bold">БАБХ Гаранция</span>
+                  </div>
+                </div>
+
+              </div>
+              
+              {/* Right Column: Premium Frosted Glass Form Card */}
+              <div className="lg:col-span-5 flex flex-col justify-center relative z-10">
+                <div className="bg-brand-green text-white p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 relative overflow-hidden border border-brand-gold/15">
+                  
+                  {/* Decorative gradients */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-light/5 rounded-full blur-3xl -ml-20 -mb-20 pointer-events-none"></div>
+
+                  <div className="relative z-10 space-y-6">
+                    {/* Form Tabs Switcher */}
+                    <div className="flex bg-black/25 backdrop-blur-md border border-white/10 p-1.5 rounded-2xl gap-1 shadow-inner">
+                      <button 
+                        type="button"
+                        onClick={() => setAuthMode("login")}
+                        className={`flex-1 text-center py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-300 cursor-pointer border-0 ${authMode === "login" ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25" : "text-white/70 hover:text-white hover:bg-white/5"}`}
+                      >
+                        Вход
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => setAuthMode("register")}
+                        className={`flex-1 text-center py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-300 cursor-pointer border-0 ${authMode === "register" ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25" : "text-white/70 hover:text-white hover:bg-white/5"}`}
+                      >
+                        Кандидатстване
+                      </button>
+                    </div>
+
+                    {authMode === "login" && (
+                      <div className="space-y-5 animate-fade-in text-left">
+                        <div className="space-y-1">
+                          <h3 className="font-serif text-xl font-bold text-white">Вход в портала</h3>
+                          <p className="text-[11px] text-white/70 font-medium">Въведете акаунта си за достъп до Вашите БАБХ дневници и папки.</p>
+                        </div>
+                        
+                        {/* Simulated Credentials Tip */}
+                        <div className="bg-brand-gold/10 border border-brand-gold/20 p-3.5 rounded-xl text-[10px] text-white/90 flex items-start gap-2.5 leading-relaxed">
+                          <Sparkles className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-black text-brand-gold block uppercase tracking-wider text-[9px] mb-0.5">Бърз достъп за тестване:</span>
+                            Въведете произволен имейл и парола за демонстрация на системата.
+                          </div>
+                        </div>
+
+                        <form onSubmit={handleSignIn} className="space-y-4 font-sans">
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Имейл адрес</label>
+                            <input 
+                              type="email" 
+                              required 
+                              value={authEmail} 
+                              onChange={(e) => setAuthEmail(e.target.value)} 
+                              placeholder="name@business.com" 
+                              className="w-full text-xs px-3.5 py-3 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Парола</label>
                             <input 
                               type="password" 
                               required 
-                              value={regPassword} 
-                              onChange={(e) => setRegPassword(e.target.value)} 
+                              value={authPassword} 
+                              onChange={(e) => setAuthPassword(e.target.value)} 
                               placeholder="••••••••" 
-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
+                              className="w-full text-xs px-3.5 py-3 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
                             />
                           </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Повторете парола *</label>
-                            <input 
-                              type="password" 
-                              required 
-                              value={regConfirmPassword} 
-                              onChange={(e) => setRegConfirmPassword(e.target.value)} 
-                              placeholder="••••••••" 
-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
-                            />
-                          </div>
-                        </div>
+                          <button 
+                            type="submit" 
+                            className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-green font-black text-xs uppercase tracking-wider py-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-brand-gold/20 border-0 hover:scale-[1.01] active:scale-[0.99] duration-150 mt-2"
+                          >
+                            Влизане в системата
+                          </button>
+                        </form>
                       </div>
+                    )}
 
-                      {/* Section: Business Activity Info */}
-                      <div className="bg-brand-light p-3 rounded-lg border border-brand-green/5 space-y-2.5">
-                        <span className="text-[9px] font-extrabold text-brand-green uppercase tracking-wider block">2. Данни за Обекта & Кандидатстване</span>
+                    {authMode === "register" && (
+                      <div className="space-y-5 animate-fade-in text-left">
+                        <div className="space-y-1">
+                          <h3 className="font-serif text-xl font-bold text-white">Регистрация и Обект</h3>
+                          <p className="text-[11px] text-white/70 font-medium">
+                            Попълнете акаунта и данните за обекта. Заявлението ще бъде прегледано лично от д-р Данка Николова.
+                          </p>
+                        </div>
                         
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Име на Обект / Фирма *</label>
-                          <input 
-                            type="text" 
-                            required 
-                            value={applyFirmName} 
-                            onChange={(e) => setApplyFirmName(e.target.value)} 
-                            placeholder="напр. Ресторант Витоша" 
-                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
-                          />
-                        </div>
+                        <form onSubmit={handleRegisterAndApply} className="space-y-4 font-sans">
+                          {/* Section: Account Info */}
+                          <div className="bg-black/20 p-4 rounded-2xl border border-white/10 space-y-3.5 shadow-sm">
+                            <span className="text-[9px] font-black text-brand-gold uppercase tracking-widest block pl-0.5 border-b border-white/10 pb-1">1. Данни за Профила</span>
+                            
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Имейл адрес *</label>
+                              <input 
+                                type="email" 
+                                required 
+                                value={regEmail} 
+                                onChange={(e) => setRegEmail(e.target.value)} 
+                                placeholder="name@business.com" 
+                                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
+                              />
+                            </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">ЕИК / Булстат</label>
-                            <input 
-                              type="text" 
-                              value={applyEik} 
-                              onChange={(e) => setApplyEik(e.target.value)} 
-                              placeholder="207654321" 
-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white font-mono"
-                            />
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Парола *</label>
+                                <input 
+                                  type="password" 
+                                  required 
+                                  value={regPassword} 
+                                  onChange={(e) => setRegPassword(e.target.value)} 
+                                  placeholder="••••••••" 
+                                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Повторете парола *</label>
+                                <input 
+                                  type="password" 
+                                  required 
+                                  value={regConfirmPassword} 
+                                  onChange={(e) => setRegConfirmPassword(e.target.value)} 
+                                  placeholder="••••••••" 
+                                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
+                                />
+                              </div>
+                            </div>
                           </div>
-                                                    <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Основен Сектор</label>
-                            <select 
-                              value={applySector} 
-                              onChange={(e) => {
-                                const newSector = e.target.value;
-                                setApplySector(newSector);
-                                setApplyNiche(BUSINESS_CATEGORIES[newSector][0]);
-                              }} 
-                              className="w-full text-xs px-2 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
-                            >
-                              {Object.keys(BUSINESS_CATEGORIES).map(sector => (
-                                <option key={sector} value={sector}>{sector}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Специфичен Обект / Категория</label>
-                            <select 
-                              value={applyNiche} 
-                              onChange={(e) => setApplyNiche(e.target.value)} 
-                              className="w-full text-xs px-2 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
-                            >
-                              {BUSINESS_CATEGORIES[applySector]?.map(niche => (
-                                <option key={niche} value={niche}>{niche}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Лице за контакт *</label>
-                            <input 
-                              type="text" 
-                              required 
-                              value={applyContact} 
-                              onChange={(e) => setApplyContact(e.target.value)} 
-                              placeholder="Иван Петров" 
-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Телефон *</label>
-                            <input 
-                              type="tel" 
-                              required 
-                              value={applyPhone} 
-                              onChange={(e) => setApplyPhone(e.target.value)} 
-                              placeholder="0888123456" 
-                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white font-mono"
-                            />
-                          </div>
-                        </div>
+                          {/* Section: Business Activity Info */}
+                          <div className="bg-black/20 p-4 rounded-2xl border border-white/10 space-y-3.5 shadow-sm">
+                            <span className="text-[9px] font-black text-brand-gold uppercase tracking-widest block pl-0.5 border-b border-white/10 pb-1">2. Данни за Обекта & Кандидатстване</span>
+                            
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Име на Обект / Фирма *</label>
+                              <input 
+                                type="text" 
+                                required 
+                                value={applyFirmName} 
+                                onChange={(e) => setApplyFirmName(e.target.value)} 
+                                placeholder="напр. Ресторант Витоша" 
+                                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
+                              />
+                            </div>
 
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-bold text-brand-dark uppercase tracking-wider block">Опишете дейността си *</label>
-                          <textarea 
-                            required
-                            value={applyDesc} 
-                            onChange={(e) => setApplyDesc(e.target.value)} 
-                            placeholder="Опишете накратко обекта: брой места, специфично меню (месо, риба, млечни), капацитет, оборудване и специфични нужди..." 
-                            rows={3.5}
-                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/20 focus:outline-none focus:border-brand-gold transition-colors bg-white leading-relaxed resize-none"
-                          />
-                        </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1 col-span-2 sm:col-span-1">
+                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">ЕИК / Булстат</label>
+                                <input 
+                                  type="text" 
+                                  value={applyEik} 
+                                  onChange={(e) => setApplyEik(e.target.value)} 
+                                  placeholder="207654321" 
+                                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1 col-span-2 sm:col-span-1">
+                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Основен Сектор</label>
+                                <select 
+                                  value={applySector} 
+                                  onChange={(e) => {
+                                    const newSector = e.target.value;
+                                    setApplySector(newSector);
+                                    setApplyNiche(BUSINESS_CATEGORIES[newSector][0]);
+                                  }} 
+                                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/25 transition-all text-white font-medium cursor-pointer"
+                                >
+                                  {Object.keys(BUSINESS_CATEGORIES).map(sector => (
+                                    <option key={sector} value={sector} className="bg-brand-green text-white">{sector}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="space-y-1 col-span-2">
+                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Специфичен Обект / Категория</label>
+                                <select 
+                                  value={applyNiche} 
+                                  onChange={(e) => setApplyNiche(e.target.value)} 
+                                  className="w-full text-xs px-3 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/25 transition-all text-white font-medium cursor-pointer"
+                                >
+                                  {BUSINESS_CATEGORIES[applySector]?.map(niche => (
+                                    <option key={niche} value={niche} className="bg-brand-green text-white">{niche}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Лице за контакт *</label>
+                                <input 
+                                  type="text" 
+                                  required 
+                                  value={applyContact} 
+                                  onChange={(e) => setApplyContact(e.target.value)} 
+                                  placeholder="Иван Петров" 
+                                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Телефон *</label>
+                                <input 
+                                  type="tel" 
+                                  required 
+                                  value={applyPhone} 
+                                  onChange={(e) => setApplyPhone(e.target.value)} 
+                                  placeholder="0888123456" 
+                                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm font-mono"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Опишете дейността си *</label>
+                              <textarea 
+                                required
+                                value={applyDesc} 
+                                onChange={(e) => setApplyDesc(e.target.value)} 
+                                placeholder="Опишете накратко обекта: брой места, специфично меню (месо, риба, млечни), капацитет, оборудване..." 
+                                rows={4}
+                                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 leading-relaxed resize-none shadow-sm"
+                              />
+                            </div>
+                          </div>
+
+                          <button 
+                            type="submit" 
+                            className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-green font-black text-xs uppercase tracking-wider py-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-brand-gold/20 border-0 hover:scale-[1.01] active:scale-[0.99] duration-150 mt-3"
+                          >
+                            Изпрати Заявление & Регистрирай обект
+                          </button>
+                        </form>
                       </div>
-
-                      <button 
-                        type="submit" 
-                        className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer mt-2"
-                      >
-                        Изпрати Заявление & Регистрирай обект
-                      </button>
-                    </form>
+                    )}
                   </div>
-                )}
 
+                </div>
               </div>
+              
             </div>
-          </div>
-        )}
-      </div>
-    )}
-
-                        {/* 3. LOGGED-IN DASHBOARD */}
+          )}
+        </div>
+      )}                        {/* 3. LOGGED-IN DASHBOARD */}
       {isLoggedIn && (
         <div className="max-w-7xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
           
@@ -1787,40 +2150,54 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
             {/* Left Sidebar Menu - Hidden on print */}
-            <aside className="lg:col-span-3 bg-white border border-brand-green/5 rounded-2xl p-5 shadow-md space-y-6 print:hidden">
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold uppercase text-brand-dark/45 tracking-widest block">
-                  {userRole === "admin" ? "Админ Меню" : "Навигация"}
+            <aside className="lg:col-span-3 bg-white/90 backdrop-blur-sm border border-brand-green/10 rounded-3xl p-6 shadow-xl space-y-6 print:hidden">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-brand-green/5">
+                  <div className="w-8 h-8 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green font-bold text-sm">
+                    {userRole === "admin" ? "A" : firmInfo.name?.substring(0, 1) || "K"}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-brand-dark truncate max-w-[150px]">
+                      {userRole === "admin" ? "д-р Данка Николова" : firmInfo.name || "Клиент"}
+                    </h4>
+                    <span className="text-[9px] font-black uppercase text-brand-gold tracking-wider">
+                      {userRole === "admin" ? "Администратор" : "БАБХ Обект"}
+                    </span>
+                  </div>
+                </div>
+                
+                <span className="text-[9px] font-black uppercase text-brand-dark/45 tracking-[0.15em] block pt-2 pl-1">
+                  Навигация
                 </span>
                 <nav className="flex flex-col gap-1.5 font-sans">
                   {userRole === "admin" ? (
                     <>
                       <button 
                         onClick={() => setActiveAdminTab("candidates")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "candidates" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "candidates" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <Clock className="h-4 w-4" />
+                        <Clock className={`h-4 w-4 ${activeAdminTab === "candidates" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Кандидати
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("users")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "users" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "users" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <Users className="h-4 w-4" />
+                        <Users className={`h-4 w-4 ${activeAdminTab === "users" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Потребители
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("materials")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "materials" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "materials" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <FileCheck className="h-4 w-4" />
+                        <FileCheck className={`h-4 w-4 ${activeAdminTab === "materials" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Материали & Тестове
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("messages")}
-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare className={`h-4 w-4 ${activeAdminTab === "messages" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Чат с Клиенти
                         {hasUnreadAdminMessages && (
                           <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
@@ -1828,9 +2205,9 @@ export default function ProfilePage() {
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("logs")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeAdminTab === "logs" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "logs" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <Search className="h-4 w-4" />
+                        <Search className={`h-4 w-4 ${activeAdminTab === "logs" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Одит на Дневници
                       </button>
                     </>
@@ -1838,37 +2215,37 @@ export default function ProfilePage() {
                     <>
                       <button 
                         onClick={() => setActiveTab("logs")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "logs" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "logs" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className={`h-4 w-4 ${activeTab === "logs" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         БАБХ Дневници
                       </button>
                       <button 
                         onClick={() => setActiveTab("haccp")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "haccp" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "haccp" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <FileText className="h-4 w-4" />
+                        <FileText className={`h-4 w-4 ${activeTab === "haccp" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         НАССР Документи
                       </button>
                       <button 
                         onClick={() => setActiveTab("assigned")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "assigned" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "assigned" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <FileCheck className="h-4 w-4" />
+                        <FileCheck className={`h-4 w-4 ${activeTab === "assigned" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Документи & Тестове
                       </button>
                       <button 
                         onClick={() => setActiveTab("courses")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "courses" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "courses" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <BookOpen className="h-4 w-4" />
+                        <BookOpen className={`h-4 w-4 ${activeTab === "courses" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Моите Обучения
                       </button>
                       <button 
                         onClick={handleOpenUserChat}
-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "chat" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "chat" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <MessageSquare className="h-4 w-4" />
+                        <MessageSquare className={`h-4 w-4 ${activeTab === "chat" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Чат с Администратор
                         {hasUnreadUserMessages && (
                           <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
@@ -1876,16 +2253,16 @@ export default function ProfilePage() {
                       </button>
                       <button 
                         onClick={() => setActiveTab("tools")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "tools" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "tools" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <Activity className="h-4 w-4" />
+                        <Activity className={`h-4 w-4 ${activeTab === "tools" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Инструменти
                       </button>
                       <button 
                         onClick={() => setActiveTab("settings")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer text-left border-0 w-full ${activeTab === "settings" ? "bg-brand-green text-white" : "bg-transparent text-brand-dark hover:bg-brand-light"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "settings" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
-                        <Settings className="h-4 w-4" />
+                        <Settings className={`h-4 w-4 ${activeTab === "settings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Фирма и Профил
                       </button>
                     </>
@@ -1896,7 +2273,7 @@ export default function ProfilePage() {
               <div className="border-t border-brand-green/5 pt-4">
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold uppercase text-red-600 hover:bg-red-50 transition-colors w-full cursor-pointer border-0 bg-transparent text-left font-sans"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold uppercase text-red-600 hover:bg-red-50 hover:pl-5 duration-300 transition-all w-full cursor-pointer border-0 bg-transparent text-left font-sans"
                 >
                   <LogOut className="h-4 w-4" />
                   Излизане
@@ -2730,36 +3107,114 @@ export default function ProfilePage() {
               {activeTab === "logs" && (
                 <div className="space-y-6">
                   {/* Control panel - Hidden on print */}
-                  <div className="bg-white border border-brand-green/5 p-5 rounded-2xl shadow-md flex flex-wrap gap-4 items-center justify-between print:hidden">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-brand-green/10 text-brand-green rounded-lg">
-                        <Calendar className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h2 className="font-serif text-lg font-bold text-brand-green leading-snug">Ежедневни Дневници по Самоконтрол</h2>
-                        <p className="text-[10px] text-brand-dark/50">Попълвайте записи онлайн и ги печатайте за инспекторите</p>
-                      </div>
-                    </div>
+                  {(() => {
+                    const totalFridges = logFridges.length;
+                    const filledFridges = logFridges.filter(f => f.tempAm.trim() !== "" && f.tempPm.trim() !== "").length;
+                    const isFridgesDone = totalFridges > 0 && filledFridges === totalFridges;
+                    const isHygieneDone = Object.values(logHygiene).some(v => v === true);
+                    const isStaffDone = logStaff.checkPassed;
+                    const isComplianceComplete = isFridgesDone && isStaffDone;
+                    
+                    return (
+                      <>
+                        <div className="bg-white border border-brand-green/10 p-5 rounded-3xl shadow-xl flex flex-wrap gap-4 items-center justify-between print:hidden">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-brand-green/10 text-brand-green rounded-xl border border-brand-green/10">
+                              <Calendar className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h2 className="font-serif text-lg font-bold text-brand-green leading-snug">Ежедневни Дневници по Самоконтрол</h2>
+                              <p className="text-[10px] text-brand-dark/50">Попълвайте записи онлайн и ги печатайте за инспекторите</p>
+                            </div>
+                          </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <label className="text-[11px] font-bold text-brand-dark/70 uppercase">Изберете дата:</label>
-                        <input 
-                          type="date" 
-                          value={selectedDate} 
-                          onChange={(e) => setSelectedDate(e.target.value)} 
-                          className="text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-brand-light"
-                        />
-                      </div>
-                      <button 
-                        onClick={handlePrint}
-                        className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase px-4 py-2 rounded transition-colors flex items-center gap-1.5 cursor-pointer shadow"
-                      >
-                        <Printer className="h-3.5 w-3.5" />
-                        Печат на всичко
-                      </button>
-                    </div>
-                  </div>
+                          <div className="flex flex-wrap items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <label className="text-[10px] font-black text-brand-dark/70 uppercase tracking-wider">Изберете дата:</label>
+                              <input 
+                                type="date" 
+                                value={selectedDate} 
+                                onChange={(e) => setSelectedDate(e.target.value)} 
+                                className="text-xs border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold rounded-xl px-3 py-2 bg-brand-light font-medium text-brand-dark"
+                              />
+                            </div>
+                            <button 
+                              onClick={handlePrint}
+                              className="bg-brand-gold hover:bg-brand-gold-light hover:scale-[1.02] active:scale-[0.98] text-brand-dark font-black text-xs uppercase px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-brand-gold/10 border-0 duration-150"
+                            >
+                              <Printer className="h-4 w-4" />
+                              Печат на всичко
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Premium Stats Bar - Hidden on print */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 print:hidden animate-fade-in">
+                          {/* Stat 1: Daily Compliance */}
+                          <div className="bg-white border border-brand-green/5 p-5 rounded-3xl shadow-md flex items-center justify-between relative overflow-hidden group hover:border-brand-gold/20 transition-all duration-300">
+                            <div className="space-y-1 z-10">
+                              <span className="text-[9px] font-black uppercase text-brand-dark/45 tracking-[0.12em] block">
+                                Статус съответствие
+                              </span>
+                              <span className="text-sm font-serif font-bold text-brand-green flex items-center gap-1.5">
+                                <span className={`w-2 h-2 rounded-full ${isComplianceComplete ? "bg-green-500 animate-pulse" : "bg-brand-gold animate-pulse"}`}></span>
+                                {isComplianceComplete ? "ИЗРЯДЕН ДНЕС" : "В ПРОЦЕС НА ПОПЪЛВАНЕ"}
+                              </span>
+                              <span className="text-[10px] text-brand-dark/50 block font-medium leading-tight">
+                                {isComplianceComplete 
+                                  ? "Всички задължителни контроли са попълнени!" 
+                                  : "Моля, попълнете температурите и филтъра на персонала."}
+                              </span>
+                            </div>
+                            <div className="p-3 bg-brand-light/50 rounded-2xl text-brand-green shrink-0 group-hover:scale-105 duration-300">
+                              <CheckCircle className="h-5 w-5" />
+                            </div>
+                          </div>
+
+                          {/* Stat 2: Fridge Monitors */}
+                          <div className="bg-white border border-brand-green/5 p-5 rounded-3xl shadow-md flex items-center justify-between relative overflow-hidden group hover:border-brand-gold/20 transition-all duration-300">
+                            <div className="space-y-1 z-10">
+                              <span className="text-[9px] font-black uppercase text-brand-dark/45 tracking-[0.12em] block">
+                                Хладилна база (БАБХ)
+                              </span>
+                              <span className="text-sm font-serif font-bold text-brand-green">
+                                {filledFridges} от {totalFridges} отчетени
+                              </span>
+                              <div className="w-24 bg-brand-light rounded-full h-1.5 mt-1 overflow-hidden">
+                                <div 
+                                  className="bg-brand-gold h-1.5 rounded-full transition-all duration-500" 
+                                  style={{ width: `${totalFridges > 0 ? (filledFridges / totalFridges) * 100 : 0}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                            <div className="p-3 bg-brand-light/50 rounded-2xl text-brand-green shrink-0 group-hover:scale-105 duration-300">
+                              <Activity className="h-5 w-5" />
+                            </div>
+                          </div>
+
+                          {/* Stat 3: Deliveries Today */}
+                          <div className="bg-white border border-brand-green/5 p-5 rounded-3xl shadow-md flex items-center justify-between relative overflow-hidden group hover:border-brand-gold/20 transition-all duration-300">
+                            <div className="space-y-1 z-10">
+                              <span className="text-[9px] font-black uppercase text-brand-dark/45 tracking-[0.12em] block">
+                                Входящ контрол днес
+                              </span>
+                              <span className="text-sm font-serif font-bold text-brand-green">
+                                {logIncoming.length} доставки
+                              </span>
+                              <span className="text-[10px] text-brand-dark/50 block font-medium leading-tight">
+                                {logIncoming.length === 0 
+                                  ? "Не са отчетени нови суровини днес." 
+                                  : `Регистрирани: ${logIncoming.map(row => row.product || "суровина").slice(0, 3).join(', ')}`}
+                              </span>
+                            </div>
+                            <div className="p-3 bg-brand-light/50 rounded-2xl text-brand-green shrink-0 group-hover:scale-105 duration-300">
+                              <Download className="h-5 w-5" />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
 
                   {/* PRINT VIEW HEADER - Visible only on print */}
                   <div className="hidden print:block space-y-4 mb-6 border-b-2 border-brand-dark pb-4">
@@ -2781,154 +3236,273 @@ export default function ProfilePage() {
                   <div className="space-y-8">
                     
                     {/* FORM 1: Входящ Контрол на храни */}
-                    <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+                    <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
                       <div className="flex items-center justify-between border-b border-brand-green/5 pb-3">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-brand-gold" />
-                          <h3 className="font-serif text-base font-bold text-brand-green">1. Дневник за входящ контрол на суровини</h3>
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl">
+                            <FileCheck className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-serif text-base font-bold text-brand-green">1. Дневник за входящ контрол на суровини</h3>
+                            <p className="text-[9px] text-brand-dark/50">Приемане на храни и проверка на транспортна температура</p>
+                          </div>
                         </div>
                         <button 
                           onClick={addDeliveryRow}
-                          className="bg-brand-green hover:bg-brand-green/90 text-white text-[10px] uppercase font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-1 cursor-pointer print:hidden"
+                          className="bg-brand-green hover:bg-brand-green/90 text-white text-[10px] uppercase font-black px-4 py-2 rounded-xl transition-all flex items-center gap-1 cursor-pointer print:hidden border-0 hover:scale-[1.02] active:scale-[0.98] duration-150 shadow-md shadow-brand-green/15"
                         >
                           <Plus className="h-3.5 w-3.5" /> Добави доставка
                         </button>
                       </div>
 
                       {logIncoming.length === 0 ? (
-                        <p className="text-xs text-brand-dark/50 italic py-2 text-center">Няма въведени доставяни храни за тази дата.</p>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-xs text-left border-collapse border border-brand-green/10">
-                            <thead>
-                              <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
-                                <th className="border border-brand-green/10 p-2.5">Продукт / Суровина</th>
-                                <th className="border border-brand-green/10 p-2.5">Доставчик</th>
-                                <th className="border border-brand-green/10 p-2.5">Партида / Номер</th>
-                                <th className="border border-brand-green/10 p-2.5 w-20 text-center">t° при трансп. (°C)</th>
-                                <th className="border border-brand-green/10 p-2.5 w-28 text-center">Срок на годност</th>
-                                <th className="border border-brand-green/10 p-2.5 w-24 text-center">Изрядна опаковка</th>
-                                <th className="border border-brand-green/10 p-2.5 w-12 text-center print:hidden">Изтрий</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {logIncoming.map((row, idx) => (
-                                <tr key={idx} className="hover:bg-brand-light/40 transition-colors">
-                                  <td className="border border-brand-green/10 p-1.5">
-                                    <input 
-                                      type="text" 
-                                      value={row.product} 
-                                      onChange={(e) => updateDeliveryRow(idx, "product", e.target.value)}
-                                      placeholder="напр. Домати" 
-                                      className="w-full px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                    />
-                                  </td>
-                                  <td className="border border-brand-green/10 p-1.5">
-                                    <input 
-                                      type="text" 
-                                      value={row.supplier} 
-                                      onChange={(e) => updateDeliveryRow(idx, "supplier", e.target.value)}
-                                      placeholder="напр. Метро" 
-                                      className="w-full px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                    />
-                                  </td>
-                                  <td className="border border-brand-green/10 p-1.5">
-                                    <input 
-                                      type="text" 
-                                      value={row.batch} 
-                                      onChange={(e) => updateDeliveryRow(idx, "batch", e.target.value)}
-                                      placeholder="напр. L3981" 
-                                      className="w-full px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none font-mono"
-                                    />
-                                  </td>
-                                  <td className="border border-brand-green/10 p-1.5 text-center">
-                                    <input 
-                                      type="text" 
-                                      value={row.temp} 
-                                      onChange={(e) => updateDeliveryRow(idx, "temp", e.target.value)}
-                                      placeholder="4" 
-                                      className="w-full text-center px-1 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                    />
-                                  </td>
-                                  <td className="border border-brand-green/10 p-1.5 text-center">
-                                    <input 
-                                      type="date" 
-                                      value={row.expiry} 
-                                      onChange={(e) => updateDeliveryRow(idx, "expiry", e.target.value)}
-                                      className="px-1 py-0.5 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                    />
-                                  </td>
-                                  <td className="border border-brand-green/10 p-1.5 text-center">
-                                    <select
-                                      value={row.compliant ? "yes" : "no"}
-                                      onChange={(e) => updateDeliveryRow(idx, "compliant", e.target.value === "yes")}
-                                      className="text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none p-1 font-bold text-brand-green"
-                                    >
-                                      <option value="yes" className="text-green-600 font-bold">Да (ОК)</option>
-                                      <option value="no" className="text-red-600 font-bold">Не (Брак)</option>
-                                    </select>
-                                  </td>
-                                  <td className="border border-brand-green/10 p-1.5 text-center print:hidden">
-                                    <button 
-                                      onClick={() => deleteDeliveryRow(idx)}
-                                      className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                        <div className="text-center py-8 border border-dashed border-brand-green/10 rounded-2xl space-y-2 print:hidden">
+                          <Download className="h-6 w-6 text-brand-green/30 mx-auto" />
+                          <p className="text-xs text-brand-dark/50 italic font-medium">Няма въведени доставяни храни за тази дата.</p>
                         </div>
+                      ) : (
+                        <>
+                          {/* Screen Version: Spreadsheet Style */}
+                          <div className="overflow-x-auto print:hidden rounded-2xl border border-brand-green/10 shadow-sm">
+                            <table className="w-full text-xs text-left border-separate border-spacing-0">
+                              <thead>
+                                <tr className="bg-brand-green/5 text-[10px] font-black uppercase text-brand-green tracking-wider border-b border-brand-green/10">
+                                  <th className="p-3 border-b border-brand-green/10">Продукт / Суровина</th>
+                                  <th className="p-3 border-b border-brand-green/10">Доставчик</th>
+                                  <th className="p-3 border-b border-brand-green/10 w-36">Партида / Номер</th>
+                                  <th className="p-3 border-b border-brand-green/10 w-24 text-center">t° трансп. (°C)</th>
+                                  <th className="p-3 border-b border-brand-green/10 w-36 text-center">Срок на годност</th>
+                                  <th className="p-3 border-b border-brand-green/10 w-28 text-center">Изрядност</th>
+                                  <th className="p-3 border-b border-brand-green/10 w-16 text-center">Изтрий</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {logIncoming.map((row, idx) => (
+                                  <tr key={idx} className="hover:bg-brand-green/[0.01] even:bg-brand-light/35 transition-colors border-b border-brand-green/5">
+                                    <td className="p-2 border-b border-brand-green/5">
+                                      <input 
+                                        type="text" 
+                                        value={row.product} 
+                                        onChange={(e) => updateDeliveryRow(idx, "product", e.target.value)}
+                                        placeholder="напр. Домати" 
+                                        className="w-full px-2 py-2 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/30 rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all text-brand-dark font-medium"
+                                      />
+                                    </td>
+                                    <td className="p-2 border-b border-brand-green/5">
+                                      <input 
+                                        type="text" 
+                                        value={row.supplier} 
+                                        onChange={(e) => updateDeliveryRow(idx, "supplier", e.target.value)}
+                                        placeholder="напр. Метро" 
+                                        className="w-full px-2 py-2 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/30 rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all text-brand-dark font-medium"
+                                      />
+                                    </td>
+                                    <td className="p-2 border-b border-brand-green/5">
+                                      <input 
+                                        type="text" 
+                                        value={row.batch} 
+                                        onChange={(e) => updateDeliveryRow(idx, "batch", e.target.value)}
+                                        placeholder="напр. L3981" 
+                                        className="w-full px-2 py-2 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/30 rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all text-brand-dark font-mono font-medium"
+                                      />
+                                    </td>
+                                    <td className="p-2 border-b border-brand-green/5 text-center">
+                                      <input 
+                                        type="text" 
+                                        value={row.temp} 
+                                        onChange={(e) => updateDeliveryRow(idx, "temp", e.target.value)}
+                                        placeholder="4" 
+                                        className="w-full text-center px-1 py-2 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/30 rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all text-brand-dark font-medium font-mono"
+                                      />
+                                    </td>
+                                    <td className="p-2 border-b border-brand-green/5 text-center">
+                                      <input 
+                                        type="date" 
+                                        value={row.expiry} 
+                                        onChange={(e) => updateDeliveryRow(idx, "expiry", e.target.value)}
+                                        className="px-2 py-1.5 text-xs border border-brand-green/10 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold text-brand-dark font-medium"
+                                      />
+                                    </td>
+                                    <td className="p-2 border-b border-brand-green/5 text-center">
+                                      <div className="flex justify-center items-center gap-1">
+                                        <button
+                                          type="button"
+                                          onClick={() => updateDeliveryRow(idx, "compliant", true)}
+                                          className={`px-2 py-1 rounded-md text-[10px] font-black uppercase transition-all border cursor-pointer ${row.compliant ? "bg-green-100 text-green-800 border-green-300 shadow-sm" : "bg-transparent text-brand-dark/45 border-transparent hover:bg-brand-light"}`}
+                                        >
+                                          ОК
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => updateDeliveryRow(idx, "compliant", false)}
+                                          className={`px-2 py-1 rounded-md text-[10px] font-black uppercase transition-all border cursor-pointer ${!row.compliant ? "bg-red-100 text-red-800 border-red-300 shadow-sm" : "bg-transparent text-brand-dark/45 border-transparent hover:bg-brand-light"}`}
+                                        >
+                                          Брак
+                                        </button>
+                                      </div>
+                                    </td>
+                                    <td className="p-2 border-b border-brand-green/5 text-center">
+                                      <button 
+                                        onClick={() => deleteDeliveryRow(idx)}
+                                        className="text-red-500 hover:text-red-700 transition-colors p-1.5 cursor-pointer bg-transparent border-0 inline-block"
+                                      >
+                                        <Trash2 className="h-4.5 w-4.5" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+
+                          {/* Print-Only Table (BAFSA Compliant) */}
+                          <div className="hidden print:block">
+                            <table className="w-full text-[10px] text-left border-collapse border border-brand-dark">
+                              <thead>
+                                <tr className="bg-brand-light text-brand-dark font-bold uppercase border-b border-brand-dark">
+                                  <th className="border border-brand-dark p-2">Продукт / Суровина</th>
+                                  <th className="border border-brand-dark p-2">Доставчик</th>
+                                  <th className="border border-brand-dark p-2">Партида / Номер</th>
+                                  <th className="border border-brand-dark p-2 w-20 text-center">t° при трансп. (°C)</th>
+                                  <th className="border border-brand-dark p-2 w-24 text-center">Срок на годност</th>
+                                  <th className="border border-brand-dark p-2 w-20 text-center">Изрядна опаковка</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {logIncoming.map((row, idx) => (
+                                  <tr key={idx} className="border-b border-brand-dark">
+                                    <td className="border border-brand-dark p-2">{row.product}</td>
+                                    <td className="border border-brand-dark p-2">{row.supplier}</td>
+                                    <td className="border border-brand-dark p-2 font-mono">{row.batch}</td>
+                                    <td className="border border-brand-dark p-2 text-center font-mono">{row.temp}°C</td>
+                                    <td className="border border-brand-dark p-2 text-center font-mono">
+                                      {row.expiry ? new Date(row.expiry).toLocaleDateString("bg-BG") : ""}
+                                    </td>
+                                    <td className="border border-brand-dark p-2 text-center font-bold">
+                                      {row.compliant ? "Да (ОК)" : "Не (Брак)"}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
                       )}
                     </div>
 
                     {/* FORM 2: Температурен Дневник за хладилници */}
-                    <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+                    <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
                       <div className="border-b border-brand-green/5 pb-3">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-5 w-5 text-brand-gold" />
-                          <h3 className="font-serif text-base font-bold text-brand-green">2. Дневник за температурния режим на хладилните съоръжения</h3>
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl">
+                            <Activity className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-serif text-base font-bold text-brand-green">2. Дневник за температурния режим на хладилните съоръжения</h3>
+                            <p className="text-[9px] text-brand-dark/50">Проследяване на хладилници и фризери сутрин и вечер</p>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-xs text-left border-collapse border border-brand-green/10">
+                      {/* Screen Version: Premium Interactive Card Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 print:hidden">
+                        {logFridges.map((row, idx) => {
+                          const isFreezer = row.name.toLowerCase().includes("фризер") || row.name.toLowerCase().includes("замраз");
+                          const tempAmVal = parseFloat(row.tempAm);
+                          const tempPmVal = parseFloat(row.tempPm);
+                          
+                          const isAmWarn = row.tempAm !== "" && !isNaN(tempAmVal) && (isFreezer ? tempAmVal > -18 : (tempAmVal > 4 || tempAmVal < 0));
+                          const isPmWarn = row.tempPm !== "" && !isNaN(tempPmVal) && (isFreezer ? tempPmVal > -18 : (tempPmVal > 4 || tempPmVal < 0));
+                          
+                          return (
+                            <div 
+                              key={idx} 
+                              className={`bg-white border rounded-2xl p-4.5 space-y-4 transition-all duration-300 ${
+                                isAmWarn || isPmWarn 
+                                  ? "border-red-200 shadow-md shadow-red-500/5 bg-red-50/[0.02]" 
+                                  : "border-brand-green/10 hover:border-brand-gold/30 shadow-sm"
+                              }`}
+                            >
+                              <div className="flex justify-between items-start">
+                                <span className="font-serif font-bold text-brand-green text-sm block leading-snug truncate max-w-[150px]">
+                                  {row.name}
+                                </span>
+                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${isFreezer ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`}>
+                                  {isFreezer ? "Фризер" : "Хладилник"}
+                                </span>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-black text-brand-dark/50 uppercase block">Сутрин</label>
+                                  <div className="relative">
+                                    <input 
+                                      type="text" 
+                                      value={row.tempAm} 
+                                      onChange={(e) => updateFridgeTemp(idx, "tempAm", e.target.value)}
+                                      placeholder="напр. 3" 
+                                      className={`w-full text-center text-xs px-2 py-2.5 rounded-xl border focus:outline-none transition-all ${
+                                        isAmWarn 
+                                          ? "border-red-300 focus:ring-2 focus:ring-red-500/20 bg-red-50/30 text-red-900 font-bold font-mono" 
+                                          : "border-brand-green/15 focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold bg-brand-light/30 text-brand-dark font-medium font-mono"
+                                      }`}
+                                    />
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-brand-dark/40 font-bold">°C</span>
+                                  </div>
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-black text-brand-dark/50 uppercase block">Вечер</label>
+                                  <div className="relative">
+                                    <input 
+                                      type="text" 
+                                      value={row.tempPm} 
+                                      onChange={(e) => updateFridgeTemp(idx, "tempPm", e.target.value)}
+                                      placeholder="напр. 4" 
+                                      className={`w-full text-center text-xs px-2 py-2.5 rounded-xl border focus:outline-none transition-all ${
+                                        isPmWarn 
+                                          ? "border-red-300 focus:ring-2 focus:ring-red-500/20 bg-red-50/30 text-red-900 font-bold font-mono" 
+                                          : "border-brand-green/15 focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold bg-brand-light/30 text-brand-dark font-medium font-mono"
+                                      }`}
+                                    />
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] text-brand-dark/40 font-bold">°C</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex justify-between items-center text-[10px] pt-1">
+                                <span className="text-brand-dark/50 font-bold italic">
+                                  Норма: {isFreezer ? "под -18°C" : "0 до 4°C"}
+                                </span>
+                                {(isAmWarn || isPmWarn) && (
+                                  <span className="text-red-600 font-extrabold flex items-center gap-0.5 animate-pulse">
+                                    <AlertTriangle className="h-3 w-3 shrink-0" /> В отклонение!
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Print-Only Table (BAFSA Compliant) */}
+                      <div className="hidden print:block">
+                        <table className="w-full text-[10px] text-left border-collapse border border-brand-dark">
                           <thead>
-                            <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
-                              <th className="border border-brand-green/10 p-2.5">Хладилно съоръжение (Име / №)</th>
-                              <th className="border border-brand-green/10 p-2.5 w-36 text-center">Температура Сутрин (°C)</th>
-                              <th className="border border-brand-green/10 p-2.5 w-36 text-center">Температура Вечер (°C)</th>
-                              <th className="border border-brand-green/10 p-2.5 w-40 text-center">Норматив (Препоръчително)</th>
+                            <tr className="bg-brand-light text-brand-dark font-bold uppercase border-b border-brand-dark">
+                              <th className="border border-brand-dark p-2">Хладилно съоръжение (Име / №)</th>
+                              <th className="border border-brand-dark p-2 w-36 text-center">Температура Сутрин (°C)</th>
+                              <th className="border border-brand-dark p-2 w-36 text-center">Температура Вечер (°C)</th>
+                              <th className="border border-brand-dark p-2 w-40 text-center">Норматив (Препоръчително)</th>
                             </tr>
                           </thead>
                           <tbody>
                             {logFridges.map((row, idx) => (
-                              <tr key={idx} className="hover:bg-brand-light/40 transition-colors">
-                                <td className="border border-brand-green/10 p-2.5 font-bold text-brand-green">
-                                  {row.name}
-                                </td>
-                                <td className="border border-brand-green/10 p-1.5 text-center">
-                                  <input 
-                                    type="text" 
-                                    value={row.tempAm} 
-                                    onChange={(e) => updateFridgeTemp(idx, "tempAm", e.target.value)}
-                                    placeholder="напр. 3" 
-                                    className="w-full text-center px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                  />
-                                </td>
-                                <td className="border border-brand-green/10 p-1.5 text-center">
-                                  <input 
-                                    type="text" 
-                                    value={row.tempPm} 
-                                    onChange={(e) => updateFridgeTemp(idx, "tempPm", e.target.value)}
-                                    placeholder="напр. 4" 
-                                    className="w-full text-center px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                  />
-                                </td>
-                                <td className="border border-brand-green/10 p-2.5 text-center text-[10px] text-brand-dark/50 italic">
-                                  {row.name.toLowerCase().includes("фризер") ? "под -18 °C" : "от 0 до 4 °C"}
+                              <tr key={idx} className="border-b border-brand-dark">
+                                <td className="border border-brand-dark p-2 font-bold">{row.name}</td>
+                                <td className="border border-brand-dark p-2 text-center font-mono">{row.tempAm}°C</td>
+                                <td className="border border-brand-dark p-2 text-center font-mono">{row.tempPm}°C</td>
+                                <td className="border border-brand-dark p-2 text-center font-medium italic">
+                                  {row.name.toLowerCase().includes("фризер") || row.name.toLowerCase().includes("замраз") ? "под -18 °C" : "от 0 до 4 °C"}
                                 </td>
                               </tr>
                             ))}
@@ -2938,256 +3512,454 @@ export default function ProfilePage() {
                     </div>
 
                     {/* TWO-COLUMN GRID FOR HYGIENE AND HEALTH CHECK */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       
                       {/* FORM 3: Почистване и Дезинфекция */}
-                      <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+                      <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
                         <div className="border-b border-brand-green/5 pb-3">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-5 w-5 text-brand-gold" />
-                            <h3 className="font-serif text-base font-bold text-brand-green">3. Дневник по дезинфекция</h3>
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl">
+                              <CheckCircle className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-serif text-base font-bold text-brand-green">3. Дневник по дезинфекция</h3>
+                              <p className="text-[9px] text-brand-dark/50">Процедури по измиване и санитарно почистване</p>
+                            </div>
                           </div>
                         </div>
 
-                        <p className="text-[10px] text-brand-dark/50 italic leading-snug">Отбележете извършените ежедневни хигиенни процедури в обекта:</p>
-                        
-                        <div className="space-y-3.5">
-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={logHygiene.desinfection} 
-                              onChange={(e) => setLogHygiene({...logHygiene, desinfection: e.target.checked})} 
-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
-                            />
-                            <div>
-                              <span className="font-bold block">Дезинфекция на инвентар и прибори</span>
-                              <span className="text-[10px] text-brand-dark/60 block">Обработка на дъски, ножове, тигани, контейнери</span>
-                            </div>
-                          </label>
+                        {/* Screen cards */}
+                        <div className="grid grid-cols-1 gap-3 print:hidden">
+                          {[
+                            {
+                              key: "desinfection",
+                              title: "Дезинфекция на инвентар и прибори",
+                              desc: "Обработка на дъски, ножове, тигани, контейнери",
+                            },
+                            {
+                              key: "surfaces",
+                              title: "Почистване на работни повърхности",
+                              desc: "Дезинфекциране на плотове и метални повърхности",
+                            },
+                            {
+                              key: "floors",
+                              title: "Подобряване и измиване на подове",
+                              desc: "Ежедневно измиване със саниращи разтвори",
+                            },
+                            {
+                              key: "waste",
+                              title: "Извозване на хранителни отпадъци",
+                              desc: "Изхвърляне на кофите, дезинфекция на контейнери",
+                            }
+                          ].map((item) => {
+                            const isChecked = (logHygiene as any)[item.key];
+                            return (
+                              <button
+                                key={item.key}
+                                type="button"
+                                onClick={() => setLogHygiene({ ...logHygiene, [item.key]: !isChecked })}
+                                className={`text-left p-3.5 rounded-2xl border transition-all duration-300 cursor-pointer flex items-start gap-4 ${
+                                  isChecked 
+                                    ? "bg-brand-green/[0.02] border-brand-gold shadow-md shadow-brand-gold/5" 
+                                    : "bg-white border-brand-green/10 hover:border-brand-green/30"
+                                }`}
+                              >
+                                <div className={`p-1.5 rounded-lg shrink-0 border transition-all ${
+                                  isChecked 
+                                    ? "bg-brand-gold text-brand-dark border-brand-gold" 
+                                    : "bg-brand-light text-brand-dark/25 border-brand-green/10"
+                                }`}>
+                                  {isChecked ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                                </div>
+                                <div className="space-y-0.5">
+                                  <span className={`text-xs font-serif font-bold block ${isChecked ? "text-brand-green" : "text-brand-dark"}`}>
+                                    {item.title}
+                                  </span>
+                                  <span className="text-[10px] text-brand-dark/50 leading-normal block">
+                                    {item.desc}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
 
-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={logHygiene.surfaces} 
-                              onChange={(e) => setLogHygiene({...logHygiene, surfaces: e.target.checked})} 
-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
-                            />
-                            <div>
-                              <span className="font-bold block">Почистване на работни повърхности</span>
-                              <span className="text-[10px] text-brand-dark/60 block">Дезинфекциране на плотове и метални повърхности</span>
+                        {/* Print checklist */}
+                        <div className="hidden print:block space-y-3.5 text-[10px]">
+                          {[
+                            { label: "Дезинфекция на инвентар и прибори (дъски, ножове, тигани, контейнери)", val: logHygiene.desinfection },
+                            { label: "Почистване и дезинфекциране на работни повърхности и плотове", val: logHygiene.surfaces },
+                            { label: "Почистване и ежедневно измиване на подове в обекта", val: logHygiene.floors },
+                            { label: "Извозване на хранителни отпадъци и дезинфекция на контейнери", val: logHygiene.waste },
+                          ].map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-3">
+                              <span className="w-4 h-4 border border-brand-dark flex items-center justify-center font-bold font-mono">
+                                {item.val ? "X" : ""}
+                              </span>
+                              <span>{item.label}</span>
                             </div>
-                          </label>
-
-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={logHygiene.floors} 
-                              onChange={(e) => setLogHygiene({...logHygiene, floors: e.target.checked})} 
-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
-                            />
-                            <div>
-                              <span className="font-bold block">Подобряване и измиване на подове</span>
-                              <span className="text-[10px] text-brand-dark/60 block">Ежедневно забърсване и измиване със саниращи разтвори</span>
-                            </div>
-                          </label>
-
-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={logHygiene.waste} 
-                              onChange={(e) => setLogHygiene({...logHygiene, waste: e.target.checked})} 
-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
-                            />
-                            <div>
-                              <span className="font-bold block">Извозване на хранителни отпадъци</span>
-                              <span className="text-[10px] text-brand-dark/60 block">Изхвърляне на кофите, почистване на контейнери и дезинфекция</span>
-                            </div>
-                          </label>
+                          ))}
                         </div>
                       </div>
 
                       {/* FORM 4: Здравен Статус / Лична Хигиена */}
-                      <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+                      <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
                         <div className="border-b border-brand-green/5 pb-3">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-5 w-5 text-brand-gold" />
-                            <h3 className="font-serif text-base font-bold text-brand-green">4. Лична хигиена и здравен статус</h3>
-                          </div>
-                        </div>
-
-                        <p className="text-[10px] text-brand-dark/50 italic leading-snug">Декларация на управителя за здравословно състояние на екипа:</p>
-
-                        <div className="space-y-4 bg-brand-light/40 p-4 rounded-xl border border-brand-green/5">
-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={logStaff.checkPassed} 
-                              onChange={(e) => setLogStaff({...logStaff, checkPassed: e.target.checked})} 
-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
-                            />
-                            <div>
-                              <span className="font-bold block text-brand-green">Извършен входящ филтър на персонала</span>
-                              <span className="text-[10px] text-brand-dark/60 block">Служителите са проверени преди започване на смяна</span>
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl">
+                              <User className="h-5 w-5" />
                             </div>
-                          </label>
-
-                          <div className="flex items-center justify-between border-t border-brand-green/5 pt-3">
-                            <span className="text-xs font-bold">Персоналът е здрав и изряден:</span>
-                            <select
-                              value={logStaff.healthy ? "healthy" : "sick"}
-                              onChange={(e) => setLogStaff({...logStaff, healthy: e.target.value === "healthy"})}
-                              className="text-xs font-bold border border-brand-green/10 rounded px-2.5 py-1 bg-white focus:outline-none focus:border-brand-gold text-brand-green"
-                            >
-                              <option value="healthy" className="text-green-600 font-bold">Да (Всички ОК)</option>
-                              <option value="sick" className="text-red-600 font-bold">Не (Има временно отстранени)</option>
-                            </select>
+                            <div>
+                              <h3 className="font-serif text-base font-bold text-brand-green">4. Лична хигиена и здравен статус</h3>
+                              <p className="text-[9px] text-brand-dark/50">Деклариране на здравословно състояние на персонала</p>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="text-[10px] text-brand-dark/50 leading-relaxed border-l-2 border-brand-gold/30 pl-3">
+                        {/* Screen buttons */}
+                        <div className="space-y-4 print:hidden">
+                          <button
+                            type="button"
+                            onClick={() => setLogStaff({ ...logStaff, checkPassed: !logStaff.checkPassed })}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex items-start gap-4 ${
+                              logStaff.checkPassed 
+                                ? "bg-brand-green/[0.02] border-brand-gold shadow-md shadow-brand-gold/5" 
+                                : "bg-white border-brand-green/10 hover:border-brand-green/30"
+                            }`}
+                          >
+                            <div className={`p-1.5 rounded-lg shrink-0 border transition-all ${
+                              logStaff.checkPassed 
+                                ? "bg-brand-gold text-brand-dark border-brand-gold" 
+                                : "bg-brand-light text-brand-dark/25 border-brand-green/10"
+                            }`}>
+                              {logStaff.checkPassed ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className={`text-xs font-serif font-bold block ${logStaff.checkPassed ? "text-brand-green" : "text-brand-dark"}`}>
+                                Извършен входящ филтър на персонала
+                              </span>
+                              <span className="text-[10px] text-brand-dark/50 leading-normal block">
+                                Служителите са проверени за здравословни симптоми преди смяна
+                              </span>
+                            </div>
+                          </button>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-brand-green/5 pt-4">
+                            <span className="text-xs font-bold text-brand-dark">Здравословен статус на екипа:</span>
+                            <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setLogStaff({ ...logStaff, healthy: true })}
+                                className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all border cursor-pointer ${
+                                  logStaff.healthy 
+                                    ? "bg-green-100 text-green-800 border-green-300 shadow-sm" 
+                                    : "bg-transparent text-brand-dark/50 border-brand-green/15 hover:bg-brand-light"
+                                }`}
+                              >
+                                Всички са здрави
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setLogStaff({ ...logStaff, healthy: false })}
+                                className={`px-3 py-2 rounded-xl text-[10px] font-black uppercase transition-all border cursor-pointer ${
+                                  !logStaff.healthy 
+                                    ? "bg-red-100 text-red-800 border-red-300 shadow-sm animate-pulse" 
+                                    : "bg-transparent text-brand-dark/50 border-brand-green/15 hover:bg-brand-light"
+                                }`}
+                              >
+                                Има отстранени
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Print view */}
+                        <div className="hidden print:block space-y-3.5 text-[10px]">
+                          <div className="flex items-center gap-3">
+                            <span className="w-4 h-4 border border-brand-dark flex items-center justify-center font-bold font-mono">
+                              {logStaff.checkPassed ? "X" : ""}
+                            </span>
+                            <span>Извършен входящ филтър на персонала за съответствие и симптоми</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-2">
+                            <span>Всички служители са клинично здрави, без рани или грипоподобни симптоми:</span>
+                            <span className="font-bold border border-brand-dark px-3 py-1 bg-brand-light font-mono">
+                              {logStaff.healthy ? "ДА" : "НЕ"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-[10px] text-brand-dark/50 leading-relaxed border-l-2 border-brand-gold/30 pl-3 pt-1">
                           <span className="font-bold block text-brand-dark/70">БАБХ Стандарт:</span>
-                          Лица с гнойни рани, кожни обриви или грипоподобни симптоми се отстраняват незабавно от кухнята.
+                          Лица с гнойни рани, кожни обриви или грипоподобни симптоми се отстраняват незабавно от работа с храни.
                         </div>
                       </div>
                     </div>
 
                     {/* NICHE-SPECIFIC FORM: 5. Термична Обработка (cooking temp log) - Rendered if Niche is Заведение or Пекарна/Производство */}
                     {(getSectorForNiche(firmInfo.niche) === "Заведения за обществено хранене (ЗОХ)" || getSectorForNiche(firmInfo.niche).includes("Производство") || getSectorForNiche(firmInfo.niche).includes("Консервирани") || getSectorForNiche(firmInfo.niche).includes("Сладкарски")) && (
-                      <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+                      <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
                         <div className="flex items-center justify-between border-b border-brand-green/5 pb-3">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-5 w-5 text-brand-gold" />
-                            <h3 className="font-serif text-base font-bold text-brand-green">5. Дневник за температурна (термична) обработка</h3>
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl">
+                              <Activity className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-serif text-base font-bold text-brand-green">5. Дневник за температурна (термична) обработка</h3>
+                              <p className="text-[9px] text-brand-dark/50">Проверка на минимална температура от 75°C в ядрото на храната</p>
+                            </div>
                           </div>
                           <button 
                             onClick={addThermalRow}
-                            className="bg-brand-green hover:bg-brand-green/90 text-white text-[10px] uppercase font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-1 cursor-pointer print:hidden"
+                            className="bg-brand-green hover:bg-brand-green/90 text-white text-[10px] uppercase font-black px-4 py-2 rounded-xl transition-all flex items-center gap-1 cursor-pointer print:hidden border-0 hover:scale-[1.02] active:scale-[0.98] duration-150 shadow-md shadow-brand-green/15"
                           >
                             <Plus className="h-3.5 w-3.5" /> Добави запис
                           </button>
                         </div>
 
-                        <p className="text-[10px] text-brand-dark/50 italic leading-snug">Задължително вписване на t° при печене/варене/пържене (минимална t° в ядрото 75°C):</p>
-
                         {logThermal.length === 0 ? (
-                          <p className="text-xs text-brand-dark/50 italic py-2 text-center">Няма въведени топлинни обработки за тази дата.</p>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-xs text-left border-collapse border border-brand-green/10">
-                              <thead>
-                                <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
-                                  <th className="border border-brand-green/10 p-2.5">Приготвено ястие / Продукт</th>
-                                  <th className="border border-brand-green/10 p-2.5 w-24 text-center">Час</th>
-                                  <th className="border border-brand-green/10 p-2.5 w-36 text-center">t° в центъра (°C)</th>
-                                  <th className="border border-brand-green/10 p-2.5 w-40 text-center">Правилно охлаждане</th>
-                                  <th className="border border-brand-green/10 p-2.5 w-12 text-center print:hidden">Изтрий</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {logThermal.map((row, idx) => (
-                                  <tr key={idx} className="hover:bg-brand-light/40 transition-colors">
-                                    <td className="border border-brand-green/10 p-1.5">
-                                      <input 
-                                        type="text" 
-                                        value={row.product} 
-                                        onChange={(e) => updateThermalRow(idx, "product", e.target.value)}
-                                        placeholder="напр. Пиле с картофи" 
-                                        className="w-full px-2 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                      />
-                                    </td>
-                                    <td className="border border-brand-green/10 p-1.5 text-center">
-                                      <input 
-                                        type="text" 
-                                        value={row.time} 
-                                        onChange={(e) => updateThermalRow(idx, "time", e.target.value)}
-                                        placeholder="12:00" 
-                                        className="w-full text-center px-1 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                      />
-                                    </td>
-                                    <td className="border border-brand-green/10 p-1.5 text-center">
-                                      <input 
-                                        type="text" 
-                                        value={row.tempCook} 
-                                        onChange={(e) => updateThermalRow(idx, "tempCook", e.target.value)}
-                                        placeholder="78" 
-                                        className="w-full text-center px-1 py-1 text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none"
-                                      />
-                                    </td>
-                                    <td className="border border-brand-green/10 p-1.5 text-center">
-                                      <select
-                                        value={row.cooled ? "yes" : "no"}
-                                        onChange={(e) => updateThermalRow(idx, "cooled", e.target.value === "yes")}
-                                        className="text-xs border border-transparent hover:border-brand-green/20 focus:border-brand-gold rounded bg-transparent focus:bg-white focus:outline-none p-1 font-bold text-brand-green"
-                                      >
-                                        <option value="yes" className="text-green-600 font-bold">Да (Бързо охлаждане)</option>
-                                        <option value="no" className="text-brand-gold font-bold">Не се изисква</option>
-                                      </select>
-                                    </td>
-                                    <td className="border border-brand-green/10 p-1.5 text-center print:hidden">
-                                      <button 
-                                        onClick={() => deleteThermalRow(idx)}
-                                        className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </button>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                          <div className="text-center py-8 border border-dashed border-brand-green/10 rounded-2xl space-y-2 print:hidden">
+                            <Activity className="h-6 w-6 text-brand-green/30 mx-auto" />
+                            <p className="text-xs text-brand-dark/50 italic font-medium">Няма въведени топлинни обработки за тази дата.</p>
                           </div>
+                        ) : (
+                          <>
+                            {/* Screen spreadsheet */}
+                            <div className="overflow-x-auto print:hidden rounded-2xl border border-brand-green/10 shadow-sm">
+                              <table className="w-full text-xs text-left border-separate border-spacing-0">
+                                <thead>
+                                  <tr className="bg-brand-green/5 text-[10px] font-black uppercase text-brand-green tracking-wider border-b border-brand-green/10">
+                                    <th className="p-3 border-b border-brand-green/10">Приготвено ястие / Продукт</th>
+                                    <th className="p-3 border-b border-brand-green/10 w-28 text-center">Час</th>
+                                    <th className="p-3 border-b border-brand-green/10 w-36 text-center">t° в центъра (°C)</th>
+                                    <th className="p-3 border-b border-brand-green/10 w-44 text-center">Правилно охлаждане</th>
+                                    <th className="p-3 border-b border-brand-green/10 w-16 text-center">Изтрий</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {logThermal.map((row, idx) => {
+                                    const tempCookVal = parseFloat(row.tempCook);
+                                    const isWarn = row.tempCook !== "" && !isNaN(tempCookVal) && tempCookVal < 75;
+                                    return (
+                                      <tr key={idx} className="hover:bg-brand-green/[0.01] even:bg-brand-light/35 transition-colors border-b border-brand-green/5">
+                                        <td className="p-2 border-b border-brand-green/5">
+                                          <input 
+                                            type="text" 
+                                            value={row.product} 
+                                            onChange={(e) => updateThermalRow(idx, "product", e.target.value)}
+                                            placeholder="напр. Пиле с картофи" 
+                                            className="w-full px-2 py-2 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/30 rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all text-brand-dark font-medium"
+                                          />
+                                        </td>
+                                        <td className="p-2 border-b border-brand-green/5 text-center">
+                                          <input 
+                                            type="text" 
+                                            value={row.time} 
+                                            onChange={(e) => updateThermalRow(idx, "time", e.target.value)}
+                                            placeholder="12:00" 
+                                            className="w-full text-center px-1 py-2 text-xs border border-transparent hover:border-brand-green/15 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/30 rounded-lg bg-transparent focus:bg-white focus:outline-none transition-all text-brand-dark font-mono font-medium"
+                                          />
+                                        </td>
+                                        <td className="p-2 border-b border-brand-green/5 text-center">
+                                          <div className="relative">
+                                            <input 
+                                              type="text" 
+                                              value={row.tempCook} 
+                                              onChange={(e) => updateThermalRow(idx, "tempCook", e.target.value)}
+                                              placeholder="78" 
+                                              className={`w-full text-center px-1 py-2 text-xs border rounded transition-all ${
+                                                isWarn 
+                                                  ? "border-red-300 text-red-900 bg-red-50/30 font-bold focus:ring-2 focus:ring-red-500/20 font-mono" 
+                                                  : "border-transparent hover:border-brand-green/15 focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/30 bg-transparent focus:bg-white focus:outline-none font-mono"
+                                              }`}
+                                            />
+                                            <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] text-brand-dark/40 font-bold">°C</span>
+                                          </div>
+                                          {isWarn && (
+                                            <span className="text-[9px] text-red-600 font-extrabold block mt-1 animate-pulse">
+                                              ⚠️ Изисква се ≥ 75°C!
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="p-2 border-b border-brand-green/5 text-center">
+                                          <div className="flex justify-center gap-1">
+                                            <button
+                                              type="button"
+                                              onClick={() => updateThermalRow(idx, "cooled", true)}
+                                              className={`px-2 py-1 rounded-md text-[10px] font-black uppercase transition-all border cursor-pointer ${row.cooled ? "bg-green-100 text-green-800 border-green-300 shadow-sm" : "bg-transparent text-brand-dark/45 border-transparent hover:bg-brand-light"}`}
+                                            >
+                                              Бързо
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => updateThermalRow(idx, "cooled", false)}
+                                              className={`px-2 py-1 rounded-md text-[10px] font-black uppercase transition-all border cursor-pointer ${!row.cooled ? "bg-brand-gold/10 text-brand-gold border-brand-gold/30" : "bg-transparent text-brand-dark/45 border-transparent hover:bg-brand-light"}`}
+                                            >
+                                              Не се изиск.
+                                            </button>
+                                          </div>
+                                        </td>
+                                        <td className="p-2 border-b border-brand-green/5 text-center">
+                                          <button 
+                                            onClick={() => deleteThermalRow(idx)}
+                                            className="text-red-500 hover:text-red-700 transition-colors p-1.5 cursor-pointer bg-transparent border-0 inline-block"
+                                          >
+                                            <Trash2 className="h-4.5 w-4.5" />
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* Print-Only Table */}
+                            <div className="hidden print:block">
+                              <table className="w-full text-[10px] text-left border-collapse border border-brand-dark">
+                                <thead>
+                                  <tr className="bg-brand-light text-brand-dark font-bold uppercase border-b border-brand-dark">
+                                    <th className="border border-brand-dark p-2">Приготвено ястие / Продукт</th>
+                                    <th className="border border-brand-dark p-2 w-24 text-center">Час</th>
+                                    <th className="border border-brand-dark p-2 w-36 text-center">t° в центъра (°C)</th>
+                                    <th className="border border-brand-dark p-2 w-40 text-center">Правилно охлаждане</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {logThermal.map((row, idx) => (
+                                    <tr key={idx} className="border-b border-brand-dark">
+                                      <td className="border border-brand-dark p-2">{row.product}</td>
+                                      <td className="border border-brand-dark p-2 text-center font-mono">{row.time}</td>
+                                      <td className="border border-brand-dark p-2 text-center font-mono">{row.tempCook}°C</td>
+                                      <td className="border border-brand-dark p-2 text-center">
+                                        {row.cooled ? "Да (Бързо охлаждане)" : "Не се изисква"}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </>
                         )}
                       </div>
                     )}
 
                     {/* NICHE-SPECIFIC FORM: 6. Контрол на фритюрна мазнина - Rendered if Niche is Заведение or Каравана */}
                     {(getSectorForNiche(firmInfo.niche) === "Заведения за обществено хранене (ЗОХ)" || getSectorForNiche(firmInfo.niche) === "МТХ – Мобилни търговски обекти") && (
-                      <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
+                      <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
                         <div className="border-b border-brand-green/5 pb-3">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle className="h-5 w-5 text-brand-gold" />
-                            <h3 className="font-serif text-base font-bold text-brand-green">6. Дневник за фритюрна мазнина</h3>
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl">
+                              <CheckCircle className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-serif text-base font-bold text-brand-green">6. Дневник за фритюрна мазнина</h3>
+                              <p className="text-[9px] text-brand-dark/50">Проверка за годност и подмяна на фритюрно олио</p>
+                            </div>
                           </div>
                         </div>
 
-                        <div className="bg-brand-light/40 p-4 rounded-xl border border-brand-green/5 space-y-4">
-                          <label className="flex items-start gap-3 text-xs text-brand-dark select-none cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              checked={logFryer.fryerUsed} 
-                              onChange={(e) => setLogFryer({...logFryer, fryerUsed: e.target.checked})} 
-                              className="mt-0.5 rounded border-brand-green/20 focus:ring-brand-gold text-brand-green"
-                            />
-                            <div>
-                              <span className="font-bold block">Фритюрниците са използвани на тази дата</span>
-                              <span className="text-[10px] text-brand-dark/60 block">Следи се качеството на олиото след употреба</span>
+                        {/* Screen Version */}
+                        <div className="space-y-4 print:hidden">
+                          <button
+                            type="button"
+                            onClick={() => setLogFryer({ ...logFryer, fryerUsed: !logFryer.fryerUsed })}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex items-start gap-4 ${
+                              logFryer.fryerUsed 
+                                ? "bg-brand-green/[0.02] border-brand-gold shadow-md shadow-brand-gold/5" 
+                                : "bg-white border-brand-green/10 hover:border-brand-green/30"
+                            }`}
+                          >
+                            <div className={`p-1.5 rounded-lg shrink-0 border transition-all ${
+                              logFryer.fryerUsed 
+                                ? "bg-brand-gold text-brand-dark border-brand-gold" 
+                                : "bg-brand-light text-brand-dark/25 border-brand-green/10"
+                            }`}>
+                              {logFryer.fryerUsed ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                             </div>
-                          </label>
+                            <div className="space-y-0.5">
+                              <span className={`text-xs font-serif font-bold block ${logFryer.fryerUsed ? "text-brand-green" : "text-brand-dark"}`}>
+                                Фритюрниците са използвани на тази дата
+                              </span>
+                              <span className="text-[10px] text-brand-dark/50 leading-normal block">
+                                Отчетете качеството и евентуалната смяна на фритюрната мазнина
+                              </span>
+                            </div>
+                          </button>
 
                           {logFryer.fryerUsed && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-brand-green/5 pt-3">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold">Качество на мазнината:</span>
-                                <select
-                                  value={logFryer.oilQualityOk ? "ok" : "bad"}
-                                  onChange={(e) => setLogFryer({...logFryer, oilQualityOk: e.target.value === "ok"})}
-                                  className="text-xs border border-brand-green/10 rounded px-2.5 py-1 bg-white focus:outline-none focus:border-brand-gold font-bold text-brand-green"
-                                >
-                                  <option value="ok" className="text-green-600 font-bold">Годна (Добра)</option>
-                                  <option value="bad" className="text-red-600 font-bold">Негодна (Потъмняла)</option>
-                                </select>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-brand-green/5 pt-4 animate-fade-in">
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="text-xs font-bold text-brand-dark">Качество на мазнината:</span>
+                                <div className="flex gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setLogFryer({ ...logFryer, oilQualityOk: true })}
+                                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border cursor-pointer ${
+                                      logFryer.oilQualityOk 
+                                        ? "bg-green-100 text-green-800 border-green-300 shadow-sm" 
+                                        : "bg-transparent text-brand-dark/50 border-brand-green/15 hover:bg-brand-light"
+                                    }`}
+                                  >
+                                    Годна
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setLogFryer({ ...logFryer, oilQualityOk: false })}
+                                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border cursor-pointer ${
+                                      !logFryer.oilQualityOk 
+                                        ? "bg-red-100 text-red-800 border-red-300 shadow-sm animate-pulse font-extrabold" 
+                                        : "bg-transparent text-brand-dark/50 border-brand-green/15 hover:bg-brand-light"
+                                    }`}
+                                  >
+                                    Негодна
+                                  </button>
+                                </div>
                               </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-semibold">Извършена ли е подмяна:</span>
-                                <select
-                                  value={logFryer.oilChanged ? "yes" : "no"}
-                                  onChange={(e) => setLogFryer({...logFryer, oilChanged: e.target.value === "yes"})}
-                                  className="text-xs border border-brand-green/10 rounded px-2.5 py-1 bg-white focus:outline-none focus:border-brand-gold font-bold text-brand-green"
-                                >
-                                  <option value="no" className="text-brand-dark/60">Не</option>
-                                  <option value="yes" className="text-green-600 font-bold">Да (Напълно подменена)</option>
-                                </select>
+
+                              <div className="flex items-center justify-between gap-3">
+                                <span className="text-xs font-bold text-brand-dark">Извършена ли е подмяна:</span>
+                                <div className="flex gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setLogFryer({ ...logFryer, oilChanged: true })}
+                                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border cursor-pointer ${
+                                      logFryer.oilChanged 
+                                        ? "bg-green-100 text-green-800 border-green-300 shadow-sm" 
+                                        : "bg-transparent text-brand-dark/50 border-brand-green/15 hover:bg-brand-light"
+                                    }`}
+                                  >
+                                    Да
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setLogFryer({ ...logFryer, oilChanged: false })}
+                                    className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all border cursor-pointer ${
+                                      !logFryer.oilChanged 
+                                        ? "bg-brand-gold/10 text-brand-gold border-brand-gold/30 shadow-sm" 
+                                        : "bg-transparent text-brand-dark/50 border-brand-green/15 hover:bg-brand-light"
+                                    }`}
+                                  >
+                                    Не
+                                  </button>
+                                </div>
                               </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Print Version */}
+                        <div className="hidden print:block text-[10px] space-y-2">
+                          <div className="flex items-center gap-3">
+                            <span className="w-4 h-4 border border-brand-dark flex items-center justify-center font-bold font-mono">
+                              {logFryer.fryerUsed ? "X" : ""}
+                            </span>
+                            <span>Фритюрните съоръжения са експлоатирани на тази дата</span>
+                          </div>
+                          {logFryer.fryerUsed && (
+                            <div className="grid grid-cols-2 gap-6 pl-7">
+                              <p>Качество на мазнината при пържене: <span className="font-bold border border-brand-dark px-2 bg-brand-light font-mono">{logFryer.oilQualityOk ? "ГОДНА" : "НЕГОДНА"}</span></p>
+                              <p>Извършена ли е подмяна на мазнината: <span className="font-bold border border-brand-dark px-2 bg-brand-light font-mono">{logFryer.oilChanged ? "ДА" : "НЕ"}</span></p>
                             </div>
                           )}
                         </div>
@@ -3196,24 +3968,37 @@ export default function ProfilePage() {
 
                   </div>
 
-                  {/* Save Button - Hidden on print */}
-                  <div className="flex justify-end gap-3 print:hidden">
-                    <button 
-                      onClick={handleSaveLogs}
-                      className="bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-lg transition-colors cursor-pointer shadow-lg shadow-brand-green/10"
-                    >
-                      Запази Дневници за тази дата
-                    </button>
+                  {/* Action Deck - Hidden on print */}
+                  <div className="bg-white/85 backdrop-blur-md border border-brand-green/10 p-5 rounded-3xl shadow-xl flex flex-col sm:flex-row gap-4 justify-end items-center print:hidden">
+                    <span className="text-[10px] text-brand-dark/50 font-bold mr-auto hidden sm:inline leading-relaxed max-w-sm">
+                      * Всички записи се съхраняват в криптиран архивен облак, съвместим с изискванията на БАБХ за дигитален контрол.
+                    </span>
+                    <div className="flex w-full sm:w-auto gap-3">
+                      <button 
+                        onClick={handlePrint}
+                        className="flex-1 sm:flex-none border border-brand-gold text-brand-green hover:bg-brand-gold hover:text-brand-dark font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Printer className="h-4 w-4" />
+                        Печат на всичко
+                      </button>
+                      <button 
+                        onClick={handleSaveLogs}
+                        className="flex-1 sm:flex-none bg-brand-green hover:bg-brand-green/90 text-white font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-xl transition-all cursor-pointer shadow-lg shadow-brand-green/20 hover:scale-[1.01] active:scale-[0.99] duration-150 flex items-center justify-center gap-2 border-0"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Запази дневници
+                      </button>
+                    </div>
                   </div>
 
                   {/* SIGNATURE FIELDS - Visible only on print */}
-                  <div className="hidden print:grid grid-cols-2 gap-12 mt-16 pt-8 border-t border-dashed border-brand-dark/40 text-xs">
+                  <div className="hidden print:grid grid-cols-2 gap-12 mt-16 pt-8 border-t border-dashed border-brand-dark/40 text-[10px]">
                     <div>
-                      <p className="font-bold">ПОДПИС НА ИЗВЪРШИЛ КОНТРОЛА:</p>
+                      <p className="font-bold uppercase tracking-wider">ПОДПИС НА ИЗВЪРШИЛ КОНТРОЛА:</p>
                       <p className="mt-8 border-b border-brand-dark w-48"></p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold">ПОДПИС НА УПРАВИТЕЛ / ОТГОВОРНИК:</p>
+                      <p className="font-bold uppercase tracking-wider">ПОДПИС НА УПРАВИТЕЛ / ОТГОВОРНИК:</p>
                       <p className="mt-8 border-b border-brand-dark w-48 ml-auto"></p>
                     </div>
                   </div>

@@ -384,6 +384,10 @@ function TrainingContent() {
                   <CheckCircle className="h-5 w-5 text-brand-gold mr-3 shrink-0" />
                   <span>Индивидуални насоки за Вашите продукти</span>
                 </div>
+                <div className="flex items-start sm:col-span-2 mt-2 bg-brand-light/50 p-3 rounded-lg border border-brand-green/10">
+                  <CheckCircle className="h-5 w-5 text-red-500 mr-3 shrink-0" />
+                  <span className="font-bold text-brand-dark">За издаване на сертификат е задължително успешното решаване на всички възложени тестове в Клиентския Портал.</span>
+                </div>
               </div>
 
               <div className="pt-4 flex flex-col sm:flex-row gap-4 items-center">

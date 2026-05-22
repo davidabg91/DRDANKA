@@ -41,7 +41,6 @@ export default function Header() {
     { name: "Обучения", href: "/training" },
     { name: "За мен", href: "/about" },
     { name: "Блог", href: "/blog" },
-    { name: "Портал", href: "/profile" },
     { name: "Контакти", href: "/contact" },
   ];
 
@@ -96,12 +95,18 @@ export default function Header() {
             </nav>
 
             {/* Desktop Call to Action */}
-            <div className="hidden lg:flex items-center shrink-0">
+            <div className="hidden lg:flex items-center shrink-0 space-x-3">
               <Link
                 href="/consultations"
-                className="relative inline-flex items-center justify-center xl:px-6 lg:px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light transition-all duration-300 rounded shadow-md hover:shadow-brand-gold/25 whitespace-nowrap"
+                className="relative inline-flex items-center justify-center xl:px-5 lg:px-3 py-2.5 text-[11px] xl:text-xs font-semibold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light transition-all duration-300 rounded shadow-md hover:shadow-brand-gold/25 whitespace-nowrap"
               >
                 Заяви консултация
+              </Link>
+              <Link
+                href="/profile"
+                className="relative inline-flex items-center justify-center xl:px-5 lg:px-3 py-2.5 text-[11px] xl:text-xs font-semibold uppercase tracking-wider text-white border border-brand-gold/50 hover:border-brand-gold hover:bg-brand-gold/10 transition-all duration-300 rounded shadow-sm whitespace-nowrap"
+              >
+                Вход / Портал
               </Link>
             </div>
 
@@ -147,6 +152,13 @@ export default function Header() {
           </nav>
 
           <div className="space-y-4 pb-20">
+            <Link
+              href="/profile"
+              onClick={() => setIsOpen(false)}
+              className="w-full text-center block px-6 py-3 text-sm font-semibold uppercase tracking-wider text-brand-gold border border-brand-gold/50 hover:border-brand-gold hover:bg-brand-gold/10 transition-colors duration-300 rounded shadow-sm"
+            >
+              Вход / Портал
+            </Link>
             <Link
               href="/consultations"
               onClick={() => setIsOpen(false)}
