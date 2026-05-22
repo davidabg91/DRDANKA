@@ -1936,15 +1936,6 @@ export default function ProfilePage() {
                           <p className="text-[11px] text-white/70 font-medium">Въведете акаунта си за достъп до Вашите БАБХ дневници и папки.</p>
                         </div>
                         
-                        {/* Simulated Credentials Tip */}
-                        <div className="bg-brand-gold/10 border border-brand-gold/20 p-3.5 rounded-xl text-[10px] text-white/90 flex items-start gap-2.5 leading-relaxed">
-                          <Sparkles className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                          <div>
-                            <span className="font-black text-brand-gold block uppercase tracking-wider text-[9px] mb-0.5">Бърз достъп за тестване:</span>
-                            Въведете произволен имейл и парола за демонстрация на системата.
-                          </div>
-                        </div>
-
                         <form onSubmit={handleSignIn} className="space-y-4 font-sans">
                           <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Имейл адрес</label>
