@@ -3210,14 +3210,14 @@ export default function ProfilePage() {
                         {assignedDocs.map((material) => (
                           <div 
                             key={material.id} 
-                            className={`border rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors $${
+                            className={`border rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${
                               material.status === "completed" 
                                 ? "bg-green-50/20 border-green-200" 
                                 : "bg-brand-light/30 border-brand-green/10 hover:border-brand-gold/45"
                             }`}
                           >
                             <div className="space-y-1">
-                              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full $${
+                              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
                                 material.type === "test" 
                                   ? "bg-amber-100 text-amber-800" 
                                   : "bg-blue-100 text-blue-800"
@@ -3364,14 +3364,14 @@ export default function ProfilePage() {
                           return (
                             <div 
                               key={msg.id}
-                              className={`flex gap-3 max-w-[85%] $${isMe ? "ml-auto flex-row-reverse" : ""}`}
+                              className={`flex gap-3 max-w-[85%] ${isMe ? "ml-auto flex-row-reverse" : ""}`}
                             >
-                              <div className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center border shrink-0 $${isMe ? "bg-brand-green border-brand-green text-white" : "bg-brand-gold border-brand-gold text-brand-dark"}`}>
+                              <div className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center border shrink-0 ${isMe ? "bg-brand-green border-brand-green text-white" : "bg-brand-gold border-brand-gold text-brand-dark"}`}>
                                 {isMe ? (currentUser?.contact?.slice(0, 2).toUpperCase() || "КЛ") : "ДН"}
                               </div>
-                              <div className={`space-y-1 p-3 rounded-2xl shadow-sm text-xs leading-relaxed $${isMe ? "bg-brand-green text-white rounded-tr-none" : "bg-white text-brand-dark rounded-tl-none border border-brand-green/5"}`}>
+                              <div className={`space-y-1 p-3 rounded-2xl shadow-sm text-xs leading-relaxed ${isMe ? "bg-brand-green text-white rounded-tr-none" : "bg-white text-brand-dark rounded-tl-none border border-brand-green/5"}`}>
                                 <p>{msg.text}</p>
-                                <span className={`text-[8px] block text-right font-mono $${isMe ? "text-white/60" : "text-brand-dark/40"}`}>
+                                <span className={`text-[8px] block text-right font-mono ${isMe ? "text-white/60" : "text-brand-dark/40"}`}>
                                   {new Date(msg.sentAt).toLocaleTimeString("bg-BG", { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
@@ -3482,7 +3482,7 @@ export default function ProfilePage() {
                       {auditScore !== null && (
                         <div className="flex items-center gap-3 bg-brand-light p-3 rounded-lg border border-brand-green/5">
                           <span className="text-xs font-bold text-brand-dark/70">Резултат:</span>
-                          <span className={`text-xl font-extrabold $${auditScore >= 80 ? "text-green-600" : auditScore >= 50 ? "text-brand-gold" : "text-red-600"}`}>
+                          <span className={`text-xl font-extrabold ${auditScore >= 80 ? "text-green-600" : auditScore >= 50 ? "text-brand-gold" : "text-red-600"}`}>
                             {auditScore}%
                           </span>
                           <span className="text-[10px] text-brand-dark/60 font-medium">
