@@ -126,12 +126,31 @@ export default function Home() {
               
               <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.1] max-w-2xl mx-auto lg:mx-0">
                 Системи за безопасност на храните, които{" "}
-                <span className="text-brand-gold font-style-italic font-medium">работят</span> при проверка
+                <span className="text-brand-gold font-style-italic font-medium">работят</span> при реални проверки
               </h1>
               
-              <p className="text-base sm:text-lg text-white/80 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                HACCP | ISO 22000 | IFS | ISO 9001 | GMP. Професионални консултации, проектиране и подготовка на пълна документация за БАБХ от д-р Данка Николова.
-              </p>
+              <div className="text-base sm:text-lg text-white/80 leading-relaxed max-w-xl mx-auto lg:mx-0 space-y-4">
+                <p className="font-bold text-brand-gold tracking-widest text-xs uppercase">
+                  GMP | HACCP | ISO 22000 | FSSC 22000 | IFS | ISO 9001
+                </p>
+                <p>
+                  Професионални консултации, проектиране и подготовка на пълна документация за БАБХ. Разработване и внедряване на системи за управление безопасността на храните за производители и търговци на храни.
+                </p>
+                <div>
+                  <p className="font-semibold text-white mb-1">Обучения по:</p>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-white/70">
+                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> HACCP / НАССР</li>
+                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> ДПХП / ДХП</li>
+                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> Етикетиране на храните</li>
+                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> ISO 22000</li>
+                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> Добри производствени практики</li>
+                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> Подготовка за проверки и регистрации</li>
+                  </ul>
+                </div>
+                <p className="italic text-sm text-white/60">
+                  Практически решения, изградени върху реален опит в официалния контрол на храните.
+                </p>
+              </div>
 
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 pt-2">
                 <Link
