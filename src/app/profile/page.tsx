@@ -6,6 +6,7 @@ import { useAuth, useDankaUsers } from "@/lib/firebaseHooks";
 import { auth, db } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 
 import { 
   User, 
@@ -70,6 +71,7 @@ export interface DankaUser {
   eik: string;
   contact: string;
   phone: string;
+  sector?: string;
   niche: string;
   desc: string;
   address: string;
@@ -317,7 +319,8 @@ export default function ProfilePage() {
   const [applyEik, setApplyEik] = useState("");
   const [applyContact, setApplyContact] = useState("");
   const [applyPhone, setApplyPhone] = useState("");
-  const [applyNiche, setApplyNiche] = useState("Заведение за хранене");
+  const [applySector, setApplySector] = useState("Заведения за обществено хранене (ЗОХ)");
+  const [applyNiche, setApplyNiche] = useState("Ресторанти");
   const [applyDesc, setApplyDesc] = useState("");
   const [applySuccess, setApplySuccess] = useState(false);
 
@@ -353,6 +356,8 @@ export default function ProfilePage() {
     healthy: true
   });
   const [logThermal, setLogThermal] = useState<any[]>([]);
+    const [logTraceability, setLogTraceability] = useState<any[]>([{ product: "", batchOut: "", rawMaterial: "", batchIn: "", amount: "" }]);
+  const [logDisposal, setLogDisposal] = useState<any[]>([{ product: "", batch: "", amount: "", reason: "", method: "" }]);
   const [logFryer, setLogFryer] = useState<any>({
     fryerUsed: false,
     oilQualityOk: true,
@@ -749,6 +754,7 @@ export default function ProfilePage() {
         eik: applyEik || "Няма въведен",
         contact: applyContact,
         phone: applyPhone,
+        sector: applySector,
         niche: applyNiche,
         desc: applyDesc,
         address: "Не е въведен",
@@ -2932,7 +2938,7 @@ export default function ProfilePage() {
                     </div>
 
                     {/* NICHE-SPECIFIC FORM: 5. Термична Обработка (cooking temp log) - Rendered if Niche is Заведение or Пекарна/Производство */}
-                    {(firmInfo.niche === "Заведение за хранене" || firmInfo.niche === "Пекарна или производство") && (
+                    {(getSectorForNiche(firmInfo.niche) === "Заведения за обществено хранене (ЗОХ)" || getSectorForNiche(firmInfo.niche).includes("Производство") || getSectorForNiche(firmInfo.niche).includes("Консервирани") || getSectorForNiche(firmInfo.niche).includes("Сладкарски")) && (
                       <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
                         <div className="flex items-center justify-between border-b border-brand-green/5 pb-3">
                           <div className="flex items-center gap-2">
@@ -3021,7 +3027,7 @@ export default function ProfilePage() {
                     )}
 
                     {/* NICHE-SPECIFIC FORM: 6. Контрол на фритюрна мазнина - Rendered if Niche is Заведение or Каравана */}
-                    {(firmInfo.niche === "Заведение за хранене" || firmInfo.niche === "Каравана или павилион") && (
+                    {(getSectorForNiche(firmInfo.niche) === "Заведения за обществено хранене (ЗОХ)" || getSectorForNiche(firmInfo.niche) === "МТХ – Мобилни търговски обекти") && (
                       <div className="bg-white border border-brand-green/5 p-6 rounded-2xl shadow-md space-y-4 break-inside-avoid">
                         <div className="border-b border-brand-green/5 pb-3">
                           <div className="flex items-center gap-2">
