@@ -1,11 +1,18 @@
 "use client";
 
-import React from "react";
-import { Player } from "@remotion/player";
+import React, { useEffect, useRef } from "react";
+import { Player, PlayerRef } from "@remotion/player";
 import { SubscriptionVideo } from "./SubscriptionVideo";
 import Link from "next/link";
 
 export default function RemotionVideoWidget() {
+  const playerRef = useRef<PlayerRef>(null);
+
+  useEffect(() => {
+    // Force the player to start immediately on mount to bypass some browser autoplay policies
+    playerRef.current?.play();
+  }, []);
+
   return (
     <div className="relative group lg:col-span-5 h-[650px]">
       {/* Ambient glow */}
@@ -15,6 +22,7 @@ export default function RemotionVideoWidget() {
         {/* Remotion Player inside the card - Transparent UI Animation */}
         <div className="w-full relative flex-grow min-h-[300px]">
           <Player
+            ref={playerRef}
             component={SubscriptionVideo}
             durationInFrames={375}
             compositionWidth={1000}
@@ -24,6 +32,7 @@ export default function RemotionVideoWidget() {
             controls={false}
             autoPlay={true}
             loop={true}
+            clickToPlay={false}
           />
         </div>
         

@@ -149,24 +149,28 @@ export const SubscriptionVideo: React.FC = () => {
   return (
     <AbsoluteFill className="bg-transparent font-sans flex items-center justify-center p-8 relative">
       {features.map((feat, i) => {
-        // Since durationInFrames=300 and we have 4 features, each feature gets exactly 75 frames (2.5 seconds)
-        const startFrame = i * 75;
-        const endFrame = startFrame + 75;
+        // We have 5 features, 75 frames each. Total duration is 375.
+        // To make it loop seamlessly, we use circular math.
+        const centerFrame = i * 75;
+        let localFrame = frame - centerFrame;
         
-        // Hide features when they are entirely outside their time window, 
-        // but add a tiny buffer for smooth crossfading overlapping.
-        if (frame < startFrame - 5 || frame > endFrame + 5) return null;
+        // Wrap around logic for seamless looping
+        if (localFrame < -187.5) localFrame += 375;
+        if (localFrame > 187.5) localFrame -= 375;
         
-        // Enter animation: slide up and fade in
+        // Hide features when they are entirely outside their time window
+        if (localFrame < -25 || localFrame > 95) return null;
+        
+        // Enter animation happens from localFrame = -15 to 0
         const enterProgress = spring({
-          frame: frame - startFrame,
+          frame: localFrame + 15,
           fps,
           config: { damping: 14, mass: 0.8 }
         });
         
-        // Exit animation: slide up further and fade out, starting 15 frames before the feature's end time
+        // Exit animation happens from localFrame = 60 to 75
         const exitProgress = spring({
-          frame: frame - (endFrame - 15), 
+          frame: localFrame - 60, 
           fps,
           config: { damping: 14, mass: 0.8 }
         });
