@@ -70,7 +70,7 @@ export default function Header() {
                   Д-р Данка Николова
                 </span>
                 <span className="text-[10px] xl:text-xs text-brand-gold font-light tracking-widest uppercase block mt-1">
-                  Хранителен контрол & Сигурност
+                  Академия сигурен хранителен бизнес
                 </span>
               </div>
             </Link>

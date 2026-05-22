@@ -13,6 +13,13 @@ interface Package {
 
 const CONSULTATION_PACKAGES: Package[] = [
   {
+    id: "free-intro",
+    name: "Безплатен опознавателен разговор",
+    duration: "10 минути",
+    price: "0 €",
+    desc: "Кратък безплатен разговор за насоки и уточняване на нуждите на Вашия бизнес, за да изберем най-подходящата услуга (консултация или обучение).",
+  },
+  {
     id: "basic",
     name: "Експресна консултация",
     duration: "30 минути",
@@ -74,7 +81,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
   const [step, setStep] = useState(1);
   const [selectedPackage, setSelectedPackage] = useState<Package>(() => {
     const pkgs = mode === "training" ? TRAINING_PACKAGES : CONSULTATION_PACKAGES;
-    return pkgs.find((p) => p.id === "startup") || pkgs[0];
+    return pkgs.find((p) => p.id === "free-intro") || pkgs.find((p) => p.id === "startup") || pkgs[0];
   });
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -205,7 +212,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                       <h5 className="font-serif text-base font-bold text-brand-green leading-snug">
                         {pkg.name}
                       </h5>
-                      {pkg.id === "startup" && (
+                      {pkg.id === "free-intro" && (
                         <span className="text-[9px] font-bold text-brand-green bg-brand-gold px-2 py-0.5 rounded uppercase tracking-wider whitespace-nowrap shrink-0">
                           Препоръчано
                         </span>
