@@ -1911,8 +1911,8 @@ export default function ProfilePage() {
               </div>
               
               {/* Right Column: Premium Frosted Glass Form Card */}
-              <div className="lg:col-span-5 flex flex-col justify-center relative z-10">
-                <div className="bg-white/[0.03] backdrop-blur-3xl text-white p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 relative overflow-hidden border border-white/10">
+              <div className="lg:col-span-5 relative z-10">
+                <div className="bg-white/[0.03] backdrop-blur-3xl text-white p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 relative overflow-hidden border border-white/10 h-full flex flex-col justify-center">
                   
                   {/* Decorative gradients */}
                   <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/20 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
