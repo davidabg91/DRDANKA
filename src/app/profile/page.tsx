@@ -1502,416 +1502,94 @@ export default function ProfilePage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
             
-              {/* Left Column: Premium SaaS Feature Showcase */}
-              <div className="lg:col-span-7 bg-white/[0.03] backdrop-blur-3xl text-white rounded-3xl p-8 lg:p-12 shadow-2xl relative overflow-hidden flex flex-col justify-between border border-white/10">
-                {/* Decorative gradients */}
-                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/20 rounded-full blur-[100px] -mr-20 -mt-20 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#00ffcc]/10 rounded-full blur-[100px] -ml-20 -mb-20 pointer-events-none"></div>
-                
-                <div className="relative z-10 space-y-8">
-                  <div className="flex items-center gap-2">
-                    <span className="px-3.5 py-1.5 bg-brand-gold/20 border border-brand-gold/30 rounded-full text-[10px] font-black uppercase text-brand-gold tracking-[0.15em] flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
-                      Дигитална Система
-                    </span>
-                    <span className="text-xs font-bold text-white/60">v2.1</span>
+            <div className="space-y-12 pb-12">
+              {/* Main Glowing Title Section */}
+              <div className="text-center max-w-4xl mx-auto space-y-6 pt-4 animate-fade-in">
+                <div className="inline-block relative">
+                  <div className="absolute inset-0 bg-brand-gold/20 blur-3xl rounded-full"></div>
+                  <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-white relative z-10">
+                    Вашият сигурен вход към <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-gold via-yellow-300 to-emerald-400 animate-pulse">спокойни</span> БАБХ проверки
+                  </h2>
+                </div>
+                <p className="text-sm sm:text-base text-white/70 leading-relaxed max-w-2xl mx-auto font-medium">
+                  Забравете за дебелите хартиени папки и хаотичните записки. „БАБХ Спокойствие“ дигитализира целия Ви HACCP архив, ДХП дневници и обучения в едно модерно уеб приложение.
+                </p>
+                <div className="flex items-center justify-center gap-6 pt-2">
+                  <div className="text-center">
+                    <span className="block text-2xl font-black text-brand-gold font-sans">1,200+</span>
+                    <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Активни обекта</span>
                   </div>
-
-                  <div className="space-y-4">
-                    <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight tracking-tight text-white">
-                      Вашият сигурен вход към <span className="text-brand-gold underline decoration-brand-gold/40 underline-offset-4 decoration-2">спокойни</span> БАБХ проверки
-                    </h2>
-                    <p className="text-xs sm:text-sm text-white/80 leading-relaxed max-w-xl font-medium">
-                      Забравете за дебелите хартиени папки и хаотичните записки. „БАБХ Спокойствие“ дигитализира целия Ви HACCP архив, ДХП дневници и обучения в едно модерно уеб приложение.
-                    </p>
+                  <div className="w-px h-8 bg-white/10"></div>
+                  <div className="text-center">
+                    <span className="block text-2xl font-black text-brand-gold font-sans">99.8%</span>
+                    <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Одобрени дневници</span>
                   </div>
-
-                  {/* Premium Interactive Systems Showcase */}
-                  <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-2xl p-6 relative overflow-hidden shadow-inner space-y-6">
-                    {/* Glowing Accent Orbs */}
-                    <div className="absolute -top-10 -right-10 w-24 h-24 bg-brand-gold/15 rounded-full blur-2xl pointer-events-none"></div>
-                    <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-brand-gold/10 rounded-full blur-2xl pointer-events-none"></div>
-
-                    {/* Showcase Tabs */}
-                    <div className="flex border-b border-white/10 pb-3 gap-1 overflow-x-auto scrollbar-none">
-                      <button
-                        type="button"
-                        onClick={() => setShowcaseTab("logbooks")}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border-0 cursor-pointer shrink-0 ${
-                          showcaseTab === "logbooks"
-                            ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25"
-                            : "text-white/70 hover:text-white hover:bg-white/5"
-                        }`}
-                      >
-                        Дневници
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowcaseTab("haccp")}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border-0 cursor-pointer shrink-0 ${
-                          showcaseTab === "haccp"
-                            ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25"
-                            : "text-white/70 hover:text-white hover:bg-white/5"
-                        }`}
-                      >
-                        HACCP Монитор
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowcaseTab("audit")}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border-0 cursor-pointer shrink-0 ${
-                          showcaseTab === "audit"
-                            ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25"
-                            : "text-white/70 hover:text-white hover:bg-white/5"
-                        }`}
-                      >
-                        БАБХ Одит
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowcaseTab("tests")}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200 border-0 cursor-pointer shrink-0 ${
-                          showcaseTab === "tests"
-                            ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25"
-                            : "text-white/70 hover:text-white hover:bg-white/5"
-                        }`}
-                      >
-                        Тестове & Обучения
-                      </button>
-                    </div>
-
-                    {/* Tab Contents */}
-                    {showcaseTab === "logbooks" && (
-                      <div className="space-y-4 animate-fade-in text-left">
-                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                          <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block"></span>
-                            Хладилници и Входящ Контрол (Демо)
-                          </span>
-                          <span className="text-[9px] text-white/50 font-mono">Днес, 08:30ч</span>
-                        </div>
-
-                        {/* Temp logger mock */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-2">
-                            <span className="text-[9px] text-white/60 font-bold block uppercase tracking-wider">Сутрешен Контрол (t°)</span>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                step="0.1"
-                                value={mockTempAm}
-                                onChange={(e) => setMockTempAm(e.target.value)}
-                                className="w-16 bg-white/10 text-white border border-white/10 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-gold"
-                              />
-                              <span className="text-[11px] text-white/80">°C</span>
-                            </div>
-                            <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider block">✓ В норма (0-4°C)</span>
-                          </div>
-
-                          <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-2">
-                            <span className="text-[9px] text-white/60 font-bold block uppercase tracking-wider">Вечерен Контрол (t°)</span>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                step="0.1"
-                                value={mockTempPm}
-                                onChange={(e) => setMockTempPm(e.target.value)}
-                                className="w-16 bg-white/10 text-white border border-white/10 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-brand-gold"
-                              />
-                              <span className="text-[11px] text-white/80">°C</span>
-                            </div>
-                            <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider block">✓ В норма (0-4°C)</span>
-                          </div>
-                        </div>
-
-                        {/* Interactive Delivery Approver */}
-                        <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-3">
-                          <div className="flex justify-between items-center">
-                            <div className="space-y-0.5">
-                              <h5 className="text-[11px] font-bold text-white">Доставка #127: Млечни продукти</h5>
-                              <p className="text-[9px] text-white/50">Партида: L230491 | Доставчик: Лакто ЕАД</p>
-                            </div>
-                            <div className="flex gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => setMockDeliveryStatus("approved")}
-                                className={`px-2 py-1 rounded text-[9px] font-black uppercase transition-all duration-200 border-0 cursor-pointer ${
-                                  mockDeliveryStatus === "approved"
-                                    ? "bg-emerald-500 text-white"
-                                    : "bg-white/5 hover:bg-emerald-500/20 text-emerald-400"
-                                }`}
-                              >
-                                Одобри
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setMockDeliveryStatus("rejected")}
-                                className={`px-2 py-1 rounded text-[9px] font-black uppercase transition-all duration-200 border-0 cursor-pointer ${
-                                  mockDeliveryStatus === "rejected"
-                                    ? "bg-rose-500 text-white"
-                                    : "bg-white/5 hover:bg-rose-500/20 text-rose-400"
-                                }`}
-                              >
-                                Брак
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="flex justify-between items-center text-[9px] border-t border-white/5 pt-2">
-                            <span className="text-white/60">Статус в Дневника:</span>
-                            {mockDeliveryStatus === "pending" && (
-                              <span className="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 text-amber-300 font-bold uppercase tracking-wider">
-                                Изчаква оценка
-                              </span>
-                            )}
-                            {mockDeliveryStatus === "approved" && (
-                              <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold uppercase tracking-wider">
-                                Внесено: Изрядна опаковка, t = 3.6°C
-                              </span>
-                            )}
-                            {mockDeliveryStatus === "rejected" && (
-                              <span className="px-2 py-0.5 rounded bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold uppercase tracking-wider">
-                                Внесено: Бракувана доставка
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {showcaseTab === "haccp" && (
-                      <div className="space-y-4 animate-fade-in text-left">
-                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                          <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
-                            <Activity className="h-3.5 w-3.5" />
-                            Критични Контролни Точки (ККТ) & Мониторинг
-                          </span>
-                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand-gold/20 text-brand-gold font-bold">ОПТИМАЛНО</span>
-                        </div>
-
-                        {/* CCP stats and visual representation */}
-                        <div className="flex gap-4 items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                          {/* Radial Progress */}
-                          <div className="relative w-12 h-12 shrink-0">
-                            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                              <path
-                                className="text-white/10"
-                                strokeWidth="3.5"
-                                stroke="currentColor"
-                                fill="none"
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                              />
-                              <path
-                                className="text-brand-gold"
-                                strokeWidth="3.5"
-                                strokeDasharray="98, 100"
-                                strokeLinecap="round"
-                                stroke="currentColor"
-                                fill="none"
-                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                              />
-                            </svg>
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-[10px] font-black text-white font-mono">98%</span>
-                            </div>
-                          </div>
-
-                          <div className="space-y-0.5">
-                            <h5 className="text-[11px] font-bold text-brand-gold">HACCP Индекс на Съвместимост</h5>
-                            <p className="text-[9px] text-white/70 leading-normal">
-                              Автоматични проверки на критични граници. Всички контролирани точки (ККТ-1 Входящ, ККТ-2 Термична обработка, ККТ-3 Хладилно съхранение) са в зеления сектор.
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Interactive corrective actions simulation */}
-                        <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl space-y-1">
-                          <div className="flex items-center gap-2">
-                            <ShieldAlert className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-                            <span className="text-[9px] font-bold text-rose-300 uppercase tracking-wider">Симулация на Коригиращо Действие</span>
-                          </div>
-                          <p className="text-[9px] text-white/80 leading-normal">
-                            Ако t° на хладилник се покачи над 4°C за повече от 2 часа, системата автоматично Ви изпраща предупреждение и Ви води стъпка по стъпка през документирането на коригиращото действие за пред БАБХ.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {showcaseTab === "audit" && (
-                      <div className="space-y-4 animate-fade-in text-left">
-                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                          <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
-                            <FileCheck className="h-3.5 w-3.5" />
-                            БАБХ Проверка & Одит
-                          </span>
-                          <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                            Готовност 100%
-                          </span>
-                        </div>
-
-                        {/* Audit Log Card */}
-                        <div className="bg-white/5 p-3.5 rounded-xl border border-white/5 space-y-3 relative overflow-hidden">
-                          <div className="absolute top-0 right-0 w-16 h-16 bg-brand-gold/5 rounded-full border border-brand-gold/15 rotate-12 flex items-center justify-center text-[8px] text-brand-gold font-bold font-serif">
-                            ОДОБРЕН
-                          </div>
-                          <div className="space-y-1">
-                            <span className="text-[8px] text-white/40 font-bold uppercase tracking-wider block">Държавен Инспектор БАБХ вижда:</span>
-                            <h5 className="text-[11px] font-bold text-white">„Обектът разполага с пълна дигитална HACCP система.“</h5>
-                          </div>
-                          <ul className="text-[9px] text-white/70 space-y-1 pl-1 list-none">
-                            <li className="flex items-center gap-1.5">
-                              <Check className="h-3 w-3 text-emerald-400" /> ДХП дневници: Попълнени и хронологично точни
-                            </li>
-                            <li className="flex items-center gap-1.5">
-                              <Check className="h-3 w-3 text-emerald-400" /> Обучения на персонал: Сертифицирани и валидни
-                            </li>
-                            <li className="flex items-center gap-1.5">
-                              <Check className="h-3 w-3 text-emerald-400" /> Проследимост на храните: Документирана с 1 клик
-                            </li>
-                          </ul>
-                        </div>
-
-                        {/* PDF printing simulation */}
-                        <button
-                          type="button"
-                          onClick={() => alert("Симулация: Експортиране на пълно БАБХ досие за 2026г. в официален PDF формат с електронен подпис.")}
-                          className="w-full bg-white/10 hover:bg-white/15 text-white border border-white/10 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99]"
-                        >
-                          <Printer className="h-3.5 w-3.5 text-brand-gold" />
-                          Свали HACCP Досие за Инспектора
-                        </button>
-                      </div>
-                    )}
-
-                    {showcaseTab === "tests" && (
-                      <div className="space-y-4 animate-fade-in text-left">
-                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                          <span className="text-[10px] font-black text-brand-gold uppercase tracking-wider flex items-center gap-1.5">
-                            <BookOpen className="h-3.5 w-3.5" />
-                            Обучение и Изпит на Служителите (Демо)
-                          </span>
-                          <span className="text-[9px] text-white/50">Въпрос 3 от 10</span>
-                        </div>
-
-                        {/* Interactive Quiz simulation */}
-                        <div className="space-y-3">
-                          <p className="text-[11px] font-bold text-white leading-normal">
-                            Колко време се пази проба от готвено ястие за изследване?
-                          </p>
-
-                          <div className="flex flex-col gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (mockTestSubmitted) return;
-                                setMockTestSelected(0);
-                              }}
-                              className={`w-full text-left p-2.5 rounded-xl border text-[10px] transition-all duration-200 cursor-pointer ${
-                                mockTestSelected === 0
-                                  ? mockTestSubmitted
-                                    ? "bg-rose-500/20 border-rose-500 text-rose-300"
-                                    : "bg-brand-gold/20 border-brand-gold text-brand-gold"
-                                  : "bg-white/5 border-white/5 text-white/80 hover:bg-white/10"
-                              }`}
-                            >
-                              А) 12 часа
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (mockTestSubmitted) return;
-                                setMockTestSelected(1);
-                              }}
-                              className={`w-full text-left p-2.5 rounded-xl border text-[10px] transition-all duration-200 cursor-pointer ${
-                                mockTestSelected === 1
-                                  ? mockTestSubmitted
-                                    ? "bg-rose-500/20 border-rose-500 text-rose-300"
-                                    : "bg-brand-gold/20 border-brand-gold text-brand-gold"
-                                  : "bg-white/5 border-white/5 text-white/80 hover:bg-white/10"
-                              }`}
-                            >
-                              Б) 24 часа
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (mockTestSubmitted) return;
-                                setMockTestSelected(2);
-                              }}
-                              className={`w-full text-left p-2.5 rounded-xl border text-[10px] transition-all duration-200 cursor-pointer ${
-                                mockTestSelected === 2
-                                  ? mockTestSubmitted
-                                    ? "bg-emerald-500/20 border-emerald-500 text-emerald-300"
-                                    : "bg-brand-gold/20 border-brand-gold text-brand-gold"
-                                  : mockTestSubmitted && mockTestSelected !== 2
-                                  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                                  : "bg-white/5 border-white/5 text-white/80 hover:bg-white/10"
-                              }`}
-                            >
-                              В) 48 часа (Верен отговор)
-                            </button>
-                          </div>
-
-                          {!mockTestSubmitted ? (
-                            <button
-                              type="button"
-                              disabled={mockTestSelected === null}
-                              onClick={() => setMockTestSubmitted(true)}
-                              className={`w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer border-0 ${
-                                mockTestSelected === null
-                                  ? "bg-white/10 text-white/45 cursor-not-allowed"
-                                  : "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/20 hover:scale-[1.01] active:scale-[0.99]"
-                              }`}
-                            >
-                              Потвърди избора
-                            </button>
-                          ) : (
-                            <div className="space-y-2">
-                              <div className="bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl text-[9px] text-white/90 leading-relaxed">
-                                <span className="font-bold text-emerald-400 block mb-0.5">Правилен отговор!</span>
-                                Съгласно изискванията на БАБХ, пробите се съхраняват в хладилник при t = 0-4°C за 48 часа. Системата автоматично издава сертификат за успешно проведено обучение на служителя.
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setMockTestSelected(null);
-                                  setMockTestSubmitted(false);
-                                }}
-                                className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/5 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer"
-                              >
-                                Нов въпрос (Нулиране)
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                  <div className="w-px h-8 bg-white/10"></div>
+                  <div className="text-center">
+                    <span className="block text-2xl font-black text-brand-gold font-sans">100%</span>
+                    <span className="text-[10px] uppercase tracking-widest text-white/50 font-bold">БАБХ Гаранция</span>
                   </div>
                 </div>
-
-                {/* Micro metrics */}
-                <div className="pt-8 border-t border-white/10 grid grid-cols-3 gap-2 mt-8 text-center sm:text-left">
-                  <div>
-                    <span className="block text-lg font-black text-brand-gold font-sans">1,200+</span>
-                    <span className="text-[9px] uppercase tracking-wider text-white/50 font-bold">Активни обекта</span>
-                  </div>
-                  <div>
-                    <span className="block text-lg font-black text-brand-gold font-sans">99.8%</span>
-                    <span className="text-[9px] uppercase tracking-wider text-white/50 font-bold">Одобрени дневници</span>
-                  </div>
-                  <div>
-                    <span className="block text-lg font-black text-brand-gold font-sans">100%</span>
-                    <span className="text-[9px] uppercase tracking-wider text-white/50 font-bold">БАБХ Гаранция</span>
-                  </div>
-                </div>
-
               </div>
+
+              {/* Bento Grid Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start relative z-10 max-w-6xl mx-auto">
               
-              {/* Right Column: Premium Frosted Glass Form Card */}
-              <div className="lg:col-span-5 relative z-10 flex flex-col">
+                {/* LEFT COLUMN: 2 Animated Panels */}
+                <div className="space-y-6 hidden lg:block">
+                  {/* Panel 1: HACCP Monitor */}
+                  <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 rounded-3xl shadow-xl relative overflow-hidden transition-transform duration-500 hover:-translate-y-1">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[50px] pointer-events-none"></div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                      <span className="text-[10px] font-black text-white/80 uppercase tracking-wider flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        HACCP Монитор
+                      </span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold animate-pulse">ОПТИМАЛНО</span>
+                    </div>
+                    <div className="flex justify-center py-2 relative z-10">
+                      <div className="relative w-20 h-20">
+                        <svg className="w-full h-full transform -rotate-90 animate-[spin_10s_linear_infinite]" viewBox="0 0 36 36">
+                          <path className="text-white/10" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                          <path className="text-emerald-400" strokeWidth="3" strokeDasharray="98, 100" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center flex-col">
+                          <span className="text-base font-black text-white font-mono">98%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Panel 2: Logbooks */}
+                  <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 rounded-3xl shadow-xl relative overflow-hidden transition-transform duration-500 hover:-translate-y-1">
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-brand-gold/10 rounded-full blur-[50px] pointer-events-none"></div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                      <span className="text-[10px] font-black text-white/80 uppercase tracking-wider flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-brand-gold"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Автоматични Дневници
+                      </span>
+                    </div>
+                    <div className="space-y-3 relative z-10">
+                       <div className="bg-white/5 border border-white/5 p-2 rounded-lg flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                         <span className="text-[9px] text-white/80 font-mono">t° Хладилник: 2.1°C (OK)</span>
+                       </div>
+                       <div className="bg-white/5 border border-white/5 p-2 rounded-lg flex items-center gap-2 opacity-70">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                         <span className="text-[9px] text-white/80 font-mono">Почистване: Завършено</span>
+                       </div>
+                       <div className="bg-white/5 border border-white/5 p-2 rounded-lg flex items-center gap-2 opacity-40">
+                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                         <span className="text-[9px] text-white/80 font-mono">Доставка #12: Одобрена</span>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CENTER COLUMN: Login/Register Card */}
+                <div className="lg:col-span-1 relative z-20 flex flex-col w-full mx-auto max-w-lg">
+
                 <div className={`bg-white/[0.03] backdrop-blur-3xl text-white p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 relative overflow-hidden border border-white/10 transition-all duration-500 ${authMode === "register" ? "h-full flex flex-col justify-center" : ""}`}>
                   
                   {/* Decorative gradients */}
@@ -2137,8 +1815,61 @@ export default function ProfilePage() {
 
                 </div>
               </div>
+
+                {/* RIGHT COLUMN: 2 Animated Panels */}
+                <div className="space-y-6 hidden lg:block">
+                  {/* Panel 3: Audit */}
+                  <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 rounded-3xl shadow-xl relative overflow-hidden transition-transform duration-500 hover:-translate-y-1">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-[50px] pointer-events-none"></div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                      <span className="text-[10px] font-black text-white/80 uppercase tracking-wider flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="m9 15 2 2 4-4"></path></svg>
+                        БАБХ Одит
+                      </span>
+                      <span className="text-[9px] text-blue-400 font-bold uppercase tracking-wider animate-pulse">ОДОБРЕН</span>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-xl border border-white/5 space-y-2 relative z-10 overflow-hidden">
+                      <div className="absolute left-0 top-0 w-full h-0.5 bg-blue-400/50 shadow-[0_0_10px_rgba(96,165,250,0.8)] animate-pulse"></div>
+                      <span className="text-[8px] text-white/40 font-bold uppercase tracking-wider block">Официален Статус:</span>
+                      <h5 className="text-[10px] font-bold text-white">„Обектът разполага с пълна дигитална HACCP система.“</h5>
+                    </div>
+                  </div>
+
+                  {/* Panel 4: Training */}
+                  <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 rounded-3xl shadow-xl relative overflow-hidden transition-transform duration-500 hover:-translate-y-1">
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-rose-500/10 rounded-full blur-[50px] pointer-events-none"></div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                      <span className="text-[10px] font-black text-white/80 uppercase tracking-wider flex items-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-400"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        Обучения
+                      </span>
+                      <span className="text-[9px] text-rose-400 font-bold uppercase tracking-wider">3/3 ЗАВЪРШЕНИ</span>
+                    </div>
+                    <div className="space-y-3 relative z-10">
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[8px] font-bold text-white/50 uppercase">
+                          <span>Хигиена</span>
+                          <span className="text-rose-400">100%</span>
+                        </div>
+                        <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                          <div className="bg-rose-400 h-full w-full shadow-[0_0_10px_rgba(251,113,133,0.5)]"></div>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[8px] font-bold text-white/50 uppercase">
+                          <span>Алергени</span>
+                          <span className="text-rose-400">100%</span>
+                        </div>
+                        <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                          <div className="bg-rose-400 h-full w-full shadow-[0_0_10px_rgba(251,113,133,0.5)]"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               
             </div>
+          </div>
           )}
         </div>
       )}                        {/* 3. LOGGED-IN DASHBOARD */}
