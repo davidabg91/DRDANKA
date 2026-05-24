@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ShieldCheck, Award, GraduationCap, CheckCircle, FileText, Heart, Quote } from "lucide-react";
+import { ShieldCheck, Award, GraduationCap, CheckCircle, FileText, Heart, Quote, Star, BadgeCheck } from "lucide-react";
+import SectionHeading from "@/components/SectionHeading";
 
 
 export default function About() {
@@ -68,11 +69,26 @@ export default function About() {
           <p className="font-serif text-xs sm:text-sm lg:text-base text-white/95 max-w-2xl mx-auto leading-relaxed font-light italic text-pretty">
             „Повече от четвърт век отдаденост на безопасността на храните, защитата на здравето и подкрепата на българския хранителен бизнес.“
           </p>
+
+
+
         </div>
       </section>
 
+      {/* Sticky Navigation (Placed outside section to stick globally) */}
+      <div className="sticky top-[85px] z-30 w-full flex justify-center -mt-6 mb-6 px-2 sm:px-4 pointer-events-none transition-all duration-300">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 bg-brand-green/90 backdrop-blur-md py-1.5 px-2 sm:py-2.5 sm:px-6 rounded-2xl border border-brand-gold/20 shadow-xl shadow-black/20 pointer-events-auto">
+          <a href="#info" className="px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl border border-white/20 text-white text-[9px] sm:text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all shadow-sm">
+            Информация
+          </a>
+          <a href="#reviews" className="px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[9px] sm:text-xs font-bold uppercase tracking-widest transition-all shadow-md shadow-brand-gold/20 flex items-center gap-1 sm:gap-2">
+            Отзиви <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-brand-dark" />
+          </a>
+        </div>
+      </div>
+
       {/* Main Bio Section */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="info" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-36">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20">
           
           {/* Visual Portrait */}
@@ -106,23 +122,38 @@ export default function About() {
 
           {/* Biography Text */}
           <div className="lg:col-span-7 space-y-6">
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green leading-tight">
-              Коя съм аз и защо да ми се доверите?
-            </h2>
+            <SectionHeading
+              align="left"
+              className="!mb-0"
+              badgeText="ЗА МЕН"
+              title="Коя съм аз и защо да ми се доверите?"
+            />
             <div className="text-sm text-brand-dark/80 space-y-4 leading-relaxed">
               <p>
                 Казвам се д-р Данка Николова — ветеринарен лекар с над 27 години реален опит в контрола и безопасността на храните. Познавам процеса отвътре — така, както повечето хора никога няма да го видят.
               </p>
-              <div className="bg-brand-light border-l-2 border-brand-gold p-4 space-y-2.5 my-5 rounded-r-xl">
-                <p className="flex items-center text-xs sm:text-sm font-semibold text-brand-green">
-                  <span className="text-brand-gold mr-2">👉</span> Работила съм в системата на държавния контрол.
-                </p>
-                <p className="flex items-center text-xs sm:text-sm font-semibold text-brand-green">
-                  <span className="text-brand-gold mr-2">👉</span> Била съм пряка част от контролните органи.
-                </p>
-                <p className="flex items-center text-xs sm:text-sm font-semibold text-brand-green">
-                  <span className="text-brand-gold mr-2">👉</span> Заемала съм и ръководни позиции в системата.
-                </p>
+              <div className="bg-white border border-brand-green/10 shadow-sm p-6 space-y-4 my-8 rounded-2xl relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-brand-gold"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-green/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-brand-green/10 transition-colors duration-500"></div>
+                
+                <div className="flex items-start gap-3 relative z-10">
+                  <BadgeCheck className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
+                  <p className="text-sm font-semibold text-brand-green leading-relaxed">
+                    Работила съм в системата на държавния контрол.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3 relative z-10">
+                  <BadgeCheck className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
+                  <p className="text-sm font-semibold text-brand-green leading-relaxed">
+                    Била съм пряка част от контролните органи.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3 relative z-10">
+                  <BadgeCheck className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
+                  <p className="text-sm font-semibold text-brand-green leading-relaxed">
+                    Заемала съм и ръководни позиции в системата.
+                  </p>
+                </div>
               </div>
               <p>
                 През моята кариера съм виждала десетки случаи, в които обекти получават отказ за регистрация, процедурите се забавят с месеци, а бизнесите губят големи суми пари още преди да започнат. И това не се случва защото идеите или обектите им са лоши, а защото не знаят как да приложат изискванията правилно.
@@ -159,14 +190,11 @@ export default function About() {
 
         {/* Core Values Section */}
         <div className="bg-white border border-brand-green/5 rounded-2xl p-8 sm:p-12 shadow-sm mb-20">
-          <div className="text-center max-w-xl mx-auto mb-12 space-y-2">
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green">
-              Нашите професионални ценности
-            </h2>
-            <p className="text-xs sm:text-sm text-brand-dark/60">
-              Принципите, които ни водят при разработването на всяка HACCP и ISO система.
-            </p>
-          </div>
+          <SectionHeading
+            badgeText="ЦЕННОСТИ"
+            title="Нашите професионални ценности"
+            subtitle="Принципите, които ни водят при разработването на всяка HACCP и ISO система."
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {values.map((val, i) => (
@@ -186,28 +214,39 @@ export default function About() {
         </div>
 
         {/* Testimonials Section */}
-        <div className="mb-20">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-            <span className="text-xs font-bold uppercase text-brand-gold tracking-widest block">
-              ОТЗИВИ И РЕЗУЛТАТИ
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green">
-              Какво казват хората, които вече направиха регистрацията си правилно
-            </h2>
-            <p className="text-xs sm:text-sm text-brand-dark/60">
-              Истории на реални бизнеси, преминали през процедурите бързо, лесно и без стрес.
-            </p>
-          </div>
+        <div id="reviews" className="mb-20 scroll-mt-24">
+          <SectionHeading
+            badgeText={
+              <div className="flex items-center gap-2">
+                <span>ОТЛИЧНА ОЦЕНКА</span>
+                <div className="flex gap-0.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star key={star} className="w-3.5 h-3.5 fill-brand-gold text-brand-gold" />
+                  ))}
+                </div>
+              </div>
+            }
+            title="Какво казват хората, които вече направиха регистрацията си правилно"
+            subtitle="Истории на реални бизнеси, преминали през процедурите бързо, лесно и без стрес."
+          />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Testimonial 1 */}
-            <div className="bg-white border border-brand-green/5 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between hover:border-brand-gold/30 hover:shadow-md transition-all duration-300">
-              <div className="space-y-4">
-                <Quote className="h-8 w-8 text-brand-gold/40" />
-                <p className="text-sm font-semibold text-brand-green italic leading-snug">
-                  "Бяхме притеснени дали изобщо ще успеем да регистрираме пекарната си за закуски и козунаци".
-                </p>
-                <div className="text-xs text-brand-dark/70 space-y-2 leading-relaxed">
+            <div className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="flex justify-between items-center mb-5">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">Преди 3 седмици</span>
+                </div>
+                
+                <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
+                  "Бяхме притеснени дали изобщо ще успеем да регистрираме пекарната си за закуски и козунаци"
+                </h3>
+                <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
                   <p>
                     Много време се лутахме и не знаехме как да подредим нещата правилно… Месеци наред обикаляхме между различни институции, без да получим ясна посока.
                   </p>
@@ -216,33 +255,37 @@ export default function About() {
                   </p>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-brand-green/5">
-                <div className="space-y-1.5">
-                  <div className="flex text-xs text-brand-green font-semibold space-x-2">
-                    <span>✔ Регистрацията мина успешно</span>
-                  </div>
-                  <div className="flex text-xs text-brand-green font-semibold space-x-2">
-                    <span>✔ Стартирахме спокойно</span>
-                  </div>
-                  <div className="flex text-xs text-brand-green font-semibold space-x-2">
-                    <span>✔ Вече сме сигурни, че всичко е направено правилно</span>
-                  </div>
+
+              <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
+                  СМ
                 </div>
-                <div className="mt-4">
-                  <h4 className="font-serif text-sm font-bold text-brand-green">Северина М.</h4>
-                  <span className="text-[10px] text-brand-dark/50 block mt-0.5">Собственик на Пекарна за закуски и козунаци</span>
+                <div>
+                  <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
+                    Северина М.
+                    <BadgeCheck className="w-4 h-4 text-emerald-500" />
+                  </h4>
+                  <span className="text-[10px] text-brand-dark/50 font-medium">Собственик на Пекарна за закуски</span>
                 </div>
               </div>
             </div>
 
             {/* Testimonial 2 */}
-            <div className="bg-white border border-brand-green/5 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between hover:border-brand-gold/30 hover:shadow-md transition-all duration-300">
-              <div className="space-y-4">
-                <Quote className="h-8 w-8 text-brand-gold/40" />
-                <p className="text-sm font-semibold text-brand-green italic leading-snug">
-                  "След срещата с д-р Николова осъзнах, че нещата не са толкова сложни, колкото изглеждат".
-                </p>
-                <div className="text-xs text-brand-dark/70 space-y-2 leading-relaxed">
+            <div className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="flex justify-between items-center mb-5">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">Преди 1 месец</span>
+                </div>
+                
+                <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
+                  "След срещата с д-р Николова осъзнах, че нещата не са толкова сложни, колкото изглеждат"
+                </h3>
+                <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
                   <p>
                     Преди това идеята ни да регистрираме мини мандра по Наредба №26 за директни доставки звучеше почти невъзможна.
                   </p>
@@ -251,33 +294,37 @@ export default function About() {
                   </p>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-brand-green/5">
-                <div className="space-y-1.5">
-                  <div className="flex text-xs text-brand-green font-semibold space-x-2">
-                    <span>✔ Имахме конкретен план</span>
-                  </div>
-                  <div className="flex text-xs text-brand-green font-semibold space-x-2">
-                    <span>✔ Върнахме си мотивацията</span>
-                  </div>
-                  <div className="flex text-xs text-brand-green font-semibold space-x-2">
-                    <span>✔ Видяхме възможност да отворим за месец</span>
-                  </div>
+
+              <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
+                  ВР
                 </div>
-                <div className="mt-4">
-                  <h4 className="font-serif text-sm font-bold text-brand-green">Виктория Р.</h4>
-                  <span className="text-[10px] text-brand-dark/50 block mt-0.5">Бъдещ собственик на мини мандра (директни доставки)</span>
+                <div>
+                  <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
+                    Виктория Р.
+                    <BadgeCheck className="w-4 h-4 text-emerald-500" />
+                  </h4>
+                  <span className="text-[10px] text-brand-dark/50 font-medium">Собственик на мини мандра</span>
                 </div>
               </div>
             </div>
 
             {/* Testimonial 3 */}
-            <div className="bg-white border border-brand-green/5 rounded-2xl p-6 sm:p-8 shadow-sm flex flex-col justify-between hover:border-brand-gold/30 hover:shadow-md transition-all duration-300">
-              <div className="space-y-4">
-                <Quote className="h-8 w-8 text-brand-gold/40" />
-                <p className="text-sm font-semibold text-brand-green italic leading-snug">
-                  "Проектът ми за производство на месни заготовки беше върнат три пъти от БАБХ."
-                </p>
-                <div className="text-xs text-brand-dark/70 space-y-2 leading-relaxed">
+            <div className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="flex justify-between items-center mb-5">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">Преди 2 месеца</span>
+                </div>
+                
+                <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
+                  "Проектът ми за производство на месни заготовки беше върнат три пъти от БАБХ"
+                </h3>
+                <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
                   <p>
                     Всеки път правех корекции, но без ясна посока. В един момент вече бях напълно объркан и не знаех какво да променя.
                   </p>
@@ -286,18 +333,59 @@ export default function About() {
                   </p>
                 </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-brand-green/5">
-                <div className="space-y-1.5">
-                  <div className="flex text-xs text-brand-green font-semibold space-x-2">
-                    <span>✔ Преодоляхме три поредни отказа</span>
-                  </div>
-                  <div className="flex text-xs text-brand-green font-semibold space-x-2">
-                    <span>✔ Сега имам яснота, увереност и сигурност</span>
-                  </div>
+
+              <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
+                  КТ
                 </div>
-                <div className="mt-4">
-                  <h4 className="font-serif text-sm font-bold text-brand-green">Крум Т.</h4>
-                  <span className="text-[10px] text-brand-dark/50 block mt-0.5">Собственик на цех за месни заготовки и разфасовки</span>
+                <div>
+                  <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
+                    Крум Т.
+                    <BadgeCheck className="w-4 h-4 text-emerald-500" />
+                  </h4>
+                  <span className="text-[10px] text-brand-dark/50 font-medium">Собственик на цех за месо</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 4 */}
+            <div className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
+              <div>
+                <div className="flex justify-between items-center mb-5">
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
+                    ))}
+                  </div>
+                  <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">Преди 1 седмица</span>
+                </div>
+                
+                <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
+                  "Професионалист като нея би ми спестил много нерви и пари, защото във бизнеса всяка грешка се заплаща!"
+                </h3>
+                <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
+                  <p>
+                    Щастлива съм, че срещнах Д-р Николова. Откривам заведение и нейните съвети и консултации ми бяха изключително ценни! Подкрепена в точния момент! Имах много въпроси, на които получих бърз професионален отговор!
+                  </p>
+                  <p>
+                    Изключително важно и решаващо за първите стъпки в бизнеса е да бъдеш правилно консултиран и да тръгнеш в правилната посока!
+                  </p>
+                  <p>
+                    Не се колебайте да се консултирате с Д-р Николова, тя е верният партньор до вас!
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
+                  АК
+                </div>
+                <div>
+                  <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
+                    Албена Колева
+                    <BadgeCheck className="w-4 h-4 text-emerald-500" />
+                  </h4>
+                  <span className="text-[10px] text-brand-dark/50 font-medium">Собственик на заведение</span>
                 </div>
               </div>
             </div>

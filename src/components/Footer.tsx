@@ -18,7 +18,7 @@ export default function Footer() {
                 className="h-14 w-14 object-contain rounded-full border border-brand-gold/20 shadow-sm"
               />
               <div>
-                <span className="font-serif text-lg font-bold text-white block leading-none">
+                <span className="font-logo text-xl sm:text-2xl font-bold text-white tracking-wide block leading-none">
                   Д-р Данка Николова
                 </span>
                 <span className="text-[10px] text-brand-gold font-light tracking-widest uppercase block mt-1">

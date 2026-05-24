@@ -6,53 +6,34 @@ import { SubscriptionVideo } from "./SubscriptionVideo";
 import Link from "next/link";
 
 export default function RemotionVideoWidget() {
-  const playerRef = useRef<PlayerRef>(null);
+  const [isMounted, setIsMounted] = React.useState(false);
 
   useEffect(() => {
-    // Robustly ensure the player starts playing, overcoming strict browser autoplay policies
-    const ensurePlay = () => {
-      if (playerRef.current && !playerRef.current.isPlaying()) {
-        try {
-          playerRef.current.play();
-        } catch (e) {
-          // ignore DOM exceptions
-        }
-      }
-    };
-    
-    // Check multiple times during the initial mount to catch when the player is fully ready
-    ensurePlay();
-    const t1 = setTimeout(ensurePlay, 100);
-    const t2 = setTimeout(ensurePlay, 500);
-    const t3 = setTimeout(ensurePlay, 1000);
-    
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+    setIsMounted(true);
   }, []);
 
   return (
-    <div className="relative group lg:col-span-5 h-[650px]">
+    <div className="relative group lg:col-span-5 h-[650px] lg:mt-12 xl:mt-14 z-20">
       {/* Ambient glow */}
       <div className="absolute -inset-1 bg-gradient-to-br from-brand-gold/30 via-amber-400/10 to-emerald-500/20 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition-all duration-700"></div>
 
       <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/8 bg-gradient-to-br from-[#0a1f17] via-[#0d2b1c] to-[#081410] flex flex-col h-full">
         {/* Remotion Player inside the card - Transparent UI Animation */}
         <div className="w-full relative flex-grow min-h-[300px]">
-          <Player
-            ref={playerRef}
-            component={SubscriptionVideo}
-            durationInFrames={300}
-            compositionWidth={1000}
-            compositionHeight={800}
-            fps={30}
-            style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
-            controls={false}
-            autoPlay={true}
-            loop={true}
-          />
+          {isMounted && (
+            <Player
+              component={SubscriptionVideo}
+              durationInFrames={300}
+              compositionWidth={1000}
+              compositionHeight={800}
+              fps={30}
+              style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
+              controls={false}
+              autoPlay={true}
+              loop={true}
+              initiallyMuted={true}
+            />
+          )}
         </div>
         
         {/* Card Content & Buttons */}

@@ -17,6 +17,7 @@
   --color-brand-dark: #1B2421;
   --font-sans: var(--font-sans);
   --font-serif: var(--font-serif);
+  --font-logo: var(--font-logo);
 }
 
 body {

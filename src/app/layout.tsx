@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+const cormorant = Cormorant_Garamond({
+  variable: "--font-logo",
+  subsets: ["cyrillic", "latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 const inter = Inter({
   variable: "--font-sans",
@@ -58,11 +64,11 @@ export default function RootLayout({
   return (
     <html
       lang="bg"
-      className={`${inter.variable} ${playfair.variable} h-full antialiased`}
+      className={`${inter.variable} ${playfair.variable} ${cormorant.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-brand-light text-brand-dark">
         <Header />
-        <main className="flex-grow overflow-x-hidden">{children}</main>
+        <main className="flex-grow overflow-x-clip">{children}</main>
         <Footer />
       </body>
     </html>

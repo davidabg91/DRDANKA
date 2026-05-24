@@ -65,7 +65,7 @@ export default function Header() {
                 className="h-14 w-14 object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
               />
               <div>
-                <span className="font-serif text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
+                <span className="font-logo text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
                   Д-р Данка Николова
                 </span>
                 <span className="text-[10px] xl:text-xs text-brand-gold font-light tracking-widest uppercase block mt-1">

@@ -11,9 +11,10 @@ import {
   FileSpreadsheet,
   Check,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  TrendingUp
 } from "lucide-react";
-
+import SectionHeading from "@/components/SectionHeading";
 
 interface ServiceItem {
   title: string;
@@ -226,13 +227,16 @@ export default function Services() {
                 <div className={`border-t pt-6 mt-6 space-y-5 ${
                   isVip ? "border-brand-green/10" : "border-brand-green/5"
                 }`}>
-                  <div className={`p-3.5 rounded-lg border text-xs flex items-start ${
+                  <div className={`p-4 rounded-xl border-l-[3px] flex items-start shadow-sm transition-all duration-300 hover:shadow-md ${
                     isVip 
-                      ? "bg-white/60 border-brand-green/15 text-brand-green backdrop-blur-sm" 
-                      : "bg-white/70 border-black/5 text-brand-green backdrop-blur-sm"
+                      ? "bg-gradient-to-r from-brand-green/10 to-transparent border-l-brand-green text-brand-green" 
+                      : "bg-gradient-to-r from-brand-gold/15 to-transparent border-l-brand-gold text-brand-dark"
                   }`}>
-                    <span className="font-bold mr-1.5 shrink-0">Полза за бизнеса:</span>
-                    <span className={isVip ? "text-brand-dark/90" : "text-brand-dark/80"}>{srv.benefits}</span>
+                    <TrendingUp className={`h-4.5 w-4.5 mr-3 shrink-0 mt-0.5 ${isVip ? "text-brand-green" : "text-brand-gold"}`} />
+                    <div className="text-xs leading-relaxed">
+                      <span className="font-bold uppercase tracking-wider block mb-1">Реална полза за бизнеса</span>
+                      <span className={isVip ? "text-brand-dark/95 font-medium" : "text-brand-dark/80"}>{srv.benefits}</span>
+                    </div>
                   </div>
                   {isVip ? (
                     <div className="flex flex-col items-center gap-3">
@@ -272,10 +276,13 @@ export default function Services() {
       {/* Secondary CTA section */}
       <section className="bg-brand-green py-16 border-t border-brand-gold/15 text-center text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <h2 className="font-serif text-2xl sm:text-4xl font-bold">Не виждате услугата, от която се нуждаете?</h2>
-          <p className="text-sm text-white/80 max-w-xl mx-auto leading-relaxed">
-            Извършваме специфични консултации за нетипични обекти, съдействаме при жалби и помагаме за решаване на сложни казуси с държавните органи.
-          </p>
+          <SectionHeading
+            lightText={true}
+            className="!mb-0"
+            badgeText="СПЕЦИФИЧНИ КАЗУСИ"
+            title="Не виждате услугата, от която се нуждаете?"
+            subtitle="Извършваме специфични консултации за нетипични обекти, съдействаме при жалби и помагаме за решаване на сложни казуси с държавните органи."
+          />
           <div className="pt-2">
             <Link
               href={`/contact?service=${encodeURIComponent("Безплатен първоначален одит")}`}

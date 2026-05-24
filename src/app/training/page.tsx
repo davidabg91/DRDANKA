@@ -222,11 +222,28 @@ function TrainingContent() {
           <p className="text-sm sm:text-base text-white/80 max-w-2xl mx-auto leading-relaxed">
             Осигурете спазването на добрите хигиенни практики. Заявете обучение за персонала или купете готови писмени наръчници и видео обучения за самоподготовка.
           </p>
+
+
         </div>
       </section>
 
+      {/* Sticky Navigation (Placed outside section to stick globally) */}
+      <div className="sticky top-[85px] z-30 w-full flex justify-center -mt-6 mb-6 px-2 sm:px-4 pointer-events-none transition-all duration-300">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 bg-brand-green/90 backdrop-blur-md py-1.5 px-2 sm:py-2.5 sm:px-6 rounded-2xl border border-brand-gold/20 shadow-xl shadow-black/20 pointer-events-auto">
+          <a href="#info" className="px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl border border-white/20 text-white text-[9px] sm:text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all shadow-sm">
+            Информация
+          </a>
+          <a href="#courses" className="px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl border border-white/20 text-white text-[9px] sm:text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all shadow-sm">
+            Курсове
+          </a>
+          <a href="#digital-materials-section" className="px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[9px] sm:text-xs font-bold uppercase tracking-widest transition-all shadow-md shadow-brand-gold/20 flex items-center gap-1 sm:gap-2">
+            Дигитална Книжарница <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-brand-dark/20" />
+          </a>
+        </div>
+      </div>
+
       {/* Main Grid: Info + Courses */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="info" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-36">
         
         {/* Certification Highlights */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
@@ -289,7 +306,7 @@ function TrainingContent() {
         </div>
 
         {/* Live Courses Section */}
-        <div className="mb-20">
+        <div id="courses" className="mb-20 scroll-mt-24">
           <div className="text-center max-w-xl mx-auto space-y-2 mb-12">
             <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green">
               Специализирани курсове по безопасност за екипи
@@ -350,7 +367,7 @@ function TrainingContent() {
         </div>
 
         {/* Special Food Labeling Promotion Panel */}
-        <div className="bg-white border border-brand-gold/30 rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden mb-16">
+        <div id="labeling" className="bg-white border border-brand-gold/30 rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden mb-16 scroll-mt-24">
           {/* Decorative badge */}
           <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-brand-gold/5 blur-2xl pointer-events-none"></div>
           
@@ -428,7 +445,7 @@ function TrainingContent() {
         </div>
 
         {/* Corporate Group Inquiry Banner */}
-        <div className="bg-brand-green text-white border border-brand-gold/20 rounded-2xl p-8 sm:p-12 shadow-2xl relative overflow-hidden mb-28">
+        <div id="corporate" className="bg-brand-green text-white border border-brand-gold/20 rounded-2xl p-8 sm:p-12 shadow-2xl relative overflow-hidden mb-28 scroll-mt-24">
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-brand-gold/5 blur-3xl pointer-events-none"></div>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-4">

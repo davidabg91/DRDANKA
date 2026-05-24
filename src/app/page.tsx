@@ -21,7 +21,7 @@ import FAQAccordion from "@/components/FAQAccordion";
 import ContactForm from "@/components/ContactForm";
 import { Suspense } from "react";
 import RemotionVideoWidget from "@/remotion/RemotionVideoWidget";
-
+import SectionHeading from "@/components/SectionHeading";
 export default function Home() {
   const stats = [
     { value: "27+", label: "Години трудов стаж в хранителния контрол" },
@@ -118,38 +118,59 @@ export default function Home() {
         <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-gold/5 blur-3xl pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:items-start items-center pt-4 lg:pt-8">
             {/* Hero Content */}
             <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
               <span className="inline-flex items-center px-3 py-1 rounded bg-brand-gold/10 border border-brand-gold/30 text-xs font-semibold text-brand-gold uppercase tracking-wider">
                 <Award className="h-3.5 w-3.5 mr-1.5" /> 27 години практика в контрола и безопасността на храните
               </span>
               
-              <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.1] max-w-2xl mx-auto lg:mx-0">
+              <h1 className="font-logo text-4xl sm:text-5xl lg:text-6xl xl:text-[4rem] font-bold text-white tracking-tight leading-[1.05] max-w-3xl mx-auto lg:mx-0">
                 Системи за безопасност на храните, които{" "}
-                <span className="text-brand-gold font-style-italic font-medium">работят</span> при реални проверки
+                <span className="text-brand-gold italic font-medium">работят</span> при реални проверки
               </h1>
               
-              <div className="text-base sm:text-lg text-white/80 leading-relaxed max-w-xl mx-auto lg:mx-0 space-y-4">
-                <p className="font-bold text-brand-gold tracking-widest text-xs uppercase">
-                  GMP | HACCP | ISO 22000 | FSSC 22000 | IFS | ISO 9001
-                </p>
-                <p>
-                  Професионални консултации, проектиране и подготовка на пълна документация за БАБХ. Разработване и внедряване на системи за управление безопасността на храните за производители и търговци на храни.
-                </p>
-                <div>
-                  <p className="font-semibold text-white mb-1">Обучения по:</p>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-white/70">
-                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> HACCP / НАССР</li>
-                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> ДПХП / ДХП</li>
-                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> Етикетиране на храните</li>
-                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> ISO 22000</li>
-                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> Добри производствени практики</li>
-                    <li className="flex items-center"><CheckCircle className="h-3 w-3 text-brand-gold mr-2 shrink-0" /> Подготовка за проверки и регистрации</li>
-                  </ul>
+              <div className="flex flex-wrap justify-center lg:justify-start gap-2 pt-2">
+                {["GMP", "HACCP", "ISO 22000", "FSSC 22000", "IFS", "ISO 9001"].map((cert) => (
+                  <span key={cert} className="px-3 sm:px-4 py-1.5 bg-white/[0.03] border border-white/10 rounded-full text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-widest backdrop-blur-sm shadow-inner transition-colors hover:bg-brand-gold/10 hover:border-brand-gold/30 cursor-default">
+                    {cert}
+                  </span>
+                ))}
+              </div>
+
+              <div className="text-base sm:text-lg text-white/80 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
+                Професионални консултации, проектиране и подготовка на пълна документация за БАБХ. Разработване и внедряване на системи за управление безопасността на храните за производители и търговци.
+              </div>
+
+              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 sm:p-6 backdrop-blur-sm max-w-2xl mx-auto lg:mx-0 text-left shadow-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-brand-gold/20 transition-all duration-700"></div>
+                <div className="flex items-center gap-3 mb-5 relative z-10">
+                  <div className="w-8 h-8 rounded-full bg-brand-gold/20 flex items-center justify-center border border-brand-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                    <Award className="h-4 w-4 text-brand-gold" />
+                  </div>
+                  <h3 className="text-white font-bold text-xs uppercase tracking-widest">Професионални Обучения</h3>
                 </div>
-                <p className="italic text-sm text-white/60">
-                  Практически решения, изградени върху реален опит в официалния контрол на храните.
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 relative z-10">
+                  {[
+                    "HACCP / НАССР",
+                    "ДПХП / ДХП",
+                    "Етикетиране на храните",
+                    "ISO 22000",
+                    "Добри производствени практики",
+                    "Подготовка за проверки",
+                  ].map((item, idx) => (
+                     <div key={idx} className="flex items-start gap-2.5 group/item">
+                       <ShieldCheck className="h-4 w-4 text-brand-gold shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform" />
+                       <span className="text-xs sm:text-sm text-white/80 font-medium group-hover/item:text-white transition-colors">{item}</span>
+                     </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="inline-flex items-center gap-4 border-l-2 border-brand-gold/50 pl-5 text-left max-w-2xl mx-auto lg:mx-0">
+                <p className="italic text-sm sm:text-base text-white/60 font-logo leading-relaxed">
+                  "Практически решения, изградени върху 27-годишен реален опит в официалния контрол на храните."
                 </p>
               </div>
 
@@ -169,21 +190,6 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Quick Trust Pillars */}
-              <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/10 max-w-md mx-auto lg:mx-0">
-                <div className="text-center lg:text-left">
-                  <span className="text-white font-bold block text-lg font-serif">100%</span>
-                  <span className="text-[10px] uppercase text-white/50 tracking-wider font-semibold block mt-0.5">Одобрение</span>
-                </div>
-                <div className="text-center lg:text-left border-x border-white/10 px-4">
-                  <span className="text-white font-bold block text-lg font-serif">Без глоби</span>
-                  <span className="text-[10px] uppercase text-white/50 tracking-wider font-semibold block mt-0.5">Сигурност</span>
-                </div>
-                <div className="text-center lg:text-left">
-                  <span className="text-white font-bold block text-lg font-serif">24h</span>
-                  <span className="text-[10px] uppercase text-white/50 tracking-wider font-semibold block mt-0.5">Бърза реакция</span>
-                </div>
-              </div>
             </div>
 
             {/* Hero Highlight Card - Remotion Video */}
@@ -197,54 +203,58 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
 
-            {/* Stat 1 — Left accent */}
-            <div className="bg-gradient-to-r from-white via-white to-[#FFFDF9] border-y border-r border-brand-green/5 border-l-4 border-brand-gold hover:border-brand-gold/60 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center justify-center">
-              <div className="w-10 h-10 rounded-xl bg-brand-green/5 flex items-center justify-center mb-3">
+            {/* Stat 1 */}
+            <div className="bg-white/60 backdrop-blur-xl border border-brand-green/40 hover:border-brand-green rounded-2xl p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(15,56,43,0.15)] transition-all duration-500 flex flex-col items-center justify-center group relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-brand-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="w-10 h-10 rounded-xl bg-brand-green/10 group-hover:bg-brand-green/20 flex items-center justify-center mb-3 transition-colors duration-500 border border-brand-green/20">
                 <Award className="h-5 w-5 text-brand-green" />
               </div>
-              <span className="font-serif text-3xl sm:text-4xl font-extrabold text-brand-green leading-none block mb-2">
-                27<span className="text-brand-gold text-2xl">+</span>
+              <span className="font-logo text-4xl sm:text-5xl font-extrabold text-brand-green leading-none block mb-2 relative z-10">
+                27<span className="text-brand-gold text-2xl sm:text-3xl font-sans">+</span>
               </span>
-              <p className="text-xs sm:text-sm text-brand-dark/70 font-semibold leading-snug max-w-[180px]">
+              <p className="text-xs sm:text-sm text-brand-dark/80 font-bold leading-snug max-w-[180px] relative z-10">
                 Години стаж в хранителния контрол
               </p>
             </div>
 
-            {/* Stat 2 — Top accent */}
-            <div className="bg-gradient-to-b from-white via-white to-[#FFFDF9] border-x border-b border-brand-green/5 border-t-4 border-brand-gold hover:border-brand-gold/60 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center justify-center">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/5 flex items-center justify-center mb-3">
-                <Users className="h-5 w-5 text-brand-gold-dark" />
+            {/* Stat 2 */}
+            <div className="bg-white/60 backdrop-blur-xl border border-brand-green/40 hover:border-brand-green rounded-2xl p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(15,56,43,0.15)] transition-all duration-500 flex flex-col items-center justify-center group relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-brand-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="w-10 h-10 rounded-xl bg-brand-green/10 group-hover:bg-brand-green/20 flex items-center justify-center mb-3 transition-colors duration-500 border border-brand-green/20">
+                <Users className="h-5 w-5 text-brand-green" />
               </div>
-              <span className="font-serif text-3xl sm:text-4xl font-extrabold text-brand-green leading-none block mb-2">
-                500<span className="text-brand-gold text-2xl">+</span>
+              <span className="font-logo text-4xl sm:text-5xl font-extrabold text-brand-green leading-none block mb-2 relative z-10">
+                500<span className="text-brand-gold text-2xl sm:text-3xl font-sans">+</span>
               </span>
-              <p className="text-xs sm:text-sm text-brand-dark/70 font-semibold leading-snug max-w-[180px]">
+              <p className="text-xs sm:text-sm text-brand-dark/80 font-bold leading-snug max-w-[180px] relative z-10">
                 Консултирани обекта в България
               </p>
             </div>
 
-            {/* Stat 3 — Right accent */}
-            <div className="bg-gradient-to-l from-white via-white to-[#FFFDF9] border-y border-l border-brand-green/5 border-r-4 border-brand-gold hover:border-brand-gold/60 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center justify-center">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/5 flex items-center justify-center mb-3">
-                <ShieldCheck className="h-5 w-5 text-emerald-600" />
+            {/* Stat 3 */}
+            <div className="bg-white/60 backdrop-blur-xl border border-brand-green/40 hover:border-brand-green rounded-2xl p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(15,56,43,0.15)] transition-all duration-500 flex flex-col items-center justify-center group relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-brand-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="w-10 h-10 rounded-xl bg-brand-green/10 group-hover:bg-brand-green/20 flex items-center justify-center mb-3 transition-colors duration-500 border border-brand-green/20">
+                <ShieldCheck className="h-5 w-5 text-brand-green" />
               </div>
-              <span className="font-serif text-3xl sm:text-4xl font-extrabold text-emerald-600 leading-none block mb-2">
-                100<span className="text-2xl">%</span>
+              <span className="font-logo text-4xl sm:text-5xl font-extrabold text-brand-green leading-none block mb-2 relative z-10">
+                100<span className="text-brand-gold text-2xl sm:text-3xl font-sans">%</span>
               </span>
-              <p className="text-xs sm:text-sm text-brand-dark/70 font-semibold leading-snug max-w-[180px]">
+              <p className="text-xs sm:text-sm text-brand-dark/80 font-bold leading-snug max-w-[180px] relative z-10">
                 Одобрение от БАБХ при проверки
               </p>
             </div>
 
-            {/* Stat 4 — Bottom accent */}
-            <div className="bg-gradient-to-t from-white via-white to-[#FFFDF9] border-x border-t border-brand-green/5 border-b-4 border-brand-gold hover:border-brand-gold/60 rounded-2xl p-6 text-center shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center justify-center">
-              <div className="w-10 h-10 rounded-xl bg-brand-green/5 flex items-center justify-center mb-3">
+            {/* Stat 4 */}
+            <div className="bg-white/60 backdrop-blur-xl border border-brand-green/40 hover:border-brand-green rounded-2xl p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(15,56,43,0.15)] transition-all duration-500 flex flex-col items-center justify-center group relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-brand-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+              <div className="w-10 h-10 rounded-xl bg-brand-green/10 group-hover:bg-brand-green/20 flex items-center justify-center mb-3 transition-colors duration-500 border border-brand-green/20">
                 <TrendingUp className="h-5 w-5 text-brand-green" />
               </div>
-              <span className="font-serif text-3xl sm:text-4xl font-extrabold text-brand-green leading-none block mb-2">
-                0<span className="text-brand-gold text-2xl">€</span>
+              <span className="font-logo text-4xl sm:text-5xl font-extrabold text-brand-green leading-none block mb-2 relative z-10">
+                0<span className="text-brand-gold text-2xl sm:text-3xl font-sans">€</span>
               </span>
-              <p className="text-xs sm:text-sm text-brand-dark/70 font-semibold leading-snug max-w-[180px]">
+              <p className="text-xs sm:text-sm text-brand-dark/80 font-bold leading-snug max-w-[180px] relative z-10">
                 Глоби след предварителен одит
               </p>
             </div>
@@ -260,16 +270,13 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left side: Message */}
             <div className="lg:col-span-7 space-y-6">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-green/5 border border-brand-green/20 rounded-full text-[10px] font-black uppercase text-brand-green tracking-[0.15em] mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
-                СИГУРНОСТ & СЪОТВЕТСТВИЕ
-              </span>
-              <h2 className="font-serif text-2xl sm:text-4xl font-bold text-brand-green leading-tight">
-                Защо бизнесът избира <span className="text-brand-gold">д-р Данка Николова</span> за свой партньор?
-              </h2>
-              <p className="text-sm sm:text-base text-brand-dark/80 leading-relaxed">
-                Безопасността на храните не е просто папка с документи, която стои на рафта. Тя е гаранция за здравето на Вашите клиенти и за сигурността на Вашата инвестиция. Ние не предлагаме генерични шаблони. Всяка система се разработва индивидуално спрямо архитектурата, потока на суровините и спецификата на Вашето меню.
-              </p>
+              <SectionHeading
+                align="left"
+                className="!mb-0"
+                badgeText="СИГУРНОСТ & СЪОТВЕТСТВИЕ"
+                title={<>Защо бизнесът избира <span className="text-brand-gold">д-р Данка Николова</span> за свой партньор?</>}
+                subtitle="Безопасността на храните не е просто папка с документи, която стои на рафта. Тя е гаранция за здравето на Вашите клиенти и за сигурността на Вашата инвестиция. Ние не предлагаме генерични шаблони. Всяка система се разработва индивидуално спрямо архитектурата, потока на суровините и спецификата на Вашето меню."
+              />
               
               {/* Trust point cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
@@ -278,10 +285,10 @@ export default function Home() {
                   return (
                     <div
                       key={index}
-                      className="bg-white border border-brand-green/5 hover:border-brand-gold/30 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 group flex flex-col justify-between"
+                      className="bg-white/60 backdrop-blur-md border border-white/60 hover:bg-white hover:border-brand-gold/40 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(197,168,128,0.15)] transition-all duration-500 group flex flex-col justify-between"
                     >
                       <div>
-                        <div className="bg-brand-green/5 group-hover:bg-brand-gold/15 p-2 rounded-lg border border-brand-green/5 group-hover:border-brand-gold/20 inline-block mb-3 transition-colors duration-300">
+                        <div className="bg-white group-hover:bg-brand-gold/15 p-2.5 rounded-xl border border-white group-hover:border-brand-gold/20 inline-block mb-4 shadow-sm transition-all duration-500">
                           <Icon className="h-5 w-5 text-brand-green group-hover:text-brand-gold-dark transition-colors duration-300" />
                         </div>
                         <h3 className="font-serif text-sm sm:text-base font-bold text-brand-green mb-1.5">
@@ -308,8 +315,9 @@ export default function Home() {
             </div>
 
             {/* Right side: Portrait & Quote */}
-            <div className="lg:col-span-5">
-              <div className="relative bg-white border border-brand-green/10 rounded-2xl p-8 shadow-xl">
+            <div className="lg:col-span-5 relative">
+              <div className="absolute -inset-4 bg-brand-gold/5 blur-2xl rounded-[3rem] -z-10"></div>
+              <div className="relative bg-white/70 backdrop-blur-xl border border-white/80 rounded-3xl p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgba(197,168,128,0.1)] transition-all duration-500">
                 <div className="absolute -top-6 -left-6 bg-brand-gold p-4 rounded-xl border border-brand-gold-dark/20 text-brand-dark">
                   <ShieldAlert className="h-8 w-8" />
                 </div>
@@ -331,18 +339,11 @@ export default function Home() {
       {/* 4. Industries We Serve */}
       <section className="py-20 md:py-28 bg-gradient-to-r from-[#FAF6EE] via-[#F3EAD9] to-[#E9D9BF] border-b border-brand-gold/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-green/5 border border-brand-green/20 rounded-full text-[10px] font-black uppercase text-brand-green tracking-[0.15em] mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
-              КОМПЕТЕНТНОСТ
-            </span>
-            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-brand-green">
-              Сектори, в които предлагаме <span className="text-brand-gold">експертни решения</span>
-            </h2>
-            <p className="text-sm text-brand-dark/70">
-              Работим с широк спектър от обекти от хранително-вкусовата промишленост в цялата страна.
-            </p>
-          </div>
+          <SectionHeading
+            badgeText="КОМПЕТЕНТНОСТ"
+            title={<>Сектори, в които предлагаме <span className="text-brand-gold">експертни решения</span></>}
+            subtitle="Работим с широк спектър от обекти от хранително-вкусовата промишленост в цялата страна."
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {industries.map((ind, i) => {
@@ -350,9 +351,9 @@ export default function Home() {
               return (
                 <div
                   key={i}
-                  className="group bg-brand-light hover:bg-white border border-brand-green/5 hover:border-brand-gold/30 rounded-xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-brand-green/5"
+                  className="group bg-white/50 backdrop-blur-md hover:bg-white border border-white/60 hover:border-brand-gold/40 rounded-2xl p-7 transition-all duration-500 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(197,168,128,0.15)]"
                 >
-                  <div className="bg-brand-green/5 group-hover:bg-brand-gold/10 p-3 rounded-lg border border-brand-green/5 group-hover:border-brand-gold/20 inline-block mb-5 transition-colors duration-300">
+                  <div className="bg-white group-hover:bg-brand-gold/10 p-3.5 rounded-xl border border-white/80 group-hover:border-brand-gold/20 inline-block mb-5 shadow-sm transition-all duration-500">
                     <Icon className="h-6 w-6 text-brand-green group-hover:text-brand-gold-dark transition-colors duration-300" />
                   </div>
                   <h3 className="font-serif text-lg font-bold text-brand-green mb-2">
@@ -371,24 +372,17 @@ export default function Home() {
       {/* 5. Professional Process Section */}
       <section className="py-20 md:py-28 bg-gradient-to-r from-[#FAF6EE] via-[#F3EAD9] to-[#E9D9BF] border-b border-brand-gold/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-green/5 border border-brand-green/20 rounded-full text-[10px] font-black uppercase text-brand-green tracking-[0.15em] mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
-              ПРОЦЕС НА РАБОТА
-            </span>
-            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-brand-green">
-              Как постигаме <span className="text-brand-gold">пълна съвместимост</span>?
-            </h2>
-            <p className="text-sm text-brand-dark/70">
-              Нашият четиристъпков подход гарантира, че нито един детайл по безопасността няма да бъде пропуснат.
-            </p>
-          </div>
+          <SectionHeading
+            badgeText="ПРОЦЕС НА РАБОТА"
+            title={<>Как постигаме <span className="text-brand-gold">пълна съвместимост</span>?</>}
+            subtitle="Нашият четиристъпков подход гарантира, че нито един детайл по безопасността няма да бъде пропуснат."
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative">
             {steps.map((step, i) => (
-              <div key={i} className="bg-white border border-brand-green/5 rounded-xl p-6 shadow-sm relative overflow-hidden group hover:border-brand-gold/30 transition-all duration-300">
+              <div key={i} className="bg-white/60 backdrop-blur-md border border-white/80 rounded-2xl p-7 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative overflow-hidden group hover:border-brand-gold/40 hover:bg-white transition-all duration-500">
                 {/* Accent line */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-brand-green group-hover:bg-brand-gold transition-colors"></div>
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-brand-green/10 to-brand-green/30 group-hover:from-brand-gold group-hover:to-yellow-300 transition-all duration-500"></div>
                 
                 <span className="font-serif text-5xl font-black text-brand-gold/40 group-hover:text-brand-gold block mb-4 transition-colors duration-300">
                   {step.num}
@@ -408,18 +402,11 @@ export default function Home() {
       {/* 6. FAQ Section */}
       <section className="py-20 md:py-28 bg-gradient-to-r from-[#FAF6EE] via-[#F3EAD9] to-[#E9D9BF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-green/5 border border-brand-green/20 rounded-full text-[10px] font-black uppercase text-brand-green tracking-[0.15em] mb-3">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-green animate-pulse"></span>
-              ВЪПРОСИ & ОТГОВОРИ
-            </span>
-            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-brand-green">
-              Често задавани <span className="text-brand-gold">въпроси от бизнеса</span>
-            </h2>
-            <p className="text-sm text-brand-dark/70">
-              Научете бързи отговори за Вашите законови задължения и нормативни изисквания.
-            </p>
-          </div>
+          <SectionHeading
+            badgeText="ВЪПРОСИ & ОТГОВОРИ"
+            title={<>Често задавани <span className="text-brand-gold">въпроси от бизнеса</span></>}
+            subtitle="Научете бързи отговори за Вашите законови задължения и нормативни изисквания."
+          />
 
           <FAQAccordion />
         </div>
@@ -434,16 +421,14 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* CTA copy */}
             <div className="lg:col-span-5 text-center lg:text-left space-y-6">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-brand-gold/10 border border-brand-gold/30 rounded-full text-[10px] font-black uppercase text-brand-gold tracking-[0.15em] mb-4">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse"></span>
-                СВЪРЖЕТЕ СЕ С НАС
-              </span>
-              <h2 className="font-serif text-2xl sm:text-4xl font-bold text-white leading-tight">
-                Готови ли сте за <span className="text-brand-gold">следващата инспекция</span>?
-              </h2>
-              <p className="text-sm sm:text-base text-white/80 leading-relaxed">
-                Попълнете формата със своите данни и изисквания. Ще се свържем с Вас, за да обсъдим казуса Ви и да предложим оптимално и законно решение за Вашия хранителен обект.
-              </p>
+              <SectionHeading
+                align="left"
+                className="!mb-0"
+                lightText={true}
+                badgeText="СВЪРЖЕТЕ СЕ С НАС"
+                title={<>Готови ли сте за <span className="text-brand-gold">следващата инспекция</span>?</>}
+                subtitle="Попълнете формата със своите данни и изисквания. Ще се свържем с Вас, за да обсъдим казуса Ви и да предложим оптимално и законно решение за Вашия хранителен обект."
+              />
               <div className="space-y-4 pt-4 hidden lg:block text-sm text-white/70">
                 <div className="flex items-center">
                   <CheckCircle className="h-4.5 w-4.5 text-brand-gold mr-3 shrink-0" />

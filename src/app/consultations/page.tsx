@@ -1,5 +1,7 @@
 import BookingCalendar from "@/components/BookingCalendar";
 import { Laptop, Clock, ShieldCheck, HelpCircle } from "lucide-react";
+import SectionHeading from "@/components/SectionHeading";
+import ConsultationStepsWidget from "@/remotion/ConsultationStepsWidget";
 
 export default function Consultations() {
   const benefits = [
@@ -38,8 +40,20 @@ export default function Consultations() {
         </div>
       </section>
 
+      {/* Sticky Navigation */}
+      <div className="sticky top-[85px] z-30 w-full flex justify-center -mt-6 mb-6 px-2 sm:px-4 pointer-events-none transition-all duration-300">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-3 bg-brand-green/90 backdrop-blur-md py-1.5 px-2 sm:py-2.5 sm:px-6 rounded-2xl border border-brand-gold/20 shadow-xl shadow-black/20 pointer-events-auto">
+          <a href="#info" className="px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl border border-white/20 text-white text-[9px] sm:text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all shadow-sm">
+            Информация
+          </a>
+          <a href="#booking" className="px-3 py-1.5 sm:px-6 sm:py-2.5 rounded-xl bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[9px] sm:text-xs font-bold uppercase tracking-widest transition-all shadow-md shadow-brand-gold/20 flex items-center gap-1 sm:gap-2">
+            Резервирайте <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+          </a>
+        </div>
+      </div>
+
       {/* Benefits Showcase */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {benefits.map((benefit, i) => {
             const Icon = benefit.icon;
@@ -66,38 +80,18 @@ export default function Consultations() {
 
         {/* Booking Calendar Integration */}
         <div id="booking" className="space-y-6 scroll-mt-32">
-          <div className="text-center max-w-xl mx-auto space-y-2 mb-8">
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green">
-              Изберете ден и час за среща
-            </h2>
-            <p className="text-xs sm:text-sm text-brand-dark/60 leading-relaxed">
-              Всички консултации се извършват лично от д-р Данка Николова в защитена онлайн среда.
-            </p>
-          </div>
+          <SectionHeading
+            badgeText="КАЛЕНДАР"
+            title="Изберете ден и час за среща"
+            subtitle="Всички консултации се извършват лично от д-р Данка Николова в защитена онлайн среда."
+          />
           
           <BookingCalendar />
         </div>
 
         {/* FAQ mini block */}
-        <div className="max-w-3xl mx-auto mt-20 p-6 sm:p-10 bg-white border border-brand-green/5 rounded-2xl shadow-sm">
-          <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mb-6 flex items-center">
-            <HelpCircle className="h-5.5 w-5.5 text-brand-gold mr-3 shrink-0" />
-            Как протича една онлайн консултация?
-          </h3>
-          <div className="space-y-4 text-xs sm:text-sm text-brand-dark/80 leading-relaxed">
-            <p>
-              <strong className="text-brand-green">1. Резервация:</strong> Изберете пакет и свободен час от формата по-горе. Веднага ще получите потвърждение с детайли за срещата.
-            </p>
-            <p>
-              <strong className="text-brand-green">2. Подготовка:</strong> Преди срещата можете да изпратите Ваши документи, скици или снимки на обекта, за да може д-р Николова да се запознае с тях предварително.
-            </p>
-            <p>
-              <strong className="text-brand-green">3. Среща:</strong> Свързваме се по видеовръзка (Google Meet) или телефон. Анализираме казуса Ви, тълкуваме конкретни разпоредби на БАБХ и набелязваме план за действие.
-            </p>
-            <p>
-              <strong className="text-brand-green">4. Резултати:</strong> До 24 часа след срещата получавате писмен опис с насоки, чек-листове или образци, нужни за коректното функциониране на бизнеса Ви.
-            </p>
-          </div>
+        <div id="info" className="scroll-mt-32">
+          <ConsultationStepsWidget />
         </div>
       </section>
     </div>
