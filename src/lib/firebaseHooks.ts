@@ -19,6 +19,7 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { DankaUser } from '../app/profile/page';
+import { Course } from './courseTypes';
 
 export function useAuth() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -131,3 +132,36 @@ export function useDankaUsers() {
 
   return { users, loading, updateUser, setFullUser, sendPasswordReset };
 }
+
+/**
+ * Subscribe to /courses collection.
+ * `publishedOnly` filters out drafts — pass false to load the admin list.
+ */
+export function useCourses(publishedOnly: boolean = true) {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, "courses"));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const list: Course[] = [];
+        snap.forEach((d) => list.push(d.data() as Course));
+        const filtered = publishedOnly ? list.filter((c) => c.published) : list;
+        // Newest first.
+        filtered.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+        setCourses(filtered);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching courses:", error);
+        setLoading(false);
+      }
+    );
+    return unsub;
+  }, [publishedOnly]);
+
+  return { courses, loading };
+}
+

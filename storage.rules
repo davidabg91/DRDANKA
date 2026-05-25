@@ -1,0 +1,42 @@
+rules_version = '2';
+
+// Firebase Storage Rules for the digital bookstore.
+//
+// Layout:
+//   /courses/{courseId}/file.pdf   — protected PDF (never served directly)
+//   /courses/{courseId}/cover.jpg  — public cover art for the catalog
+//
+// The PDF is sealed: no client can read it directly. All authorized reads go
+// through /api/courses/{id}/url which uses Firebase Admin SDK to issue a
+// short-lived signed URL after verifying the caller owns the course.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "d.nikolova.haccp@gmail.com";
+    }
+
+    // Public catalog cover images.
+    match /courses/{courseId}/cover.{ext} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource.size < 5 * 1024 * 1024              // ≤ 5 MB
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Course PDF — direct read FORBIDDEN. Admin can upload.
+    match /courses/{courseId}/file.pdf {
+      allow read: if false;
+      allow write: if isAdmin()
+        && request.resource.size < 200 * 1024 * 1024            // ≤ 200 MB
+        && request.resource.contentType == 'application/pdf';
+    }
+
+    // Default deny.
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

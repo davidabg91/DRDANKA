@@ -11,11 +11,15 @@
   "dependencies": {
     "@remotion/player": "^4.0.465",
     "firebase": "^12.13.0",
+    "firebase-admin": "^13.10.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
+    "pdfjs-dist": "^5.7.284",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "remotion": "^4.0.465"
+    "react-pdf": "^10.4.1",
+    "remotion": "^4.0.465",
+    "stripe": "^22.1.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

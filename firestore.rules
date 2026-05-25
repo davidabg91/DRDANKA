@@ -76,6 +76,23 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // /courses/{courseId} — digital bookstore catalog.
+    //   - Public read: anyone can browse the catalog.
+    //   - Write: admin only.
+    match /courses/{courseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // /purchases/{purchaseId} — paid orders.
+    //   - Read/write: admin only. Buyers see their access via
+    //     /users/{email}.purchasedCourseIds rather than reading /purchases.
+    //   - The Firebase Admin SDK (server-side) bypasses these rules for
+    //     post-checkout writes from /api/stripe/webhook.
+    match /purchases/{purchaseId} {
+      allow read, write: if isAdmin();
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;

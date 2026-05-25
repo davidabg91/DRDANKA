@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth, useDankaUsers } from "@/lib/firebaseHooks";
-import { auth, db } from "@/lib/firebase";
+import { useAuth, useDankaUsers, useCourses } from "@/lib/firebaseHooks";
+import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
+import { Course } from "@/lib/courseTypes";
 
 import { 
   User, 
@@ -72,6 +74,7 @@ export interface DankaUser {
   email: string;
   /** @deprecated Firebase Auth manages passwords — never write this to Firestore. Kept optional only for legacy localStorage seed compatibility. */
   password?: string;
+  /** Business name. Empty string for bookstore-only buyers (no business profile). */
   firmName: string;
   eik: string;
   contact: string;
@@ -85,6 +88,8 @@ export interface DankaUser {
   /** ISO date (YYYY-MM-DD) when the subscription expires. Admin-managed. */
   expiresAt?: string;
   role: 'user' | 'admin';
+  /** Course ids the user has paid for and may read. */
+  purchasedCourseIds?: string[];
   assignedDocs: AssignedMaterial[];
   messages: Message[];
 }
@@ -253,6 +258,7 @@ export default function ProfilePage() {
   // Authentication states
   const { user: firebaseUser, loading: authLoading } = useAuth();
   const { users: firebaseUsers, loading: usersLoading, setFullUser, updateUser, sendPasswordReset } = useDankaUsers();
+  const { courses: allCourses } = useCourses(false); // admin sees drafts too
   const ADMIN_EMAIL = "d.nikolova.haccp@gmail.com";
 
   const saveUsers = (newUsers: DankaUser[]) => {
@@ -361,7 +367,18 @@ export default function ProfilePage() {
   const [currentUserEmail, setCurrentUserEmail] = useState("");
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
   const [usersList, setUsersList] = useState<DankaUser[]>([]);
-  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "users" | "materials" | "messages" | "logs">("candidates");
+  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "users" | "materials" | "courses" | "messages" | "logs">("candidates");
+
+  // Bookstore courses admin state
+  const [courseDraftTitle, setCourseDraftTitle] = useState("");
+  const [courseDraftDesc, setCourseDraftDesc] = useState("");
+  const [courseDraftLongDesc, setCourseDraftLongDesc] = useState("");
+  const [courseDraftPrice, setCourseDraftPrice] = useState("");
+  const [courseDraftPdf, setCourseDraftPdf] = useState<File | null>(null);
+  const [courseDraftCover, setCourseDraftCover] = useState<File | null>(null);
+  const [courseUploadProgress, setCourseUploadProgress] = useState<number | null>(null);
+  const [courseGrantEmail, setCourseGrantEmail] = useState("");
+  const [courseGrantTargetId, setCourseGrantTargetId] = useState("");
 
   // Admin Materials form states
   const [materialType, setMaterialType] = useState<"document" | "test">("document");
@@ -1056,6 +1073,129 @@ export default function ProfilePage() {
     toExpire.forEach(u => updateUser(u.email, { status: "expired" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole, usersLoading, usersList.length]);
+
+  // ────────────────────────────────────────────────────────────────────────
+  // Bookstore: admin upload / edit / delete / grant
+  // ────────────────────────────────────────────────────────────────────────
+
+  const handleCreateCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!courseDraftTitle.trim() || !courseDraftDesc.trim()) {
+      alert("Моля попълнете заглавие и кратко описание на курса.");
+      return;
+    }
+    const priceNum = parseFloat(courseDraftPrice);
+    if (Number.isNaN(priceNum) || priceNum < 0) {
+      alert("Моля въведете валидна цена (лева).");
+      return;
+    }
+    if (!courseDraftPdf) {
+      alert("Моля прикачете PDF файл за курса.");
+      return;
+    }
+    if (courseDraftPdf.type !== "application/pdf") {
+      alert("Файлът трябва да бъде във формат PDF.");
+      return;
+    }
+
+    const courseId = "course_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+    const pdfPath = `courses/${courseId}/file.pdf`;
+    const coverPath = courseDraftCover ? `courses/${courseId}/cover.${(courseDraftCover.name.split(".").pop() || "jpg").toLowerCase()}` : "";
+
+    try {
+      // Upload PDF with progress.
+      setCourseUploadProgress(0);
+      await new Promise<void>((resolve, reject) => {
+        const task = uploadBytesResumable(storageRef(storage, pdfPath), courseDraftPdf);
+        task.on(
+          "state_changed",
+          (snap) => setCourseUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+          (err) => reject(err),
+          () => resolve()
+        );
+      });
+
+      // Optional cover image upload.
+      let coverImageUrl = "";
+      if (courseDraftCover) {
+        const coverTask = await uploadBytesResumable(storageRef(storage, coverPath), courseDraftCover);
+        coverImageUrl = await getDownloadURL(coverTask.ref);
+      }
+
+      const now = new Date().toISOString();
+      const newCourse: Course = {
+        id: courseId,
+        title: courseDraftTitle.trim(),
+        description: courseDraftDesc.trim(),
+        longDescription: courseDraftLongDesc.trim() || undefined,
+        priceBgn: Math.round(priceNum * 100) / 100,
+        coverImageUrl: coverImageUrl || undefined,
+        filePath: pdfPath,
+        fileSizeMb: Math.round((courseDraftPdf.size / (1024 * 1024)) * 100) / 100,
+        published: true,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await setDoc(doc(db, "courses", courseId), newCourse);
+
+      setCourseUploadProgress(null);
+      setCourseDraftTitle("");
+      setCourseDraftDesc("");
+      setCourseDraftLongDesc("");
+      setCourseDraftPrice("");
+      setCourseDraftPdf(null);
+      setCourseDraftCover(null);
+      alert("Курсът беше успешно качен!");
+    } catch (err: any) {
+      setCourseUploadProgress(null);
+      console.error("Course upload error:", err);
+      alert(`Грешка при качване: ${err?.code || ""} ${err?.message || err}`);
+    }
+  };
+
+  const handleTogglePublished = async (c: Course) => {
+    try {
+      await setDoc(doc(db, "courses", c.id), { ...c, published: !c.published, updatedAt: new Date().toISOString() });
+    } catch (err: any) {
+      alert("Грешка: " + (err?.message || err));
+    }
+  };
+
+  const handleDeleteCourse = async (c: Course) => {
+    if (!confirm(`Изтриване на курс „${c.title}"? Действието е необратимо. Купувачите ще загубят достъп.`)) return;
+    try {
+      await deleteDoc(doc(db, "courses", c.id));
+      // Storage cleanup — file & cover may or may not exist; ignore individual errors.
+      try { await deleteObject(storageRef(storage, c.filePath)); } catch { /* ignore */ }
+      alert("Курсът беше изтрит.");
+    } catch (err: any) {
+      alert("Грешка при изтриване: " + (err?.message || err));
+    }
+  };
+
+  const handleGrantCourse = async () => {
+    const email = courseGrantEmail.trim().toLowerCase();
+    if (!email || !courseGrantTargetId) {
+      alert("Моля изберете курс и въведете email на клиента.");
+      return;
+    }
+    const target = usersList.find(u => u.email.toLowerCase() === email);
+    if (!target) {
+      alert(`Няма потребител с email ${email}. Първо клиентът трябва да си направи акаунт.`);
+      return;
+    }
+    const existing = target.purchasedCourseIds || [];
+    if (existing.includes(courseGrantTargetId)) {
+      alert("Този потребител вече има достъп до този курс.");
+      return;
+    }
+    const ok = await updateUser(email, { purchasedCourseIds: [...existing, courseGrantTargetId] });
+    if (ok) {
+      setCourseGrantEmail("");
+      setCourseGrantTargetId("");
+      alert(`Достъпът беше предоставен на ${email}.`);
+    }
+  };
 
   const handleSaveFirm = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2169,14 +2309,21 @@ export default function ProfilePage() {
                         <Users className={`h-4 w-4 ${activeAdminTab === "users" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Потребители
                       </button>
-                      <button 
+                      <button
                         onClick={() => setActiveAdminTab("materials")}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "materials" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
                         <FileCheck className={`h-4 w-4 ${activeAdminTab === "materials" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Материали & Тестове
                       </button>
-                      <button 
+                      <button
+                        onClick={() => setActiveAdminTab("courses")}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "courses" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                      >
+                        <BookOpen className={`h-4 w-4 ${activeAdminTab === "courses" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        Курсове (Книжарница)
+                      </button>
+                      <button
                         onClick={() => setActiveAdminTab("messages")}
                         className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
@@ -2755,6 +2902,128 @@ export default function ProfilePage() {
                       </div>
                     );
                   })()}
+
+                  {/* ADMIN TAB 3.5: COURSES (DIGITAL BOOKSTORE) */}
+                  {activeAdminTab === "courses" && (
+                    <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
+                      <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
+                        <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                          <BookOpen className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h2 className="font-serif text-xl font-bold text-brand-green">Курсове / Дигитална Книжарница</h2>
+                          <p className="text-xs text-brand-dark/50">Качете PDF, задайте цена, контролирайте кой клиент има достъп</p>
+                        </div>
+                      </div>
+
+                      {/* Upload form */}
+                      <form onSubmit={handleCreateCourse} className="bg-brand-light/30 p-5 rounded-xl border border-brand-green/10 space-y-3">
+                        <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
+                          <PlusCircle className="h-4 w-4 text-brand-gold" />
+                          Нов курс
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <input type="text" placeholder="Заглавие" value={courseDraftTitle} onChange={(e) => setCourseDraftTitle(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
+                          <input type="number" step="0.01" min="0" placeholder="Цена в лв." value={courseDraftPrice} onChange={(e) => setCourseDraftPrice(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required />
+                        </div>
+                        <input type="text" placeholder="Кратко описание (показва се в каталога)" value={courseDraftDesc} onChange={(e) => setCourseDraftDesc(e.target.value)} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
+                        <textarea placeholder="Дълго описание (по желание, показва се на страницата на курса)" value={courseDraftLongDesc} onChange={(e) => setCourseDraftLongDesc(e.target.value)} rows={3} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <label className="text-xs flex flex-col gap-1">
+                            <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">PDF файл *</span>
+                            <input type="file" accept="application/pdf" onChange={(e) => setCourseDraftPdf(e.target.files?.[0] || null)} className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-green file:text-white file:cursor-pointer file:font-bold cursor-pointer" />
+                            {courseDraftPdf && <span className="text-[10px] text-brand-dark/60">{courseDraftPdf.name} — {(courseDraftPdf.size / (1024 * 1024)).toFixed(1)} MB</span>}
+                          </label>
+                          <label className="text-xs flex flex-col gap-1">
+                            <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">Корица (опционално)</span>
+                            <input type="file" accept="image/*" onChange={(e) => setCourseDraftCover(e.target.files?.[0] || null)} className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-dark file:cursor-pointer file:font-bold cursor-pointer" />
+                            {courseDraftCover && <span className="text-[10px] text-brand-dark/60">{courseDraftCover.name}</span>}
+                          </label>
+                        </div>
+                        {courseUploadProgress !== null && (
+                          <div className="w-full bg-brand-green/10 rounded-full h-2 overflow-hidden">
+                            <div className="h-full bg-brand-gold transition-all" style={{ width: `${courseUploadProgress}%` }} />
+                            <span className="text-[10px] text-brand-dark/60">{courseUploadProgress}% качено…</span>
+                          </div>
+                        )}
+                        <button type="submit" disabled={courseUploadProgress !== null} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
+                          <Plus className="h-4 w-4" />
+                          {courseUploadProgress !== null ? "Качване…" : "Качи курс"}
+                        </button>
+                      </form>
+
+                      {/* Manual grant access */}
+                      <div className="bg-brand-gold/5 border border-brand-gold/25 rounded-xl p-4 space-y-2">
+                        <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-brand-gold" />
+                          Ръчно предоставяне на достъп
+                        </h3>
+                        <p className="text-[11px] text-brand-dark/60">За случаи когато клиентът е платил извън сайта (банков превод, кеш). Клиентът трябва вече да има акаунт.</p>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input type="email" placeholder="email на клиента" value={courseGrantEmail} onChange={(e) => setCourseGrantEmail(e.target.value)} className="flex-1 text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" />
+                          <select value={courseGrantTargetId} onChange={(e) => setCourseGrantTargetId(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer">
+                            <option value="">— избери курс —</option>
+                            {allCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                          </select>
+                          <button type="button" onClick={handleGrantCourse} className="text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap">
+                            Предостави
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Course list */}
+                      <div className="space-y-2">
+                        <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Качени курсове ({allCourses.length})</h3>
+                        {allCourses.length === 0 ? (
+                          <p className="text-xs text-brand-dark/50 italic py-4 text-center">Все още няма качени курсове.</p>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs border-collapse border border-brand-green/10">
+                              <thead>
+                                <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
+                                  <th className="border border-brand-green/10 p-3 text-left">Курс</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Размер</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Цена</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Купувачи</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Статус</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Действия</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {allCourses.map(c => {
+                                  const buyersCount = usersList.filter(u => (u.purchasedCourseIds || []).includes(c.id)).length;
+                                  return (
+                                    <tr key={c.id} className="hover:bg-brand-light/30">
+                                      <td className="border border-brand-green/10 p-3">
+                                        <div className="font-bold text-brand-green">{c.title}</div>
+                                        <div className="text-[10px] text-brand-dark/50">{c.description}</div>
+                                      </td>
+                                      <td className="border border-brand-green/10 p-3 text-center font-mono text-[10px]">{c.fileSizeMb} MB</td>
+                                      <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{c.priceBgn.toFixed(2)} лв.</td>
+                                      <td className="border border-brand-green/10 p-3 text-center font-mono">{buyersCount}</td>
+                                      <td className="border border-brand-green/10 p-3 text-center">
+                                        <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${c.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
+                                          {c.published ? "Активен" : "Скрит"}
+                                        </span>
+                                      </td>
+                                      <td className="border border-brand-green/10 p-3 text-center space-x-1">
+                                        <button onClick={() => handleTogglePublished(c)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
+                                          {c.published ? "Скрий" : "Покажи"}
+                                        </button>
+                                        <button onClick={() => handleDeleteCourse(c)} className="text-red-500 hover:text-red-700 p-1 cursor-pointer" title="Изтрий">
+                                          <Trash2 className="h-3.5 w-3.5 inline" />
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   {/* ADMIN TAB 4: MESSAGES/CHAT */}
                   {activeAdminTab === "messages" && (() => {
