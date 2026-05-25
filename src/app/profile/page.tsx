@@ -180,50 +180,6 @@ const DOCUMENT_TEMPLATES = {
   }
 };
 
-// Course contents for reading inside profile
-const COURSE_CONTENTS = {
-  labeling: {
-    title: "15 златни правила за етикетиране на храните",
-    content: `
-15 ЗЛАТНИ ПРАВИЛА ЗА ЕТИКЕТИРАНЕ НА ХРАНИТЕ
-Практичен наръчник от д-р Данка Николова
-
-Правило 1: Името на храната трябва да бъде точно и да не подвежда купувача.
-Правило 2: Списъкът на съставките е задължителен и започва с най-голямото количество.
-Правило 3: Всеки алерген трябва да е подчертан, удебелен или с различен цвят в съставките.
-Правило 4: Количеството на определени съставки (напр. плодово съдържание) трябва да се посочва в проценти.
-Правило 5: Нетното количество се изразява в литри, сантилитри, милилитри, килограми или грамове.
-Правило 6: Датата на минимална трайност („Най-добър до...“) или срок на годност („Използвай преди...“) е задължителна.
-Правило 7: Условията за съхранение (напр. от 0°C до 4°C) трябва да са ясно указани за бързоразвалящи се храни.
-Правило 8: Бизнес името и адресът на производителя или вносителя трябва да присъстват.
-Правило 9: Страната на произход е задължителна за месо, плодове, зеленчуци и мед.
-Правило 10: Указанията за употреба се добавят, ако без тях е трудно правилното консумиране.
-Правило 11: Действителното алкохолно съдържание по обем се посочва за напитки с над 1.2 об.%.
-Правило 12: Хранителната декларация (енергийна стойност, мазнини, въглехидрати, протеини, сол) е задължителна за пакетирани храни.
-Правило 13: Текстът на етикета в България задължително трябва да бъде на български език.
-Правило 14: Шрифтът на задължителната информация не може да бъде по-малък от 1.2 мм височина на буквата "х".
-Правило 15: Здравните претенции на етикета изискват научно доказателство и одобрение от ЕО.
-    `
-  },
-  meat: {
-    title: "Практическо ръководство за обекти с месо",
-    content: `
-ПРАКТИЧЕСКО МИНИ РЪКОВОДСТВО ЗА ОБЕКТИ С МЕСО И МЕСНИ ПРОДУКТИ
-Как да избегнеш отказ, забавяне и излишни разходи при регистрация в БАБХ
-
-Раздел 1: Подготовка на обекта и сграден фонд
-Подовете трябва да са гладки, лесни за измиване и дезинфекция. Задължително е разделянето на зоните (чиста зона за разфасовка и мръсна зона за приемане и отпадъци).
-Раздел 2: Водоснабдяване и вентилация
-Обектът трябва да разполага с достатъчно топла и студена питейна вода. Вентилацията трябва да предотвратява конденз по стените и таваните.
-Раздел 3: Хладилна верига
-Охладено месо се съхранява от 0°C до 4°C (за птици – до 2°C, за мляно месо – до 2°C). Замразено месо – под -18°C. Хладилниците трябва да са оборудвани с термометри.
-Раздел 4: Документация пред БАБХ
-Изисква се подаване на заявление по образец, НАССР система със специфични ККТ за месо, ДХП процедури, договори за ДДД и екарисаж.
-    `
-  }
-};
-
-
 function getDefaultLogsForNiche(niche: string) {
   const sector = getSectorForNiche(niche);
   let incoming = [];
@@ -490,8 +446,6 @@ export default function ProfilePage() {
 
   // Document modal viewer
   const [activeDocKey, setActiveDocKey] = useState<string | null>(null);
-  // Course modal reader
-  const [activeCourseKey, setActiveCourseKey] = useState<string | null>(null);
 
       // Load state and initial date on client mount
   useEffect(() => {
@@ -4532,71 +4486,59 @@ export default function ProfilePage() {
                 );
               })()}
 {/* TAB 3: MY PURCHASED COURSES */}
-              {activeTab === "courses" && (
-                <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6">
-                  <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
-                    <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
-                      <BookOpen className="h-6 w-6" />
+              {activeTab === "courses" && (() => {
+                const myIds = currentUser?.purchasedCourseIds || [];
+                const myCourses = allCourses.filter(c => myIds.includes(c.id));
+                return (
+                  <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6">
+                    <div className="flex items-center justify-between gap-3 border-b border-brand-green/5 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                          <BookOpen className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h2 className="font-serif text-xl font-bold text-brand-green">Моите курсове</h2>
+                          <p className="text-xs text-brand-dark/50">Закупените от Вас материали — четат се онлайн с воден знак</p>
+                        </div>
+                      </div>
+                      <Link href="/bookstore" className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer whitespace-nowrap">
+                        <PlusCircle className="h-3.5 w-3.5" />
+                        Купи още
+                      </Link>
                     </div>
-                    <div>
-                      <h2 className="font-serif text-xl font-bold text-brand-green">Моите Закупени Материали и Наръчници</h2>
-                      <p className="text-xs text-brand-dark/50">Всички Ваши образователни ресурси за самоподготовка на едно място</p>
-                    </div>
+
+                    {myCourses.length === 0 ? (
+                      <div className="text-center py-10 border border-dashed border-brand-green/10 rounded-xl space-y-3">
+                        <BookOpen className="h-10 w-10 text-brand-gold/40 mx-auto" />
+                        <p className="text-sm text-brand-dark/60">Все още нямате закупени курсове.</p>
+                        <Link href="/bookstore" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer">
+                          Към книжарницата →
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        {myCourses.map(c => (
+                          <div key={c.id} className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
+                            <div className="space-y-3">
+                              <span className="text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Закупен</span>
+                              <h4 className="font-serif text-base font-bold text-brand-green">{c.title}</h4>
+                              <p className="text-xs text-brand-dark/60 leading-normal">{c.description}</p>
+                              <span className="text-[10px] text-brand-dark/40 font-mono block">{c.fileSizeMb} MB · PDF</span>
+                            </div>
+                            <Link
+                              href={`/courses/${c.id}/viewer`}
+                              className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                              Отвори курса
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                    <div className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
-                      <div className="space-y-3">
-                        <span className="text-[9px] font-bold uppercase bg-brand-gold text-brand-dark px-2 py-0.5 rounded-full">Пълен Достъп</span>
-                        <h4 className="font-serif text-base font-bold text-brand-green">15 златни правила за етикетиране на храните</h4>
-                        <p className="text-xs text-brand-dark/60 leading-normal">
-                          Практически указания, съобразени с българското законодателство и Регламент 1169 за етикети, алергени и шрифтове.
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => setActiveCourseKey("labeling")}
-                        className="mt-6 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
-                      >
-                        Прочети наръчника
-                      </button>
-                    </div>
-
-                    <div className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
-                      <div className="space-y-3">
-                        <span className="text-[9px] font-bold uppercase bg-brand-gold text-brand-dark px-2 py-0.5 rounded-full">Пълен Достъп</span>
-                        <h4 className="font-serif text-base font-bold text-brand-green">Практическо ръководство за обекти с месо</h4>
-                        <p className="text-xs text-brand-dark/60 leading-normal">
-                          Пълно ръководство за изискванията на БАБХ при обекти за месни продукти, съхранение, рязане и етикетиране.
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => setActiveCourseKey("meat")}
-                        className="mt-6 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
-                      >
-                        Прочети наръчника
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* COURSE READING VIEWER */}
-                  {activeCourseKey && (
-                    <div className="border border-brand-gold/30 rounded-xl p-6 bg-brand-light/30 relative space-y-4 pt-5 mt-6">
-                      <div className="flex items-center justify-between border-b border-brand-green/5 pb-2">
-                        <h4 className="font-serif text-sm font-bold text-brand-green">Наръчник: {(COURSE_CONTENTS as any)[activeCourseKey].title}</h4>
-                        <button 
-                          onClick={() => setActiveCourseKey(null)}
-                          className="text-xs text-brand-dark/50 hover:text-brand-dark font-bold hover:underline"
-                        >
-                          Затвори четенето
-                        </button>
-                      </div>
-                      <pre className="font-sans text-xs sm:text-sm whitespace-pre-wrap leading-relaxed p-6 border border-brand-green/10 bg-white rounded shadow-sm text-brand-dark max-h-[500px] overflow-y-auto">
-                        {(COURSE_CONTENTS as any)[activeCourseKey].content}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              )}
+                );
+              })()}
 
               
               {/* CLIENT TAB 5: CHAT (ЧАТ С АДМИНИСТРАТОР) */}
