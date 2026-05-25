@@ -12,11 +12,10 @@ import { doc, getDoc } from "firebase/firestore";
 import { ref as storageRef, getDownloadURL } from "firebase/storage";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock } from "lucide-react";
 
-// Use the bundled worker from pdfjs-dist.
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+// Load the worker from CDN matched to the exact version react-pdf is using.
+// Avoids the "API version X does not match Worker version Y" mismatch when
+// pdfjs-dist and react-pdf resolve to different versions in node_modules.
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 /**
  * Protected PDF reader.
