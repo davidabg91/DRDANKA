@@ -2,16 +2,10 @@ rules_version = '2';
 
 // Firebase Storage Rules for the digital bookstore.
 //
-// Layout:
-//   /courses/{courseId}/file.pdf      — protected PDF (never served directly)
-//   /courses/{courseId}/cover.{ext}   — public cover art (jpg/png/webp/...)
-//
-// The PDF is sealed: no client can read it directly. All authorized reads go
-// through /api/courses/{id}/url which uses Firebase Admin SDK to issue a
-// short-lived signed URL after verifying the caller owns the course.
-//
-// Note: Storage Rules don't allow segment-prefix wildcards like "cover.{ext}",
-// so we match the whole filename and gate behavior by filename pattern.
+// Storage Rules cross-check Firestore to verify the caller actually owns the
+// course before letting them download the PDF. This means the viewer can use
+// `getDownloadURL()` directly from the client, with no Firebase Admin SDK or
+// API route required.
 
 service firebase.storage {
   match /b/{bucket}/o {
@@ -21,14 +15,21 @@ service firebase.storage {
         && request.auth.token.email == "d.nikolova.haccp@gmail.com";
     }
 
-    // Files inside a course folder.
-    match /courses/{courseId}/{fileName} {
-      // Public read ONLY for cover images (any extension). PDF read is denied
-      // by default — no allow statement here matches "file.pdf" for read.
-      allow read: if fileName.matches('^cover\\..+');
+    // Check the buyer's /users/{email}.purchasedCourseIds for the courseId.
+    function hasPurchased(courseId) {
+      let email = request.auth.token.email.lower();
+      let userPath = /databases/(default)/documents/users/$(email);
+      return request.auth != null
+        && firestore.exists(userPath)
+        && courseId in firestore.get(userPath).data.purchasedCourseIds;
+    }
 
-      // Admin can upload either the protected PDF or the public cover image,
-      // with separate size/content-type limits.
+    match /courses/{courseId}/{fileName} {
+      // Public read for cover images. PDF read requires admin OR purchaser.
+      allow read: if fileName.matches('^cover\\..+')
+        || (fileName == 'file.pdf' && (isAdmin() || hasPurchased(courseId)));
+
+      // Admin uploads — separate size/type limits per file kind.
       allow write: if isAdmin() && (
         (fileName == 'file.pdf'
           && request.resource.size < 200 * 1024 * 1024
@@ -39,7 +40,5 @@ service firebase.storage {
           && request.resource.contentType.matches('image/.*'))
       );
     }
-
-    // Everything else is denied by default (no allow rule = no access).
   }
 }

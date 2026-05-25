@@ -6,8 +6,10 @@ import { useParams, useRouter } from "next/navigation";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { auth } from "@/lib/firebase";
+import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { ref as storageRef, getDownloadURL } from "firebase/storage";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock } from "lucide-react";
 
 // Use the bundled worker from pdfjs-dist.
@@ -37,7 +39,9 @@ export default function CourseViewerPage() {
   const [scale, setScale] = useState(1.2);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Listen to auth state; fetch signed URL once we have a user.
+  // Listen to auth state; fetch PDF directly via Firebase Storage.
+  // Storage rules verify the buyer owns the course (cross-check Firestore),
+  // so no Admin SDK / API route is needed.
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
       setAuthReady(true);
@@ -47,18 +51,21 @@ export default function CourseViewerPage() {
       }
       setEmail(user.email);
       try {
-        const token = await user.getIdToken();
-        const res = await fetch(`/api/courses/${courseId}/url`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body?.error || `HTTP ${res.status}`);
+        // 1. Load course doc to get the storage filePath.
+        const courseSnap = await getDoc(doc(db, "courses", courseId as string));
+        if (!courseSnap.exists()) {
+          throw new Error("Курсът не съществува");
         }
-        const data = await res.json();
-        setPdfUrl(data.url);
+        const courseData = courseSnap.data() as { filePath: string };
+        // 2. Ask Storage for a download URL. Storage rules deny this unless the
+        //    caller is admin OR has purchasedCourseIds containing this courseId.
+        const url = await getDownloadURL(storageRef(storage, courseData.filePath));
+        setPdfUrl(url);
       } catch (err: any) {
-        setLoadError(err?.message || "Грешка при зареждане на курса");
+        const msg = err?.code === "storage/unauthorized"
+          ? "Нямате достъп до този курс. Ако сте го закупили, моля излезте и влезте отново."
+          : err?.message || "Грешка при зареждане на курса";
+        setLoadError(msg);
       }
     });
     return unsub;
