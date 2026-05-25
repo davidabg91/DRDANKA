@@ -2210,13 +2210,31 @@ export default function ProfilePage() {
                         <FileText className={`h-4 w-4 ${activeTab === "haccp" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         НАССР Документи
                       </button>
-                      <button 
-                        onClick={() => setActiveTab("assigned")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "assigned" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
-                      >
-                        <FileCheck className={`h-4 w-4 ${activeTab === "assigned" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                        Документи & Тестове
-                      </button>
+                      {(() => {
+                        const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+                        const pendingCount = (me?.assignedDocs || []).filter(d => d.status === "pending").length;
+                        return (
+                          <button
+                            onClick={() => setActiveTab("assigned")}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "assigned" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                          >
+                            <span className="relative inline-flex">
+                              <FileCheck className={`h-4 w-4 ${activeTab === "assigned" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                              {pendingCount > 0 && (
+                                <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none border border-white shadow-sm animate-pulse">
+                                  {pendingCount > 9 ? "9+" : pendingCount}
+                                </span>
+                              )}
+                            </span>
+                            <span className="flex-1">Документи &amp; Тестове</span>
+                            {pendingCount > 0 && (
+                              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab === "assigned" ? "bg-brand-gold text-brand-dark" : "bg-red-100 text-red-700"}`}>
+                                {pendingCount} ново{pendingCount === 1 ? "" : "/и"}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })()}
                       <button 
                         onClick={() => setActiveTab("courses")}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "courses" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
@@ -4747,16 +4765,24 @@ export default function ProfilePage() {
                     <p key={i} className="mb-4 leading-relaxed">{para}</p>
                   ))}
                 </div>
-                {activeAssignedMaterial.status !== "completed" && (
-                  <div className="flex justify-end pt-4 border-t border-brand-green/10">
+                <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4 border-t border-brand-green/10">
+                  <button
+                    onClick={() => handlePrintText(activeAssignedMaterial.title, activeAssignedMaterial.content)}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white border border-brand-green/20 hover:border-brand-gold text-brand-green hover:bg-brand-gold/5 font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-sm cursor-pointer"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Принтирай
+                  </button>
+                  {activeAssignedMaterial.status !== "completed" && (
                     <button
                       onClick={() => handleCompleteDocument(activeAssignedMaterial.id)}
-                      className="px-6 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-md shadow-brand-green/20"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-md shadow-brand-green/20 cursor-pointer"
                     >
+                      <Check className="h-4 w-4" />
                       Маркирай като прочетено
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
 
@@ -4794,16 +4820,44 @@ export default function ProfilePage() {
                     <button
                       onClick={() => handleSolveTest()}
                       disabled={userTestAnswers.includes(-1)}
-                      className="px-8 py-3 bg-brand-green hover:bg-brand-green/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-md shadow-brand-green/20"
+                      className="px-8 py-3 bg-brand-green hover:bg-brand-green/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-md shadow-brand-green/20 cursor-pointer"
                     >
                       Предай теста
                     </button>
                   </div>
                 ) : (
-                  <div className="bg-brand-gold/10 text-brand-dark p-6 rounded-xl border border-brand-gold/20 flex flex-col items-center justify-center text-center">
-                    <span className="text-3xl mb-2">🎉</span>
-                    <h4 className="font-bold text-lg mb-1">Тестът е успешно завършен!</h4>
-                    <p className="text-sm opacity-75">Вашият резултат е: <strong className="text-brand-green">{activeAssignedMaterial.score}%</strong></p>
+                  <div className="space-y-4">
+                    <div className="bg-brand-gold/10 text-brand-dark p-6 rounded-xl border border-brand-gold/20 flex flex-col items-center justify-center text-center">
+                      <CheckCircle className="h-8 w-8 text-green-600 mb-2" />
+                      <h4 className="font-bold text-lg mb-1">Тестът е успешно завършен!</h4>
+                      <p className="text-sm opacity-75">Вашият резултат е: <strong className="text-brand-green">{activeAssignedMaterial.score}%</strong></p>
+                    </div>
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => {
+                          const m = activeAssignedMaterial;
+                          let text = `ТЕСТ: ${m.title}\n`;
+                          text += `Дата: ${new Date().toLocaleDateString("bg-BG")}\n`;
+                          text += `Резултат: ${m.score ?? 0}%\n`;
+                          text += `==============================\n\n`;
+                          (m.questions || []).forEach((q, i) => {
+                            const userIdx = m.userAnswers?.[i];
+                            const correct = userIdx === q.correctIdx;
+                            text += `Въпрос ${i + 1}: ${q.text}\n`;
+                            q.options.forEach((opt, oi) => {
+                              const marker = oi === q.correctIdx ? "✓" : oi === userIdx ? "✗" : " ";
+                              text += `  [${marker}] ${opt}\n`;
+                            });
+                            text += `  → ${correct ? "ВЯРЕН" : "ГРЕШЕН"} отговор\n\n`;
+                          });
+                          handlePrintText(`Тест_${m.title}`, text);
+                        }}
+                        className="inline-flex items-center gap-2 px-5 py-3 bg-white border border-brand-green/20 hover:border-brand-gold text-brand-green hover:bg-brand-gold/5 font-bold text-sm uppercase tracking-wider rounded-xl transition-colors shadow-sm cursor-pointer"
+                      >
+                        <Printer className="h-4 w-4" />
+                        Принтирай резултата
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
