@@ -47,6 +47,9 @@ export interface AssignedMaterial {
   content: string;
   type: 'document' | 'test';
   assignedAt: string;
+  /** ISO timestamp when the client marked the material as read / submitted the test.
+   *  Required for HACCP audit trail — proves the client acknowledged the document. */
+  completedAt?: string;
   questions?: Array<{
     id: string;
     text: string;
@@ -67,7 +70,8 @@ export interface Message {
 
 export interface DankaUser {
   email: string;
-  password: string;
+  /** @deprecated Firebase Auth manages passwords — never write this to Firestore. Kept optional only for legacy localStorage seed compatibility. */
+  password?: string;
   firmName: string;
   eik: string;
   contact: string;
@@ -78,6 +82,8 @@ export interface DankaUser {
   address: string;
   manager: string;
   status: 'pending' | 'approved' | 'expired';
+  /** ISO date (YYYY-MM-DD) when the subscription expires. Admin-managed. */
+  expiresAt?: string;
   role: 'user' | 'admin';
   assignedDocs: AssignedMaterial[];
   messages: Message[];
@@ -246,7 +252,8 @@ function getDefaultLogsForNiche(niche: string) {
 export default function ProfilePage() {
   // Authentication states
   const { user: firebaseUser, loading: authLoading } = useAuth();
-  const { users: firebaseUsers, loading: usersLoading, setFullUser, updateUser } = useDankaUsers();
+  const { users: firebaseUsers, loading: usersLoading, setFullUser, updateUser, sendPasswordReset } = useDankaUsers();
+  const ADMIN_EMAIL = "d.nikolova.haccp@gmail.com";
 
   const saveUsers = (newUsers: DankaUser[]) => {
     setUsersList(newUsers);
@@ -266,13 +273,36 @@ export default function ProfilePage() {
   }, [firebaseUsers, usersLoading]);
 
 
+  // Auto-create admin Firestore doc on first admin login (no plaintext password).
+  useEffect(() => {
+    if (authLoading || usersLoading || !firebaseUser) return;
+    if (firebaseUser.email !== ADMIN_EMAIL) return;
+    const adminInDb = firebaseUsers.find(u => u.email === ADMIN_EMAIL);
+    if (adminInDb) return;
+    setFullUser(ADMIN_EMAIL, {
+      email: ADMIN_EMAIL,
+      firmName: "БАБХ Спокойствие",
+      eik: "123456789",
+      contact: "д-р Данка Николова",
+      phone: "0888888888",
+      niche: "Консултации",
+      desc: "Администратор на системата",
+      address: "гр. София, ул. БАБХ 1",
+      manager: "д-р Данка Николова",
+      status: "approved",
+      role: "admin",
+      assignedDocs: [],
+      messages: []
+    });
+  }, [authLoading, usersLoading, firebaseUser, firebaseUsers]);
+
   useEffect(() => {
     if (!authLoading) {
       if (firebaseUser) {
         setIsLoggedIn(true);
         setCurrentUserEmail(firebaseUser.email || "");
-        
-        if (firebaseUser.email === "d.nikolova.haccp@gmail.com") {
+
+        if (firebaseUser.email === ADMIN_EMAIL) {
           setUserRole("admin");
         } else {
           const matchedUser = firebaseUsers.find(u => u.email === firebaseUser.email);
@@ -351,6 +381,9 @@ export default function ProfilePage() {
   // Admin User search/filter state
   const [usersSearchQuery, setUsersSearchQuery] = useState("");
 
+  // Broadcast (admin → all approved clients) state
+  const [broadcastText, setBroadcastText] = useState("");
+
   // User assigned materials states
   const [activeAssignedMaterial, setActiveAssignedMaterial] = useState<AssignedMaterial | null>(null);
   const [userTestAnswers, setUserTestAnswers] = useState<number[]>([]);
@@ -364,6 +397,7 @@ export default function ProfilePage() {
   const [applySector, setApplySector] = useState("Заведения за обществено хранене (ЗОХ)");
   const [applyNiche, setApplyNiche] = useState("Ресторанти");
   const [applyDesc, setApplyDesc] = useState("");
+  const [applyAddress, setApplyAddress] = useState("");
   const [applySuccess, setApplySuccess] = useState(false);
 
   // Approval flow states
@@ -440,8 +474,7 @@ export default function ProfilePage() {
     } else {
       users = [
         {
-          email: "d.nikolova.haccp@gmail.com",
-          password: "davida9166",
+          email: ADMIN_EMAIL,
           firmName: "БАБХ Спокойствие",
           eik: "123456789",
           contact: "д-р Данка Николова",
@@ -457,7 +490,6 @@ export default function ProfilePage() {
         },
         {
           email: "kristian.cafe@gmail.com",
-          password: "password123",
           firmName: "Кофи Шоп ЕООД",
           eik: "207554321",
           contact: "Кристиан Иванов",
@@ -473,7 +505,6 @@ export default function ProfilePage() {
         },
         {
           email: "danka_client@gmail.com",
-          password: "password123",
           firmName: "Вкусни Мигове ЕООД",
           eik: "207654321",
           contact: "Георги Георгиев",
@@ -514,11 +545,10 @@ export default function ProfilePage() {
     }
 
     // Ensure the admin user is always in the users array
-    const adminExists = users.some(u => u.email.toLowerCase().trim() === "d.nikolova.haccp@gmail.com");
+    const adminExists = users.some(u => u.email.toLowerCase().trim() === ADMIN_EMAIL);
     if (!adminExists) {
       const adminUser: DankaUser = {
-        email: "d.nikolova.haccp@gmail.com",
-        password: "davida9166",
+        email: ADMIN_EMAIL,
         firmName: "БАБХ Спокойствие",
         eik: "123456789",
         contact: "д-р Данка Николова",
@@ -560,47 +590,19 @@ export default function ProfilePage() {
     }
   }, []);
 
-    // Sync date-based logs when selectedDate changes or when user details change
+  // Logs are stored in Firestore at /logs/{logKey}. localStorage is read once
+  // as a one-way migration if a Firestore doc doesn't exist yet, then written
+  // to Firestore. After that, Firestore is the single source of truth.
+  const logKeyFor = (email: string, date: string) =>
+    `danka_logs_${email.replace(/@/g, "_").replace(/\./g, "_")}_${date}`;
+
+  // Sync date-based logs from Firestore when selectedDate or user changes.
   useEffect(() => {
     if (!isLoggedIn || !selectedDate || userRole !== "user" || !currentUserEmail) return;
-    const key = `danka_logs_${currentUserEmail.replace("@", "_").replace(".", "_")}_${selectedDate}`;
-    const storedLogs = localStorage.getItem(key);
-    
-    // Determine what defaults should be for this niche
+    let cancelled = false;
     const defaults = getDefaultLogsForNiche(firmInfo.niche || "Ресторант/Кафе");
-    
-    if (storedLogs) {
-      const parsed = JSON.parse(storedLogs);
-      
-      // Auto-correct if they have wrong defaults saved (e.g. from before fixing categories)
-      let incoming = parsed.incoming || [];
-      let fridges = parsed.fridges || [];
-      
-      if (incoming.length === 1 && (
-        incoming[0].product.includes("пилешко месо") || 
-        incoming[0].product.includes("Захар") || 
-        incoming[0].product.includes("Брашно") || 
-        incoming[0].product.includes("Млечни") || 
-        incoming[0].product.includes("мляко") || 
-        incoming[0].product.includes("полуфабрикати")
-      ) && incoming[0].product !== defaults.incoming[0]?.product) {
-        // They have a generic default that doesn't match their current sector! Overwrite it!
-        incoming = defaults.incoming;
-        fridges = defaults.fridges;
-        // Optionally save the corrected data back to localStorage immediately
-        parsed.incoming = incoming;
-        parsed.fridges = fridges;
-        localStorage.setItem(key, JSON.stringify(parsed));
-      }
-      
-      setLogIncoming(incoming);
-      setLogFridges(fridges);
-      setLogHygiene(parsed.hygiene || { desinfection: false, surfaces: false, floors: false, waste: false });
-      setLogStaff(parsed.staff || { checkPassed: false, healthy: true });
-      setLogThermal(parsed.thermal || []);
-      setLogFryer(parsed.fryer || { fryerUsed: false, oilQualityOk: true, oilChanged: false });
-    } else {
-      // Default empty structures based on niche
+    const applyDefaults = () => {
+      if (cancelled) return;
       setLogIncoming(defaults.incoming);
       setLogFridges(defaults.fridges);
       setLogHygiene({ desinfection: false, surfaces: false, floors: false, waste: false });
@@ -609,27 +611,79 @@ export default function ProfilePage() {
         { product: "Готвено пилешко филе", time: "11:30", tempCook: "78", cooled: true }
       ]);
       setLogFryer({ fryerUsed: false, oilQualityOk: true, oilChanged: false });
-    }
+    };
+    const key = logKeyFor(currentUserEmail, selectedDate);
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, "logs", key));
+        if (cancelled) return;
+        if (snap.exists()) {
+          const parsed: any = snap.data();
+          setLogIncoming(parsed.incoming || defaults.incoming);
+          setLogFridges(parsed.fridges || defaults.fridges);
+          setLogHygiene(parsed.hygiene || { desinfection: false, surfaces: false, floors: false, waste: false });
+          setLogStaff(parsed.staff || { checkPassed: false, healthy: true });
+          setLogThermal(parsed.thermal || []);
+          setLogFryer(parsed.fryer || { fryerUsed: false, oilQualityOk: true, oilChanged: false });
+          return;
+        }
+        // One-time migration from localStorage if the user has legacy data.
+        const legacy = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+        if (legacy) {
+          const parsed = JSON.parse(legacy);
+          await setDoc(doc(db, "logs", key), parsed);
+          if (cancelled) return;
+          setLogIncoming(parsed.incoming || defaults.incoming);
+          setLogFridges(parsed.fridges || defaults.fridges);
+          setLogHygiene(parsed.hygiene || { desinfection: false, surfaces: false, floors: false, waste: false });
+          setLogStaff(parsed.staff || { checkPassed: false, healthy: true });
+          setLogThermal(parsed.thermal || []);
+          setLogFryer(parsed.fryer || { fryerUsed: false, oilQualityOk: true, oilChanged: false });
+          return;
+        }
+        applyDefaults();
+      } catch (err) {
+        console.error("Error loading logs:", err);
+        applyDefaults();
+      }
+    })();
+    return () => { cancelled = true; };
   }, [selectedDate, isLoggedIn, userRole, currentUserEmail, firmInfo.niche]);
 
-  // Sync audited logs when auditor selects another user/date
+  // Sync audited logs from Firestore when auditor selects another user/date.
   useEffect(() => {
     if (userRole !== "admin" || !auditUserEmail || !auditSelectedDate) return;
-    const key = `danka_logs_${auditUserEmail.replace("@", "_").replace(".", "_")}_${auditSelectedDate}`;
-    const storedLogs = localStorage.getItem(key);
-    if (storedLogs) {
-      setAuditLogs(JSON.parse(storedLogs));
-    } else {
-      setAuditLogs({
-        incoming: [],
-        fridges: [],
-        hygiene: { desinfection: false, surfaces: false, floors: false, waste: false },
-        staff: { checkPassed: false, healthy: true },
-        thermal: [],
-        fryer: { fryerUsed: false, oilQualityOk: true, oilChanged: false }
-      });
-    }
+    let cancelled = false;
+    const emptyLogs = {
+      incoming: [],
+      fridges: [],
+      hygiene: { desinfection: false, surfaces: false, floors: false, waste: false },
+      staff: { checkPassed: false, healthy: true },
+      thermal: [],
+      fryer: { fryerUsed: false, oilQualityOk: true, oilChanged: false }
+    };
+    const key = logKeyFor(auditUserEmail, auditSelectedDate);
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, "logs", key));
+        if (cancelled) return;
+        setAuditLogs(snap.exists() ? snap.data() : emptyLogs);
+      } catch (err) {
+        console.error("Error loading audited logs:", err);
+        if (!cancelled) setAuditLogs(emptyLogs);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [auditUserEmail, auditSelectedDate, userRole]);
+
+  // Escape HTML to prevent XSS in print iframes (user-supplied strings)
+  const escapeHtml = (raw: string) =>
+    String(raw)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
 
   // Print helper writing to a hidden iframe to prevent printing the whole page
   const handlePrintText = (title: string, content: string) => {
@@ -650,7 +704,7 @@ export default function ProfilePage() {
       doc.write(`
         <html>
           <head>
-            <title>${title}</title>
+            <title>${escapeHtml(title)}</title>
             <style>
               body {
                 font-family: 'Courier New', Courier, monospace;
@@ -665,7 +719,7 @@ export default function ProfilePage() {
               }
             </style>
           </head>
-          <body>${content}</body>
+          <body>${escapeHtml(content)}</body>
         </html>
       `);
       doc.close();
@@ -718,9 +772,9 @@ export default function ProfilePage() {
           <body>
             <div class="label-card">
               <div class="title">ЕТИКЕТ ЗА ОТВОРЕНА ХРАНА</div>
-              <div class="detail">Продукт: <span class="highlight">${product}</span></div>
-              <div class="detail">Отворен на: ${opened}</div>
-              <div class="detail">Годен до: <span class="highlight">${expiry}</span></div>
+              <div class="detail">Продукт: <span class="highlight">${escapeHtml(product)}</span></div>
+              <div class="detail">Отворен на: ${escapeHtml(opened)}</div>
+              <div class="detail">Годен до: <span class="highlight">${escapeHtml(expiry)}</span></div>
               <div class="detail" style="margin-top: 10px; font-size: 10px; border-top: 1px dashed #000; padding-top: 5px;">
                 Контрол по НАССР / БАБХ Спокойствие
               </div>
@@ -736,7 +790,8 @@ export default function ProfilePage() {
     }
   };
 
-      // Sign In handler checking local users array
+  // Sign in via Firebase Auth. The admin's Firestore doc is auto-created
+  // by ensureAdminDoc() effect below — no hardcoded credentials in client JS.
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authEmail || !authPassword) {
@@ -746,35 +801,6 @@ export default function ProfilePage() {
     const cleanEmail = authEmail.trim().toLowerCase();
 
     try {
-      if (cleanEmail === "d.nikolova.haccp@gmail.com" && authPassword === "davida9166") {
-        try {
-          await signInWithEmailAndPassword(auth, cleanEmail, authPassword);
-        } catch (err: any) {
-          if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-             await createUserWithEmailAndPassword(auth, cleanEmail, authPassword);
-             await setDoc(doc(db, "users", cleanEmail), {
-                email: cleanEmail,
-                password: "---",
-                firmName: "БАБХ Спокойствие",
-                eik: "123456789",
-                contact: "д-р Данка Николова",
-                phone: "0888888888",
-                niche: "Консултации",
-                desc: "Администратор на системата",
-                address: "гр. София, ул. БАБХ 1",
-                manager: "д-р Данка Николова",
-                status: "approved",
-                role: "admin",
-                assignedDocs: [],
-                messages: []
-             });
-          } else {
-             alert("Грешка при вход: " + err.message);
-          }
-        }
-        return;
-      }
-
       await signInWithEmailAndPassword(auth, cleanEmail, authPassword);
       const matchedUser = firebaseUsers.find(u => u.email === cleanEmail);
       if (matchedUser) {
@@ -795,10 +821,25 @@ export default function ProfilePage() {
     }
   };
 
+  // Send password reset email to whatever's in the auth email field.
+  const handleForgotPassword = async () => {
+    const cleanEmail = authEmail.trim().toLowerCase();
+    if (!cleanEmail) {
+      alert("Моля въведете имейла си в полето по-горе и натиснете отново „Забравена парола“.");
+      return;
+    }
+    try {
+      await sendPasswordReset(cleanEmail);
+      alert(`Изпратихме линк за смяна на парола на ${cleanEmail}. Проверете пощата си (и Spam папката).`);
+    } catch (err: any) {
+      alert("Не успяхме да изпратим линк: " + (err?.message || "неизвестна грешка"));
+    }
+  };
+
   // Register & Apply handler
   const handleRegisterAndApply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regEmail || !regPassword || !applyFirmName || !applyContact || !applyPhone || !applyDesc) {
+    if (!regEmail || !regPassword || !applyFirmName || !applyContact || !applyPhone || !applyAddress || !applyDesc) {
       alert("Моля, попълнете всички полета с червена звездичка (*).");
       return;
     }
@@ -811,7 +852,6 @@ export default function ProfilePage() {
       await createUserWithEmailAndPassword(auth, regEmail, regPassword);
       const pendingUser: DankaUser = {
         email: regEmail,
-        password: "---",
         firmName: applyFirmName,
         eik: applyEik || "Няма въведен",
         contact: applyContact,
@@ -819,7 +859,7 @@ export default function ProfilePage() {
         sector: applySector,
         niche: applyNiche,
         desc: applyDesc,
-        address: "Не е въведен",
+        address: applyAddress || "Не е въведен",
         manager: applyContact,
         status: "pending",
         role: "user",
@@ -846,35 +886,33 @@ export default function ProfilePage() {
 
   // Logout handler
 
-  // Auto-mark messages as read when viewing chat
+  // Auto-mark messages as read when viewing chat.
+  // NOTE: we intentionally do NOT depend on usersList — that caused an infinite
+  // saveUsers → setUsersList → effect → saveUsers cycle. Instead we run only
+  // when the active chat target changes and write a single user via updateUser.
   useEffect(() => {
-    let changed = false;
-    let newUsers = [...usersList];
+    const targetEmail =
+      userRole === "admin" && activeAdminTab === "messages" ? adminActiveChatEmail :
+      userRole !== "admin" && activeTab === "chat" ? currentUserEmail :
+      "";
+    if (!targetEmail) return;
 
-    if (userRole === "admin" && activeAdminTab === "messages" && adminActiveChatEmail) {
-      const uIndex = newUsers.findIndex(u => u.email === adminActiveChatEmail);
-      if (uIndex !== -1 && newUsers[uIndex].messages?.some((m: any) => m.sender === "user" && !m.isRead)) {
-        newUsers[uIndex] = {
-          ...newUsers[uIndex],
-          messages: newUsers[uIndex].messages.map((m: any) => m.sender === "user" ? { ...m, isRead: true } : m)
-        };
-        changed = true;
-      }
-    } else if (userRole !== "admin" && activeTab === "chat" && currentUserEmail) {
-      const uIndex = newUsers.findIndex(u => u.email === currentUserEmail);
-      if (uIndex !== -1 && newUsers[uIndex].messages?.some((m: any) => m.sender === "admin" && !m.isRead)) {
-        newUsers[uIndex] = {
-          ...newUsers[uIndex],
-          messages: newUsers[uIndex].messages.map((m: any) => m.sender === "admin" ? { ...m, isRead: true } : m)
-        };
-        changed = true;
-      }
-    }
+    const target = usersList.find(u => u.email === targetEmail);
+    if (!target || !target.messages) return;
 
-    if (changed) {
-      saveUsers(newUsers);
-    }
-  }, [usersList, userRole, activeAdminTab, adminActiveChatEmail, activeTab, currentUserEmail]);
+    const incomingSender: "user" | "admin" = userRole === "admin" ? "user" : "admin";
+    const hasUnread = target.messages.some((m: any) => m.sender === incomingSender && !m.isRead);
+    if (!hasUnread) return;
+
+    const updatedMessages = target.messages.map((m: any) =>
+      m.sender === incomingSender ? { ...m, isRead: true } : m
+    );
+    updateUser(target.email, { messages: updatedMessages });
+    setUsersList(prev => prev.map(u =>
+      u.email === target.email ? { ...u, messages: updatedMessages } : u
+    ));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userRole, activeAdminTab, adminActiveChatEmail, activeTab, currentUserEmail]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -914,6 +952,94 @@ export default function ProfilePage() {
     const updatedUsers = usersList.filter(u => u.email.toLowerCase() !== email.toLowerCase());
     saveUsers(updatedUsers);
   };
+
+  // Subscription expiry helpers.
+  const daysUntilExpiry = (expiresAt?: string): number | null => {
+    if (!expiresAt) return null;
+    const exp = new Date(expiresAt + "T23:59:59").getTime();
+    if (Number.isNaN(exp)) return null;
+    return Math.ceil((exp - Date.now()) / (1000 * 60 * 60 * 24));
+  };
+
+  // Admin sets/changes the expiry date for a client.
+  const handleSetExpiresAt = (email: string, expiresAt: string) => {
+    const updatedUsers = usersList.map(u =>
+      u.email.toLowerCase() === email.toLowerCase() ? { ...u, expiresAt } : u
+    );
+    saveUsers(updatedUsers);
+  };
+
+  // Admin broadcasts a single chat message to every approved client.
+  const handleBroadcastMessage = () => {
+    const text = broadcastText.trim();
+    if (!text) {
+      alert("Моля въведете текст за broadcast съобщението.");
+      return;
+    }
+    if (!confirm(`Ще изпратите това съобщение на всички активни клиенти. Продължавате?`)) return;
+    const baseId = "msg_" + Date.now();
+    const sentAt = new Date().toISOString();
+    const updatedUsers = usersList.map((u, idx) => {
+      if (u.role !== "user" || u.status !== "approved") return u;
+      const msg: Message = {
+        id: `${baseId}_${idx}`,
+        sender: "admin",
+        text,
+        sentAt
+      };
+      return { ...u, messages: [...(u.messages || []), msg] };
+    });
+    saveUsers(updatedUsers);
+    setBroadcastText("");
+    const recipients = updatedUsers.filter(u => u.role === "user" && u.status === "approved").length;
+    alert(`Съобщението беше изпратено на ${recipients} клиент${recipients === 1 ? "" : "и"}.`);
+  };
+
+  // Admin export of all clients to CSV (downloads in browser).
+  const handleExportClientsCsv = () => {
+    const cols = ["email", "firmName", "eik", "contact", "phone", "niche", "address", "status", "expiresAt", "assignedCount", "completedCount"];
+    const csvEscape = (raw: any) => {
+      const s = String(raw ?? "");
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = usersList
+      .filter(u => u.role === "user")
+      .map(u => [
+        u.email,
+        u.firmName,
+        u.eik,
+        u.contact,
+        u.phone,
+        u.niche,
+        u.address,
+        u.status,
+        u.expiresAt || "",
+        (u.assignedDocs || []).length,
+        (u.assignedDocs || []).filter(d => d.status === "completed").length
+      ].map(csvEscape).join(","));
+    const csv = "﻿" + cols.join(",") + "\n" + rows.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `danka-clients-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Auto-expire clients whose expiresAt has passed (runs once on admin login).
+  useEffect(() => {
+    if (userRole !== "admin" || usersLoading) return;
+    const toExpire = usersList.filter(u =>
+      u.role === "user" && u.status === "approved" &&
+      u.expiresAt && (daysUntilExpiry(u.expiresAt) ?? 1) < 0
+    );
+    if (toExpire.length === 0) return;
+    toExpire.forEach(u => updateUser(u.email, { status: "expired" }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userRole, usersLoading, usersList.length]);
 
   const handleSaveFirm = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1138,6 +1264,7 @@ export default function ProfilePage() {
 
     const scorePercent = Math.round((correctCount / questions.length) * 100);
 
+    const now = new Date().toISOString();
     const updatedUsers = usersList.map(u => {
       if (u.email.toLowerCase() === currentUserEmail.toLowerCase()) {
         const updatedDocs = u.assignedDocs.map(doc => {
@@ -1145,6 +1272,7 @@ export default function ProfilePage() {
             return {
               ...doc,
               status: "completed" as const,
+              completedAt: now,
               userAnswers: userTestAnswers,
               score: scorePercent
             };
@@ -1160,7 +1288,7 @@ export default function ProfilePage() {
     });
 
     saveUsers(updatedUsers);
-    
+
     alert(`Тестът е решен успешно! Вашият резултат е: ${scorePercent}% (${correctCount}/${questions.length} верни отговора).`);
     setActiveAssignedMaterial(null);
     setUserTestAnswers([]);
@@ -1170,13 +1298,15 @@ export default function ProfilePage() {
   const handleCompleteDocument = (materialId: string) => {
     if (!currentUserEmail) return;
     
+    const now = new Date().toISOString();
     const updatedUsers = usersList.map(u => {
       if (u.email.toLowerCase() === currentUserEmail.toLowerCase()) {
         const updatedDocs = u.assignedDocs.map(doc => {
           if (doc.id === materialId) {
             return {
               ...doc,
-              status: "completed" as const
+              status: "completed" as const,
+              completedAt: now
             };
           }
           return doc;
@@ -1276,20 +1406,25 @@ export default function ProfilePage() {
     handlePrintText(`Одит_${user.firmName}_${auditSelectedDate}`, text);
   };
 
-  // Save current date logbooks
+  // Save current date logbooks to Firestore (single source of truth).
   const handleSaveLogs = () => {
     if (!currentUserEmail) return;
-    const key = `danka_logs_${currentUserEmail.replace("@", "_").replace(".", "_")}_${selectedDate}`;
+    const key = logKeyFor(currentUserEmail, selectedDate);
     const logsData = {
       incoming: logIncoming,
       fridges: logFridges,
       hygiene: logHygiene,
       staff: logStaff,
       thermal: logThermal,
-      fryer: logFryer
+      fryer: logFryer,
+      savedAt: new Date().toISOString()
     };
     setDoc(doc(db, "logs", key), logsData)
-      .then(() => alert(`Ежедневните дневници за дата ${selectedDate} бяха успешно запазени!`))
+      .then(() => {
+        // Drop legacy localStorage copy so it doesn't drift.
+        if (typeof window !== "undefined") localStorage.removeItem(key);
+        alert(`Ежедневните дневници за дата ${selectedDate} бяха успешно запазени!`);
+      })
       .catch((err) => alert("Възникна грешка при запазване: " + err.message));
   };
 
@@ -1674,11 +1809,18 @@ export default function ProfilePage() {
                               className="w-full text-xs px-3.5 py-3 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
                             />
                           </div>
-                          <button 
-                            type="submit" 
+                          <button
+                            type="submit"
                             className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-green font-black text-xs uppercase tracking-wider py-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-brand-gold/20 border-0 hover:scale-[1.01] active:scale-[0.99] duration-150 mt-2"
                           >
                             Влизане в системата
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleForgotPassword}
+                            className="w-full text-center text-[11px] text-white/60 hover:text-brand-gold underline underline-offset-4 transition-colors duration-200 cursor-pointer pt-1"
+                          >
+                            Забравена парола?
                           </button>
                         </form>
                       </div>
@@ -1819,12 +1961,24 @@ export default function ProfilePage() {
                             </div>
 
                             <div className="space-y-1">
-                              <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Опишете дейността си *</label>
-                              <textarea 
+                              <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Адрес на обекта *</label>
+                              <input
+                                type="text"
                                 required
-                                value={applyDesc} 
-                                onChange={(e) => setApplyDesc(e.target.value)} 
-                                placeholder="Опишете накратко обекта: брой места, специфично меню (месо, риба, млечни), капацитет, оборудване..." 
+                                value={applyAddress}
+                                onChange={(e) => setApplyAddress(e.target.value)}
+                                placeholder="гр. София, ул. Витоша 12"
+                                className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Опишете дейността си *</label>
+                              <textarea
+                                required
+                                value={applyDesc}
+                                onChange={(e) => setApplyDesc(e.target.value)}
+                                placeholder="Опишете накратко обекта: брой места, специфично меню (месо, риба, млечни), капацитет, оборудване..."
                                 rows={4}
                                 className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 leading-relaxed resize-none shadow-sm"
                               />
@@ -1929,7 +2083,36 @@ export default function ProfilePage() {
       )}                        {/* 3. LOGGED-IN DASHBOARD */}
       {isLoggedIn && (
         <div className="max-w-7xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
-          
+
+          {/* Subscription expiry warning banner — clients only */}
+          {userRole === "user" && (() => {
+            const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+            const d = daysUntilExpiry(me?.expiresAt);
+            if (d === null || d > 14) return null;
+            const isExpired = d < 0;
+            return (
+              <div className={`mb-6 rounded-2xl border p-4 sm:p-5 flex items-start gap-3 ${isExpired ? "bg-red-50 border-red-300 text-red-900" : "bg-amber-50 border-amber-300 text-amber-900"}`}>
+                <AlertTriangle className={`h-5 w-5 mt-0.5 shrink-0 ${isExpired ? "text-red-600" : "text-amber-600"}`} />
+                <div className="flex-1 text-sm">
+                  <p className="font-bold mb-1">
+                    {isExpired ? "Абонаментът Ви е изтекъл" : d === 0 ? "Абонаментът Ви изтича днес" : `Абонаментът Ви изтича след ${d} дни`}
+                  </p>
+                  <p className="text-xs opacity-80">
+                    {isExpired
+                      ? "Свържете се с д-р Николова, за да възстановите достъпа си до системата."
+                      : `Дата на изтичане: ${me?.expiresAt}. Свържете се с д-р Николова, за да поднови абонамента си.`}
+                  </p>
+                </div>
+                <Link
+                  href="/contact"
+                  className="text-xs font-bold uppercase tracking-wider px-3 py-2 rounded-lg bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Свържи се
+                </Link>
+              </div>
+            );
+          })()}
+
           {/* Main Layout Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
@@ -2167,17 +2350,52 @@ export default function ProfilePage() {
                             </div>
                           </div>
 
-                          {/* Search Input */}
-                          <div className="relative w-full sm:w-64 font-sans">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark/40" />
-                            <input 
-                              type="text" 
-                              value={usersSearchQuery}
-                              onChange={(e) => setUsersSearchQuery(e.target.value)}
-                              placeholder="Търси фирма или имейл..."
-                              className="w-full text-xs pl-10 pr-4 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-brand-light/40"
-                            />
+                          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                            {/* Search Input */}
+                            <div className="relative w-full sm:w-64 font-sans">
+                              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark/40" />
+                              <input
+                                type="text"
+                                value={usersSearchQuery}
+                                onChange={(e) => setUsersSearchQuery(e.target.value)}
+                                placeholder="Търси фирма или имейл..."
+                                className="w-full text-xs pl-10 pr-4 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-brand-light/40"
+                              />
+                            </div>
+                            {/* CSV Export */}
+                            <button
+                              type="button"
+                              onClick={handleExportClientsCsv}
+                              className="inline-flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer whitespace-nowrap"
+                              title="Изтегли CSV с всички клиенти"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              Експорт CSV
+                            </button>
                           </div>
+                        </div>
+
+                        {/* Broadcast bar */}
+                        <div className="bg-brand-gold/5 border border-brand-gold/30 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-brand-green uppercase tracking-wider whitespace-nowrap">
+                            <Send className="h-3.5 w-3.5 text-brand-gold" />
+                            Изпрати до всички:
+                          </div>
+                          <input
+                            type="text"
+                            value={broadcastText}
+                            onChange={(e) => setBroadcastText(e.target.value)}
+                            placeholder="напр. Напомняне: проверете дневниците си преди петък"
+                            className="flex-1 text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleBroadcastMessage}
+                            disabled={!broadcastText.trim()}
+                            className="text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-brand-gold text-brand-dark hover:bg-brand-gold-light disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer whitespace-nowrap"
+                          >
+                            Изпрати
+                          </button>
                         </div>
 
                         {filteredUsers.length === 0 ? (
@@ -2190,6 +2408,7 @@ export default function ProfilePage() {
                                   <th className="border border-brand-green/10 p-3">Фирма / Обект</th>
                                   <th className="border border-brand-green/10 p-3">Контакти</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Статус Абонамент</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Изтича на</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Промяна Абонамент</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Изтриване</th>
                                 </tr>
@@ -2213,7 +2432,33 @@ export default function ProfilePage() {
                                       </span>
                                     </td>
                                     <td className="border border-brand-green/10 p-3 text-center">
-                                      <button 
+                                      {(() => {
+                                        const d = daysUntilExpiry(u.expiresAt);
+                                        const colour =
+                                          d === null ? "text-brand-dark/40" :
+                                          d < 0 ? "text-red-600 font-bold" :
+                                          d <= 14 ? "text-amber-600 font-bold" :
+                                          "text-brand-dark/70";
+                                        return (
+                                          <div className="flex flex-col items-center gap-1">
+                                            <input
+                                              type="date"
+                                              value={u.expiresAt || ""}
+                                              onChange={(e) => handleSetExpiresAt(u.email, e.target.value)}
+                                              className="text-[10px] font-mono px-2 py-1 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer"
+                                            />
+                                            <span className={`text-[9px] ${colour}`}>
+                                              {d === null ? "— не е зададено —" :
+                                               d < 0 ? `Изтекъл преди ${-d} дни` :
+                                               d === 0 ? "Изтича днес" :
+                                               `След ${d} дни`}
+                                            </span>
+                                          </div>
+                                        );
+                                      })()}
+                                    </td>
+                                    <td className="border border-brand-green/10 p-3 text-center">
+                                      <button
                                         onClick={() => handleToggleUserStatus(u.email, u.status)}
                                         className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border ${u.status === "approved" ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"}`}
                                       >

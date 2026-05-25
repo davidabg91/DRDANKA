@@ -1,0 +1,76 @@
+rules_version = '2';
+
+// Firestore Security Rules for d-r-danka-nikolova HACCP system.
+//
+// Deploy with:  firebase deploy --only firestore:rules
+//
+// Identity model:
+//   - Firebase Auth provides request.auth.token.email (verified email).
+//   - The single admin is `d.nikolova.haccp@gmail.com`. Everyone else is a `user`.
+//   - User documents live under /users/{email}; daily HACCP logs under /logs/{key}.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function authEmail() {
+      return request.auth.token.email;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && authEmail() == "d.nikolova.haccp@gmail.com";
+    }
+
+    // /users/{email}
+    //   - Admin: full read/write on every doc.
+    //   - User: read & write own doc only.
+    //   - On create: doc id MUST equal the caller's email (no impersonation).
+    //   - On write: a non-admin cannot escalate their role to "admin".
+    match /users/{email} {
+      allow read: if isAdmin() || (isSignedIn() && authEmail() == email);
+
+      allow create: if isAdmin() || (
+        isSignedIn() &&
+        authEmail() == email &&
+        request.resource.data.role == "user"
+      );
+
+      allow update: if isAdmin() || (
+        isSignedIn() &&
+        authEmail() == email &&
+        // user cannot change their own role or status
+        request.resource.data.role == resource.data.role &&
+        request.resource.data.status == resource.data.status
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // /logs/{key} — key format: danka_logs_<emailWithDots>_<YYYY-MM-DD>
+    //   - Admin reads/writes everything (audit).
+    //   - Authenticated user reads/writes own logs where key starts with their email.
+    match /logs/{key} {
+      function ownsKey() {
+        // sanitize email same way client does: '@'→'_' and '.'→'_'
+        return key.matches("^danka_logs_" + authEmail().replace("@","_").replace(".","_") + "_.*$");
+      }
+
+      allow read, write: if isAdmin() || (isSignedIn() && ownsKey());
+    }
+
+    // Audit trail of admin actions: append-only, admin-only.
+    match /admin_audit/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

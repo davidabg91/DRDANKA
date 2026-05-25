@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from './firebase';
-import { 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
   User as FirebaseUser
 } from 'firebase/auth';
 import { 
@@ -67,12 +68,19 @@ export function useDankaUsers() {
   const setFullUser = async (email: string, data: DankaUser) => {
     try {
       const userRef = doc(db, "users", email);
-      await setDoc(userRef, data);
+      // SECURITY: never persist plaintext password — Firebase Auth handles it.
+      const { password: _omitPassword, ...safeData } = data;
+      await setDoc(userRef, safeData);
     } catch (error: any) {
       console.error("Error setting user:", error);
       alert("Грешка при запис в базата данни (Firebase): " + error.message + "\n\nМоля, проверете вашите Firestore Security Rules в Firebase Console!");
     }
   };
 
-  return { users, loading, updateUser, setFullUser };
+  // Send a password reset email through Firebase Auth.
+  const sendPasswordReset = async (email: string) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
+  return { users, loading, updateUser, setFullUser, sendPasswordReset };
 }
