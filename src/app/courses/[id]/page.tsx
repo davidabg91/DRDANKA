@@ -164,6 +164,7 @@ export default function CourseDetailPage() {
           address: "",
           manager: "",
           status: "approved",
+          subscriptionStatus: "none",
           role: "user",
           assignedDocs: [],
           messages: [],

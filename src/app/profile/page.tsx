@@ -86,6 +86,16 @@ export interface DankaUser {
   address: string;
   manager: string;
   status: 'pending' | 'approved' | 'expired';
+  /**
+   * Business subscription status. Separate from `status` (which gates login).
+   *   - 'none'     — bookstore-only buyer, has account but no subscription
+   *   - 'pending'  — applied for subscription, awaiting admin approval
+   *   - 'approved' — full subscriber, has access to logbooks/HACCP/chat/etc.
+   *   - 'expired'  — subscription lapsed
+   * When the field is missing on legacy docs, treat as 'approved' so existing
+   * clients keep their access.
+   */
+  subscriptionStatus?: 'none' | 'pending' | 'approved' | 'expired';
   /** ISO date (YYYY-MM-DD) when the subscription expires. Admin-managed. */
   expiresAt?: string;
   role: 'user' | 'admin';
@@ -388,6 +398,9 @@ export default function ProfilePage() {
   const [applyDesc, setApplyDesc] = useState("");
   const [applyAddress, setApplyAddress] = useState("");
   const [applySuccess, setApplySuccess] = useState(false);
+
+  // Logged-in apply-for-subscription modal (bookstore-only buyers wanting full plan)
+  const [subApplyOpen, setSubApplyOpen] = useState(false);
 
   // Approval flow states
   const [isPendingApproval, setIsPendingApproval] = useState(false);
@@ -910,11 +923,11 @@ export default function ProfilePage() {
     setActiveTab("logs");
   };
 
-  // Admin approves candidate
+  // Admin approves candidate (grants full business subscription)
   const handleApproveCandidate = (email: string) => {
     const updatedUsers = usersList.map(u => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
-        return { ...u, status: "approved" as const };
+        return { ...u, status: "approved" as const, subscriptionStatus: "approved" as const };
       }
       return u;
     });
@@ -1016,6 +1029,18 @@ export default function ProfilePage() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+
+  // Non-subscribed buyers land on 'Моите курсове' tab — they can't see anything else anyway.
+  useEffect(() => {
+    if (userRole !== "user" || !currentUserEmail) return;
+    const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+    if (!me) return;
+    const subStatus = me.subscriptionStatus ?? "approved";
+    if (subStatus !== "approved" && activeTab !== "courses") {
+      setActiveTab("courses");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userRole, currentUserEmail, usersList.length]);
 
   // Auto-expire clients whose expiresAt has passed (runs once on admin login).
   useEffect(() => {
@@ -1194,6 +1219,43 @@ export default function ProfilePage() {
     }
     
     alert("Фирмените настройки бяха успешно запазени! Примерните данни в дневниците бяха обновени спрямо новия сектор.");
+  };
+
+  /**
+   * Logged-in user (e.g. bookstore-only buyer) applies for a full business
+   * subscription. Marks subscriptionStatus='pending'. Admin sees them in the
+   * Candidates tab and can approve to set subscriptionStatus='approved'.
+   */
+  const handleApplyForSubscription = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUserEmail) return;
+    if (!applyFirmName.trim() || !applyContact.trim() || !applyPhone.trim() || !applyAddress.trim() || !applyDesc.trim()) {
+      alert("Моля попълнете всички полета с * за обекта.");
+      return;
+    }
+    const ok = await updateUser(currentUserEmail, {
+      firmName: applyFirmName.trim(),
+      eik: applyEik.trim() || "Няма въведен",
+      contact: applyContact.trim(),
+      phone: applyPhone.trim(),
+      sector: applySector,
+      niche: applyNiche,
+      desc: applyDesc.trim(),
+      address: applyAddress.trim(),
+      manager: applyContact.trim(),
+      subscriptionStatus: "pending",
+    });
+    if (ok) {
+      setSubApplyOpen(false);
+      // Reset form
+      setApplyFirmName("");
+      setApplyEik("");
+      setApplyContact("");
+      setApplyPhone("");
+      setApplyAddress("");
+      setApplyDesc("");
+      alert("Заявлението е изпратено! Д-р Николова ще го прегледа и ще получите уведомление след одобрение.");
+    }
   };
 
   // Admin assigns document
@@ -2302,30 +2364,52 @@ export default function ProfilePage() {
                         Одит на Дневници
                       </button>
                     </>
-                  ) : (
-                    <>
-                      <button 
-                        onClick={() => setActiveTab("logs")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "logs" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
-                      >
-                        <Calendar className={`h-4 w-4 ${activeTab === "logs" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                        БАБХ Дневници
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab("haccp")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "haccp" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
-                      >
-                        <FileText className={`h-4 w-4 ${activeTab === "haccp" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                        НАССР Документи
-                      </button>
-                      {(() => {
-                        const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
-                        const pendingCount = (me?.assignedDocs || []).filter(d => d.status === "pending").length;
-                        return (
-                          <button
-                            onClick={() => setActiveTab("assigned")}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "assigned" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
-                          >
+                  ) : (() => {
+                    const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+                    const subStatus = me?.subscriptionStatus ?? "approved"; // legacy default
+                    const isSubscribed = subStatus === "approved";
+                    const pendingCount = (me?.assignedDocs || []).filter(d => d.status === "pending").length;
+
+                    const lockedClick = () => setSubApplyOpen(true);
+                    const lockedStyle = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-not-allowed text-left border-0 w-full bg-transparent text-brand-dark/35 hover:bg-brand-dark/5";
+                    const activeStyle = (active: boolean) =>
+                      `flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${active ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`;
+
+                    const LockBadge = () => <Lock className="h-3 w-3 text-brand-dark/30 ml-auto" />;
+
+                    return (
+                      <>
+                        {/* Premium tab: БАБХ Дневници */}
+                        {isSubscribed ? (
+                          <button onClick={() => setActiveTab("logs")} className={activeStyle(activeTab === "logs")}>
+                            <Calendar className={`h-4 w-4 ${activeTab === "logs" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            БАБХ Дневници
+                          </button>
+                        ) : (
+                          <button onClick={lockedClick} className={lockedStyle} title="Изисква абонамент">
+                            <Calendar className="h-4 w-4" />
+                            <span className="flex-1">БАБХ Дневници</span>
+                            <LockBadge />
+                          </button>
+                        )}
+
+                        {/* Premium tab: НАССР Документи */}
+                        {isSubscribed ? (
+                          <button onClick={() => setActiveTab("haccp")} className={activeStyle(activeTab === "haccp")}>
+                            <FileText className={`h-4 w-4 ${activeTab === "haccp" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            НАССР Документи
+                          </button>
+                        ) : (
+                          <button onClick={lockedClick} className={lockedStyle} title="Изисква абонамент">
+                            <FileText className="h-4 w-4" />
+                            <span className="flex-1">НАССР Документи</span>
+                            <LockBadge />
+                          </button>
+                        )}
+
+                        {/* Premium tab: Документи & Тестове */}
+                        {isSubscribed ? (
+                          <button onClick={() => setActiveTab("assigned")} className={activeStyle(activeTab === "assigned")}>
                             <span className="relative inline-flex">
                               <FileCheck className={`h-4 w-4 ${activeTab === "assigned" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                               {pendingCount > 0 && (
@@ -2341,41 +2425,67 @@ export default function ProfilePage() {
                               </span>
                             )}
                           </button>
-                        );
-                      })()}
-                      <button 
-                        onClick={() => setActiveTab("courses")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "courses" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
-                      >
-                        <BookOpen className={`h-4 w-4 ${activeTab === "courses" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                        Моите Обучения
-                      </button>
-                      <button 
-                        onClick={handleOpenUserChat}
-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "chat" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
-                      >
-                        <MessageSquare className={`h-4 w-4 ${activeTab === "chat" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                        Чат с Администратор
-                        {hasUnreadUserMessages && (
-                          <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
+                        ) : (
+                          <button onClick={lockedClick} className={lockedStyle} title="Изисква абонамент">
+                            <FileCheck className="h-4 w-4" />
+                            <span className="flex-1">Документи &amp; Тестове</span>
+                            <LockBadge />
+                          </button>
                         )}
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab("tools")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "tools" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
-                      >
-                        <Activity className={`h-4 w-4 ${activeTab === "tools" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                        Инструменти
-                      </button>
-                      <button 
-                        onClick={() => setActiveTab("settings")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeTab === "settings" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
-                      >
-                        <Settings className={`h-4 w-4 ${activeTab === "settings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                        Фирма и Профил
-                      </button>
-                    </>
-                  )}
+
+                        {/* ALWAYS OPEN: Моите курсове (paid content) */}
+                        <button onClick={() => setActiveTab("courses")} className={activeStyle(activeTab === "courses")}>
+                          <BookOpen className={`h-4 w-4 ${activeTab === "courses" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                          Моите Обучения
+                        </button>
+
+                        {/* Premium tab: Чат */}
+                        {isSubscribed ? (
+                          <button onClick={handleOpenUserChat} className={`relative ${activeStyle(activeTab === "chat")}`}>
+                            <MessageSquare className={`h-4 w-4 ${activeTab === "chat" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            Чат с Администратор
+                            {hasUnreadUserMessages && (
+                              <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
+                            )}
+                          </button>
+                        ) : (
+                          <button onClick={lockedClick} className={lockedStyle} title="Изисква абонамент">
+                            <MessageSquare className="h-4 w-4" />
+                            <span className="flex-1">Чат с Администратор</span>
+                            <LockBadge />
+                          </button>
+                        )}
+
+                        {/* Premium tab: Инструменти */}
+                        {isSubscribed ? (
+                          <button onClick={() => setActiveTab("tools")} className={activeStyle(activeTab === "tools")}>
+                            <Activity className={`h-4 w-4 ${activeTab === "tools" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            Инструменти
+                          </button>
+                        ) : (
+                          <button onClick={lockedClick} className={lockedStyle} title="Изисква абонамент">
+                            <Activity className="h-4 w-4" />
+                            <span className="flex-1">Инструменти</span>
+                            <LockBadge />
+                          </button>
+                        )}
+
+                        {/* Premium tab: Фирма и Профил */}
+                        {isSubscribed ? (
+                          <button onClick={() => setActiveTab("settings")} className={activeStyle(activeTab === "settings")}>
+                            <Settings className={`h-4 w-4 ${activeTab === "settings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            Фирма и Профил
+                          </button>
+                        ) : (
+                          <button onClick={lockedClick} className={lockedStyle} title="Изисква абонамент">
+                            <Settings className="h-4 w-4" />
+                            <span className="flex-1">Фирма и Профил</span>
+                            <LockBadge />
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </nav>
               </div>
 
@@ -2397,7 +2507,14 @@ export default function ProfilePage() {
                 <>
                   {/* ADMIN TAB 1: CANDIDATES */}
                   {activeAdminTab === "candidates" && (() => {
-                    const pendingCandidates = usersList.filter(u => u.status === "pending" && u.role === "user");
+                    // Include both legacy 'pending' status applicants AND bookstore
+                    // buyers who later applied for subscription (subscriptionStatus = "pending").
+                    const pendingCandidates = usersList.filter(u =>
+                      u.role === "user" && (
+                        u.status === "pending" ||
+                        u.subscriptionStatus === "pending"
+                      )
+                    );
                     return (
                       <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
                         <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
@@ -3394,6 +3511,55 @@ export default function ProfilePage() {
                 <>
                   {(() => {
                     const currentUser = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+                    const subStatus = currentUser?.subscriptionStatus ?? "approved"; // legacy default = approved
+                    const isSubscribed = subStatus === "approved";
+
+                    // Bookstore-only buyer / pending applicant: lock everything except "courses".
+                    if (!isSubscribed && activeTab !== "courses") {
+                      return (
+                        <div className="bg-white border border-brand-green/5 p-8 sm:p-10 rounded-2xl shadow-md animate-fade-in space-y-6 max-w-2xl mx-auto text-center">
+                          <div className="inline-flex p-4 bg-brand-gold/10 text-brand-gold rounded-2xl mx-auto">
+                            <Lock className="h-8 w-8" />
+                          </div>
+                          <div className="space-y-2">
+                            <h2 className="font-serif text-2xl font-bold text-brand-green">Заключена секция</h2>
+                            <p className="text-sm text-brand-dark/70 leading-relaxed">
+                              {subStatus === "pending"
+                                ? `Вашето заявление за абонамент е получено и се преглежда от д-р Николова. След одобрение всички функции на портала ще се отключат автоматично.`
+                                : `Тази секция е достъпна само за клиенти с активен абонамент „БАБХ Спокойствие". Закупените от Вас курсове можете да четете в таб „Моите Обучения".`}
+                            </p>
+                          </div>
+                          <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 text-left text-xs text-brand-dark/70 space-y-1.5">
+                            <p className="font-bold text-brand-green">С абонамента получавате:</p>
+                            <p>✓ Електронни дневници за БАБХ самоконтрол</p>
+                            <p>✓ Готови НАССР документи с Ваши данни</p>
+                            <p>✓ Документи и тестове, изпратени персонално</p>
+                            <p>✓ Директен чат с д-р Николова</p>
+                            <p>✓ Инструменти (одит, срокове, етикети)</p>
+                          </div>
+                          {subStatus === "pending" ? (
+                            <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl px-4 py-3">
+                              ⏳ Заявлението Ви се обработва — обикновено отнема до 24 часа.
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setSubApplyOpen(true)}
+                              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-sm uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md shadow-brand-gold/20"
+                            >
+                              Кандидатствай за абонамент
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setActiveTab("courses")}
+                            className="block mx-auto text-xs text-brand-dark/50 hover:text-brand-gold underline underline-offset-4 cursor-pointer"
+                          >
+                            ← Към моите курсове
+                          </button>
+                        </div>
+                      );
+                    }
+
                     return (
                       <>
                         {/* TAB 1: DAILY LOGBOOKS (ДНЕВНИЦИ) */}
@@ -5080,6 +5246,94 @@ export default function ProfilePage() {
                 )}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ─────────── SUBSCRIPTION APPLY MODAL (bookstore buyer → applies for full plan) ─────────── */}
+      {subApplyOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl my-8 overflow-hidden">
+            <div className="bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/10 rounded-xl">
+                  <Building className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Абонамент</div>
+                  <div className="font-serif text-lg font-bold">Кандидатствай за БАБХ Спокойствие</div>
+                </div>
+              </div>
+              <button onClick={() => setSubApplyOpen(false)} className="text-white/60 hover:text-white p-1 rounded-full cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleApplyForSubscription} className="p-6 space-y-4">
+              <p className="text-xs text-brand-dark/60 leading-relaxed">
+                Попълнете данните за обекта си. Д-р Николова ще прегледа лично заявлението — обикновено до 24 часа.
+                След одобрение всички функции на портала се отключват.
+              </p>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Име на Обект / Фирма *</label>
+                <input type="text" required value={applyFirmName} onChange={(e) => setApplyFirmName(e.target.value)} placeholder="напр. Ресторант Витоша" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">ЕИК / Булстат</label>
+                  <input type="text" value={applyEik} onChange={(e) => setApplyEik(e.target.value)} placeholder="207654321" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Сектор</label>
+                  <select
+                    value={applySector}
+                    onChange={(e) => { setApplySector(e.target.value); setApplyNiche(BUSINESS_CATEGORIES[e.target.value][0]); }}
+                    className="w-full text-sm px-3 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer"
+                  >
+                    {Object.keys(BUSINESS_CATEGORIES).map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Категория обект</label>
+                <select value={applyNiche} onChange={(e) => setApplyNiche(e.target.value)} className="w-full text-sm px-3 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer">
+                  {BUSINESS_CATEGORIES[applySector]?.map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Лице за контакт *</label>
+                  <input type="text" required value={applyContact} onChange={(e) => setApplyContact(e.target.value)} placeholder="Иван Петров" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Телефон *</label>
+                  <input type="tel" required value={applyPhone} onChange={(e) => setApplyPhone(e.target.value)} placeholder="0888123456" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Адрес на обекта *</label>
+                <input type="text" required value={applyAddress} onChange={(e) => setApplyAddress(e.target.value)} placeholder="гр. София, ул. Витоша 12" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Опишете дейността *</label>
+                <textarea required value={applyDesc} onChange={(e) => setApplyDesc(e.target.value)} rows={3} placeholder="Брой места, меню, оборудване…" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" />
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button type="button" onClick={() => setSubApplyOpen(false)} className="flex-1 px-5 py-3 rounded-full border border-brand-green/20 text-brand-green text-xs font-bold uppercase tracking-wider hover:bg-brand-green/5 transition-colors cursor-pointer">
+                  Отказ
+                </button>
+                <button type="submit" className="flex-1 px-5 py-3 rounded-full bg-brand-gold text-brand-dark text-xs font-bold uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md">
+                  Изпрати заявление
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

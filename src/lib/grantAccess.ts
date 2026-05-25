@@ -88,6 +88,7 @@ export async function grantAccess(input: {
       address: "",
       manager: "",
       status: "approved",
+      subscriptionStatus: "none",
       role: "user",
       assignedDocs: [],
       messages: [],
