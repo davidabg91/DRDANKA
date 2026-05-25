@@ -65,7 +65,7 @@ export default function BookstorePage() {
                   <div className="flex items-end justify-between pt-3 border-t border-brand-green/5">
                     <div>
                       <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
-                      <span className="font-serif text-2xl font-bold text-brand-gold">{c.priceBgn.toFixed(2)}<span className="text-xs text-brand-dark/50 font-sans ml-1">лв.</span></span>
+                      <span className="font-serif text-2xl font-bold text-brand-gold">{c.priceEur.toFixed(2)}<span className="text-xs text-brand-dark/50 font-sans ml-1">€</span></span>
                     </div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-brand-green group-hover:text-brand-gold transition-colors">
                       Виж →

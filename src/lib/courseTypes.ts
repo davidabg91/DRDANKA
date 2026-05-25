@@ -14,8 +14,8 @@ export interface Course {
   description: string;
   /** Optional long markdown-like description for the detail page. */
   longDescription?: string;
-  /** Price in Bulgarian leva (BGN). Stored as a number, e.g. 49.90. */
-  priceBgn: number;
+  /** Price in EUR. Stored as a number, e.g. 24.90. */
+  priceEur: number;
   /** Optional cover image URL (public). */
   coverImageUrl?: string;
   /** Storage path of the PDF, e.g. "courses/<id>/file.pdf". */
@@ -37,7 +37,7 @@ export interface Purchase {
   buyerEmail: string;
   /** Stripe Checkout Session id. Doubles as idempotency key. */
   stripeSessionId: string;
-  amountPaidBgn: number;
+  amountPaidEur: number;
   status: PurchaseStatus;
   paidAt?: string;
   createdAt: string;

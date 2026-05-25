@@ -16,7 +16,7 @@ export async function grantAccess(input: {
   courseId: string;
   buyerEmail: string;
   stripeSessionId: string;
-  amountPaidBgn: number;
+  amountPaidEur: number;
 }): Promise<{ purchaseId: string; alreadyGranted: boolean; signInLink?: string }> {
   const email = input.buyerEmail.trim().toLowerCase();
   const purchaseId = input.stripeSessionId;
@@ -41,7 +41,7 @@ export async function grantAccess(input: {
     courseId: input.courseId,
     buyerEmail: email,
     stripeSessionId: input.stripeSessionId,
-    amountPaidBgn: input.amountPaidBgn,
+    amountPaidEur: input.amountPaidEur,
     status: "paid",
     paidAt: now,
     createdAt: now,

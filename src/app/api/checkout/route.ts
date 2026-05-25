@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: "bgn",
-            unit_amount: Math.round(course.priceBgn * 100),
+            currency: "eur",
+            unit_amount: Math.round(course.priceEur * 100),
             product_data: {
               name: course.title,
               description: course.description.slice(0, 250),

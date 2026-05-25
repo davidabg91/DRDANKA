@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       courseId,
       buyerEmail,
       stripeSessionId: session.id,
-      amountPaidBgn: (session.amount_total || 0) / 100,
+      amountPaidEur: (session.amount_total || 0) / 100,
     });
 
     return NextResponse.json({

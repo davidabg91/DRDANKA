@@ -1083,7 +1083,7 @@ export default function ProfilePage() {
         title: courseDraftTitle.trim(),
         description: courseDraftDesc.trim(),
         longDescription: courseDraftLongDesc.trim() || undefined,
-        priceBgn: Math.round(priceNum * 100) / 100,
+        priceEur: Math.round(priceNum * 100) / 100,
         coverImageUrl: coverImageUrl || undefined,
         filePath: pdfPath,
         fileSizeMb: Math.round((courseDraftPdf.size / (1024 * 1024)) * 100) / 100,
@@ -2879,7 +2879,7 @@ export default function ProfilePage() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <input type="text" placeholder="Заглавие" value={courseDraftTitle} onChange={(e) => setCourseDraftTitle(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
-                          <input type="number" step="0.01" min="0" placeholder="Цена в лв." value={courseDraftPrice} onChange={(e) => setCourseDraftPrice(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required />
+                          <input type="number" step="0.01" min="0" placeholder="Цена в EUR (€)" value={courseDraftPrice} onChange={(e) => setCourseDraftPrice(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required />
                         </div>
                         <input type="text" placeholder="Кратко описание (показва се в каталога)" value={courseDraftDesc} onChange={(e) => setCourseDraftDesc(e.target.value)} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
                         <textarea placeholder="Дълго описание (по желание, показва се на страницата на курса)" value={courseDraftLongDesc} onChange={(e) => setCourseDraftLongDesc(e.target.value)} rows={3} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" />
@@ -2954,7 +2954,7 @@ export default function ProfilePage() {
                                         <div className="text-[10px] text-brand-dark/50">{c.description}</div>
                                       </td>
                                       <td className="border border-brand-green/10 p-3 text-center font-mono text-[10px]">{c.fileSizeMb} MB</td>
-                                      <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{c.priceBgn.toFixed(2)} лв.</td>
+                                      <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{c.priceEur.toFixed(2)} €</td>
                                       <td className="border border-brand-green/10 p-3 text-center font-mono">{buyersCount}</td>
                                       <td className="border border-brand-green/10 p-3 text-center">
                                         <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${c.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>

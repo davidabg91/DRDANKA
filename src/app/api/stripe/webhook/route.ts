@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const session = event.data.object as Stripe.Checkout.Session;
   const courseId = session.metadata?.courseId;
   const buyerEmail = (session.customer_email || session.metadata?.buyerEmail || "").trim().toLowerCase();
-  const amountPaidBgn = (session.amount_total || 0) / 100;
+  const amountPaidEur = (session.amount_total || 0) / 100;
 
   if (!courseId || !buyerEmail) {
     console.error("Webhook missing courseId/email on session", session.id);
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       courseId,
       buyerEmail,
       stripeSessionId: session.id,
-      amountPaidBgn,
+      amountPaidEur,
     });
     return NextResponse.json({ ok: true });
   } catch (err: any) {

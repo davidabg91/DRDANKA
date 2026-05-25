@@ -114,7 +114,7 @@ export default function CourseDetailPage() {
               <div className="flex items-end justify-between">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
-                  <span className="font-serif text-4xl font-bold text-brand-gold">{course.priceBgn.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">лв.</span></span>
+                  <span className="font-serif text-4xl font-bold text-brand-gold">{course.priceEur.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
                 </div>
                 <span className="text-[10px] text-brand-dark/40 font-mono">{course.fileSizeMb} MB · PDF</span>
               </div>
