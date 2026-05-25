@@ -33,6 +33,7 @@ import {
   Sparkles,
   ChevronRight,
   ShieldAlert,
+  ShieldCheck,
   MessageSquare,
   Send,
   Users,

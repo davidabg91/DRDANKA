@@ -3,12 +3,15 @@ rules_version = '2';
 // Firebase Storage Rules for the digital bookstore.
 //
 // Layout:
-//   /courses/{courseId}/file.pdf   — protected PDF (never served directly)
-//   /courses/{courseId}/cover.jpg  — public cover art for the catalog
+//   /courses/{courseId}/file.pdf      — protected PDF (never served directly)
+//   /courses/{courseId}/cover.{ext}   — public cover art (jpg/png/webp/...)
 //
 // The PDF is sealed: no client can read it directly. All authorized reads go
 // through /api/courses/{id}/url which uses Firebase Admin SDK to issue a
 // short-lived signed URL after verifying the caller owns the course.
+//
+// Note: Storage Rules don't allow segment-prefix wildcards like "cover.{ext}",
+// so we match the whole filename and gate behavior by filename pattern.
 
 service firebase.storage {
   match /b/{bucket}/o {
@@ -18,25 +21,25 @@ service firebase.storage {
         && request.auth.token.email == "d.nikolova.haccp@gmail.com";
     }
 
-    // Public catalog cover images.
-    match /courses/{courseId}/cover.{ext} {
-      allow read: if true;
-      allow write: if isAdmin()
-        && request.resource.size < 5 * 1024 * 1024              // ≤ 5 MB
-        && request.resource.contentType.matches('image/.*');
+    // Files inside a course folder.
+    match /courses/{courseId}/{fileName} {
+      // Public read ONLY for cover images (any extension). PDF read is denied
+      // by default — no allow statement here matches "file.pdf" for read.
+      allow read: if fileName.matches('^cover\\..+');
+
+      // Admin can upload either the protected PDF or the public cover image,
+      // with separate size/content-type limits.
+      allow write: if isAdmin() && (
+        (fileName == 'file.pdf'
+          && request.resource.size < 200 * 1024 * 1024
+          && request.resource.contentType == 'application/pdf')
+        ||
+        (fileName.matches('^cover\\..+')
+          && request.resource.size < 5 * 1024 * 1024
+          && request.resource.contentType.matches('image/.*'))
+      );
     }
 
-    // Course PDF — direct read FORBIDDEN. Admin can upload.
-    match /courses/{courseId}/file.pdf {
-      allow read: if false;
-      allow write: if isAdmin()
-        && request.resource.size < 200 * 1024 * 1024            // ≤ 200 MB
-        && request.resource.contentType == 'application/pdf';
-    }
-
-    // Default deny.
-    match /{path=**} {
-      allow read, write: if false;
-    }
+    // Everything else is denied by default (no allow rule = no access).
   }
 }
