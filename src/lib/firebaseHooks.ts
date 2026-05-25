@@ -90,21 +90,34 @@ export function useDankaUsers() {
     };
   }, []);
 
-  const updateUser = async (email: string, data: Partial<DankaUser>) => {
+  // Returns true if the write succeeded, false otherwise. Caller can show
+  // a visible error message rather than silently swallowing failures.
+  const updateUser = async (email: string, data: Partial<DankaUser>): Promise<boolean> => {
+    const docId = email.trim().toLowerCase();
     try {
-      const userRef = doc(db, "users", email);
+      const userRef = doc(db, "users", docId);
       await updateDoc(userRef, data);
-    } catch (error) {
-      console.error("Error updating user:", error);
+      return true;
+    } catch (error: any) {
+      console.error("Error updating user:", docId, error);
+      if (typeof window !== "undefined") {
+        alert(
+          `Грешка при запис в потребителския профил (${docId}):\n` +
+          `${error?.code || ""} ${error?.message || error}`
+        );
+      }
+      return false;
     }
   };
 
   const setFullUser = async (email: string, data: DankaUser) => {
+    const docId = email.trim().toLowerCase();
     try {
-      const userRef = doc(db, "users", email);
+      const userRef = doc(db, "users", docId);
       // SECURITY: never persist plaintext password — Firebase Auth handles it.
       const { password: _omitPassword, ...safeData } = data;
-      await setDoc(userRef, safeData);
+      // Also store email in lowercase form to match the doc id.
+      await setDoc(userRef, { ...safeData, email: docId });
     } catch (error: any) {
       console.error("Error setting user:", error);
       alert("Грешка при запис в базата данни (Firebase): " + error.message + "\n\nМоля, проверете вашите Firestore Security Rules в Firebase Console!");
