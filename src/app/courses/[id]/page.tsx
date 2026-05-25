@@ -127,7 +127,17 @@ export default function CourseDetailPage() {
         await createUserWithEmailAndPassword(auth, email, testPassword);
       } catch (err: any) {
         if (err?.code === "auth/email-already-in-use") {
-          await signInWithEmailAndPassword(auth, email, testPassword);
+          try {
+            await signInWithEmailAndPassword(auth, email, testPassword);
+          } catch (signinErr: any) {
+            if (signinErr?.code === "auth/invalid-credential" || signinErr?.code === "auth/wrong-password") {
+              throw new Error(
+                `За email ${email} вече има акаунт от предишен опит, но въведената парола е различна. ` +
+                `Използвайте оригиналната парола или опитайте с друг email адрес (или нулирайте паролата от /profile → „Забравена парола").`
+              );
+            }
+            throw signinErr;
+          }
         } else {
           throw err;
         }
