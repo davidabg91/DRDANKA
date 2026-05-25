@@ -9,7 +9,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { ref as storageRef, getDownloadURL } from "firebase/storage";
+import { ref as storageRef, getBlob } from "firebase/storage";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock } from "lucide-react";
 
 // Load the worker from CDN matched to the exact version react-pdf is using.
@@ -29,7 +29,7 @@ export default function CourseViewerPage() {
   const router = useRouter();
   const courseId = params?.id;
 
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfFile, setPdfFile] = useState<Blob | null>(null);
   const [email, setEmail] = useState<string>("");
   const [authReady, setAuthReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export default function CourseViewerPage() {
     const unsub = onAuthStateChanged(auth, async (user) => {
       setAuthReady(true);
       if (!user || !user.email) {
-        setPdfUrl(null);
+        setPdfFile(null);
         return;
       }
       setEmail(user.email);
@@ -56,10 +56,12 @@ export default function CourseViewerPage() {
           throw new Error("Курсът не съществува");
         }
         const courseData = courseSnap.data() as { filePath: string };
-        // 2. Ask Storage for a download URL. Storage rules deny this unless the
-        //    caller is admin OR has purchasedCourseIds containing this courseId.
-        const url = await getDownloadURL(storageRef(storage, courseData.filePath));
-        setPdfUrl(url);
+        // 2. Download the PDF as a Blob through the Firebase SDK. Storage rules
+        //    deny this unless the caller is admin OR has purchasedCourseIds
+        //    containing this courseId. Using getBlob (not getDownloadURL+fetch)
+        //    avoids the browser CORS preflight on firebasestorage.googleapis.com.
+        const blob = await getBlob(storageRef(storage, courseData.filePath));
+        setPdfFile(blob);
       } catch (err: any) {
         const msg = err?.code === "storage/unauthorized"
           ? "Нямате достъп до този курс. Ако сте го закупили, моля излезте и влезте отново."
@@ -120,7 +122,7 @@ export default function CourseViewerPage() {
     );
   }
 
-  if (!pdfUrl) {
+  if (!pdfFile) {
     return <div className="min-h-screen flex items-center justify-center text-brand-dark/50">Зареждане на курса…</div>;
   }
 
@@ -176,7 +178,7 @@ export default function CourseViewerPage() {
       <div className="relative flex justify-center py-6 select-none">
         <div className="relative">
           <Document
-            file={pdfUrl}
+            file={pdfFile}
             onLoadSuccess={onLoadSuccess}
             onLoadError={(err) => setLoadError(err.message)}
             loading={<div className="text-white/60 text-sm">Зареждане на страница…</div>}
