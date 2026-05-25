@@ -35,25 +35,59 @@ export function useAuth() {
   return { user, loading, auth };
 }
 
+const ADMIN_EMAIL = "d.nikolova.haccp@gmail.com";
+
 export function useDankaUsers() {
   const [users, setUsers] = useState<DankaUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(collection(db, "users"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const usersData: DankaUser[] = [];
-      querySnapshot.forEach((doc) => {
-        usersData.push(doc.data() as DankaUser);
-      });
-      setUsers(usersData);
-      setLoading(false);
-    }, (error) => {
-      console.error("Error fetching users:", error);
-      setLoading(false);
+    let dataUnsub: () => void = () => {};
+
+    // Firestore rules let admin read the whole /users collection but a regular
+    // user can only read their own doc. Listening to the wrong query throws
+    // "Missing or insufficient permissions" in the console even though saves
+    // work, so we pick the query based on the signed-in user's email.
+    const authUnsub = onAuthStateChanged(auth, (firebaseUser) => {
+      dataUnsub();
+      dataUnsub = () => {};
+
+      if (!firebaseUser?.email) {
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+
+      const email = firebaseUser.email.toLowerCase();
+      const isAdmin = email === ADMIN_EMAIL;
+
+      if (isAdmin) {
+        const q = query(collection(db, "users"));
+        dataUnsub = onSnapshot(q, (snap) => {
+          const list: DankaUser[] = [];
+          snap.forEach((d) => list.push(d.data() as DankaUser));
+          setUsers(list);
+          setLoading(false);
+        }, (error) => {
+          console.error("Error fetching users:", error);
+          setLoading(false);
+        });
+      } else {
+        const docRef = doc(db, "users", email);
+        dataUnsub = onSnapshot(docRef, (snap) => {
+          setUsers(snap.exists() ? [snap.data() as DankaUser] : []);
+          setLoading(false);
+        }, (error) => {
+          console.error("Error fetching own user:", error);
+          setLoading(false);
+        });
+      }
     });
 
-    return unsubscribe;
+    return () => {
+      dataUnsub();
+      authUnsub();
+    };
   }, []);
 
   const updateUser = async (email: string, data: Partial<DankaUser>) => {

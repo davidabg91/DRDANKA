@@ -864,9 +864,10 @@ export default function ProfilePage() {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, regEmail, regPassword);
+      const cleanRegEmail = regEmail.trim().toLowerCase();
+      await createUserWithEmailAndPassword(auth, cleanRegEmail, regPassword);
       const pendingUser: DankaUser = {
-        email: regEmail,
+        email: cleanRegEmail,
         firmName: applyFirmName,
         eik: applyEik || "Няма въведен",
         contact: applyContact,
@@ -884,8 +885,8 @@ export default function ProfilePage() {
       
       const updatedList = [...usersList, pendingUser];
       saveUsers(updatedList);
-      
-      setPendingEmail(regEmail);
+
+      setPendingEmail(cleanRegEmail);
       setPendingFirmName(applyFirmName);
       setIsPendingApproval(true);
       await signOut(auth);
