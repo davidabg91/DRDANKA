@@ -177,14 +177,15 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 pt-2">
                 <Link
                   href="/consultations#booking"
-                  className="px-8 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest transition-all duration-300 rounded shadow-lg shadow-brand-gold/20 flex items-center justify-center cursor-pointer"
+                  className="relative overflow-hidden px-8 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest transition-all duration-300 rounded-full shadow-lg shadow-brand-gold/20 hover:shadow-xl hover:shadow-brand-gold/35 flex items-center justify-center cursor-pointer group"
                 >
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
                   Безплатен 10-мин. разговор
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="h-4 w-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
                 <Link
                   href="/services"
-                  className="px-8 py-4 border border-white/20 hover:border-brand-gold text-white hover:text-brand-gold font-bold text-xs uppercase tracking-widest transition-all duration-300 rounded flex items-center justify-center cursor-pointer"
+                  className="px-8 py-4 rounded-full border border-white/20 hover:border-brand-gold/80 text-white/80 hover:text-brand-gold bg-white/5 hover:bg-brand-gold/10 backdrop-blur-sm font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center cursor-pointer"
                 >
                   Разгледай услугите
                 </Link>

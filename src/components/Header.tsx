@@ -75,17 +75,17 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center justify-center flex-grow gap-x-2.5 xl:gap-x-5 px-4 xl:px-8">
+            <nav className="hidden lg:flex items-center justify-center flex-grow gap-x-1 xl:gap-x-2 px-4 xl:px-8">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`lg:text-[11px] xl:text-[13px] font-bold tracking-wider transition-colors duration-200 uppercase whitespace-nowrap ${
+                    className={`relative lg:text-[11px] xl:text-[12px] font-semibold tracking-wider transition-all duration-200 uppercase whitespace-nowrap px-3 py-1.5 rounded-full cursor-pointer ${
                       isActive
-                        ? "text-brand-gold border-b-2 border-brand-gold pb-1"
-                        : "text-white/80 hover:text-brand-gold"
+                        ? "text-brand-dark bg-brand-gold shadow-sm"
+                        : "text-white/75 hover:text-white hover:bg-white/10"
                     }`}
                   >
                     {link.name}
@@ -95,16 +95,20 @@ export default function Header() {
             </nav>
 
             {/* Desktop Call to Action */}
-            <div className="hidden lg:flex items-center shrink-0 space-x-3">
+            <div className="hidden lg:flex items-center shrink-0 space-x-2.5">
+              {/* Primary CTA — gold pill with shimmer */}
               <Link
                 href="/consultations"
-                className="relative inline-flex items-center justify-center xl:px-5 lg:px-3 py-2.5 text-[11px] xl:text-xs font-semibold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light transition-all duration-300 rounded shadow-md hover:shadow-brand-gold/25 whitespace-nowrap"
+                className="relative inline-flex items-center justify-center overflow-hidden xl:px-5 lg:px-3.5 py-2 text-[11px] xl:text-[12px] font-bold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-full shadow-md hover:shadow-lg hover:shadow-brand-gold/30 transition-all duration-300 whitespace-nowrap cursor-pointer group"
               >
+                {/* shimmer sweep */}
+                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
                 Заяви консултация
               </Link>
+              {/* Secondary CTA — glass pill */}
               <Link
                 href="/profile"
-                className="relative inline-flex items-center justify-center xl:px-5 lg:px-3 py-2.5 text-[11px] xl:text-xs font-semibold uppercase tracking-wider text-white border border-brand-gold/50 hover:border-brand-gold hover:bg-brand-gold/10 transition-all duration-300 rounded shadow-sm whitespace-nowrap"
+                className="inline-flex items-center justify-center xl:px-5 lg:px-3.5 py-2 text-[11px] xl:text-[12px] font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer"
               >
                 Вход / Портал
               </Link>
@@ -151,19 +155,20 @@ export default function Header() {
             })}
           </nav>
 
-          <div className="space-y-4 pb-20">
+          <div className="space-y-3 pb-20">
             <Link
               href="/profile"
               onClick={() => setIsOpen(false)}
-              className="w-full text-center block px-6 py-3 text-sm font-semibold uppercase tracking-wider text-brand-gold border border-brand-gold/50 hover:border-brand-gold hover:bg-brand-gold/10 transition-colors duration-300 rounded shadow-sm"
+              className="w-full text-center block px-6 py-3 text-sm font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm cursor-pointer"
             >
               Вход / Портал
             </Link>
             <Link
               href="/consultations"
               onClick={() => setIsOpen(false)}
-              className="w-full text-center block px-6 py-3 text-sm font-semibold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light transition-colors duration-300 rounded shadow-md"
+              className="relative w-full text-center block overflow-hidden px-6 py-3 text-sm font-bold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-full shadow-md hover:shadow-lg hover:shadow-brand-gold/30 transition-all duration-300 cursor-pointer group"
             >
+              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
               Заяви консултация
             </Link>
           </div>
