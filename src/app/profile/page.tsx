@@ -257,11 +257,26 @@ export default function ProfilePage() {
 
   const saveUsers = (newUsers: DankaUser[]) => {
     setUsersList(newUsers);
-    // Sync changed users to Firestore
+    // Sync only the fields that actually changed for each user. Sending the
+    // full document via setDoc was rejected by the Firestore rules when local
+    // state had drifted from the server (e.g. status mismatch). updateDoc only
+    // touches the fields we pass — leaves role/status alone unless changed.
     newUsers.forEach(nu => {
       const oldUser = usersList.find(ou => ou.email === nu.email);
-      if (!oldUser || JSON.stringify(oldUser) !== JSON.stringify(nu)) {
+      if (!oldUser) {
+        // New user — must use setDoc (create). setFullUser strips password.
         setFullUser(nu.email, nu);
+        return;
+      }
+      const diff: Partial<DankaUser> = {};
+      (Object.keys(nu) as Array<keyof DankaUser>).forEach((k) => {
+        if (k === "password") return; // never persist
+        if (JSON.stringify((oldUser as any)[k]) !== JSON.stringify((nu as any)[k])) {
+          (diff as any)[k] = (nu as any)[k];
+        }
+      });
+      if (Object.keys(diff).length > 0) {
+        updateUser(nu.email, diff);
       }
     });
   };

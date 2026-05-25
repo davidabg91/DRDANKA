@@ -16,46 +16,54 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Lower-cased email so comparisons are case-insensitive.
     function authEmail() {
-      return request.auth.token.email;
+      return request.auth.token.email.lower();
     }
 
     function isAdmin() {
       return isSignedIn() && authEmail() == "d.nikolova.haccp@gmail.com";
     }
 
+    // True when the post-update value of `field` is unchanged.
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
     // /users/{email}
     //   - Admin: full read/write on every doc.
-    //   - User: read & write own doc only.
+    //   - User: read & write own doc only (case-insensitive email match).
     //   - On create: doc id MUST equal the caller's email (no impersonation).
-    //   - On write: a non-admin cannot escalate their role to "admin".
+    //   - On update: a non-admin cannot escalate their own role or status.
     match /users/{email} {
-      allow read: if isAdmin() || (isSignedIn() && authEmail() == email);
+      allow read: if isAdmin() || (isSignedIn() && authEmail() == email.lower());
 
       allow create: if isAdmin() || (
         isSignedIn() &&
-        authEmail() == email &&
+        authEmail() == email.lower() &&
         request.resource.data.role == "user"
       );
 
       allow update: if isAdmin() || (
         isSignedIn() &&
-        authEmail() == email &&
-        // user cannot change their own role or status
-        request.resource.data.role == resource.data.role &&
-        request.resource.data.status == resource.data.status
+        authEmail() == email.lower() &&
+        unchanged("role") &&
+        unchanged("status")
       );
 
       allow delete: if isAdmin();
     }
 
-    // /logs/{key} — key format: danka_logs_<emailWithDots>_<YYYY-MM-DD>
+    // /logs/{key} — key format: danka_logs_<sanitizedEmail>_<YYYY-MM-DD>
     //   - Admin reads/writes everything (audit).
-    //   - Authenticated user reads/writes own logs where key starts with their email.
+    //   - Authenticated user reads/writes own logs.
+    //   NOTE: rules.String.replace uses REGEX patterns and replaces ALL matches,
+    //   so '.' must be escaped as '\\.' to match a literal dot, not "any char".
     match /logs/{key} {
       function ownsKey() {
-        // sanitize email same way client does: '@'→'_' and '.'→'_'
-        return key.matches("^danka_logs_" + authEmail().replace("@","_").replace(".","_") + "_.*$");
+        return key.matches(
+          "^danka_logs_" + authEmail().replace("@", "_").replace("\\.", "_") + "_.*$"
+        );
       }
 
       allow read, write: if isAdmin() || (isSignedIn() && ownsKey());
