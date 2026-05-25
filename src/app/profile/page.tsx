@@ -1078,19 +1078,25 @@ export default function ProfilePage() {
       }
 
       const now = new Date().toISOString();
+      // Firestore rejects undefined values, so build the object without the
+      // optional fields and add them only when populated.
       const newCourse: Course = {
         id: courseId,
         title: courseDraftTitle.trim(),
         description: courseDraftDesc.trim(),
-        longDescription: courseDraftLongDesc.trim() || undefined,
         priceEur: Math.round(priceNum * 100) / 100,
-        coverImageUrl: coverImageUrl || undefined,
         filePath: pdfPath,
         fileSizeMb: Math.round((courseDraftPdf.size / (1024 * 1024)) * 100) / 100,
         published: true,
         createdAt: now,
         updatedAt: now,
       };
+      if (courseDraftLongDesc.trim()) {
+        newCourse.longDescription = courseDraftLongDesc.trim();
+      }
+      if (coverImageUrl) {
+        newCourse.coverImageUrl = coverImageUrl;
+      }
       await setDoc(doc(db, "courses", courseId), newCourse);
 
       setCourseUploadProgress(null);
