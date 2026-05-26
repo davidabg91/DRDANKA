@@ -5258,7 +5258,7 @@ export default function ProfilePage() {
 {/* TAB 3: MY PURCHASED COURSES */}
               {activeTab === "courses" && (() => {
                 const myIds = currentUser?.purchasedCourseIds || [];
-                const myCourses = allCourses.filter(c => myIds.includes(c.id));
+                const myMaterials = LIBRARY_MATERIALS.filter(m => myIds.includes(m.slug));
                 return (
                   <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6">
                     <div className="flex items-center justify-between gap-3 border-b border-brand-green/5 pb-4">
@@ -5267,41 +5267,47 @@ export default function ProfilePage() {
                           <BookOpen className="h-6 w-6" />
                         </div>
                         <div>
-                          <h2 className="font-serif text-xl font-bold text-brand-green">Моите курсове</h2>
-                          <p className="text-xs text-brand-dark/50">Закупените от Вас материали — четат се онлайн с воден знак</p>
+                          <h2 className="font-serif text-xl font-bold text-brand-green">Моите обучения</h2>
+                          <p className="text-xs text-brand-dark/50">Закупените от Вас материали — отворете в нов раздел</p>
                         </div>
                       </div>
-                      <Link href="/bookstore" className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer whitespace-nowrap">
+                      <Link href="/library" className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer whitespace-nowrap">
                         <PlusCircle className="h-3.5 w-3.5" />
                         Купи още
                       </Link>
                     </div>
 
-                    {myCourses.length === 0 ? (
+                    {myMaterials.length === 0 ? (
                       <div className="text-center py-10 border border-dashed border-brand-green/10 rounded-xl space-y-3">
                         <BookOpen className="h-10 w-10 text-brand-gold/40 mx-auto" />
-                        <p className="text-sm text-brand-dark/60">Все още нямате закупени курсове.</p>
-                        <Link href="/bookstore" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer">
+                        <p className="text-sm text-brand-dark/60">Все още нямате закупени обучения.</p>
+                        <Link href="/library" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer">
                           Към книжарницата →
                         </Link>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                        {myCourses.map(c => (
-                          <div key={c.id} className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
+                        {myMaterials.map(m => (
+                          <div key={m.slug} className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
                             <div className="space-y-3">
-                              <span className="text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2 py-0.5 rounded-full">Закупен</span>
-                              <h4 className="font-serif text-base font-bold text-brand-green">{c.title}</h4>
-                              <p className="text-xs text-brand-dark/60 leading-normal">{c.description}</p>
-                              <span className="text-[10px] text-brand-dark/40 font-mono block">{c.fileSizeMb} MB · PDF</span>
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                                <CheckCircle className="h-3 w-3" /> Закупен
+                              </span>
+                              <h4 className="font-serif text-base font-bold text-brand-green">{m.title}</h4>
+                              <p className="text-xs text-brand-dark/60 leading-normal">{m.tagline}</p>
+                              <span className="text-[10px] text-brand-dark/40 font-mono block">
+                                {m.type === "video" ? "🎬 Видео обучение" : "📄 PDF Наръчник"}
+                              </span>
                             </div>
-                            <Link
-                              href={`/courses/${c.id}/viewer`}
+                            <a
+                              href={m.contentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
                             >
                               <BookOpen className="h-4 w-4" />
-                              Отвори курса
-                            </Link>
+                              Отвори обучението
+                            </a>
                           </div>
                         ))}
                       </div>
