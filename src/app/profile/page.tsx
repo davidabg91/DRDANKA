@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useAuth, useDankaUsers, useCourses } from "@/lib/firebaseHooks";
+import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments } from "@/lib/firebaseHooks";
 import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { Course } from "@/lib/courseTypes";
+import { Training, Enrollment } from "@/lib/trainingTypes";
 
 import { 
   User, 
@@ -36,6 +37,9 @@ import {
   ShieldCheck,
   CreditCard,
   Loader2,
+  Video,
+  ExternalLink,
+  Copy,
   MessageSquare,
   Send,
   Users,
@@ -232,6 +236,8 @@ export default function ProfilePage() {
   const { user: firebaseUser, loading: authLoading } = useAuth();
   const { users: firebaseUsers, loading: usersLoading, setFullUser, updateUser, sendPasswordReset } = useDankaUsers();
   const { courses: allCourses } = useCourses(false); // admin sees drafts too
+  const { trainings: allTrainings } = useTrainings(false); // admin sees drafts too
+  const { enrollments: allEnrollments } = useEnrollments();
   const ADMIN_EMAIL = "d.nikolova.haccp@gmail.com";
 
   const saveUsers = (newUsers: DankaUser[]) => {
@@ -340,7 +346,18 @@ export default function ProfilePage() {
   const [currentUserEmail, setCurrentUserEmail] = useState("");
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
   const [usersList, setUsersList] = useState<DankaUser[]>([]);
-  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "users" | "materials" | "courses" | "messages" | "logs">("candidates");
+  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "users" | "materials" | "courses" | "trainings" | "messages" | "logs">("candidates");
+
+  // Specialized trainings admin state
+  const [trainingDraftTitle, setTrainingDraftTitle] = useState("");
+  const [trainingDraftShort, setTrainingDraftShort] = useState("");
+  const [trainingDraftPrice, setTrainingDraftPrice] = useState("");
+  const [trainingDraftType, setTrainingDraftType] = useState<"video" | "zoom">("video");
+  const [trainingDraftVideoUrl, setTrainingDraftVideoUrl] = useState("");
+  const [trainingDraftBullets, setTrainingDraftBullets] = useState("");
+  const [trainingDraftHasCertificate, setTrainingDraftHasCertificate] = useState(true);
+  const [trainingsViewMode, setTrainingsViewMode] = useState<"manage" | "enrollments">("manage");
+  const [enrollmentSearchQuery, setEnrollmentSearchQuery] = useState("");
 
   // Bookstore courses admin state
   const [courseDraftTitle, setCourseDraftTitle] = useState("");
@@ -1245,6 +1262,91 @@ export default function ProfilePage() {
       alert("Курсът беше изтрит.");
     } catch (err: any) {
       alert("Грешка при изтриване: " + (err?.message || err));
+    }
+  };
+
+  // ────────────────────────────────────────────────────────────────────────
+  // Trainings: admin create / edit / delete / toggle published
+  // ────────────────────────────────────────────────────────────────────────
+
+  const handleCreateTraining = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!trainingDraftTitle.trim() || !trainingDraftShort.trim()) {
+      alert("Моля попълнете заглавие и кратко описание.");
+      return;
+    }
+    const priceNum = parseFloat(trainingDraftPrice);
+    if (Number.isNaN(priceNum) || priceNum < 0) {
+      alert("Моля въведете валидна цена в евро.");
+      return;
+    }
+    if (trainingDraftType === "video" && !trainingDraftVideoUrl.trim()) {
+      alert(`За тип „Видео обучение" е необходим линк към видеото (YouTube, Vimeo и т.н.).`);
+      return;
+    }
+
+    const trainingId = "training_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+    const now = new Date().toISOString();
+    const bullets = trainingDraftBullets
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const newTraining: Training = {
+      id: trainingId,
+      title: trainingDraftTitle.trim(),
+      shortDesc: trainingDraftShort.trim(),
+      bullets,
+      priceEur: Math.round(priceNum * 100) / 100,
+      type: trainingDraftType,
+      hasCertificate: trainingDraftHasCertificate,
+      published: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+    if (trainingDraftType === "video" && trainingDraftVideoUrl.trim()) {
+      newTraining.videoUrl = trainingDraftVideoUrl.trim();
+    }
+
+    try {
+      await setDoc(doc(db, "trainings", trainingId), newTraining);
+      // reset
+      setTrainingDraftTitle("");
+      setTrainingDraftShort("");
+      setTrainingDraftPrice("");
+      setTrainingDraftType("video");
+      setTrainingDraftVideoUrl("");
+      setTrainingDraftBullets("");
+      setTrainingDraftHasCertificate(true);
+      alert("Курсът беше успешно добавен!");
+    } catch (err: any) {
+      alert("Грешка: " + (err?.message || err));
+    }
+  };
+
+  const handleToggleTrainingPublished = async (t: Training) => {
+    try {
+      await setDoc(doc(db, "trainings", t.id), { ...t, published: !t.published, updatedAt: new Date().toISOString() });
+    } catch (err: any) {
+      alert("Грешка: " + (err?.message || err));
+    }
+  };
+
+  const handleDeleteTraining = async (t: Training) => {
+    if (!confirm(`Изтриване на курс „${t.title}"? Записаните за него ще запазят достъпа си.`)) return;
+    try {
+      await deleteDoc(doc(db, "trainings", t.id));
+      alert("Курсът беше изтрит.");
+    } catch (err: any) {
+      alert("Грешка при изтриване: " + (err?.message || err));
+    }
+  };
+
+  const handleMarkEnrollmentContacted = async (enr: Enrollment) => {
+    try {
+      await setDoc(doc(db, "enrollments", enr.id), { ...enr, status: "contacted", contactedAt: new Date().toISOString() }, { merge: true });
+    } catch (err: any) {
+      alert("Грешка: " + (err?.message || err));
     }
   };
 
@@ -2463,6 +2565,18 @@ export default function ProfilePage() {
                         Курсове (Книжарница)
                       </button>
                       <button
+                        onClick={() => setActiveAdminTab("trainings")}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "trainings" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                      >
+                        <Video className={`h-4 w-4 ${activeAdminTab === "trainings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        Обучения & Записани
+                        {allEnrollments.filter(e => e.status === "paid").length > 0 && (
+                          <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm animate-pulse">
+                            {allEnrollments.filter(e => e.status === "paid").length}
+                          </span>
+                        )}
+                      </button>
+                      <button
                         onClick={() => setActiveAdminTab("messages")}
                         className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
@@ -3216,6 +3330,228 @@ export default function ProfilePage() {
                           </div>
                         )}
                       </div>
+                    </div>
+                  )}
+
+                  {/* ADMIN TAB: TRAININGS & ENROLLMENTS */}
+                  {activeAdminTab === "trainings" && (
+                    <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
+                      <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
+                        <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                          <Video className="h-6 w-6" />
+                        </div>
+                        <div>
+                          <h2 className="font-serif text-xl font-bold text-brand-green">Обучения & Записани</h2>
+                          <p className="text-xs text-brand-dark/50">Управление на специализирани онлайн курсове и преглед на записани участници</p>
+                        </div>
+                      </div>
+
+                      {/* Sub-tabs */}
+                      <div className="flex gap-1 border-b border-brand-green/5">
+                        <button
+                          onClick={() => setTrainingsViewMode("manage")}
+                          className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border-b-2 ${trainingsViewMode === "manage" ? "border-brand-gold text-brand-green" : "border-transparent text-brand-dark/50 hover:text-brand-green"}`}
+                        >
+                          Управление на курсове ({allTrainings.length})
+                        </button>
+                        <button
+                          onClick={() => setTrainingsViewMode("enrollments")}
+                          className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border-b-2 ${trainingsViewMode === "enrollments" ? "border-brand-gold text-brand-green" : "border-transparent text-brand-dark/50 hover:text-brand-green"}`}
+                        >
+                          Записани ({allEnrollments.length})
+                        </button>
+                      </div>
+
+                      {trainingsViewMode === "manage" && (
+                        <>
+                          {/* New training form */}
+                          <form onSubmit={handleCreateTraining} className="bg-brand-light/30 p-5 rounded-xl border border-brand-green/10 space-y-3">
+                            <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
+                              <PlusCircle className="h-4 w-4 text-brand-gold" />
+                              Нов курс / обучение
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <input type="text" placeholder="Заглавие" value={trainingDraftTitle} onChange={(e) => setTrainingDraftTitle(e.target.value)} className="md:col-span-2 text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
+                              <input type="number" step="0.01" min="0" placeholder="Цена в EUR (€)" value={trainingDraftPrice} onChange={(e) => setTrainingDraftPrice(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required />
+                            </div>
+                            <textarea placeholder="Кратко описание" value={trainingDraftShort} onChange={(e) => setTrainingDraftShort(e.target.value)} rows={2} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" required />
+                            <textarea placeholder="Bullets (по един на ред)&#10;напр.:&#10;БАБХ признат лектор&#10;Реални казуси от практиката" value={trainingDraftBullets} onChange={(e) => setTrainingDraftBullets(e.target.value)} rows={4} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y font-mono" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <label className="text-xs flex flex-col gap-1">
+                                <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">Тип на обучението</span>
+                                <select value={trainingDraftType} onChange={(e) => setTrainingDraftType(e.target.value as "video" | "zoom")} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer">
+                                  <option value="video">📹 Видео обучение (с линк)</option>
+                                  <option value="zoom">📞 Zoom / онлайн лекция (с уговорка)</option>
+                                </select>
+                              </label>
+                              <label className="text-xs flex items-center gap-2 select-none cursor-pointer mt-5">
+                                <input type="checkbox" checked={trainingDraftHasCertificate} onChange={(e) => setTrainingDraftHasCertificate(e.target.checked)} className="w-4 h-4 cursor-pointer" />
+                                <span className="text-brand-dark/80">Издава сертификат след тестове в портала</span>
+                              </label>
+                            </div>
+                            {trainingDraftType === "video" && (
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-green">Линк към видеото (YouTube/Vimeo/частен) *</label>
+                                <input type="url" placeholder="https://youtu.be/..." value={trainingDraftVideoUrl} onChange={(e) => setTrainingDraftVideoUrl(e.target.value)} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required={trainingDraftType === "video"} />
+                                <p className="text-[10px] text-brand-dark/50">След плащане купувачът получава този линк за да гледа видеото.</p>
+                              </div>
+                            )}
+                            <button type="submit" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer">
+                              <Plus className="h-4 w-4" />
+                              Добави курс
+                            </button>
+                          </form>
+
+                          {/* Training list */}
+                          <div className="space-y-2">
+                            <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Качени курсове ({allTrainings.length})</h3>
+                            {allTrainings.length === 0 ? (
+                              <p className="text-xs text-brand-dark/50 italic py-4 text-center">Все още няма добавени онлайн обучения.</p>
+                            ) : (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs border-collapse border border-brand-green/10">
+                                  <thead>
+                                    <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
+                                      <th className="border border-brand-green/10 p-3 text-left">Курс</th>
+                                      <th className="border border-brand-green/10 p-3 text-center">Тип</th>
+                                      <th className="border border-brand-green/10 p-3 text-center">Цена</th>
+                                      <th className="border border-brand-green/10 p-3 text-center">Записани</th>
+                                      <th className="border border-brand-green/10 p-3 text-center">Статус</th>
+                                      <th className="border border-brand-green/10 p-3 text-center">Действия</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {allTrainings.map((t) => {
+                                      const enrolledCount = allEnrollments.filter(e => e.trainingId === t.id).length;
+                                      return (
+                                        <tr key={t.id} className="hover:bg-brand-light/30">
+                                          <td className="border border-brand-green/10 p-3">
+                                            <div className="font-bold text-brand-green">{t.title}</div>
+                                            <div className="text-[10px] text-brand-dark/50">{t.shortDesc}</div>
+                                            {t.type === "video" && t.videoUrl && (
+                                              <a href={t.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] text-brand-gold hover:underline mt-1">
+                                                <ExternalLink className="h-3 w-3" />
+                                                Виж видеото
+                                              </a>
+                                            )}
+                                          </td>
+                                          <td className="border border-brand-green/10 p-3 text-center text-[10px]">
+                                            {t.type === "video" ? "📹 Видео" : "📞 Zoom"}
+                                          </td>
+                                          <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{t.priceEur.toFixed(2)} €</td>
+                                          <td className="border border-brand-green/10 p-3 text-center font-mono">{enrolledCount}</td>
+                                          <td className="border border-brand-green/10 p-3 text-center">
+                                            <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${t.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
+                                              {t.published ? "Активен" : "Скрит"}
+                                            </span>
+                                          </td>
+                                          <td className="border border-brand-green/10 p-3 text-center space-x-1">
+                                            <button onClick={() => handleToggleTrainingPublished(t)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
+                                              {t.published ? "Скрий" : "Покажи"}
+                                            </button>
+                                            <button onClick={() => handleDeleteTraining(t)} className="text-red-500 hover:text-red-700 p-1 cursor-pointer" title="Изтрий">
+                                              <Trash2 className="h-3.5 w-3.5 inline" />
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+
+                      {trainingsViewMode === "enrollments" && (
+                        <>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div className="relative flex-1 font-sans">
+                              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark/40" />
+                              <input
+                                type="text"
+                                value={enrollmentSearchQuery}
+                                onChange={(e) => setEnrollmentSearchQuery(e.target.value)}
+                                placeholder="Търси по име, email, телефон, курс…"
+                                className="w-full text-xs pl-10 pr-4 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-brand-light/40"
+                              />
+                            </div>
+                          </div>
+
+                          {(() => {
+                            const q = enrollmentSearchQuery.toLowerCase();
+                            const filtered = allEnrollments.filter(e =>
+                              !q ||
+                              e.fullName.toLowerCase().includes(q) ||
+                              e.email.toLowerCase().includes(q) ||
+                              e.phone.toLowerCase().includes(q) ||
+                              e.trainingTitle.toLowerCase().includes(q) ||
+                              (e.company || "").toLowerCase().includes(q)
+                            );
+                            if (filtered.length === 0) {
+                              return <p className="text-xs text-brand-dark/50 italic py-8 text-center">Няма записани участници по този критерий.</p>;
+                            }
+                            return (
+                              <div className="overflow-x-auto font-sans">
+                                <table className="w-full text-xs border-collapse border border-brand-green/10">
+                                  <thead>
+                                    <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
+                                      <th className="border border-brand-green/10 p-3 text-left">Участник</th>
+                                      <th className="border border-brand-green/10 p-3 text-left">Контакти</th>
+                                      <th className="border border-brand-green/10 p-3 text-left">Курс</th>
+                                      <th className="border border-brand-green/10 p-3 text-center">Цена</th>
+                                      <th className="border border-brand-green/10 p-3 text-center">Статус</th>
+                                      <th className="border border-brand-green/10 p-3 text-center">Действия</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {filtered.map((enr) => (
+                                      <tr key={enr.id} className="hover:bg-brand-light/30">
+                                        <td className="border border-brand-green/10 p-3">
+                                          <div className="font-bold text-brand-green">{enr.fullName}</div>
+                                          {enr.company && <div className="text-[10px] text-brand-dark/50">{enr.company}</div>}
+                                          <div className="text-[9px] text-brand-dark/40 font-mono mt-0.5">{new Date(enr.createdAt).toLocaleString("bg-BG")}</div>
+                                        </td>
+                                        <td className="border border-brand-green/10 p-3">
+                                          <a href={`mailto:${enr.email}`} className="text-brand-green hover:text-brand-gold font-mono block">{enr.email}</a>
+                                          <a href={`tel:${enr.phone}`} className="text-brand-dark/70 font-mono block mt-0.5">{enr.phone}</a>
+                                        </td>
+                                        <td className="border border-brand-green/10 p-3">
+                                          <div className="font-bold">{enr.trainingTitle}</div>
+                                          <div className="text-[10px] text-brand-dark/50">
+                                            {enr.trainingType === "video" ? "📹 Видео" : enr.trainingType === "zoom" ? "📞 Zoom" : ""}
+                                          </div>
+                                        </td>
+                                        <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{enr.priceEur.toFixed(2)} €</td>
+                                        <td className="border border-brand-green/10 p-3 text-center">
+                                          <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${
+                                            enr.status === "paid" ? "bg-amber-100 text-amber-800" :
+                                            enr.status === "contacted" ? "bg-blue-100 text-blue-800" :
+                                            enr.status === "completed" ? "bg-green-100 text-green-800" :
+                                            "bg-gray-100 text-gray-800"
+                                          }`}>
+                                            {enr.status === "paid" ? "Платено" : enr.status === "contacted" ? "Свързан" : enr.status === "completed" ? "Завършил" : enr.status}
+                                          </span>
+                                        </td>
+                                        <td className="border border-brand-green/10 p-3 text-center">
+                                          {enr.status === "paid" ? (
+                                            <button onClick={() => handleMarkEnrollmentContacted(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
+                                              Маркирай свързан
+                                            </button>
+                                          ) : (
+                                            <span className="text-[9px] text-brand-dark/40">—</span>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            );
+                          })()}
+                        </>
+                      )}
                     </div>
                   )}
 

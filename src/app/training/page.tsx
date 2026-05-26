@@ -4,51 +4,30 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   GraduationCap, BookOpen, Award, ArrowRight, CheckCircle, Building,
-  Video, Calendar, X, CreditCard, Loader2, ShieldCheck,
+  Video, Calendar, X, CreditCard, Loader2, ShieldCheck, ExternalLink, Copy,
 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { useTrainings } from "@/lib/firebaseHooks";
+import { Training } from "@/lib/trainingTypes";
 
 /**
- * /training — marketing landing for the digital bookstore and online specialized
- * training courses (live online lectures with certificates).
+ * /training — landing for the digital bookstore and specialized online trainings.
  *
- * Specialized trainings differ from bookstore PDFs:
- *   - Live online lecture + tests in the Client Portal → certificate issued
- *     manually by Dr. Danka after the trainee passes the portal tests.
- *   - Enrollments are saved to Firestore /enrollments/{id}; admin contacts
- *     the buyer to schedule the session.
+ * Trainings are now stored in Firestore /trainings (managed by admin in
+ * /profile → Курсове/Обучения tab). Two delivery types are supported:
+ *
+ *   - 'zoom':  live online lecture; after payment admin contacts buyer for dates.
+ *   - 'video': pre-recorded; after payment buyer immediately receives videoUrl.
+ *
+ * Certificate (when training.hasCertificate) is issued by Dr. Danka after the
+ * trainee passes the tests assigned in the Client Portal.
  */
 
-interface SpecializedTraining {
-  id: string;
-  title: string;
-  shortDesc: string;
-  bullets: string[];
-  priceEur: number;
-  certificate: string;
-}
-
-const SPECIALIZED_TRAININGS: SpecializedTraining[] = [
-  {
-    id: "etiketirane-hrani",
-    title: "Обучение за Етикетиране на Храни",
-    shortDesc:
-      "Научете се да съставяте напълно легални и съобразени с изискванията етикети за Вашите продукти. Обучението покрива изискванията на Регламент (ЕС) № 1169/2011, правилното деклариране на съставки, подчертаването на алергени и изчисляването на хранителни стойности.",
-    bullets: [
-      "БАБХ признат лектор и нормативна точност",
-      "Включва Сертификат за преминати обучения",
-      "Реални казуси от практиката",
-      "Индивидуални насоки за Вашите продукти",
-    ],
-    priceEur: 99.9,
-    certificate:
-      "За издаване на сертификат е задължително успешното решаване на всички възложени тестове в Клиентския Портал.",
-  },
-];
-
 export default function TrainingPage() {
-  const [enrollFor, setEnrollFor] = useState<SpecializedTraining | null>(null);
+  const { trainings, loading } = useTrainings(true);
+
+  const [enrollFor, setEnrollFor] = useState<Training | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -58,13 +37,14 @@ export default function TrainingPage() {
   const [cardCvc, setCardCvc] = useState("123");
   const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [error, setError] = useState("");
+  const [copyDone, setCopyDone] = useState(false);
 
   const validEmail = (s: string) => /^[^@]+@[^@]+\.[^@]+$/.test(s);
 
-  const openEnroll = (t: SpecializedTraining) => {
+  const openEnroll = (t: Training) => {
     setEnrollFor(t);
     setName(""); setEmail(""); setPhone(""); setCompany("");
-    setStatus("idle"); setError("");
+    setStatus("idle"); setError(""); setCopyDone(false);
   };
   const closeEnroll = () => {
     if (status === "processing") return;
@@ -87,25 +67,40 @@ export default function TrainingPage() {
     setStatus("processing");
     try {
       const enrollmentId = `enroll_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      await setDoc(doc(db, "enrollments", enrollmentId), {
+      const payload: any = {
         id: enrollmentId,
         trainingId: enrollFor.id,
         trainingTitle: enrollFor.title,
+        trainingType: enrollFor.type,
         fullName: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         company: company.trim() || "",
         priceEur: enrollFor.priceEur,
-        status: "paid", // test mode immediately marks paid; real Stripe flow will do this in webhook
+        status: "paid",
         paidAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
-      });
+      };
+      // Snapshot videoUrl into the enrollment so the buyer keeps access if admin later edits/removes it.
+      if (enrollFor.type === "video" && enrollFor.videoUrl) {
+        payload.videoUrl = enrollFor.videoUrl;
+      }
+      await setDoc(doc(db, "enrollments", enrollmentId), payload);
       setStatus("success");
     } catch (err: any) {
       console.error("Enrollment error:", err);
       setError(err?.message || "Грешка при записването. Опитайте отново.");
       setStatus("error");
     }
+  };
+
+  const copyVideoUrl = async () => {
+    if (!enrollFor?.videoUrl) return;
+    try {
+      await navigator.clipboard.writeText(enrollFor.videoUrl);
+      setCopyDone(true);
+      setTimeout(() => setCopyDone(false), 2000);
+    } catch { /* ignore */ }
   };
 
   return (
@@ -177,40 +172,56 @@ export default function TrainingPage() {
           </span>
           <h3 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green">Специализирани курсове по безопасност</h3>
           <p className="text-sm text-brand-dark/60 max-w-2xl mx-auto">
-            Запишете се сега, заплатете онлайн и д-р Николова ще се свърже с Вас, за да уточни датите на онлайн обучението.
+            Запишете се сега, заплатете онлайн и започнете обучението. Д-р Николова ще се свърже с Вас при нужда от
+            уточнения по графика.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-6">
-          {SPECIALIZED_TRAININGS.map((t) => (
+          {loading && (
+            <div className="text-center text-sm text-brand-dark/50 py-12">Зареждане на курсовете…</div>
+          )}
+          {!loading && trainings.length === 0 && (
+            <div className="text-center text-sm text-brand-dark/50 py-12 italic">
+              В момента няма налични онлайн обучения. Скоро ще добавим нови курсове.
+            </div>
+          )}
+          {!loading && trainings.map((t) => (
             <div key={t.id} className="bg-white rounded-3xl border border-brand-green/5 shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-3">
               <div className="md:col-span-1 bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center p-8">
                 <div className="text-center space-y-2">
                   <div className="inline-flex p-4 bg-white rounded-2xl shadow-md">
-                    <Award className="h-10 w-10 text-brand-gold" />
+                    {t.type === "video" ? <Video className="h-10 w-10 text-brand-gold" /> : <Award className="h-10 w-10 text-brand-gold" />}
                   </div>
                   <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold pt-2">
-                    Със сертификат
+                    {t.type === "video" ? "Видео обучение" : "Онлайн лекция"}
                   </div>
+                  {t.hasCertificate && (
+                    <div className="text-[9px] font-bold uppercase tracking-wider text-brand-green/70">
+                      Със сертификат
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="md:col-span-2 p-6 sm:p-8 space-y-4">
-                <h4 className="font-serif text-xl sm:text-2xl font-bold text-brand-green leading-tight">
-                  {t.title}
-                </h4>
+                <h4 className="font-serif text-xl sm:text-2xl font-bold text-brand-green leading-tight">{t.title}</h4>
                 <p className="text-sm text-brand-dark/70 leading-relaxed">{t.shortDesc}</p>
-                <ul className="space-y-1.5">
-                  {t.bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-2 text-xs text-brand-dark/80">
-                      <CheckCircle className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-[11px] text-amber-900 leading-relaxed">
-                  <strong>Важно:</strong> {t.certificate}
-                </div>
+                {t.bullets.length > 0 && (
+                  <ul className="space-y-1.5">
+                    {t.bullets.map((b, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-brand-dark/80">
+                        <CheckCircle className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {t.hasCertificate && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-[11px] text-amber-900 leading-relaxed">
+                    <strong>Сертификат:</strong> За издаване на сертификат е задължително успешното решаване на всички възложени тестове в Клиентския Портал.
+                  </div>
+                )}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-2 border-t border-brand-green/5">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
@@ -244,7 +255,7 @@ export default function TrainingPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            { icon: Award, title: "Сертификат", text: "Официален документ за проведено обучение след успешни тестове в портала." },
+            { icon: Award, title: "Сертификат", text: "Официален документ след успешни тестове в портала." },
             { icon: CheckCircle, title: "Актуални документи", text: "Шаблони, които отговарят на последните изисквания на БАБХ." },
             { icon: Building, title: "Практически примери", text: "Реални казуси от ресторанти, цехове и магазини." },
           ].map(({ icon: Icon, title, text }) => (
@@ -280,22 +291,55 @@ export default function TrainingPage() {
 
             <div className="p-6 space-y-4">
               {status === "success" ? (
-                <div className="text-center py-6 space-y-3">
+                <div className="text-center py-4 space-y-3">
                   <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
                   <h3 className="font-serif text-xl font-bold text-brand-green">Записването е успешно!</h3>
                   <p className="text-sm text-brand-dark/70 leading-relaxed">
-                    Благодарим за записването за курса <strong>{enrollFor.title}</strong>.
+                    Благодарим за записването за <strong>{enrollFor.title}</strong>.
                   </p>
-                  <div className="bg-brand-light/50 border border-brand-green/10 rounded-xl p-4 text-left text-xs text-brand-dark/70 space-y-2">
-                    <p className="flex items-start gap-2">
-                      <Calendar className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                      <span><strong className="text-brand-green">Следваща стъпка:</strong> Д-р Данка Николова ще се свърже с Вас на посочения email и телефон, за да уточни датите за онлайн обучението.</span>
-                    </p>
-                    <p className="flex items-start gap-2">
-                      <Award className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                      <span><strong className="text-brand-green">Сертификат:</strong> Издава се след успешно решаване на тестовете, които ще получите в Клиентския Портал.</span>
-                    </p>
-                  </div>
+
+                  {enrollFor.type === "video" && enrollFor.videoUrl ? (
+                    <div className="bg-brand-light/50 border border-brand-green/15 rounded-xl p-4 text-left space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Video className="h-5 w-5 text-brand-gold" />
+                        <span className="text-xs font-black uppercase tracking-wider text-brand-green">Линк за видеото</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={enrollFor.videoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 text-xs text-brand-green underline underline-offset-2 break-all hover:text-brand-gold transition-colors"
+                        >
+                          {enrollFor.videoUrl}
+                        </a>
+                        <button onClick={copyVideoUrl} className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer" title="Копирай линка">
+                          {copyDone ? <CheckCircle className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                      <a href={enrollFor.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-xs uppercase tracking-widest hover:bg-brand-gold-light transition-colors cursor-pointer">
+                        Отвори обучението
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                      <p className="text-[10px] text-brand-dark/60 leading-relaxed">
+                        <strong>Запазете този линк</strong> — изпратили сме копие и на посочения email. Можете да гледате обучението по всяко време.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-brand-light/50 border border-brand-green/10 rounded-xl p-4 text-left text-xs text-brand-dark/70 space-y-2">
+                      <p className="flex items-start gap-2">
+                        <Calendar className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                        <span><strong className="text-brand-green">Следваща стъпка:</strong> Д-р Данка Николова ще се свърже с Вас на посочения email и телефон, за да уточни датите за онлайн обучението.</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {enrollFor.hasCertificate && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left text-xs text-amber-900">
+                      <strong>🏆 Сертификат:</strong> Издава се след успешно решаване на тестовете, които ще получите в Клиентския Портал.
+                    </div>
+                  )}
+
                   <button onClick={closeEnroll} className="px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">
                     Затвори
                   </button>
@@ -359,7 +403,9 @@ export default function TrainingPage() {
 
                   <p className="text-[10px] text-center text-brand-dark/50 leading-relaxed">
                     <ShieldCheck className="h-3 w-3 inline text-brand-gold mr-1" />
-                    След плащане ще получите потвърждение и Д-р Николова ще се свърже с Вас за уточняване на датите.
+                    {enrollFor.type === "video"
+                      ? "След плащане ще получите линк за гледане на обучението."
+                      : "След плащане ще получите потвърждение и Д-р Николова ще се свърже с Вас за уточняване на датите."}
                   </p>
                 </>
               )}

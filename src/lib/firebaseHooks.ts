@@ -20,6 +20,7 @@ import {
 } from 'firebase/firestore';
 import { DankaUser } from '../app/profile/page';
 import { Course } from './courseTypes';
+import { Training, Enrollment } from './trainingTypes';
 
 export function useAuth() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -131,6 +132,68 @@ export function useDankaUsers() {
   };
 
   return { users, loading, updateUser, setFullUser, sendPasswordReset };
+}
+
+/**
+ * Subscribe to /trainings (specialized online/zoom courses with certificate).
+ * publishedOnly=true → only published rows (for the public /training page).
+ */
+export function useTrainings(publishedOnly: boolean = true) {
+  const [trainings, setTrainings] = useState<Training[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      query(collection(db, "trainings")),
+      (snap) => {
+        const list: Training[] = [];
+        snap.forEach((d) => list.push(d.data() as Training));
+        const filtered = publishedOnly ? list.filter((t) => t.published) : list;
+        filtered.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+        setTrainings(filtered);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching trainings:", error);
+        setLoading(false);
+      }
+    );
+    return unsub;
+  }, [publishedOnly]);
+
+  return { trainings, loading };
+}
+
+/**
+ * Admin-only: subscribe to /enrollments (paid training signups).
+ * Returns empty list silently for non-admin callers (rules block read).
+ */
+export function useEnrollments() {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      query(collection(db, "enrollments")),
+      (snap) => {
+        const list: Enrollment[] = [];
+        snap.forEach((d) => list.push(d.data() as Enrollment));
+        list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+        setEnrollments(list);
+        setLoading(false);
+      },
+      (error) => {
+        // Non-admins get permission-denied; treat as empty.
+        if (error?.code !== "permission-denied") {
+          console.error("Error fetching enrollments:", error);
+        }
+        setLoading(false);
+      }
+    );
+    return unsub;
+  }, []);
+
+  return { enrollments, loading };
 }
 
 /**
