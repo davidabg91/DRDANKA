@@ -42,7 +42,7 @@ export default function TrainingPage() {
 
         {/* ───── CARD 1: Digital bookstore (PDF manuals) ───── */}
         <Link
-          href="/bookstore"
+          href="/library"
           className="group relative block overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A1F18] via-[#0F2A20] to-[#1A3D2E] border border-brand-gold/25 shadow-2xl shadow-brand-green/20 hover:shadow-brand-gold/20 transition-all duration-500 cursor-pointer"
         >
           {/* Glow blobs */}
@@ -68,25 +68,25 @@ export default function TrainingPage() {
               </div>
               <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold bg-brand-gold/10 border border-brand-gold/30 px-3 py-1.5 rounded-full">
                 <Sparkles className="h-3 w-3" />
-                Готови за теглене
+                Започни веднага
               </span>
             </div>
 
             <div className="space-y-2">
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white leading-tight">
-                Дигитална <span className="text-brand-gold">Книжарница</span>
+                Готови <span className="text-brand-gold">обучения</span>
               </h2>
               <p className="text-sm text-white/70 leading-relaxed">
-                Готови наръчници, шаблони и обучителни материали. Купуват се онлайн с карта, четат се веднага
-                в защитения Ви профил. Идеално за самоподготовка преди инспекция.
+                PDF наръчници и видео обучения, готови от д-р Николова. Купувате с карта, получавате достъп
+                веднага. Учите във Вашето темпо.
               </p>
             </div>
 
             <ul className="space-y-1.5 mt-auto">
               {[
                 "Достъп веднага след плащане",
-                "Защитено четене онлайн без сваляне",
-                "Шаблони, отговарящи на БАБХ",
+                "PDF и видео формат",
+                "Учиш във Вашето темпо",
               ].map((b) => (
                 <li key={b} className="flex items-center gap-2 text-xs text-white/80">
                   <CheckCircle className="h-3.5 w-3.5 text-brand-gold shrink-0" />
@@ -97,15 +97,15 @@ export default function TrainingPage() {
 
             <span className="relative overflow-hidden inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/30 transition-all duration-300 mt-2 w-fit">
               <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none" />
-              Виж каталога
+              Виж готовите обучения
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </span>
           </div>
         </Link>
 
-        {/* ───── CARD 2: Specialized online trainings ───── */}
+        {/* ───── CARD 2: Live online courses ───── */}
         <Link
-          href="/trainings"
+          href="/live"
           className="group relative block overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A1F18] via-[#0F2A20] to-[#1A3D2E] border border-brand-gold/25 shadow-2xl shadow-brand-green/20 hover:shadow-brand-gold/20 transition-all duration-500 cursor-pointer"
         >
           {/* Glow blobs */}
@@ -133,26 +133,26 @@ export default function TrainingPage() {
                 </div>
               </div>
               <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold bg-brand-gold/10 border border-brand-gold/30 px-3 py-1.5 rounded-full">
-                <Award className="h-3 w-3" />
-                Със сертификат
+                <Video className="h-3 w-3" />
+                Live с д-р Данка
               </span>
             </div>
 
             <div className="space-y-2">
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white leading-tight">
-                Специализирани <span className="text-brand-gold">курсове</span>
+                Live <span className="text-brand-gold">курсове</span>
               </h2>
               <p className="text-sm text-white/70 leading-relaxed">
-                Онлайн обучения и лекции, провеждани лично от д-р Николова. Видео уроци или Zoom сесии — сертификат
-                след успешни тестове в портала.
+                Групови онлайн обучения по Zoom / Google Meet, водени лично от д-р Николова. Записвате се, ние
+                Ви пишем с дата при сформирана група.
               </p>
             </div>
 
             <ul className="space-y-1.5 mt-auto">
               {[
-                "Видео обучения или живи Zoom лекции",
-                "БАБХ признат лектор",
-                "Сертификат след преминати тестове",
+                "Малки групи с лична обратна връзка",
+                "Zoom / Google Meet сесии",
+                "Сертификат след тестове",
               ].map((b) => (
                 <li key={b} className="flex items-center gap-2 text-xs text-white/80">
                   <CheckCircle className="h-3.5 w-3.5 text-brand-gold shrink-0" />
@@ -163,7 +163,7 @@ export default function TrainingPage() {
 
             <span className="relative overflow-hidden inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/30 transition-all duration-300 mt-2 w-fit">
               <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none" />
-              Виж курсовете
+              Запиши се за live
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </span>
           </div>
