@@ -25,6 +25,8 @@ export interface Training {
   type: TrainingType;
   /** Required when type='video'. The URL the buyer can use to watch (e.g. YouTube, Vimeo, private). */
   videoUrl?: string;
+  /** Optional cover image URL (Firebase Storage). Public — anyone browsing the catalog can see it. */
+  coverImageUrl?: string;
   /** When true, certificate is issued by Dr. Danka after the trainee passes
    *  all assigned tests in the Client Portal. */
   hasCertificate: boolean;

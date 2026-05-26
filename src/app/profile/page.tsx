@@ -356,6 +356,8 @@ export default function ProfilePage() {
   const [trainingDraftVideoUrl, setTrainingDraftVideoUrl] = useState("");
   const [trainingDraftBullets, setTrainingDraftBullets] = useState("");
   const [trainingDraftHasCertificate, setTrainingDraftHasCertificate] = useState(true);
+  const [trainingDraftCover, setTrainingDraftCover] = useState<File | null>(null);
+  const [trainingUploadProgress, setTrainingUploadProgress] = useState<number | null>(null);
   const [trainingsViewMode, setTrainingsViewMode] = useState<"manage" | "enrollments">("manage");
   const [enrollmentSearchQuery, setEnrollmentSearchQuery] = useState("");
 
@@ -1292,23 +1294,47 @@ export default function ProfilePage() {
       .map((s) => s.trim())
       .filter(Boolean);
 
-    const newTraining: Training = {
-      id: trainingId,
-      title: trainingDraftTitle.trim(),
-      shortDesc: trainingDraftShort.trim(),
-      bullets,
-      priceEur: Math.round(priceNum * 100) / 100,
-      type: trainingDraftType,
-      hasCertificate: trainingDraftHasCertificate,
-      published: true,
-      createdAt: now,
-      updatedAt: now,
-    };
-    if (trainingDraftType === "video" && trainingDraftVideoUrl.trim()) {
-      newTraining.videoUrl = trainingDraftVideoUrl.trim();
-    }
-
     try {
+      // Optional cover image upload to /trainings/{id}/cover.<ext>
+      let coverImageUrl = "";
+      if (trainingDraftCover) {
+        setTrainingUploadProgress(0);
+        const ext = (trainingDraftCover.name.split(".").pop() || "jpg").toLowerCase();
+        const coverPath = `trainings/${trainingId}/cover.${ext}`;
+        await new Promise<void>((resolve, reject) => {
+          const task = uploadBytesResumable(storageRef(storage, coverPath), trainingDraftCover);
+          task.on(
+            "state_changed",
+            (snap) => setTrainingUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+            (err) => reject(err),
+            async () => {
+              coverImageUrl = await getDownloadURL(task.snapshot.ref);
+              resolve();
+            }
+          );
+        });
+      }
+      setTrainingUploadProgress(null);
+
+      const newTraining: Training = {
+        id: trainingId,
+        title: trainingDraftTitle.trim(),
+        shortDesc: trainingDraftShort.trim(),
+        bullets,
+        priceEur: Math.round(priceNum * 100) / 100,
+        type: trainingDraftType,
+        hasCertificate: trainingDraftHasCertificate,
+        published: true,
+        createdAt: now,
+        updatedAt: now,
+      };
+      if (trainingDraftType === "video" && trainingDraftVideoUrl.trim()) {
+        newTraining.videoUrl = trainingDraftVideoUrl.trim();
+      }
+      if (coverImageUrl) {
+        newTraining.coverImageUrl = coverImageUrl;
+      }
+
       await setDoc(doc(db, "trainings", trainingId), newTraining);
       // reset
       setTrainingDraftTitle("");
@@ -1318,8 +1344,10 @@ export default function ProfilePage() {
       setTrainingDraftVideoUrl("");
       setTrainingDraftBullets("");
       setTrainingDraftHasCertificate(true);
+      setTrainingDraftCover(null);
       alert("Курсът беше успешно добавен!");
     } catch (err: any) {
+      setTrainingUploadProgress(null);
       alert("Грешка: " + (err?.message || err));
     }
   };
@@ -3396,9 +3424,59 @@ export default function ProfilePage() {
                                 <p className="text-[10px] text-brand-dark/50">След плащане купувачът получава този линк за да гледа видеото.</p>
                               </div>
                             )}
-                            <button type="submit" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer">
+
+                            {/* Cover image upload */}
+                            <div className="space-y-2 border-t border-brand-green/5 pt-3">
+                              <label className="text-[10px] font-bold uppercase tracking-wider text-brand-green flex items-center gap-2">
+                                <Sparkles className="h-3 w-3 text-brand-gold" />
+                                Корица на курса (по желание)
+                              </label>
+                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                {trainingDraftCover ? (
+                                  <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-brand-green/15 shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={URL.createObjectURL(trainingDraftCover)} alt="Преглед" className="w-full h-full object-cover" />
+                                    <button
+                                      type="button"
+                                      onClick={() => setTrainingDraftCover(null)}
+                                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors cursor-pointer"
+                                      title="Премахни"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="w-24 h-24 rounded-xl border-2 border-dashed border-brand-green/20 bg-white flex items-center justify-center text-brand-dark/30 shrink-0">
+                                    <Sparkles className="h-6 w-6" />
+                                  </div>
+                                )}
+                                <label className="flex-1 text-xs cursor-pointer">
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setTrainingDraftCover(e.target.files?.[0] || null)}
+                                    className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-dark file:cursor-pointer file:font-bold cursor-pointer"
+                                  />
+                                  {trainingDraftCover && (
+                                    <span className="text-[10px] text-brand-dark/60 block mt-1">{trainingDraftCover.name} — {(trainingDraftCover.size / 1024).toFixed(0)} KB</span>
+                                  )}
+                                  <span className="text-[10px] text-brand-dark/50 block mt-1">JPG / PNG / WEBP, до 5 MB</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            {trainingUploadProgress !== null && (
+                              <div className="space-y-1">
+                                <div className="w-full bg-brand-green/10 rounded-full h-2 overflow-hidden">
+                                  <div className="h-full bg-brand-gold transition-all" style={{ width: `${trainingUploadProgress}%` }} />
+                                </div>
+                                <span className="text-[10px] text-brand-dark/60">{trainingUploadProgress}% качено…</span>
+                              </div>
+                            )}
+
+                            <button type="submit" disabled={trainingUploadProgress !== null} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
                               <Plus className="h-4 w-4" />
-                              Добави курс
+                              {trainingUploadProgress !== null ? "Качване…" : "Добави курс"}
                             </button>
                           </form>
 

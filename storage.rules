@@ -40,5 +40,15 @@ service firebase.storage {
           && request.resource.contentType.matches('image/.*'))
       );
     }
+
+    // Cover images for specialized trainings (catalog imagery).
+    // Public read, admin write only. Same naming scheme: cover.<ext>.
+    match /trainings/{trainingId}/{fileName} {
+      allow read: if fileName.matches('^cover\\..+');
+      allow write: if isAdmin()
+        && fileName.matches('^cover\\..+')
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
   }
 }

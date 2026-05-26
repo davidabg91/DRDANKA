@@ -187,22 +187,40 @@ export default function TrainingPage() {
             </div>
           )}
           {!loading && trainings.map((t) => (
-            <div key={t.id} className="bg-white rounded-3xl border border-brand-green/5 shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-3">
-              <div className="md:col-span-1 bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center p-8">
-                <div className="text-center space-y-2">
-                  <div className="inline-flex p-4 bg-white rounded-2xl shadow-md">
-                    {t.type === "video" ? <Video className="h-10 w-10 text-brand-gold" /> : <Award className="h-10 w-10 text-brand-gold" />}
+            <div key={t.id} className="bg-white rounded-3xl border border-brand-green/5 shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-3 hover:shadow-xl transition-shadow duration-300">
+              {t.coverImageUrl ? (
+                <div className="md:col-span-1 relative aspect-[4/3] md:aspect-auto md:min-h-[280px] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={t.coverImageUrl} alt={t.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white space-y-1">
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] bg-brand-gold text-brand-dark px-2 py-1 rounded-full">
+                      {t.type === "video" ? <><Video className="h-3 w-3" /> Видео</> : <><Award className="h-3 w-3" /> Онлайн</>}
+                    </span>
+                    {t.hasCertificate && (
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-white/90 pt-1 flex items-center gap-1">
+                        <Award className="h-3 w-3 text-brand-gold" /> Със сертификат
+                      </div>
+                    )}
                   </div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold pt-2">
-                    {t.type === "video" ? "Видео обучение" : "Онлайн лекция"}
-                  </div>
-                  {t.hasCertificate && (
-                    <div className="text-[9px] font-bold uppercase tracking-wider text-brand-green/70">
-                      Със сертификат
-                    </div>
-                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="md:col-span-1 bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center p-8">
+                  <div className="text-center space-y-2">
+                    <div className="inline-flex p-4 bg-white rounded-2xl shadow-md">
+                      {t.type === "video" ? <Video className="h-10 w-10 text-brand-gold" /> : <Award className="h-10 w-10 text-brand-gold" />}
+                    </div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold pt-2">
+                      {t.type === "video" ? "Видео обучение" : "Онлайн лекция"}
+                    </div>
+                    {t.hasCertificate && (
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-brand-green/70">
+                        Със сертификат
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="md:col-span-2 p-6 sm:p-8 space-y-4">
                 <h4 className="font-serif text-xl sm:text-2xl font-bold text-brand-green leading-tight">{t.title}</h4>
