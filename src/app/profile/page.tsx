@@ -11,6 +11,8 @@ import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategorie
 import { Course } from "@/lib/courseTypes";
 import { Training, Enrollment } from "@/lib/trainingTypes";
 import { slugify, uniqueSlug } from "@/lib/slugify";
+import { LIBRARY_MATERIALS } from "@/data/library";
+import { LIVE_COURSES } from "@/data/live-courses";
 
 import { 
   User, 
@@ -236,8 +238,37 @@ export default function ProfilePage() {
   // Authentication states
   const { user: firebaseUser, loading: authLoading } = useAuth();
   const { users: firebaseUsers, loading: usersLoading, setFullUser, updateUser, sendPasswordReset } = useDankaUsers();
-  const { courses: allCourses } = useCourses(false); // admin sees drafts too
-  const { trainings: allTrainings } = useTrainings(false); // admin sees drafts too
+  // Catalogs are now curated in /src/data/ — admin sees them as read-only stats.
+  // The legacy 'Course' / 'Training' shape is kept here as an adapter so the
+  // existing list/buyer/expansion UI keeps working without rewriting it.
+  const allCourses: Course[] = LIBRARY_MATERIALS.map(m => ({
+    id: m.slug,
+    slug: m.slug,
+    title: m.title,
+    description: m.tagline,
+    priceEur: m.priceEur,
+    type: m.type === "pdf" ? "pdf" : "link",
+    coverImageUrl: m.card.cover,
+    fileSizeMb: 0,
+    filePath: "",
+    published: true,
+    createdAt: "",
+    updatedAt: "",
+  }));
+  const allTrainings: Training[] = LIVE_COURSES.map(c => ({
+    id: c.slug,
+    slug: c.slug,
+    title: c.title,
+    shortDesc: c.tagline,
+    bullets: [],
+    priceEur: c.priceEur,
+    type: c.platform === "zoom" ? "zoom" : "zoom", // unify to closest legacy enum
+    coverImageUrl: c.card.cover,
+    hasCertificate: c.hasCertificate,
+    published: true,
+    createdAt: "",
+    updatedAt: "",
+  }));
   const { enrollments: allEnrollments } = useEnrollments();
   const ADMIN_EMAIL = "d.nikolova.haccp@gmail.com";
 
@@ -3324,67 +3355,14 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Upload form */}
-                      <form onSubmit={handleCreateCourse} className="bg-brand-light/30 p-5 rounded-xl border border-brand-green/10 space-y-3">
-                        <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
-                          <PlusCircle className="h-4 w-4 text-brand-gold" />
-                          Нов курс
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <input type="text" placeholder="Заглавие" value={courseDraftTitle} onChange={(e) => setCourseDraftTitle(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
-                          <input type="number" step="0.01" min="0" placeholder="Цена в EUR (€)" value={courseDraftPrice} onChange={(e) => setCourseDraftPrice(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required />
+                      {/* Read-only notice — catalog is now curated in code */}
+                      <div className="bg-brand-light/30 p-4 rounded-xl border border-brand-green/10 flex items-start gap-3">
+                        <BookOpen className="h-5 w-5 text-brand-gold shrink-0 mt-0.5" />
+                        <div className="text-xs text-brand-dark/70 leading-relaxed">
+                          <p className="font-bold text-brand-green mb-1">Каталогът се поддържа в кода</p>
+                          <p>Готовите обучения вече се добавят само от разработчика, за да изглежда всеки курс със свой уникален дизайн. Тук виждате статистика — кои клиенти са купили кои материали.</p>
                         </div>
-                        <input type="text" placeholder="Кратко описание (показва се в каталога)" value={courseDraftDesc} onChange={(e) => setCourseDraftDesc(e.target.value)} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
-                        <textarea placeholder="Дълго описание (по желание, показва се на страницата на курса)" value={courseDraftLongDesc} onChange={(e) => setCourseDraftLongDesc(e.target.value)} rows={3} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" />
-
-                        {/* Type selector: PDF vs external link */}
-                        <div className="flex flex-col gap-2 border-t border-brand-green/5 pt-3">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-brand-green">Съдържание на курса *</span>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <label className={`text-xs flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${courseDraftType === "pdf" ? "border-brand-gold bg-brand-gold/10 text-brand-green" : "border-brand-green/15 bg-white text-brand-dark/70 hover:border-brand-gold/40"}`}>
-                              <input type="radio" name="courseType" value="pdf" checked={courseDraftType === "pdf"} onChange={() => setCourseDraftType("pdf")} className="w-3.5 h-3.5 cursor-pointer" />
-                              <FileText className="h-4 w-4" />
-                              <span className="font-bold">PDF файл</span>
-                            </label>
-                            <label className={`text-xs flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${courseDraftType === "link" ? "border-brand-gold bg-brand-gold/10 text-brand-green" : "border-brand-green/15 bg-white text-brand-dark/70 hover:border-brand-gold/40"}`}>
-                              <input type="radio" name="courseType" value="link" checked={courseDraftType === "link"} onChange={() => setCourseDraftType("link")} className="w-3.5 h-3.5 cursor-pointer" />
-                              <ExternalLink className="h-4 w-4" />
-                              <span className="font-bold">Линк (друг сайт)</span>
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {courseDraftType === "pdf" ? (
-                            <label className="text-xs flex flex-col gap-1">
-                              <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">PDF файл *</span>
-                              <input type="file" accept="application/pdf" onChange={(e) => setCourseDraftPdf(e.target.files?.[0] || null)} className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-green file:text-white file:cursor-pointer file:font-bold cursor-pointer" />
-                              {courseDraftPdf && <span className="text-[10px] text-brand-dark/60">{courseDraftPdf.name} — {(courseDraftPdf.size / (1024 * 1024)).toFixed(1)} MB</span>}
-                            </label>
-                          ) : (
-                            <label className="text-xs flex flex-col gap-1">
-                              <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">Линк към курса *</span>
-                              <input type="url" placeholder="https://example.com/course" value={courseDraftExternalUrl} onChange={(e) => setCourseDraftExternalUrl(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" />
-                              <span className="text-[10px] text-brand-dark/50">Купувачът ще бъде препратен към този URL.</span>
-                            </label>
-                          )}
-                          <label className="text-xs flex flex-col gap-1">
-                            <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">Корица (опционално)</span>
-                            <input type="file" accept="image/*" onChange={(e) => setCourseDraftCover(e.target.files?.[0] || null)} className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-dark file:cursor-pointer file:font-bold cursor-pointer" />
-                            {courseDraftCover && <span className="text-[10px] text-brand-dark/60">{courseDraftCover.name}</span>}
-                          </label>
-                        </div>
-                        {courseUploadProgress !== null && (
-                          <div className="w-full bg-brand-green/10 rounded-full h-2 overflow-hidden">
-                            <div className="h-full bg-brand-gold transition-all" style={{ width: `${courseUploadProgress}%` }} />
-                            <span className="text-[10px] text-brand-dark/60">{courseUploadProgress}% качено…</span>
-                          </div>
-                        )}
-                        <button type="submit" disabled={courseUploadProgress !== null} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
-                          <Plus className="h-4 w-4" />
-                          {courseUploadProgress !== null ? "Качване…" : "Качи курс"}
-                        </button>
-                      </form>
+                      </div>
 
                       {/* Manual grant access */}
                       <div className="bg-brand-gold/5 border border-brand-gold/25 rounded-xl p-4 space-y-2">
@@ -3536,94 +3514,14 @@ export default function ProfilePage() {
 
                       {trainingsViewMode === "manage" && (
                         <>
-                          {/* New training form */}
-                          <form onSubmit={handleCreateTraining} className="bg-brand-light/30 p-5 rounded-xl border border-brand-green/10 space-y-3">
-                            <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
-                              <PlusCircle className="h-4 w-4 text-brand-gold" />
-                              Нов курс / обучение
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                              <input type="text" placeholder="Заглавие" value={trainingDraftTitle} onChange={(e) => setTrainingDraftTitle(e.target.value)} className="md:col-span-2 text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
-                              <input type="number" step="0.01" min="0" placeholder="Цена в EUR (€)" value={trainingDraftPrice} onChange={(e) => setTrainingDraftPrice(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required />
+                          {/* Read-only notice — live courses curated in code */}
+                          <div className="bg-brand-light/30 p-4 rounded-xl border border-brand-green/10 flex items-start gap-3">
+                            <Video className="h-5 w-5 text-brand-gold shrink-0 mt-0.5" />
+                            <div className="text-xs text-brand-dark/70 leading-relaxed">
+                              <p className="font-bold text-brand-green mb-1">Live курсовете се поддържат в кода</p>
+                              <p>Всеки курс има свой уникален дизайн и страница. Тук виждате статистика — кои клиенти са записани за кои live сесии.</p>
                             </div>
-                            <textarea placeholder="Кратко описание (показва се в каталога)" value={trainingDraftShort} onChange={(e) => setTrainingDraftShort(e.target.value)} rows={2} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" required />
-                            <textarea placeholder="Дълго описание (по желание, показва се на страницата на курса). Поддържа абзаци — оставете празен ред между абзаци." value={trainingDraftLongDesc} onChange={(e) => setTrainingDraftLongDesc(e.target.value)} rows={4} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" />
-                            <textarea placeholder="Bullets (по един на ред)&#10;напр.:&#10;БАБХ признат лектор&#10;Реални казуси от практиката" value={trainingDraftBullets} onChange={(e) => setTrainingDraftBullets(e.target.value)} rows={4} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y font-mono" />
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              <label className="text-xs flex flex-col gap-1">
-                                <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">Тип на обучението</span>
-                                <select value={trainingDraftType} onChange={(e) => setTrainingDraftType(e.target.value as "video" | "zoom")} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer">
-                                  <option value="video">📹 Видео обучение (с линк)</option>
-                                  <option value="zoom">📞 Zoom / онлайн лекция (с уговорка)</option>
-                                </select>
-                              </label>
-                              <label className="text-xs flex items-center gap-2 select-none cursor-pointer mt-5">
-                                <input type="checkbox" checked={trainingDraftHasCertificate} onChange={(e) => setTrainingDraftHasCertificate(e.target.checked)} className="w-4 h-4 cursor-pointer" />
-                                <span className="text-brand-dark/80">Издава сертификат след тестове в портала</span>
-                              </label>
-                            </div>
-                            {trainingDraftType === "video" && (
-                              <div className="space-y-1">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-green">Линк към видеото (YouTube/Vimeo/частен) *</label>
-                                <input type="url" placeholder="https://youtu.be/..." value={trainingDraftVideoUrl} onChange={(e) => setTrainingDraftVideoUrl(e.target.value)} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required={trainingDraftType === "video"} />
-                                <p className="text-[10px] text-brand-dark/50">След плащане купувачът получава този линк за да гледа видеото.</p>
-                              </div>
-                            )}
-
-                            {/* Cover image upload */}
-                            <div className="space-y-2 border-t border-brand-green/5 pt-3">
-                              <label className="text-[10px] font-bold uppercase tracking-wider text-brand-green flex items-center gap-2">
-                                <Sparkles className="h-3 w-3 text-brand-gold" />
-                                Корица на курса (по желание)
-                              </label>
-                              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                                {trainingDraftCover ? (
-                                  <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-brand-green/15 shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={URL.createObjectURL(trainingDraftCover)} alt="Преглед" className="w-full h-full object-cover" />
-                                    <button
-                                      type="button"
-                                      onClick={() => setTrainingDraftCover(null)}
-                                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors cursor-pointer"
-                                      title="Премахни"
-                                    >
-                                      <X className="h-3 w-3" />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <div className="w-24 h-24 rounded-xl border-2 border-dashed border-brand-green/20 bg-white flex items-center justify-center text-brand-dark/30 shrink-0">
-                                    <Sparkles className="h-6 w-6" />
-                                  </div>
-                                )}
-                                <label className="flex-1 text-xs cursor-pointer">
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => setTrainingDraftCover(e.target.files?.[0] || null)}
-                                    className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-dark file:cursor-pointer file:font-bold cursor-pointer"
-                                  />
-                                  {trainingDraftCover && (
-                                    <span className="text-[10px] text-brand-dark/60 block mt-1">{trainingDraftCover.name} — {(trainingDraftCover.size / 1024).toFixed(0)} KB</span>
-                                  )}
-                                  <span className="text-[10px] text-brand-dark/50 block mt-1">JPG / PNG / WEBP, до 5 MB</span>
-                                </label>
-                              </div>
-                            </div>
-
-                            {trainingUploadProgress !== null && (
-                              <div className="space-y-1">
-                                <div className="w-full bg-brand-green/10 rounded-full h-2 overflow-hidden">
-                                  <div className="h-full bg-brand-gold transition-all" style={{ width: `${trainingUploadProgress}%` }} />
-                                </div>
-                                <span className="text-[10px] text-brand-dark/60">{trainingUploadProgress}% качено…</span>
-                              </div>
-                            )}
-
-                            <button type="submit" disabled={trainingUploadProgress !== null} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer">
-                              <Plus className="h-4 w-4" />
-                              {trainingUploadProgress !== null ? "Качване…" : "Добави курс"}
-                            </button>
-                          </form>
+                          </div>
 
                           {/* Training list */}
                           <div className="space-y-2">
