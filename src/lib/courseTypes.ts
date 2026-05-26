@@ -7,6 +7,15 @@
  *                              own access via /users/{email}.purchasedCourseIds)
  */
 
+/**
+ * Course delivery format:
+ *   - 'pdf': PDF file uploaded to Firebase Storage, viewed in our protected
+ *            viewer at /courses/[id]/viewer.
+ *   - 'link': external URL (YouTube, custom learning platform, etc.) — the
+ *            buyer is redirected to it from their portal.
+ */
+export type CourseType = "pdf" | "link";
+
 export interface Course {
   id: string;
   title: string;
@@ -18,10 +27,14 @@ export interface Course {
   priceEur: number;
   /** Optional cover image URL (public). */
   coverImageUrl?: string;
-  /** Storage path of the PDF, e.g. "courses/<id>/file.pdf". */
-  filePath: string;
-  /** Size in MB at upload time — informational. */
-  fileSizeMb: number;
+  /** Format of the course content. Missing on legacy docs → treat as 'pdf'. */
+  type?: CourseType;
+  /** Storage path of the PDF, e.g. "courses/<id>/file.pdf". Required when type='pdf'. */
+  filePath?: string;
+  /** Size in MB at upload time — informational, only for type='pdf'. */
+  fileSizeMb?: number;
+  /** External course URL. Required when type='link'. */
+  externalUrl?: string;
   /** If false, hidden from the public catalog but existing buyers still keep access. */
   published: boolean;
   createdAt: string;

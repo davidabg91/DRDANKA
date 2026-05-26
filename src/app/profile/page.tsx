@@ -367,7 +367,9 @@ export default function ProfilePage() {
   const [courseDraftDesc, setCourseDraftDesc] = useState("");
   const [courseDraftLongDesc, setCourseDraftLongDesc] = useState("");
   const [courseDraftPrice, setCourseDraftPrice] = useState("");
+  const [courseDraftType, setCourseDraftType] = useState<"pdf" | "link">("pdf");
   const [courseDraftPdf, setCourseDraftPdf] = useState<File | null>(null);
+  const [courseDraftExternalUrl, setCourseDraftExternalUrl] = useState("");
   const [courseDraftCover, setCourseDraftCover] = useState<File | null>(null);
   const [courseUploadProgress, setCourseUploadProgress] = useState<number | null>(null);
   const [courseGrantEmail, setCourseGrantEmail] = useState("");
@@ -1198,13 +1200,27 @@ export default function ProfilePage() {
       alert("Моля въведете валидна цена (лева).");
       return;
     }
-    if (!courseDraftPdf) {
-      alert("Моля прикачете PDF файл за курса.");
-      return;
-    }
-    if (courseDraftPdf.type !== "application/pdf") {
-      alert("Файлът трябва да бъде във формат PDF.");
-      return;
+    if (courseDraftType === "pdf") {
+      if (!courseDraftPdf) {
+        alert("Моля прикачете PDF файл за курса.");
+        return;
+      }
+      if (courseDraftPdf.type !== "application/pdf") {
+        alert("Файлът трябва да бъде във формат PDF.");
+        return;
+      }
+    } else {
+      // type === 'link'
+      if (!courseDraftExternalUrl.trim()) {
+        alert("Моля въведете линк към курса (URL).");
+        return;
+      }
+      try {
+        new URL(courseDraftExternalUrl.trim());
+      } catch {
+        alert("Линкът не е валиден URL. Започвайте с https://");
+        return;
+      }
     }
 
     const courseId = "course_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
@@ -1212,17 +1228,19 @@ export default function ProfilePage() {
     const coverPath = courseDraftCover ? `courses/${courseId}/cover.${(courseDraftCover.name.split(".").pop() || "jpg").toLowerCase()}` : "";
 
     try {
-      // Upload PDF with progress.
-      setCourseUploadProgress(0);
-      await new Promise<void>((resolve, reject) => {
-        const task = uploadBytesResumable(storageRef(storage, pdfPath), courseDraftPdf);
-        task.on(
-          "state_changed",
-          (snap) => setCourseUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-          (err) => reject(err),
-          () => resolve()
-        );
-      });
+      // PDF upload only for type='pdf'.
+      if (courseDraftType === "pdf" && courseDraftPdf) {
+        setCourseUploadProgress(0);
+        await new Promise<void>((resolve, reject) => {
+          const task = uploadBytesResumable(storageRef(storage, pdfPath), courseDraftPdf);
+          task.on(
+            "state_changed",
+            (snap) => setCourseUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+            (err) => reject(err),
+            () => resolve()
+          );
+        });
+      }
 
       // Optional cover image upload.
       let coverImageUrl = "";
@@ -1239,12 +1257,18 @@ export default function ProfilePage() {
         title: courseDraftTitle.trim(),
         description: courseDraftDesc.trim(),
         priceEur: Math.round(priceNum * 100) / 100,
-        filePath: pdfPath,
-        fileSizeMb: Math.round((courseDraftPdf.size / (1024 * 1024)) * 100) / 100,
+        type: courseDraftType,
         published: true,
         createdAt: now,
         updatedAt: now,
       };
+      if (courseDraftType === "pdf" && courseDraftPdf) {
+        newCourse.filePath = pdfPath;
+        newCourse.fileSizeMb = Math.round((courseDraftPdf.size / (1024 * 1024)) * 100) / 100;
+      }
+      if (courseDraftType === "link") {
+        newCourse.externalUrl = courseDraftExternalUrl.trim();
+      }
       if (courseDraftLongDesc.trim()) {
         newCourse.longDescription = courseDraftLongDesc.trim();
       }
@@ -1258,7 +1282,9 @@ export default function ProfilePage() {
       setCourseDraftDesc("");
       setCourseDraftLongDesc("");
       setCourseDraftPrice("");
+      setCourseDraftType("pdf");
       setCourseDraftPdf(null);
+      setCourseDraftExternalUrl("");
       setCourseDraftCover(null);
       alert("Курсът беше успешно качен!");
     } catch (err: any) {
@@ -3298,12 +3324,38 @@ export default function ProfilePage() {
                         </div>
                         <input type="text" placeholder="Кратко описание (показва се в каталога)" value={courseDraftDesc} onChange={(e) => setCourseDraftDesc(e.target.value)} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
                         <textarea placeholder="Дълго описание (по желание, показва се на страницата на курса)" value={courseDraftLongDesc} onChange={(e) => setCourseDraftLongDesc(e.target.value)} rows={3} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" />
+
+                        {/* Type selector: PDF vs external link */}
+                        <div className="flex flex-col gap-2 border-t border-brand-green/5 pt-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-brand-green">Съдържание на курса *</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <label className={`text-xs flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${courseDraftType === "pdf" ? "border-brand-gold bg-brand-gold/10 text-brand-green" : "border-brand-green/15 bg-white text-brand-dark/70 hover:border-brand-gold/40"}`}>
+                              <input type="radio" name="courseType" value="pdf" checked={courseDraftType === "pdf"} onChange={() => setCourseDraftType("pdf")} className="w-3.5 h-3.5 cursor-pointer" />
+                              <FileText className="h-4 w-4" />
+                              <span className="font-bold">PDF файл</span>
+                            </label>
+                            <label className={`text-xs flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors ${courseDraftType === "link" ? "border-brand-gold bg-brand-gold/10 text-brand-green" : "border-brand-green/15 bg-white text-brand-dark/70 hover:border-brand-gold/40"}`}>
+                              <input type="radio" name="courseType" value="link" checked={courseDraftType === "link"} onChange={() => setCourseDraftType("link")} className="w-3.5 h-3.5 cursor-pointer" />
+                              <ExternalLink className="h-4 w-4" />
+                              <span className="font-bold">Линк (друг сайт)</span>
+                            </label>
+                          </div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <label className="text-xs flex flex-col gap-1">
-                            <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">PDF файл *</span>
-                            <input type="file" accept="application/pdf" onChange={(e) => setCourseDraftPdf(e.target.files?.[0] || null)} className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-green file:text-white file:cursor-pointer file:font-bold cursor-pointer" />
-                            {courseDraftPdf && <span className="text-[10px] text-brand-dark/60">{courseDraftPdf.name} — {(courseDraftPdf.size / (1024 * 1024)).toFixed(1)} MB</span>}
-                          </label>
+                          {courseDraftType === "pdf" ? (
+                            <label className="text-xs flex flex-col gap-1">
+                              <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">PDF файл *</span>
+                              <input type="file" accept="application/pdf" onChange={(e) => setCourseDraftPdf(e.target.files?.[0] || null)} className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-green file:text-white file:cursor-pointer file:font-bold cursor-pointer" />
+                              {courseDraftPdf && <span className="text-[10px] text-brand-dark/60">{courseDraftPdf.name} — {(courseDraftPdf.size / (1024 * 1024)).toFixed(1)} MB</span>}
+                            </label>
+                          ) : (
+                            <label className="text-xs flex flex-col gap-1">
+                              <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">Линк към курса *</span>
+                              <input type="url" placeholder="https://example.com/course" value={courseDraftExternalUrl} onChange={(e) => setCourseDraftExternalUrl(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" />
+                              <span className="text-[10px] text-brand-dark/50">Купувачът ще бъде препратен към този URL.</span>
+                            </label>
+                          )}
                           <label className="text-xs flex flex-col gap-1">
                             <span className="font-bold text-brand-green uppercase tracking-wider text-[10px]">Корица (опционално)</span>
                             <input type="file" accept="image/*" onChange={(e) => setCourseDraftCover(e.target.files?.[0] || null)} className="text-xs file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-brand-gold file:text-brand-dark file:cursor-pointer file:font-bold cursor-pointer" />
@@ -3352,7 +3404,7 @@ export default function ProfilePage() {
                               <thead>
                                 <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
                                   <th className="border border-brand-green/10 p-3 text-left">Курс</th>
-                                  <th className="border border-brand-green/10 p-3 text-center">Размер</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Тип / Размер</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Цена</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Купувачи</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Статус</th>
@@ -3370,7 +3422,16 @@ export default function ProfilePage() {
                                         <div className="font-bold text-brand-green">{c.title}</div>
                                         <div className="text-[10px] text-brand-dark/50">{c.description}</div>
                                       </td>
-                                      <td className="border border-brand-green/10 p-3 text-center font-mono text-[10px]">{c.fileSizeMb} MB</td>
+                                      <td className="border border-brand-green/10 p-3 text-center text-[10px]">
+                                        {(c.type ?? "pdf") === "link" ? (
+                                          <a href={c.externalUrl} target="_blank" rel="noopener noreferrer" className="text-brand-gold hover:underline inline-flex items-center gap-1 font-bold">
+                                            <ExternalLink className="h-3 w-3" />
+                                            Линк
+                                          </a>
+                                        ) : (
+                                          <span className="font-mono">{c.fileSizeMb ?? 0} MB</span>
+                                        )}
+                                      </td>
                                       <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{c.priceEur.toFixed(2)} €</td>
                                       <td className="border border-brand-green/10 p-3 text-center">
                                         {buyers.length > 0 ? (

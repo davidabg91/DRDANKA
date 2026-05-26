@@ -50,12 +50,24 @@ export default function CourseViewerPage() {
       }
       setEmail(user.email);
       try {
-        // 1. Load course doc to get the storage filePath.
+        // 1. Load course doc to get the storage filePath or external URL.
         const courseSnap = await getDoc(doc(db, "courses", courseId as string));
         if (!courseSnap.exists()) {
           throw new Error("Курсът не съществува");
         }
-        const courseData = courseSnap.data() as { filePath: string };
+        const courseData = courseSnap.data() as {
+          filePath?: string;
+          externalUrl?: string;
+          type?: "pdf" | "link";
+        };
+        // External link course → redirect to the URL instead of rendering PDF.
+        if ((courseData.type ?? "pdf") === "link" && courseData.externalUrl) {
+          window.location.href = courseData.externalUrl;
+          return;
+        }
+        if (!courseData.filePath) {
+          throw new Error("Курсът няма прикачен файл.");
+        }
         // 2. Download the PDF as a Blob through the Firebase SDK. Storage rules
         //    deny this unless the caller is admin OR has purchasedCourseIds
         //    containing this courseId. Using getBlob (not getDownloadURL+fetch)

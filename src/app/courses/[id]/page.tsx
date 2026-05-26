@@ -240,7 +240,9 @@ export default function CourseDetailPage() {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
                   <span className="font-serif text-4xl font-bold text-brand-gold">{course.priceEur.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
                 </div>
-                <span className="text-[10px] text-brand-dark/40 font-mono">{course.fileSizeMb} MB · PDF</span>
+                <span className="text-[10px] text-brand-dark/40 font-mono">
+                  {(course.type ?? "pdf") === "link" ? "Външен курс" : `${course.fileSizeMb ?? 0} MB · PDF`}
+                </span>
               </div>
 
               <div className="flex flex-col gap-2">
