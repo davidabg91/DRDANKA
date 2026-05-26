@@ -93,6 +93,13 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // /enrollments/{id} — public training enrollments (anonymous signups
+    // from /training). Anyone can submit; admin reviews and contacts them.
+    match /enrollments/{id} {
+      allow create: if true;          // public signup form
+      allow read, update, delete: if isAdmin();
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;
