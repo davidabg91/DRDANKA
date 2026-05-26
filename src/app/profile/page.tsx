@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
 import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments } from "@/lib/firebaseHooks";
 import { auth, db, storage } from "@/lib/firebase";
@@ -351,6 +351,7 @@ export default function ProfilePage() {
   // Specialized trainings admin state
   const [trainingDraftTitle, setTrainingDraftTitle] = useState("");
   const [trainingDraftShort, setTrainingDraftShort] = useState("");
+  const [trainingDraftLongDesc, setTrainingDraftLongDesc] = useState("");
   const [trainingDraftPrice, setTrainingDraftPrice] = useState("");
   const [trainingDraftType, setTrainingDraftType] = useState<"video" | "zoom">("video");
   const [trainingDraftVideoUrl, setTrainingDraftVideoUrl] = useState("");
@@ -371,6 +372,7 @@ export default function ProfilePage() {
   const [courseUploadProgress, setCourseUploadProgress] = useState<number | null>(null);
   const [courseGrantEmail, setCourseGrantEmail] = useState("");
   const [courseGrantTargetId, setCourseGrantTargetId] = useState("");
+  const [expandedCourseBuyers, setExpandedCourseBuyers] = useState<string | null>(null);
 
   // Admin Materials form states
   const [materialType, setMaterialType] = useState<"document" | "test">("document");
@@ -1334,11 +1336,15 @@ export default function ProfilePage() {
       if (coverImageUrl) {
         newTraining.coverImageUrl = coverImageUrl;
       }
+      if (trainingDraftLongDesc.trim()) {
+        newTraining.longDescription = trainingDraftLongDesc.trim();
+      }
 
       await setDoc(doc(db, "trainings", trainingId), newTraining);
       // reset
       setTrainingDraftTitle("");
       setTrainingDraftShort("");
+      setTrainingDraftLongDesc("");
       setTrainingDraftPrice("");
       setTrainingDraftType("video");
       setTrainingDraftVideoUrl("");
@@ -3327,16 +3333,30 @@ export default function ProfilePage() {
                               </thead>
                               <tbody>
                                 {allCourses.map(c => {
-                                  const buyersCount = usersList.filter(u => (u.purchasedCourseIds || []).includes(c.id)).length;
+                                  const buyers = usersList.filter(u => (u.purchasedCourseIds || []).includes(c.id));
+                                  const isExpanded = expandedCourseBuyers === c.id;
                                   return (
-                                    <tr key={c.id} className="hover:bg-brand-light/30">
+                                    <Fragment key={c.id}>
+                                    <tr className="hover:bg-brand-light/30">
                                       <td className="border border-brand-green/10 p-3">
                                         <div className="font-bold text-brand-green">{c.title}</div>
                                         <div className="text-[10px] text-brand-dark/50">{c.description}</div>
                                       </td>
                                       <td className="border border-brand-green/10 p-3 text-center font-mono text-[10px]">{c.fileSizeMb} MB</td>
                                       <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{c.priceEur.toFixed(2)} €</td>
-                                      <td className="border border-brand-green/10 p-3 text-center font-mono">{buyersCount}</td>
+                                      <td className="border border-brand-green/10 p-3 text-center">
+                                        {buyers.length > 0 ? (
+                                          <button
+                                            onClick={() => setExpandedCourseBuyers(isExpanded ? null : c.id)}
+                                            className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1"
+                                          >
+                                            {buyers.length}
+                                            <ChevronRight className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
+                                          </button>
+                                        ) : (
+                                          <span className="text-[10px] text-brand-dark/40">0</span>
+                                        )}
+                                      </td>
                                       <td className="border border-brand-green/10 p-3 text-center">
                                         <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${c.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
                                           {c.published ? "Активен" : "Скрит"}
@@ -3351,6 +3371,29 @@ export default function ProfilePage() {
                                         </button>
                                       </td>
                                     </tr>
+                                    {isExpanded && buyers.length > 0 && (
+                                      <tr>
+                                        <td colSpan={6} className="border border-brand-green/10 p-3 bg-brand-light/50">
+                                          <div className="space-y-2">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-brand-green">Купувачи ({buyers.length})</p>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                              {buyers.map(b => (
+                                                <div key={b.email} className="bg-white border border-brand-green/10 rounded-lg p-2.5 text-[11px] flex items-start gap-2">
+                                                  <Users className="h-3.5 w-3.5 text-brand-gold shrink-0 mt-0.5" />
+                                                  <div className="flex-1 min-w-0">
+                                                    <a href={`mailto:${b.email}`} className="font-mono text-brand-green hover:text-brand-gold block truncate">{b.email}</a>
+                                                    {b.firmName && <div className="text-brand-dark/60 truncate">{b.firmName}</div>}
+                                                    {b.contact && <div className="text-brand-dark/50">{b.contact}</div>}
+                                                    {b.phone && <a href={`tel:${b.phone}`} className="font-mono text-brand-dark/70 hover:text-brand-gold">{b.phone}</a>}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                    </Fragment>
                                   );
                                 })}
                               </tbody>
@@ -3402,7 +3445,8 @@ export default function ProfilePage() {
                               <input type="text" placeholder="Заглавие" value={trainingDraftTitle} onChange={(e) => setTrainingDraftTitle(e.target.value)} className="md:col-span-2 text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" required />
                               <input type="number" step="0.01" min="0" placeholder="Цена в EUR (€)" value={trainingDraftPrice} onChange={(e) => setTrainingDraftPrice(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" required />
                             </div>
-                            <textarea placeholder="Кратко описание" value={trainingDraftShort} onChange={(e) => setTrainingDraftShort(e.target.value)} rows={2} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" required />
+                            <textarea placeholder="Кратко описание (показва се в каталога)" value={trainingDraftShort} onChange={(e) => setTrainingDraftShort(e.target.value)} rows={2} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" required />
+                            <textarea placeholder="Дълго описание (по желание, показва се на страницата на курса). Поддържа абзаци — оставете празен ред между абзаци." value={trainingDraftLongDesc} onChange={(e) => setTrainingDraftLongDesc(e.target.value)} rows={4} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y" />
                             <textarea placeholder="Bullets (по един на ред)&#10;напр.:&#10;БАБХ признат лектор&#10;Реални казуси от практиката" value={trainingDraftBullets} onChange={(e) => setTrainingDraftBullets(e.target.value)} rows={4} className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y font-mono" />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                               <label className="text-xs flex flex-col gap-1">

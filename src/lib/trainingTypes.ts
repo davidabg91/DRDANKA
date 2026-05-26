@@ -13,6 +13,8 @@ export interface Training {
   title: string;
   /** Short tagline / hero description shown on the catalog card. */
   shortDesc: string;
+  /** Optional long description (paragraphs) for the detail page. */
+  longDescription?: string;
   /** Up to ~5 short feature bullets. */
   bullets: string[];
   /** Price in EUR. */
