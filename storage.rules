@@ -50,5 +50,23 @@ service firebase.storage {
         && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
     }
+
+    // Library materials (code-based catalog at src/data/library/).
+    // Each material's PDF lives at library/<slug>/file.pdf and is readable
+    // only by admin OR a buyer who has the slug in purchasedCourseIds.
+    function hasPurchasedSlug(slug) {
+      let email = request.auth.token.email.lower();
+      let userPath = /databases/(default)/documents/users/$(email);
+      return request.auth != null
+        && firestore.exists(userPath)
+        && slug in firestore.get(userPath).data.purchasedCourseIds;
+    }
+
+    match /library/{slug}/file.pdf {
+      allow read: if isAdmin() || hasPurchasedSlug(slug);
+      allow write: if isAdmin()
+        && request.resource.size < 200 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+    }
   }
 }

@@ -43,6 +43,7 @@ import {
   Video,
   ExternalLink,
   Copy,
+  Upload,
   MessageSquare,
   Send,
   Users,
@@ -407,6 +408,8 @@ export default function ProfilePage() {
   const [courseGrantEmail, setCourseGrantEmail] = useState("");
   const [courseGrantTargetId, setCourseGrantTargetId] = useState("");
   const [expandedCourseBuyers, setExpandedCourseBuyers] = useState<string | null>(null);
+  /** Per-material PDF upload progress (0..100, or null if idle). Keyed by slug. */
+  const [libraryUploadProgress, setLibraryUploadProgress] = useState<Record<string, number | null>>({});
 
   // Admin Materials form states
   const [materialType, setMaterialType] = useState<"document" | "test">("document");
@@ -1479,6 +1482,38 @@ export default function ProfilePage() {
     } catch (err: any) {
       alert("Грешка: " + (err?.message || err));
     }
+  };
+
+  /**
+   * Admin uploads a PDF for a library material (code-based catalog).
+   * File is stored at /library/{slug}/file.pdf in Firebase Storage.
+   * Storage Rules grant read access to admin or any buyer who has the slug
+   * in their purchasedCourseIds — same protected pattern as before.
+   */
+  const handleUploadLibraryPdf = (slug: string, file: File) => {
+    if (file.type !== "application/pdf") {
+      alert("Файлът трябва да бъде PDF.");
+      return;
+    }
+    const path = `library/${slug}/file.pdf`;
+    setLibraryUploadProgress(p => ({ ...p, [slug]: 0 }));
+    const task = uploadBytesResumable(storageRef(storage, path), file);
+    task.on(
+      "state_changed",
+      (snap) => {
+        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+        setLibraryUploadProgress(p => ({ ...p, [slug]: pct }));
+      },
+      (err) => {
+        console.error("library upload error:", err);
+        setLibraryUploadProgress(p => ({ ...p, [slug]: null }));
+        alert(`Грешка при качване: ${err?.code || ""} ${err?.message || err}`);
+      },
+      () => {
+        setLibraryUploadProgress(p => ({ ...p, [slug]: null }));
+        alert(`PDF-ът за „${slug}" е качен успешно!`);
+      }
+    );
   };
 
   const handleGrantCourse = async () => {
@@ -3398,7 +3433,7 @@ export default function ProfilePage() {
                                   <th className="border border-brand-green/10 p-3 text-center">Цена</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Купувачи</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Статус</th>
-                                  <th className="border border-brand-green/10 p-3 text-center">Действия</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">PDF файл</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -3441,13 +3476,36 @@ export default function ProfilePage() {
                                           {c.published ? "Активен" : "Скрит"}
                                         </span>
                                       </td>
-                                      <td className="border border-brand-green/10 p-3 text-center space-x-1">
-                                        <button onClick={() => handleTogglePublished(c)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
-                                          {c.published ? "Скрий" : "Покажи"}
-                                        </button>
-                                        <button onClick={() => handleDeleteCourse(c)} className="text-red-500 hover:text-red-700 p-1 cursor-pointer" title="Изтрий">
-                                          <Trash2 className="h-3.5 w-3.5 inline" />
-                                        </button>
+                                      <td className="border border-brand-green/10 p-3 text-center">
+                                        {(() => {
+                                          const progress = libraryUploadProgress[c.slug || c.id];
+                                          if (progress !== null && progress !== undefined) {
+                                            return (
+                                              <div className="space-y-1">
+                                                <div className="w-full bg-brand-green/10 rounded-full h-1.5 overflow-hidden">
+                                                  <div className="h-full bg-brand-gold transition-all" style={{ width: `${progress}%` }} />
+                                                </div>
+                                                <span className="text-[9px] text-brand-dark/60">{progress}%</span>
+                                              </div>
+                                            );
+                                          }
+                                          return (
+                                            <label className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer">
+                                              <Upload className="h-3 w-3" />
+                                              Качи PDF
+                                              <input
+                                                type="file"
+                                                accept="application/pdf"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                  const f = e.target.files?.[0];
+                                                  if (f) handleUploadLibraryPdf(c.slug || c.id, f);
+                                                  e.target.value = ""; // reset so the same file can be re-uploaded
+                                                }}
+                                              />
+                                            </label>
+                                          );
+                                        })()}
                                       </td>
                                     </tr>
                                     {isExpanded && buyers.length > 0 && (
@@ -5288,7 +5346,8 @@ export default function ProfilePage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                         {myMaterials.map(m => {
-                          const ready = !m.contentUrl.includes("REPLACE_ME");
+                          // For PDF type, we serve from Firebase Storage at library/<slug>/file.pdf
+                          // through the protected viewer. For video type, fallback to contentUrl.
                           return (
                           <div key={m.slug} className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
                             <div className="space-y-3">
@@ -5301,7 +5360,15 @@ export default function ProfilePage() {
                                 {m.type === "video" ? "🎬 Видео обучение" : "📄 PDF Наръчник"}
                               </span>
                             </div>
-                            {ready ? (
+                            {m.type === "pdf" ? (
+                              <Link
+                                href={`/library/${m.slug}/viewer`}
+                                className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
+                              >
+                                <BookOpen className="h-4 w-4" />
+                                Отвори обучението
+                              </Link>
+                            ) : !m.contentUrl.includes("REPLACE_ME") ? (
                               <a
                                 href={m.contentUrl}
                                 target="_blank"
@@ -5309,7 +5376,7 @@ export default function ProfilePage() {
                                 className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
                               >
                                 <BookOpen className="h-4 w-4" />
-                                Отвори обучението
+                                Отвори видеото
                               </a>
                             ) : (
                               <div className="mt-6 inline-flex items-center justify-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs uppercase py-3 rounded-lg w-full text-center" title="contentUrl още не е настроен в src/data/library/">
