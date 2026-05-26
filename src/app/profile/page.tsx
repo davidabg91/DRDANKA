@@ -1152,6 +1152,25 @@ export default function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole, currentUserEmail, usersList.length]);
 
+  // Auto-mark 'paid' enrollments as 'contacted' when admin opens the
+  // Записани sub-tab. Clears the red badge — admin can still see them
+  // in the list (status pill turns blue 'Свързан').
+  useEffect(() => {
+    if (userRole !== "admin") return;
+    if (activeAdminTab !== "trainings" || trainingsViewMode !== "enrollments") return;
+    const toMark = allEnrollments.filter(e => e.status === "paid");
+    if (toMark.length === 0) return;
+    const now = new Date().toISOString();
+    toMark.forEach(e => {
+      setDoc(
+        doc(db, "enrollments", e.id),
+        { status: "contacted", contactedAt: now },
+        { merge: true }
+      ).catch(err => console.error("auto-mark enrollment contacted:", err));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userRole, activeAdminTab, trainingsViewMode, allEnrollments.length]);
+
   // Auto-expire clients whose expiresAt has passed (runs once on admin login).
   useEffect(() => {
     if (userRole !== "admin" || usersLoading) return;
@@ -1367,9 +1386,18 @@ export default function ProfilePage() {
   };
 
   const handleDeleteTraining = async (t: Training) => {
-    if (!confirm(`Изтриване на курс „${t.title}"? Записаните за него ще запазят достъпа си.`)) return;
+    const relatedEnrollments = allEnrollments.filter(e => e.trainingId === t.id);
+    const cascadeMsg = relatedEnrollments.length > 0
+      ? `\n\nЩе бъдат изтрити и ${relatedEnrollments.length} записани участници за този курс.`
+      : "";
+    if (!confirm(`Изтриване на курс „${t.title}"?${cascadeMsg}`)) return;
     try {
       await deleteDoc(doc(db, "trainings", t.id));
+      // Cascade-delete enrollments for this training so the badge doesn't
+      // keep counting orphan records.
+      await Promise.all(
+        relatedEnrollments.map(e => deleteDoc(doc(db, "enrollments", e.id)).catch(() => undefined))
+      );
       alert("Курсът беше изтрит.");
     } catch (err: any) {
       alert("Грешка при изтриване: " + (err?.message || err));
