@@ -5287,7 +5287,9 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                        {myMaterials.map(m => (
+                        {myMaterials.map(m => {
+                          const ready = !m.contentUrl.includes("REPLACE_ME");
+                          return (
                           <div key={m.slug} className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
                             <div className="space-y-3">
                               <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
@@ -5299,17 +5301,25 @@ export default function ProfilePage() {
                                 {m.type === "video" ? "🎬 Видео обучение" : "📄 PDF Наръчник"}
                               </span>
                             </div>
-                            <a
-                              href={m.contentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
-                            >
-                              <BookOpen className="h-4 w-4" />
-                              Отвори обучението
-                            </a>
+                            {ready ? (
+                              <a
+                                href={m.contentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
+                              >
+                                <BookOpen className="h-4 w-4" />
+                                Отвори обучението
+                              </a>
+                            ) : (
+                              <div className="mt-6 inline-flex items-center justify-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs uppercase py-3 rounded-lg w-full text-center" title="contentUrl още не е настроен в src/data/library/">
+                                <Clock className="h-4 w-4" />
+                                Материалът се подготвя
+                              </div>
+                            )}
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
