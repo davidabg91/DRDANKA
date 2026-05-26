@@ -2352,6 +2352,33 @@ export default function ProfilePage() {
       {isLoggedIn && (
         <div className="max-w-7xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
 
+          {/* Subscription PAYMENT banner — clients in awaiting_payment state.
+              Shown on every tab so the buyer always sees the call to pay. */}
+          {userRole === "user" && (() => {
+            const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+            if (me?.subscriptionStatus !== "awaiting_payment") return null;
+            const fee = me?.subscriptionFeeEur ?? 0;
+            return (
+              <div className="mb-6 rounded-2xl border bg-gradient-to-r from-brand-gold/20 to-brand-gold/10 border-brand-gold/40 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <CreditCard className="h-6 w-6 text-brand-gold shrink-0" />
+                <div className="flex-1 text-sm">
+                  <p className="font-bold text-brand-green mb-0.5">
+                    Заявлението Ви за абонамент е одобрено!
+                  </p>
+                  <p className="text-xs text-brand-dark/70">
+                    За да активирате пълния достъп до портала, заплатете годишния абонамент от <strong className="text-brand-green">{fee.toFixed(2)} €</strong>.
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setSubPayOpen(true); setSubPayStatus("idle"); setSubPayError(""); }}
+                  className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap shadow-md shadow-brand-gold/20"
+                >
+                  Плати {fee.toFixed(2)} €
+                </button>
+              </div>
+            );
+          })()}
+
           {/* Subscription expiry warning banner — clients only */}
           {userRole === "user" && (() => {
             const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
