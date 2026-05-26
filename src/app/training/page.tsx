@@ -38,7 +38,7 @@ export default function TrainingPage() {
       </section>
 
       {/* Two premium cards */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* ───── CARD 1: Digital bookstore (PDF manuals) ───── */}
         <Link
