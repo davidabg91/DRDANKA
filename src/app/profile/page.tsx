@@ -34,6 +34,8 @@ import {
   ChevronRight,
   ShieldAlert,
   ShieldCheck,
+  CreditCard,
+  Loader2,
   MessageSquare,
   Send,
   Users,
@@ -88,14 +90,18 @@ export interface DankaUser {
   status: 'pending' | 'approved' | 'expired';
   /**
    * Business subscription status. Separate from `status` (which gates login).
-   *   - 'none'     — bookstore-only buyer, has account but no subscription
-   *   - 'pending'  — applied for subscription, awaiting admin approval
-   *   - 'approved' — full subscriber, has access to logbooks/HACCP/chat/etc.
-   *   - 'expired'  — subscription lapsed
-   * When the field is missing on legacy docs, treat as 'approved' so existing
-   * clients keep their access.
+   *   - 'none'              — bookstore-only buyer, no subscription
+   *   - 'pending'           — applied for subscription, awaiting admin approval
+   *   - 'awaiting_payment'  — admin approved & set a fee; user must pay before access
+   *   - 'approved'          — full subscriber, all tabs unlocked
+   *   - 'expired'           — subscription lapsed
+   * Missing on legacy docs → treat as 'approved' so existing clients keep access.
    */
-  subscriptionStatus?: 'none' | 'pending' | 'approved' | 'expired';
+  subscriptionStatus?: 'none' | 'pending' | 'awaiting_payment' | 'approved' | 'expired';
+  /** Subscription fee in EUR set by admin upon approval. 0 = paid offline (cash). */
+  subscriptionFeeEur?: number;
+  /** ISO timestamp when subscription was actually paid (online or marked-cash). */
+  subscriptionPaidAt?: string;
   /** ISO date (YYYY-MM-DD) when the subscription expires. Admin-managed. */
   expiresAt?: string;
   role: 'user' | 'admin';
@@ -401,6 +407,18 @@ export default function ProfilePage() {
 
   // Logged-in apply-for-subscription modal (bookstore-only buyers wanting full plan)
   const [subApplyOpen, setSubApplyOpen] = useState(false);
+
+  // Admin: "set fee" modal that opens when approving a candidate
+  const [feeModalEmail, setFeeModalEmail] = useState<string | null>(null);
+  const [feeModalAmount, setFeeModalAmount] = useState("");
+
+  // Client: subscription payment test-checkout modal
+  const [subPayOpen, setSubPayOpen] = useState(false);
+  const [subPayCard, setSubPayCard] = useState("4242 4242 4242 4242");
+  const [subPayExpiry, setSubPayExpiry] = useState("12 / 30");
+  const [subPayCvc, setSubPayCvc] = useState("123");
+  const [subPayStatus, setSubPayStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
+  const [subPayError, setSubPayError] = useState("");
 
   // Approval flow states
   const [isPendingApproval, setIsPendingApproval] = useState(false);
@@ -923,16 +941,87 @@ export default function ProfilePage() {
     setActiveTab("logs");
   };
 
-  // Admin approves candidate (grants full business subscription)
+  /**
+   * Admin clicks "Approve" on a candidate. Opens a modal asking for the
+   * subscription fee in EUR. The actual approval happens in handleConfirmApproval
+   * below — admin can set fee=0 to mark the client as paid-in-cash and grant
+   * immediate access, or any positive amount to put them in 'awaiting_payment'
+   * state until they pay online.
+   */
   const handleApproveCandidate = (email: string) => {
-    const updatedUsers = usersList.map(u => {
-      if (u.email.toLowerCase() === email.toLowerCase()) {
-        return { ...u, status: "approved" as const, subscriptionStatus: "approved" as const };
-      }
-      return u;
+    setFeeModalEmail(email);
+    setFeeModalAmount("");
+  };
+
+  /**
+   * Admin submits the fee modal. Two outcomes:
+   *   fee  = 0  → client paid offline / cash → subscriptionStatus = 'approved'
+   *               with subscriptionPaidAt set to now (full access granted)
+   *   fee  > 0  → subscriptionStatus = 'awaiting_payment' + subscriptionFeeEur
+   *               saved. Client sees a pay button in their portal until they
+   *               complete payment via /api/checkout (or the test flow below).
+   */
+  const handleConfirmApproval = async () => {
+    if (!feeModalEmail) return;
+    const fee = parseFloat(feeModalAmount);
+    if (Number.isNaN(fee) || fee < 0) {
+      alert("Моля въведете валидна сума в EUR (или 0 за платено в кеш).");
+      return;
+    }
+    const updates: Partial<DankaUser> = fee === 0
+      ? {
+          status: "approved",
+          subscriptionStatus: "approved",
+          subscriptionFeeEur: 0,
+          subscriptionPaidAt: new Date().toISOString(),
+        }
+      : {
+          status: "approved",
+          subscriptionStatus: "awaiting_payment",
+          subscriptionFeeEur: Math.round(fee * 100) / 100,
+        };
+    const ok = await updateUser(feeModalEmail, updates);
+    if (ok) {
+      const targetEmail = feeModalEmail;
+      setFeeModalEmail(null);
+      setFeeModalAmount("");
+      alert(
+        fee === 0
+          ? `Обектът ${targetEmail} беше одобрен и получи безплатен достъп (платено в кеш).`
+          : `Обектът ${targetEmail} беше одобрен. Сега трябва да заплати ${fee.toFixed(2)} € преди да получи достъп.`
+      );
+    }
+  };
+
+  /**
+   * Client clicks "Pay subscription" — opens a test-mode payment modal
+   * (analogous to the bookstore course purchase). Real Stripe checkout
+   * would be wired here once env vars are set in production.
+   */
+  const handleSubscriptionTestPay = async () => {
+    if (!currentUserEmail) return;
+    const cleanCard = subPayCard.replace(/\s+/g, "");
+    if (cleanCard !== "4242424242424242") {
+      setSubPayError("Тестов режим — използвайте картата 4242 4242 4242 4242.");
+      return;
+    }
+    setSubPayError("");
+    setSubPayStatus("processing");
+    const ok = await updateUser(currentUserEmail, {
+      subscriptionStatus: "approved",
+      subscriptionPaidAt: new Date().toISOString(),
     });
-    saveUsers(updatedUsers);
-    alert(`Обектът с имейл ${email} беше успешно одобрен!`);
+    if (ok) {
+      setSubPayStatus("success");
+      setTimeout(() => {
+        setSubPayOpen(false);
+        setSubPayStatus("idle");
+        setActiveTab("logs");
+      }, 1500);
+    } else {
+      setSubPayStatus("error");
+      setSubPayError("Грешка при обновяване — опитайте отново.");
+    }
   };
 
   // Admin toggles user active/expired status
@@ -3514,19 +3603,23 @@ export default function ProfilePage() {
                     const subStatus = currentUser?.subscriptionStatus ?? "approved"; // legacy default = approved
                     const isSubscribed = subStatus === "approved";
 
-                    // Bookstore-only buyer / pending applicant: lock everything except "courses".
+                    // Bookstore-only buyer / pending applicant / awaiting payment:
+                    // lock everything except "courses".
                     if (!isSubscribed && activeTab !== "courses") {
+                      const feeEur = currentUser?.subscriptionFeeEur ?? 0;
                       return (
                         <div className="bg-white border border-brand-green/5 p-8 sm:p-10 rounded-2xl shadow-md animate-fade-in space-y-6 max-w-2xl mx-auto text-center">
                           <div className="inline-flex p-4 bg-brand-gold/10 text-brand-gold rounded-2xl mx-auto">
                             <Lock className="h-8 w-8" />
                           </div>
                           <div className="space-y-2">
-                            <h2 className="font-serif text-2xl font-bold text-brand-green">Заключена секция</h2>
+                            <h2 className="font-serif text-2xl font-bold text-brand-green">
+                              {subStatus === "awaiting_payment" ? `Плащане на абонамент` : `Заключена секция`}
+                            </h2>
                             <p className="text-sm text-brand-dark/70 leading-relaxed">
-                              {subStatus === "pending"
-                                ? `Вашето заявление за абонамент е получено и се преглежда от д-р Николова. След одобрение всички функции на портала ще се отключат автоматично.`
-                                : `Тази секция е достъпна само за клиенти с активен абонамент „БАБХ Спокойствие". Закупените от Вас курсове можете да четете в таб „Моите Обучения".`}
+                              {subStatus === "pending" && `Вашето заявление за абонамент е получено и се преглежда от д-р Николова. След одобрение и заплащане на абонамента, всички функции на портала се отключват.`}
+                              {subStatus === "awaiting_payment" && `Заявлението Ви е одобрено! За да активирате пълния достъп до портала, моля заплатете годишния абонамент по-долу.`}
+                              {(subStatus === "none" || subStatus === "expired") && `Тази секция е достъпна само за клиенти с активен абонамент „БАБХ Спокойствие". Закупените от Вас курсове можете да четете в таб „Моите Обучения".`}
                             </p>
                           </div>
                           <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 text-left text-xs text-brand-dark/70 space-y-1.5">
@@ -3537,11 +3630,30 @@ export default function ProfilePage() {
                             <p>✓ Директен чат с д-р Николова</p>
                             <p>✓ Инструменти (одит, срокове, етикети)</p>
                           </div>
-                          {subStatus === "pending" ? (
+
+                          {subStatus === "pending" && (
                             <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl px-4 py-3">
                               ⏳ Заявлението Ви се обработва — обикновено отнема до 24 часа.
                             </div>
-                          ) : (
+                          )}
+
+                          {subStatus === "awaiting_payment" && (
+                            <div className="space-y-3">
+                              <div className="bg-brand-green/5 border border-brand-green/15 rounded-xl px-4 py-4 flex items-center justify-between">
+                                <span className="text-sm font-bold text-brand-green">Годишен абонамент</span>
+                                <span className="font-serif text-2xl font-bold text-brand-gold">{feeEur.toFixed(2)} €</span>
+                              </div>
+                              <button
+                                onClick={() => { setSubPayOpen(true); setSubPayStatus("idle"); setSubPayError(""); }}
+                                className="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-brand-gold text-brand-dark font-bold text-sm uppercase tracking-widest hover:bg-brand-gold-light transition-colors cursor-pointer shadow-lg shadow-brand-gold/20"
+                              >
+                                <CreditCard className="h-4 w-4" />
+                                Плати абонамента
+                              </button>
+                            </div>
+                          )}
+
+                          {(subStatus === "none" || subStatus === "expired") && (
                             <button
                               onClick={() => setSubApplyOpen(true)}
                               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-sm uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md shadow-brand-gold/20"
@@ -3550,6 +3662,7 @@ export default function ProfilePage() {
                               <ChevronRight className="h-4 w-4" />
                             </button>
                           )}
+
                           <button
                             onClick={() => setActiveTab("courses")}
                             className="block mx-auto text-xs text-brand-dark/50 hover:text-brand-gold underline underline-offset-4 cursor-pointer"
@@ -5337,6 +5450,169 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* ─────────── ADMIN: SET-FEE-ON-APPROVE MODAL ─────────── */}
+      {feeModalEmail && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/10 rounded-xl">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Одобрение</div>
+                  <div className="font-serif text-lg font-bold">Определи цена на абонамента</div>
+                </div>
+              </div>
+              <button onClick={() => { setFeeModalEmail(null); setFeeModalAmount(""); }} className="text-white/60 hover:text-white p-1 rounded-full cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-brand-light/50 border border-brand-green/5 rounded-xl p-3 text-xs">
+                <span className="text-brand-dark/50 block mb-0.5">Клиент:</span>
+                <span className="font-bold text-brand-green break-all">{feeModalEmail}</span>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Сума за абонамент (EUR)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={feeModalAmount}
+                  onChange={(e) => setFeeModalAmount(e.target.value)}
+                  placeholder="напр. 120.00"
+                  className="w-full text-lg font-mono px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-white"
+                  autoFocus
+                />
+                <p className="text-[10px] text-brand-dark/60 leading-relaxed">
+                  Сложете <strong>0</strong>, ако клиентът Ви е платил в кеш / банков превод — достъпът ще се отвори веднага без онлайн плащане.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFeeModalAmount("0")}
+                  className="text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
+                >
+                  0 € (кеш)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFeeModalAmount("120")}
+                  className="text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
+                >
+                  120 € (стандартен)
+                </button>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setFeeModalEmail(null); setFeeModalAmount(""); }}
+                  className="flex-1 px-5 py-3 rounded-full border border-brand-green/20 text-brand-green text-xs font-bold uppercase tracking-wider hover:bg-brand-green/5 transition-colors cursor-pointer"
+                >
+                  Отказ
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmApproval}
+                  disabled={feeModalAmount === ""}
+                  className="flex-1 px-5 py-3 rounded-full bg-brand-gold text-brand-dark text-xs font-bold uppercase tracking-wider hover:bg-brand-gold-light disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-md"
+                >
+                  Одобри
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────── CLIENT: SUBSCRIPTION TEST-PAYMENT MODAL ─────────── */}
+      {subPayOpen && (() => {
+        const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+        const fee = me?.subscriptionFeeEur ?? 0;
+        return (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+              <div className="bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-white/10 rounded-xl">
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Тестов режим</div>
+                    <div className="font-serif text-lg font-bold">Плати абонамента</div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { if (subPayStatus !== "processing") { setSubPayOpen(false); setSubPayStatus("idle"); } }}
+                  className="text-white/60 hover:text-white p-1 rounded-full cursor-pointer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                {subPayStatus === "success" ? (
+                  <div className="text-center py-8 space-y-3">
+                    <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
+                    <h3 className="font-serif text-xl font-bold text-brand-green">Плащането е успешно!</h3>
+                    <p className="text-sm text-brand-dark/60">Профилът Ви е активиран.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
+                      <span className="text-sm font-bold text-brand-green">Годишен абонамент</span>
+                      <span className="font-serif text-2xl font-bold text-brand-gold">{fee.toFixed(2)} €</span>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Номер на карта</label>
+                      <input type="text" value={subPayCard} onChange={(e) => setSubPayCard(e.target.value)} className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono tracking-wider" disabled={subPayStatus === "processing"} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Валидна до</label>
+                        <input type="text" value={subPayExpiry} onChange={(e) => setSubPayExpiry(e.target.value)} className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={subPayStatus === "processing"} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">CVC</label>
+                        <input type="text" value={subPayCvc} onChange={(e) => setSubPayCvc(e.target.value)} className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={subPayStatus === "processing"} />
+                      </div>
+                    </div>
+
+                    {subPayError && (
+                      <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{subPayError}</div>
+                    )}
+
+                    <button
+                      onClick={handleSubscriptionTestPay}
+                      disabled={subPayStatus === "processing"}
+                      className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      {subPayStatus === "processing" ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>
+                      ) : (
+                        <>Плати {fee.toFixed(2)} €</>
+                      )}
+                    </button>
+
+                    <p className="text-[10px] text-center text-brand-dark/40">
+                      Тестов режим — никаква реална сума не се таксува.
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
