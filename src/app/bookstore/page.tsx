@@ -30,7 +30,7 @@ export default function BookstorePage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         {loading ? (
           <div className="bg-white rounded-2xl shadow-md p-10 text-center text-brand-dark/50 text-sm">
             Зареждане на каталога…
