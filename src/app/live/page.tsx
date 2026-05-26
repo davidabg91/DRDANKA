@@ -6,6 +6,7 @@ import {
   Video, Calendar, Users, Award, ArrowRight, Sparkles, ShieldCheck, BookOpen,
 } from "lucide-react";
 import { LIVE_COURSES } from "@/data/live-courses";
+import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
 
 /**
  * /live — catalog of group online courses (Zoom / Google Meet) run by Dr. Danka.
@@ -15,6 +16,7 @@ import { LIVE_COURSES } from "@/data/live-courses";
  * group is formed.
  */
 export default function LiveCoursesPage() {
+  const { overrides } = usePriceOverrides();
   return (
     <div className="bg-brand-light min-h-screen pb-24">
       <section className="bg-brand-green text-white py-16 border-b border-brand-gold/20">
@@ -97,7 +99,7 @@ export default function LiveCoursesPage() {
                     <div>
                       <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/40 block leading-none">Цена</span>
                       <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold leading-tight">
-                        {c.priceEur.toFixed(2)}<span className="text-sm text-brand-dark/50 font-sans ml-0.5">€</span>
+                        {resolvePrice(c.slug, overrides, c.priceEur).toFixed(2)}<span className="text-sm text-brand-dark/50 font-sans ml-0.5">€</span>
                       </span>
                     </div>
                     <span className="relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-green group-hover:bg-brand-gold text-white group-hover:text-brand-dark font-bold text-[10px] uppercase tracking-widest rounded-full shadow-md group-hover:shadow-lg group-hover:shadow-brand-gold/40 transition-all duration-300">

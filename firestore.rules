@@ -108,6 +108,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // /priceOverrides/{slug} — admin-controlled price overrides for
+    // code-curated catalog items. Public read so /library and /live can
+    // show the latest price without a server roundtrip. Admin-only write.
+    match /priceOverrides/{slug} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;

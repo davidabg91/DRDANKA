@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { findLiveCourse } from "@/data/live-courses";
+import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import {
@@ -16,6 +17,8 @@ export default function LiveCourseDetailPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
   const course = slug ? findLiveCourse(slug) : undefined;
+  const { overrides } = usePriceOverrides();
+  const livePrice = course ? resolvePrice(course.slug, overrides, course.priceEur) : 0;
 
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [name, setName] = useState("");
@@ -64,7 +67,7 @@ export default function LiveCourseDetailPage() {
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         company: company.trim() || "",
-        priceEur: course.priceEur,
+        priceEur: livePrice,
         status: "paid",
         paidAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
@@ -132,7 +135,7 @@ export default function LiveCourseDetailPage() {
               <div className="flex items-end justify-between">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
-                  <span className="font-serif text-4xl font-bold text-brand-gold">{course.priceEur.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
+                  <span className="font-serif text-4xl font-bold text-brand-gold">{livePrice.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
                 </div>
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-dark/50 bg-brand-light/60 px-3 py-1.5 rounded-full">
                   <Calendar className="h-3 w-3 text-brand-gold" /> По уговорка
@@ -195,7 +198,7 @@ export default function LiveCourseDetailPage() {
                 <>
                   <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
                     <span className="text-sm font-bold text-brand-green">Цена</span>
-                    <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{course.priceEur.toFixed(2)} €</span>
+                    <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{livePrice.toFixed(2)} €</span>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Име и фамилия *</label>
@@ -229,7 +232,7 @@ export default function LiveCourseDetailPage() {
                   </div>
                   {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
                   <button onClick={submitEnrollment} disabled={status === "processing"} className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>) : (<>Запиши се и плати {course.priceEur.toFixed(2)} €</>)}
+                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>) : (<>Запиши се и плати {livePrice.toFixed(2)} €</>)}
                   </button>
                 </>
               )}

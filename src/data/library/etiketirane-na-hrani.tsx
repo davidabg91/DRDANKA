@@ -124,6 +124,7 @@ export const etiketiraneNaHrani: LibraryMaterial = {
   // Replace with the real Google Drive / S3 URL once content is ready.
   contentUrl: "https://drive.google.com/file/d/REPLACE_ME/view",
   card: {
+    cover: "/library/etiketirane-na-hrani-cover.jpg",
     badge: "Бестселър",
     accent: "gold",
   },

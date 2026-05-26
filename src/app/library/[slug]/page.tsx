@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter, notFound } from "next/navigation";
 import { findLibraryMaterial } from "@/data/library";
+import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
 import { auth, db } from "@/lib/firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
@@ -21,6 +22,8 @@ export default function LibraryMaterialPage() {
   const router = useRouter();
   const slug = params?.slug;
   const material = slug ? findLibraryMaterial(slug) : undefined;
+  const { overrides } = usePriceOverrides();
+  const livePrice = material ? resolvePrice(material.slug, overrides, material.priceEur) : 0;
 
   // Hooks must be called unconditionally — declare them before any early return.
   const [buyOpen, setBuyOpen] = useState(false);
@@ -157,7 +160,7 @@ export default function LibraryMaterialPage() {
               <div className="flex items-end justify-between">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
-                  <span className="font-serif text-4xl font-bold text-brand-gold">{material.priceEur.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
+                  <span className="font-serif text-4xl font-bold text-brand-gold">{livePrice.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
                 </div>
                 <span className="text-[10px] text-brand-dark/40 font-mono">
                   {material.type === "video" ? "Видео достъп" : "PDF за четене"}
@@ -211,7 +214,7 @@ export default function LibraryMaterialPage() {
                 <>
                   <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
                     <span className="text-sm font-bold text-brand-green">Цена</span>
-                    <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{material.priceEur.toFixed(2)} €</span>
+                    <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{livePrice.toFixed(2)} €</span>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email *</label>
@@ -230,7 +233,7 @@ export default function LibraryMaterialPage() {
                   </div>
                   {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
                   <button onClick={handleBuy} disabled={status === "processing"} className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>) : (<>Плати {material.priceEur.toFixed(2)} €</>)}
+                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>) : (<>Плати {livePrice.toFixed(2)} €</>)}
                   </button>
                   {CHECKOUT_MODE === "test" && (
                     <p className="text-[10px] text-center text-brand-dark/40">

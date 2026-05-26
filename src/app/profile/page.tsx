@@ -13,6 +13,7 @@ import { Training, Enrollment } from "@/lib/trainingTypes";
 import { slugify, uniqueSlug } from "@/lib/slugify";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { LIVE_COURSES } from "@/data/live-courses";
+import { usePriceOverrides, setPriceOverride, resolvePrice } from "@/lib/priceOverrides";
 
 import { 
   User, 
@@ -271,6 +272,9 @@ export default function ProfilePage() {
     updatedAt: "",
   }));
   const { enrollments: allEnrollments } = useEnrollments();
+  const { overrides: priceOverrides } = usePriceOverrides();
+  /** Local edit buffer per slug while admin types a new price (string for the input). */
+  const [priceDraft, setPriceDraft] = useState<Record<string, string>>({});
   const ADMIN_EMAIL = "d.nikolova.haccp@gmail.com";
 
   const saveUsers = (newUsers: DankaUser[]) => {
@@ -1490,6 +1494,34 @@ export default function ProfilePage() {
    * Storage Rules grant read access to admin or any buyer who has the slug
    * in their purchasedCourseIds — same protected pattern as before.
    */
+  /** Admin saves a custom price for a slug (library or live). */
+  const handleSavePrice = async (slug: string) => {
+    const raw = priceDraft[slug];
+    if (raw === undefined) return;
+    const num = parseFloat(raw);
+    if (Number.isNaN(num) || num < 0) {
+      alert("Моля въведете валидна цена в EUR.");
+      return;
+    }
+    try {
+      await setPriceOverride(slug, Math.round(num * 100) / 100);
+      setPriceDraft(p => { const next = { ...p }; delete next[slug]; return next; });
+    } catch (err: any) {
+      alert("Грешка при запис на цената: " + (err?.message || err));
+    }
+  };
+
+  /** Admin clears the override — falls back to code default. */
+  const handleResetPrice = async (slug: string) => {
+    if (!confirm("Премахване на персоналната цена и връщане към default-а от кода?")) return;
+    try {
+      await setPriceOverride(slug, null);
+      setPriceDraft(p => { const next = { ...p }; delete next[slug]; return next; });
+    } catch (err: any) {
+      alert("Грешка: " + (err?.message || err));
+    }
+  };
+
   const handleUploadLibraryPdf = (slug: string, file: File) => {
     if (file.type !== "application/pdf") {
       alert("Файлът трябва да бъде PDF.");
@@ -3457,7 +3489,40 @@ export default function ProfilePage() {
                                           <span className="font-mono">{c.fileSizeMb ?? 0} MB</span>
                                         )}
                                       </td>
-                                      <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{c.priceEur.toFixed(2)} €</td>
+                                      <td className="border border-brand-green/10 p-3 text-center">
+                                        {(() => {
+                                          const live = resolvePrice(c.slug || c.id, priceOverrides, c.priceEur);
+                                          const draftVal = priceDraft[c.slug || c.id];
+                                          const editing = draftVal !== undefined;
+                                          const overridden = priceOverrides[c.slug || c.id] !== undefined;
+                                          return (
+                                            <div className="flex flex-col items-center gap-1">
+                                              <div className="flex items-center gap-1">
+                                                <input
+                                                  type="number"
+                                                  step="0.01"
+                                                  min="0"
+                                                  value={editing ? draftVal : live.toFixed(2)}
+                                                  onChange={(e) => setPriceDraft(p => ({ ...p, [c.slug || c.id]: e.target.value }))}
+                                                  className="w-20 text-xs font-mono font-bold text-center px-2 py-1 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                                                />
+                                                <span className="text-xs font-bold text-brand-dark/50">€</span>
+                                              </div>
+                                              {editing ? (
+                                                <button onClick={() => handleSavePrice(c.slug || c.id)} className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-brand-gold text-brand-dark hover:bg-brand-gold-light cursor-pointer">
+                                                  Запиши
+                                                </button>
+                                              ) : overridden ? (
+                                                <button onClick={() => handleResetPrice(c.slug || c.id)} className="text-[8px] font-bold uppercase text-brand-dark/40 hover:text-red-600 cursor-pointer">
+                                                  върни default
+                                                </button>
+                                              ) : (
+                                                <span className="text-[8px] text-brand-dark/30">default</span>
+                                              )}
+                                            </div>
+                                          );
+                                        })()}
+                                      </td>
                                       <td className="border border-brand-green/10 p-3 text-center">
                                         {buyers.length > 0 ? (
                                           <button
@@ -3617,7 +3682,40 @@ export default function ProfilePage() {
                                           <td className="border border-brand-green/10 p-3 text-center text-[10px]">
                                             {t.type === "video" ? "📹 Видео" : "📞 Zoom"}
                                           </td>
-                                          <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{t.priceEur.toFixed(2)} €</td>
+                                          <td className="border border-brand-green/10 p-3 text-center">
+                                            {(() => {
+                                              const live = resolvePrice(t.slug || t.id, priceOverrides, t.priceEur);
+                                              const draftVal = priceDraft[t.slug || t.id];
+                                              const editing = draftVal !== undefined;
+                                              const overridden = priceOverrides[t.slug || t.id] !== undefined;
+                                              return (
+                                                <div className="flex flex-col items-center gap-1">
+                                                  <div className="flex items-center gap-1">
+                                                    <input
+                                                      type="number"
+                                                      step="0.01"
+                                                      min="0"
+                                                      value={editing ? draftVal : live.toFixed(2)}
+                                                      onChange={(e) => setPriceDraft(p => ({ ...p, [t.slug || t.id]: e.target.value }))}
+                                                      className="w-20 text-xs font-mono font-bold text-center px-2 py-1 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                                                    />
+                                                    <span className="text-xs font-bold text-brand-dark/50">€</span>
+                                                  </div>
+                                                  {editing ? (
+                                                    <button onClick={() => handleSavePrice(t.slug || t.id)} className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-brand-gold text-brand-dark hover:bg-brand-gold-light cursor-pointer">
+                                                      Запиши
+                                                    </button>
+                                                  ) : overridden ? (
+                                                    <button onClick={() => handleResetPrice(t.slug || t.id)} className="text-[8px] font-bold uppercase text-brand-dark/40 hover:text-red-600 cursor-pointer">
+                                                      върни default
+                                                    </button>
+                                                  ) : (
+                                                    <span className="text-[8px] text-brand-dark/30">default</span>
+                                                  )}
+                                                </div>
+                                              );
+                                            })()}
+                                          </td>
                                           <td className="border border-brand-green/10 p-3 text-center font-mono">{enrolledCount}</td>
                                           <td className="border border-brand-green/10 p-3 text-center">
                                             <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${t.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
