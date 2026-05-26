@@ -85,7 +85,7 @@ export default function BookstorePage() {
 
         {/* ─────────── PREMIUM CROSS-SELL: SPECIALIZED ONLINE COURSES ─────────── */}
         <Link
-          href="/training#specialized-courses"
+          href="/trainings"
           className="group relative block overflow-hidden rounded-3xl bg-gradient-to-br from-[#0A1F18] via-[#0F2A20] to-[#1A3D2E] border border-brand-gold/25 shadow-2xl shadow-brand-green/20 hover:shadow-brand-gold/20 transition-all duration-500 cursor-pointer mt-12"
         >
           {/* Decorative glow blobs */}
