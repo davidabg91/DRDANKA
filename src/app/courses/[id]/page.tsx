@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc, setDoc, updateDoc, getDoc as getDoc2 } from "firebase/firestore";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
@@ -205,10 +206,16 @@ export default function CourseDetailPage() {
         </Link>
 
         <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
-          <div className="aspect-[4/3] lg:aspect-auto bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center">
+          <div className="relative aspect-[4/3] lg:aspect-auto lg:min-h-[500px] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center">
             {course.coverImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={course.coverImageUrl} alt={course.title} className="w-full h-full object-cover" />
+              <Image
+                src={course.coverImageUrl}
+                alt={course.title}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+                priority
+              />
             ) : (
               <BookOpen className="h-24 w-24 text-brand-green/30" />
             )}

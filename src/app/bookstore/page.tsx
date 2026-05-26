@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCourses } from "@/lib/firebaseHooks";
 import { BookOpen, ShieldCheck } from "lucide-react";
 
@@ -47,10 +48,15 @@ export default function BookstorePage() {
                 href={`/courses/${c.id}`}
                 className="group bg-white rounded-2xl border border-brand-green/10 overflow-hidden shadow-sm hover:shadow-xl hover:border-brand-gold/40 transition-all duration-300 flex flex-col cursor-pointer"
               >
-                <div className="aspect-[4/3] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center overflow-hidden">
+                <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center overflow-hidden">
                   {c.coverImageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={c.coverImageUrl} alt={c.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image
+                      src={c.coverImageUrl}
+                      alt={c.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   ) : (
                     <BookOpen className="h-16 w-16 text-brand-green/30" />
                   )}

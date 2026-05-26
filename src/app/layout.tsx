@@ -66,6 +66,12 @@ export default function RootLayout({
       lang="bg"
       className={`${inter.variable} ${playfair.variable} ${cormorant.variable} h-full antialiased`}
     >
+      <head>
+        {/* Pre-warm the TLS connection to Firebase Storage so cover images
+            (catalog, training cards) start downloading without an extra RTT. */}
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+      </head>
       <body className="min-h-full flex flex-col bg-brand-light text-brand-dark">
         <Header />
         <main className="flex-grow overflow-x-clip">{children}</main>

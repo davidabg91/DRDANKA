@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   GraduationCap, BookOpen, Award, ArrowRight, CheckCircle, Building,
   Video, Calendar, X, CreditCard, Loader2, ShieldCheck, ExternalLink, Copy,
@@ -190,8 +191,13 @@ export default function TrainingPage() {
             <div key={t.id} className="bg-white rounded-3xl border border-brand-green/5 shadow-md overflow-hidden grid grid-cols-1 md:grid-cols-3 hover:shadow-xl transition-shadow duration-300">
               {t.coverImageUrl ? (
                 <div className="md:col-span-1 relative aspect-[4/3] md:aspect-auto md:min-h-[280px] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={t.coverImageUrl} alt={t.title} className="w-full h-full object-cover" />
+                  <Image
+                    src={t.coverImageUrl}
+                    alt={t.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    className="object-cover"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-4 text-white space-y-1">
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] bg-brand-gold text-brand-dark px-2 py-1 rounded-full">
