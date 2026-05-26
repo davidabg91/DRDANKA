@@ -198,17 +198,6 @@ export default function TrainingsCatalogPage() {
             ))}
           </div>
         )}
-
-        <div className="mt-10 bg-white rounded-2xl border border-brand-green/5 p-6 sm:p-8 flex items-start gap-4">
-          <ShieldCheck className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-bold text-brand-green text-sm">Сертификат след успешни тестове</p>
-            <p className="text-xs text-brand-dark/60 leading-relaxed">
-              След плащане Д-р Николова Ви добавя тестове в Клиентския Портал. След успешното им решаване получавате
-              официален Сертификат за преминато обучение.
-            </p>
-          </div>
-        </div>
       </section>
 
       {/* ─────────── ENROLLMENT MODAL ─────────── */}
