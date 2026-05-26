@@ -207,42 +207,46 @@ export default function CourseDetailPage() {
 
   return (
     <div className="bg-brand-light min-h-screen pb-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <Link href="/bookstore" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark/60 hover:text-brand-gold transition-colors cursor-pointer mb-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+        <Link href="/bookstore" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark/60 hover:text-brand-gold transition-colors cursor-pointer">
           <ArrowLeft className="h-3.5 w-3.5" />
           Каталог
         </Link>
 
-        <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-2 lg:items-start">
-          <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center">
+        {/* ─── HERO CARD: cover + summary + buy ─── */}
+        <div className="bg-white rounded-3xl shadow-lg border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-12 lg:items-stretch">
+          {/* Cover (5/12) */}
+          <div className="relative aspect-[4/3] lg:aspect-auto lg:col-span-5 bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center overflow-hidden">
             {course.coverImageUrl ? (
               <Image
                 src={course.coverImageUrl}
                 alt={course.title}
                 fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="(max-width: 1024px) 100vw, 42vw"
                 className="object-cover"
                 priority
               />
             ) : (
               <BookOpen className="h-24 w-24 text-brand-green/30" />
             )}
+            <div className="absolute top-4 left-4">
+              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-white/95 backdrop-blur-sm text-brand-green px-2.5 py-1.5 rounded-full shadow-sm">
+                <BookOpen className="h-3 w-3" />
+                {(course.type ?? "pdf") === "link" ? "Външен курс" : "PDF Наръчник"}
+              </span>
+            </div>
           </div>
 
-          <div className="p-6 sm:p-10 space-y-5 flex flex-col">
+          {/* Summary + Buy (7/12) */}
+          <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col gap-5">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
               Дигитална Книжарница
             </span>
-            <h1 className="font-serif text-3xl font-bold text-brand-green leading-tight">{course.title}</h1>
-            <p className="text-sm text-brand-dark/70 leading-relaxed">{course.description}</p>
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-green leading-tight">{course.title}</h1>
+            <div className="w-12 h-0.5 bg-brand-gold/60 rounded-full" />
+            <p className="text-sm sm:text-base text-brand-dark/70 leading-relaxed">{course.description}</p>
 
-            {course.longDescription && (
-              <div className="text-sm text-brand-dark/80 leading-relaxed border-t border-brand-green/5 pt-4 space-y-2 whitespace-pre-wrap">
-                {course.longDescription}
-              </div>
-            )}
-
-            <div className="mt-auto pt-6 border-t border-brand-green/5 space-y-4">
+            <div className="mt-auto pt-6 border-t border-brand-green/5 space-y-3">
               <div className="flex items-end justify-between">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
@@ -263,9 +267,6 @@ export default function CourseDetailPage() {
                   className="text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-white"
                   disabled={buying}
                 />
-                <p className="text-[10px] text-brand-dark/50 leading-relaxed">
-                  На този адрес ще получите достъп до материала след успешно плащане.
-                </p>
               </div>
 
               <button
@@ -279,17 +280,36 @@ export default function CourseDetailPage() {
 
               {CHECKOUT_MODE === "test" && (
                 <div className="text-[10px] bg-amber-50 border border-amber-200 text-amber-900 rounded-lg px-3 py-2 leading-relaxed">
-                  <strong>Тестов режим:</strong> плащането НЕ е реално. Карта <code className="font-mono">4242 4242 4242 4242</code>, всяка бъдеща дата, всеки CVC.
+                  <strong>Тестов режим:</strong> карта <code className="font-mono">4242 4242 4242 4242</code>, всяка бъдеща дата, всеки CVC.
                 </div>
               )}
-
-              <div className="flex items-start gap-2 text-[10px] text-brand-dark/50 leading-relaxed">
-                <ShieldCheck className="h-4 w-4 text-brand-gold/70 shrink-0 mt-0.5" />
-                <span>
-                  Материалът се чете онлайн в защитения ви профил — не се сваля на компютъра.
-                </span>
-              </div>
             </div>
+          </div>
+        </div>
+
+        {/* ─── LONG DESCRIPTION ─── */}
+        {course.longDescription && (
+          <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 p-6 sm:p-10 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <h2 className="font-serif text-xl font-bold text-brand-green">За материала</h2>
+            </div>
+            <div className="text-sm sm:text-base text-brand-dark/80 leading-relaxed whitespace-pre-wrap">
+              {course.longDescription}
+            </div>
+          </div>
+        )}
+
+        {/* ─── TRUST ROW ─── */}
+        <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 p-6 sm:p-8 flex items-start gap-4">
+          <ShieldCheck className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold text-brand-green text-sm">Сигурен достъп след покупка</p>
+            <p className="text-xs text-brand-dark/60 leading-relaxed">
+              Материалът се чете онлайн в защитения Ви профил — не се сваля на компютъра. На посочения email ще получите линк за достъп.
+            </p>
           </div>
         </div>
       </div>

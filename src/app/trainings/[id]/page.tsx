@@ -141,21 +141,22 @@ export default function TrainingDetailPage() {
 
   return (
     <div className="bg-brand-light min-h-screen pb-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-        <Link href="/trainings" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark/60 hover:text-brand-gold transition-colors cursor-pointer mb-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+        <Link href="/trainings" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark/60 hover:text-brand-gold transition-colors cursor-pointer">
           <ArrowLeft className="h-3.5 w-3.5" />
           Към курсовете
         </Link>
 
-        <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-2 lg:items-start">
-          {/* Cover */}
-          <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center">
+        {/* ─── HERO CARD: cover + summary + buy ─── */}
+        <div className="bg-white rounded-3xl shadow-lg border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-12 lg:items-stretch">
+          {/* Cover (5/12) */}
+          <div className="relative aspect-[4/3] lg:aspect-auto lg:col-span-5 bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center overflow-hidden">
             {training.coverImageUrl ? (
               <Image
                 src={training.coverImageUrl}
                 alt={training.title}
                 fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="(max-width: 1024px) 100vw, 42vw"
                 className="object-cover"
                 priority
               />
@@ -170,7 +171,7 @@ export default function TrainingDetailPage() {
             {/* Floating chips */}
             <div className="absolute top-4 left-4 flex flex-wrap gap-1.5">
               <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-white/95 backdrop-blur-sm text-brand-green px-2.5 py-1.5 rounded-full shadow-sm">
-                {training.type === "video" ? <><Video className="h-3 w-3" /> Видео обучение</> : <><Award className="h-3 w-3" /> Онлайн лекция</>}
+                {training.type === "video" ? <><Video className="h-3 w-3" /> Видео</> : <><Award className="h-3 w-3" /> Онлайн</>}
               </span>
               {training.hasCertificate && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-2.5 py-1.5 rounded-full shadow-sm">
@@ -180,51 +181,37 @@ export default function TrainingDetailPage() {
             </div>
           </div>
 
-          {/* Content */}
-          <div className="p-6 sm:p-10 space-y-5 flex flex-col">
+          {/* Summary + Buy (7/12) */}
+          <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col gap-5">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
               Специализиран курс
             </span>
-            <h1 className="font-serif text-3xl font-bold text-brand-green leading-tight">{training.title}</h1>
-            <p className="text-sm text-brand-dark/70 leading-relaxed">{training.shortDesc}</p>
-
-            {training.longDescription && (
-              <div className="text-sm text-brand-dark/80 leading-relaxed border-t border-brand-green/5 pt-4 space-y-3 whitespace-pre-wrap">
-                {training.longDescription}
-              </div>
-            )}
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-green leading-tight">{training.title}</h1>
+            <div className="w-12 h-0.5 bg-brand-gold/60 rounded-full" />
+            <p className="text-sm sm:text-base text-brand-dark/70 leading-relaxed">{training.shortDesc}</p>
 
             {training.bullets && training.bullets.length > 0 && (
-              <div className="space-y-2 border-t border-brand-green/5 pt-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40">Какво включва обучението</p>
-                <ul className="space-y-1.5">
-                  {training.bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-brand-dark/80">
-                      <CheckCircle className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <ul className="space-y-2 mt-1">
+                {training.bullets.slice(0, 4).map((b, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-brand-dark/80">
+                    <CheckCircle className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
             )}
 
-            {training.hasCertificate && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-900 leading-relaxed">
-                <strong>🏆 Сертификат:</strong> За издаване на сертификат е задължително успешното решаване на всички възложени тестове в Клиентския Портал.
-              </div>
-            )}
-
-            <div className="mt-auto pt-6 border-t border-brand-green/5 space-y-4">
+            {/* Price + Buy stripe */}
+            <div className="mt-auto pt-6 border-t border-brand-green/5 space-y-3">
               <div className="flex items-end justify-between">
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
                   <span className="font-serif text-4xl font-bold text-brand-gold">{training.priceEur.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
                 </div>
-                <span className="text-[10px] text-brand-dark/40 font-mono">
-                  {training.type === "video" ? "Незабавен достъп" : "По уговорка"}
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-dark/50 bg-brand-light/60 px-3 py-1.5 rounded-full">
+                  {training.type === "video" ? <><Video className="h-3 w-3 text-brand-gold" /> Незабавен достъп</> : <><Calendar className="h-3 w-3 text-brand-gold" /> По уговорка</>}
                 </span>
               </div>
-
               <button
                 onClick={openEnroll}
                 className="group relative overflow-hidden w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 hover:shadow-xl hover:shadow-brand-gold/35 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
@@ -233,16 +220,70 @@ export default function TrainingDetailPage() {
                 Запиши се за курса
                 <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
               </button>
-
-              <div className="flex items-start gap-2 text-[10px] text-brand-dark/50 leading-relaxed">
-                <ShieldCheck className="h-4 w-4 text-brand-gold/70 shrink-0 mt-0.5" />
-                <span>
-                  {training.type === "video"
-                    ? "След плащане получавате незабавно линк за гледане на обучението."
-                    : "След плащане Д-р Николова ще се свърже с Вас, за да уточни датите за онлайн обучението."}
-                </span>
-              </div>
             </div>
+          </div>
+        </div>
+
+        {/* ─── LONG DESCRIPTION (only when admin filled it) ─── */}
+        {training.longDescription && (
+          <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 p-6 sm:p-10 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                <BookOpen className="h-5 w-5" />
+              </div>
+              <h2 className="font-serif text-xl font-bold text-brand-green">За обучението</h2>
+            </div>
+            <div className="text-sm sm:text-base text-brand-dark/80 leading-relaxed whitespace-pre-wrap">
+              {training.longDescription}
+            </div>
+          </div>
+        )}
+
+        {/* ─── ALL BULLETS (if more than 4) ─── */}
+        {training.bullets && training.bullets.length > 4 && (
+          <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 p-6 sm:p-10 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+                <CheckCircle className="h-5 w-5" />
+              </div>
+              <h2 className="font-serif text-xl font-bold text-brand-green">Какво включва обучението</h2>
+            </div>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {training.bullets.map((b, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-brand-dark/80">
+                  <CheckCircle className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* ─── CERTIFICATE NOTICE ─── */}
+        {training.hasCertificate && (
+          <div className="bg-gradient-to-br from-amber-50 to-brand-gold/10 border border-amber-200 rounded-3xl p-6 sm:p-8 flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-brand-gold text-brand-dark flex items-center justify-center shrink-0 shadow-md">
+              <Award className="h-6 w-6" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-serif text-lg font-bold text-brand-green">Официален сертификат</p>
+              <p className="text-sm text-brand-dark/70 leading-relaxed">
+                За издаване на сертификат е задължително успешното решаване на всички възложени тестове в Клиентския Портал.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ─── BOTTOM TRUST ROW ─── */}
+        <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 p-6 sm:p-8 flex items-start gap-4">
+          <ShieldCheck className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold text-brand-green text-sm">Сигурно записване</p>
+            <p className="text-xs text-brand-dark/60 leading-relaxed">
+              {training.type === "video"
+                ? "След плащане получавате незабавно линк за гледане на обучението на посочения email."
+                : "След плащане Д-р Николова ще се свърже с Вас, за да уточни датите за онлайн обучението."}
+            </p>
           </div>
         </div>
       </div>
