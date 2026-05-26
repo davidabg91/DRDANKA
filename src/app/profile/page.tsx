@@ -10,6 +10,7 @@ import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject }
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { Course } from "@/lib/courseTypes";
 import { Training, Enrollment } from "@/lib/trainingTypes";
+import { slugify, uniqueSlug } from "@/lib/slugify";
 
 import { 
   User, 
@@ -1250,10 +1251,16 @@ export default function ProfilePage() {
       }
 
       const now = new Date().toISOString();
+      // SEO-friendly slug from the title, deduped against existing courses.
+      const slug = uniqueSlug(
+        slugify(courseDraftTitle),
+        allCourses.map((x) => x.slug).filter((s): s is string => !!s)
+      );
       // Firestore rejects undefined values, so build the object without the
       // optional fields and add them only when populated.
       const newCourse: Course = {
         id: courseId,
+        slug,
         title: courseDraftTitle.trim(),
         description: courseDraftDesc.trim(),
         priceEur: Math.round(priceNum * 100) / 100,
@@ -1363,8 +1370,13 @@ export default function ProfilePage() {
       }
       setTrainingUploadProgress(null);
 
+      const slug = uniqueSlug(
+        slugify(trainingDraftTitle),
+        allTrainings.map((x) => x.slug).filter((s): s is string => !!s)
+      );
       const newTraining: Training = {
         id: trainingId,
+        slug,
         title: trainingDraftTitle.trim(),
         shortDesc: trainingDraftShort.trim(),
         bullets,

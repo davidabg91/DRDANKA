@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Training } from "@/lib/trainingTypes";
 import {
@@ -43,8 +43,15 @@ export default function TrainingDetailPage() {
     if (!trainingId) return;
     (async () => {
       try {
-        const snap = await getDoc(doc(db, "trainings", trainingId));
-        setTraining(snap.exists() ? (snap.data() as Training) : null);
+        // Slug lookup with fallback to doc id for legacy URLs.
+        const q = query(collection(db, "trainings"), where("slug", "==", trainingId), limit(1));
+        const bySlug = await getDocs(q);
+        if (!bySlug.empty) {
+          setTraining(bySlug.docs[0].data() as Training);
+        } else {
+          const snap = await getDoc(doc(db, "trainings", trainingId));
+          setTraining(snap.exists() ? (snap.data() as Training) : null);
+        }
       } catch (err) {
         console.error("Training load error:", err);
         setTraining(null);
@@ -140,9 +147,9 @@ export default function TrainingDetailPage() {
           Към курсовете
         </Link>
 
-        <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+        <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-2 lg:items-start">
           {/* Cover */}
-          <div className="relative aspect-[4/3] lg:aspect-auto lg:min-h-[500px] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center">
+          <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center">
             {training.coverImageUrl ? (
               <Image
                 src={training.coverImageUrl}

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, setDoc, updateDoc, getDoc as getDoc2 } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, getDoc as getDoc2, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { Course } from "@/lib/courseTypes";
@@ -47,8 +47,16 @@ export default function CourseDetailPage() {
     if (!courseId) return;
     (async () => {
       try {
-        const snap = await getDoc(doc(db, "courses", courseId));
-        setCourse(snap.exists() ? (snap.data() as Course) : null);
+        // Try slug lookup first (SEO-friendly URLs), fall back to doc id
+        // for legacy /courses/<doc_id> links.
+        const q = query(collection(db, "courses"), where("slug", "==", courseId), limit(1));
+        const bySlug = await getDocs(q);
+        if (!bySlug.empty) {
+          setCourse(bySlug.docs[0].data() as Course);
+        } else {
+          const snap = await getDoc(doc(db, "courses", courseId));
+          setCourse(snap.exists() ? (snap.data() as Course) : null);
+        }
       } catch (err) {
         console.error("Course load error:", err);
         setCourse(null);
@@ -205,8 +213,8 @@ export default function CourseDetailPage() {
           Каталог
         </Link>
 
-        <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-2">
-          <div className="relative aspect-[4/3] lg:aspect-auto lg:min-h-[500px] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center">
+        <div className="bg-white rounded-3xl shadow-md border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-2 lg:items-start">
+          <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center">
             {course.coverImageUrl ? (
               <Image
                 src={course.coverImageUrl}

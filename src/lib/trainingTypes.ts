@@ -10,6 +10,8 @@ export type TrainingType = "video" | "zoom";
 
 export interface Training {
   id: string;
+  /** Human-readable URL slug (Cyrillic transliterated). Used in /trainings/<slug>. */
+  slug?: string;
   title: string;
   /** Short tagline / hero description shown on the catalog card. */
   shortDesc: string;

@@ -8,7 +8,7 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { ref as storageRef, getBlob } from "firebase/storage";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock } from "lucide-react";
 
@@ -50,16 +50,19 @@ export default function CourseViewerPage() {
       }
       setEmail(user.email);
       try {
-        // 1. Load course doc to get the storage filePath or external URL.
-        const courseSnap = await getDoc(doc(db, "courses", courseId as string));
-        if (!courseSnap.exists()) {
+        // 1. Load course doc — try slug first, fall back to doc id.
+        let courseData: { filePath?: string; externalUrl?: string; type?: "pdf" | "link" } | null = null;
+        const slugQ = query(collection(db, "courses"), where("slug", "==", courseId as string), limit(1));
+        const bySlug = await getDocs(slugQ);
+        if (!bySlug.empty) {
+          courseData = bySlug.docs[0].data() as typeof courseData;
+        } else {
+          const courseSnap = await getDoc(doc(db, "courses", courseId as string));
+          if (courseSnap.exists()) courseData = courseSnap.data() as typeof courseData;
+        }
+        if (!courseData) {
           throw new Error("Курсът не съществува");
         }
-        const courseData = courseSnap.data() as {
-          filePath?: string;
-          externalUrl?: string;
-          type?: "pdf" | "link";
-        };
         // External link course → redirect to the URL instead of rendering PDF.
         if ((courseData.type ?? "pdf") === "link" && courseData.externalUrl) {
           window.location.href = courseData.externalUrl;

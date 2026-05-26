@@ -131,7 +131,7 @@ export default function TrainingsCatalogPage() {
             {trainings.map(t => (
               <Link
                 key={t.id}
-                href={`/trainings/${t.id}`}
+                href={`/trainings/${t.slug || t.id}`}
                 className="group relative bg-white rounded-3xl border border-brand-green/10 hover:border-brand-gold/50 overflow-hidden shadow-md hover:shadow-2xl hover:shadow-brand-gold/20 hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer text-left"
               >
                 {/* Cover */}

@@ -45,7 +45,7 @@ export default function BookstorePage() {
             {courses.map(c => (
               <Link
                 key={c.id}
-                href={`/courses/${c.id}`}
+                href={`/courses/${c.slug || c.id}`}
                 className="group relative bg-white rounded-3xl border border-brand-green/10 hover:border-brand-gold/50 overflow-hidden shadow-md hover:shadow-2xl hover:shadow-brand-gold/20 hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
               >
                 {/* Cover */}

@@ -18,6 +18,8 @@ export type CourseType = "pdf" | "link";
 
 export interface Course {
   id: string;
+  /** Human-readable URL slug (Cyrillic transliterated). Used in /courses/<slug>. */
+  slug?: string;
   title: string;
   /** Short tagline shown on the catalog card. */
   description: string;
