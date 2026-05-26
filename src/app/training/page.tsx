@@ -298,17 +298,19 @@ export default function TrainingPage() {
       {enrollFor && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl my-8 overflow-hidden">
-            <div className="bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-white/10 rounded-xl">
-                  <Video className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Записване</div>
-                  <div className="font-serif text-lg font-bold truncate">{enrollFor.title}</div>
-                </div>
+            <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
+              <div className="p-2.5 bg-white/10 rounded-xl shrink-0">
+                <Video className="h-5 w-5" />
               </div>
-              <button onClick={closeEnroll} className="text-white/60 hover:text-white p-1 rounded-full cursor-pointer">
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Записване</div>
+                <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{enrollFor.title}</div>
+              </div>
+              <button
+                onClick={closeEnroll}
+                aria-label="Затвори"
+                className="absolute top-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
