@@ -9,9 +9,11 @@
  */
 import type { LiveCourse } from "./types";
 import { haccpOsnovi } from "./haccp-osnovi";
+import { haccpDhppPraktika } from "./haccp-dhpp-praktika";
 
 export const LIVE_COURSES: ReadonlyArray<LiveCourse> = [
   haccpOsnovi,
+  haccpDhppPraktika,
 ];
 
 export function findLiveCourse(slug: string): LiveCourse | undefined {

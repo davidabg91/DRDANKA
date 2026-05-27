@@ -93,7 +93,7 @@ export default function LiveCourseDetailPage() {
               src={course.card.cover}
               alt={course.title}
               fill
-              className="object-cover object-center sm:object-[center_15%]"
+              className={`object-cover ${course.slug === 'haccp-dhpp-praktika' ? 'object-top' : 'object-center sm:object-[center_15%]'}`}
               priority
             />
             {/* Gradient Overlay to ensure text readability */}

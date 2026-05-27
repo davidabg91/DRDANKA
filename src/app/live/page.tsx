@@ -56,7 +56,7 @@ export default function LiveCoursesPage() {
                       alt={c.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                      className={`object-cover group-hover:scale-110 transition-transform duration-700 ${c.slug === 'haccp-dhpp-praktika' ? 'object-top' : 'object-center'}`}
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
