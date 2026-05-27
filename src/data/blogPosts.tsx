@@ -499,7 +499,7 @@ export const BLOG_POSTS: BlogPost[] = [
               <Video className="h-3.5 w-3.5" /> Онлайн курс на живо
             </span>
             <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
-              Практически курс „НАССР Основи“ с д-р Николова
+              Практически курс по разработване, въвеждане и поддържане на НАССР система
             </h4>
             <p className="text-xs text-brand-dark/80 max-w-md">
               Спрете да попълвате Дневниците „на око“. Включете се в нашия Zoom курс и разберете как да настроите и управлявате Вашата HACCP система реално и лесно.

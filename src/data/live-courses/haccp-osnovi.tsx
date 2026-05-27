@@ -115,7 +115,7 @@ function HaccpOsnoviPage() {
 
 export const haccpOsnovi: LiveCourse = {
   slug: "haccp-osnovi",
-  title: "НАССР Основи — практически курс с д-р Николова",
+  title: "Практически курс по разработване, въвеждане и поддържане на НАССР система",
   tagline:
     "3 сесии онлайн в Zoom за внедряване на НАССР в реалния обект — с Вашите казуси, не учебникови.",
   priceEur: 149.0,
@@ -125,7 +125,7 @@ export const haccpOsnovi: LiveCourse = {
   groupSize: "8–14 участници",
   nextBatch: "Следваща група: при достигане на 6 записани",
   card: {
-    cover: "/33aebc06-d24b-4198-ac58-08c5b4eb58c6.png",
+    cover: "/viber_image_2026-05-27_16-15-03-570.jpg",
     badge: "Live с д-р Данка",
     accent: "green",
   },

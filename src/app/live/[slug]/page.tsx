@@ -84,80 +84,119 @@ export default function LiveCourseDetailPage() {
 
   return (
     <div className="bg-brand-light min-h-screen pb-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        <Link href="/live" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark/60 hover:text-brand-gold transition-colors cursor-pointer">
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Към live курсовете
-        </Link>
+      {/* Immersive Full-Screen Hero */}
+      <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden">
+        {/* Background Image - Full screen */}
+        {course.card.cover ? (
+          <div className="absolute inset-0 w-full h-full">
+            <Image
+              src={course.card.cover}
+              alt={course.title}
+              fill
+              className="object-cover object-center sm:object-[center_15%]"
+              priority
+            />
+            {/* Gradient Overlay to ensure text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-brand-dark/70 to-brand-dark/40 lg:bg-gradient-to-r lg:from-brand-dark lg:via-brand-dark/80 lg:to-transparent" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-green to-brand-dark" />
+        )}
 
-        {/* HERO */}
-        <div className="bg-white rounded-3xl shadow-lg border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-12 lg:items-stretch">
-          <div className="relative aspect-[4/3] lg:aspect-auto lg:col-span-5 bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center overflow-hidden">
-            {course.card.cover ? (
-              <Image src={course.card.cover} alt={course.title} fill sizes="(max-width: 1024px) 100vw, 42vw" className="object-cover object-left" priority />
-            ) : (
-              <Video className="h-24 w-24 text-brand-green/30" strokeWidth={1.5} />
-            )}
-            <div className="absolute top-4 left-4 flex flex-wrap gap-1.5">
-              <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-white/95 backdrop-blur-sm text-brand-green px-2.5 py-1.5 rounded-full shadow-sm">
-                <Video className="h-3 w-3" /> {course.platform === "zoom" ? "Zoom" : "Google Meet"}
-              </span>
-              {course.hasCertificate && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-2.5 py-1.5 rounded-full shadow-sm">
-                  <Award className="h-3 w-3" /> Сертификат
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
+          
+          {/* Left content (Title, details) */}
+          <div className="lg:col-span-7 space-y-8">
+            <Link href="/live" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-gold hover:text-white transition-colors cursor-pointer backdrop-blur-sm bg-black/20 px-3.5 py-2 rounded-full border border-white/10 w-fit">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Към live курсовете
+            </Link>
+
+            <div className="space-y-5">
+              <div className="flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-white/10 backdrop-blur-md border border-white/20 text-white px-3 py-1.5 rounded-full shadow-lg">
+                  <Video className="h-3.5 w-3.5 text-brand-gold" /> {course.platform === "zoom" ? "Zoom Live Сесия" : "Google Meet Сесия"}
                 </span>
-              )}
+                {course.hasCertificate && (
+                  <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-3 py-1.5 rounded-full shadow-lg shadow-brand-gold/20">
+                    <Award className="h-3.5 w-3.5" /> Сертификат
+                  </span>
+                )}
+              </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold text-white leading-tight drop-shadow-xl">
+                {course.title}
+              </h1>
+              <div className="w-16 h-1 bg-brand-gold rounded-full shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
+              <p className="text-lg sm:text-xl text-white/80 leading-relaxed max-w-2xl drop-shadow-md font-light">
+                {course.tagline}
+              </p>
+              
+              <div className="flex flex-wrap gap-4 pt-4">
+                {course.format && (
+                  <div className="flex items-center gap-2 text-white/90 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
+                    <Calendar className="h-5 w-5 text-brand-gold shrink-0" />
+                    <span className="text-sm font-medium">{course.format}</span>
+                  </div>
+                )}
+                {course.groupSize && (
+                  <div className="flex items-center gap-2 text-white/90 bg-black/20 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
+                    <Users className="h-5 w-5 text-brand-gold shrink-0" />
+                    <span className="text-sm font-medium">{course.groupSize}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col gap-5">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Live с д-р Николова</span>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-green leading-tight">{course.title}</h1>
-            <div className="w-12 h-0.5 bg-brand-gold/60 rounded-full" />
-            <p className="text-sm sm:text-base text-brand-dark/70 leading-relaxed">{course.tagline}</p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-brand-dark/70">
-              {course.format && (
-                <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-brand-gold shrink-0" />{course.format}</div>
-              )}
-              {course.groupSize && (
-                <div className="flex items-center gap-2"><Users className="h-4 w-4 text-brand-gold shrink-0" />{course.groupSize}</div>
-              )}
-            </div>
-
-            {course.nextBatch && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-3 text-xs leading-relaxed">
-                <strong>📅 {course.nextBatch}</strong>
-              </div>
-            )}
-
-            <div className="mt-auto pt-6 border-t border-brand-green/5 space-y-3">
-              <div className="flex items-end justify-between">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/40 block">Цена</span>
-                  <span className="font-serif text-4xl font-bold text-brand-gold">{livePrice.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
+          {/* Right content: Glassmorphism Checkout Panel */}
+          <div className="lg:col-span-5">
+            <div className="bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_0_40px_rgba(0,0,0,0.3)] rounded-3xl p-6 sm:p-8 relative overflow-hidden group">
+              {/* Subtle animated glow inside panel */}
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-brand-gold/20 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-700 pointer-events-none" />
+              <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-brand-green/30 rounded-full blur-3xl opacity-50 group-hover:opacity-70 transition-opacity duration-700 pointer-events-none" />
+              
+              <div className="relative z-10 flex flex-col h-full">
+                {/* Price Section */}
+                <div className="mb-6 pb-6 border-b border-white/10 space-y-4">
+                  {course.nextBatch && (
+                    <div className="bg-brand-gold text-brand-dark rounded-xl p-3 text-xs font-bold leading-relaxed shadow-sm">
+                      📅 {course.nextBatch}
+                    </div>
+                  )}
+                  
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-2">Инвестиция във Вашия бизнес</span>
+                    <div className="flex items-end gap-3 mb-3">
+                      <div className="flex flex-col">
+                        <span className="font-serif text-5xl sm:text-6xl font-bold text-brand-gold leading-none drop-shadow-md">
+                          {livePrice.toFixed(2)}<span className="text-2xl text-brand-gold/70 font-sans ml-1">€</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-dark/50 bg-brand-light/60 px-3 py-1.5 rounded-full">
-                  <Calendar className="h-3 w-3 text-brand-gold" /> По уговорка
-                </span>
-              </div>
-              <button
-                onClick={() => { setEnrollOpen(true); setStatus("idle"); setError(""); }}
-                className="group relative overflow-hidden w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 hover:shadow-xl hover:shadow-brand-gold/35 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
-                Запиши се за следваща група
-                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-              </button>
-              <div className="flex items-start gap-2 text-[10px] text-brand-dark/50 leading-relaxed">
-                <ShieldCheck className="h-4 w-4 text-brand-gold/70 shrink-0 mt-0.5" />
-                <span>След записване д-р Николова Ви пише с дата при сформирана група.</span>
+
+                {/* Buy Button */}
+                <button
+                  onClick={() => { setEnrollOpen(true); setStatus("idle"); setError(""); }}
+                  className="group/btn relative overflow-hidden w-full px-6 py-4 sm:py-5 bg-brand-gold hover:bg-white text-brand-dark font-black text-sm uppercase tracking-widest rounded-2xl shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-500 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-brand-dark/10 to-transparent skew-x-12 pointer-events-none" />
+                  Запази своето място
+                  <ArrowRight className="h-4.5 w-4.5 transition-transform duration-300 group-hover/btn:translate-x-1.5" />
+                </button>
+                <div className="flex items-start gap-2 mt-4 text-[11px] text-white/70 leading-relaxed">
+                  <ShieldCheck className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                  <span>Сигурно плащане. След записване д-р Николова ще се свърже с Вас.</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* CUSTOM CONTENT */}
+      {/* Course Content Wrapper */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 relative z-20">
         <Page />
       </div>
 

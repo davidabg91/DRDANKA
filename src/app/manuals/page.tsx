@@ -15,36 +15,35 @@ import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
  * banner at the bottom links to /live for buyers who want a live session
  * instead.
  */
-export default function LibraryPage() {
+export default function ManualsPage() {
   const { overrides } = usePriceOverrides();
-  const trainingMaterials = LIBRARY_MATERIALS.filter(m => m.category === "training" || (!m.category && m.type === "video"));
+  const manualMaterials = LIBRARY_MATERIALS.filter(m => m.category === "document" || (!m.category && m.type === "pdf"));
   return (
     <div className="bg-brand-light min-h-screen pb-24">
       <section className="bg-brand-green text-white py-16 border-b border-brand-gold/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
           <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-            <Video className="h-3.5 w-3.5" />
-            Обучения
+            <BookOpen className="h-3.5 w-3.5" />
+            Документи и Наръчници
           </span>
           <h1 className="font-serif text-3xl sm:text-5xl font-bold">
-            Обучения за хранителен бизнес
+            Наръчници и чек листи
           </h1>
           <p className="text-sm sm:text-base text-white/70 max-w-2xl mx-auto font-light">
-            Професионални обучения от д-р Данка Николова — получавате ги веднага след покупка и учите
-            във Вашето темпо.
+            Професионални наръчници, ръководства, чек листи и въпросници за проверка на документацията. Готови за изтегляне веднага след покупка.
           </p>
         </div>
       </section>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        {trainingMaterials.length === 0 ? (
+        {manualMaterials.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-md p-10 text-center space-y-2">
             <BookOpen className="h-10 w-10 text-brand-gold/50 mx-auto" />
             <p className="text-brand-dark/60 text-sm">Скоро добавяме материали.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
-            {trainingMaterials.map(m => (
+            {manualMaterials.map(m => (
               <Link
                 key={m.slug}
                 href={`/library/${m.slug}`}

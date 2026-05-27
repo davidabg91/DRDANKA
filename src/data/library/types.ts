@@ -19,8 +19,12 @@ export interface LibraryMaterial {
   tagline: string;
   /** Price in EUR. */
   priceEur: number;
+  /** Original price before discount (optional) */
+  originalPriceEur?: number;
   /** Delivery format. */
   type: LibraryMaterialType;
+  /** Logical category for the UI separation (trainings vs documents). */
+  category?: "training" | "document";
   /** External URL the buyer receives after payment (Google Drive PDF, Vimeo, etc.). */
   contentUrl: string;
   /** Catalog card visuals. */

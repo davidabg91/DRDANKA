@@ -535,6 +535,8 @@ export default function ProfilePage() {
     oilQualityOk: true,
     oilChanged: false
   });
+  const [logTechCards, setLogTechCards] = useState<any>({ reviewed: false, strictlyFollowed: true });
+  const [logSafetyCulture, setLogSafetyCulture] = useState<any>({ briefingDone: false, rulesRespected: true });
 
   // Tools state: Self-Audit Questionnaire
   const [auditAnswers, setAuditAnswers] = useState<any>({});
@@ -705,6 +707,8 @@ export default function ProfilePage() {
         { product: "Готвено пилешко филе", time: "11:30", tempCook: "78", cooled: true }
       ]);
       setLogFryer({ fryerUsed: false, oilQualityOk: true, oilChanged: false });
+      setLogTechCards({ reviewed: false, strictlyFollowed: true });
+      setLogSafetyCulture({ briefingDone: false, rulesRespected: true });
     };
     const key = logKeyFor(currentUserEmail, selectedDate);
     (async () => {
@@ -719,6 +723,8 @@ export default function ProfilePage() {
           setLogStaff(parsed.staff || { checkPassed: false, healthy: true });
           setLogThermal(parsed.thermal || []);
           setLogFryer(parsed.fryer || { fryerUsed: false, oilQualityOk: true, oilChanged: false });
+          setLogTechCards(parsed.techCards || { reviewed: false, strictlyFollowed: true });
+          setLogSafetyCulture(parsed.safetyCulture || { briefingDone: false, rulesRespected: true });
           return;
         }
         // One-time migration from localStorage if the user has legacy data.
@@ -733,6 +739,8 @@ export default function ProfilePage() {
           setLogStaff(parsed.staff || { checkPassed: false, healthy: true });
           setLogThermal(parsed.thermal || []);
           setLogFryer(parsed.fryer || { fryerUsed: false, oilQualityOk: true, oilChanged: false });
+          setLogTechCards(parsed.techCards || { reviewed: false, strictlyFollowed: true });
+          setLogSafetyCulture(parsed.safetyCulture || { briefingDone: false, rulesRespected: true });
           return;
         }
         applyDefaults();
@@ -2706,7 +2714,7 @@ export default function ProfilePage() {
             if (d === null || d > 14) return null;
             const isExpired = d < 0;
             return (
-              <div className={`mb-6 rounded-2xl border p-4 sm:p-5 flex items-start gap-3 ${isExpired ? "bg-red-50 border-red-300 text-red-900" : "bg-amber-50 border-amber-300 text-amber-900"}`}>
+              <div className={`mb-6 rounded-2xl border p-4 sm:p-5 flex items-start gap-3 print:hidden ${isExpired ? "bg-red-50 border-red-300 text-red-900" : "bg-amber-50 border-amber-300 text-amber-900"}`}>
                 <AlertTriangle className={`h-5 w-5 mt-0.5 shrink-0 ${isExpired ? "text-red-600" : "text-amber-600"}`} />
                 <div className="flex-1 text-sm">
                   <p className="font-bold mb-1">
@@ -4527,6 +4535,36 @@ export default function ProfilePage() {
                       ) : (
                         <>
                           {/* Screen Version: Spreadsheet Style */}
+                          {(() => {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const expiredItems = logIncoming.filter(row => {
+                              if (!row.expiry) return false;
+                              const exp = new Date(row.expiry);
+                              return exp < today;
+                            });
+                            
+                            return expiredItems.length > 0 && (
+                              <div className="mb-4 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm animate-pulse print:hidden">
+                                <div className="flex">
+                                  <div className="flex-shrink-0">
+                                    <AlertTriangle className="h-5 w-5 text-red-500" />
+                                  </div>
+                                  <div className="ml-3">
+                                    <h3 className="text-sm font-bold text-red-800">Внимание: Изтекъл срок на годност!</h3>
+                                    <div className="mt-1 text-xs text-red-700">
+                                      <p>Следните суровини/продукти са с изтекъл срок на годност и трябва да бъдат бракувани/върнати:</p>
+                                      <ul className="list-disc pl-5 mt-1 font-medium space-y-1">
+                                        {expiredItems.map((item, i) => (
+                                          <li key={i}>{item.product || "Ненаименован продукт"} (Срок: {new Date(item.expiry).toLocaleDateString("bg-BG")})</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                           <div className="overflow-x-auto print:hidden rounded-2xl border border-brand-green/10 shadow-sm">
                             <table className="w-full text-xs text-left border-separate border-spacing-0">
                               <thead>
@@ -4960,7 +4998,109 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    {/* NICHE-SPECIFIC FORM: 5. Термична Обработка (cooking temp log) - Rendered if Niche is Заведение or Пекарна/Производство */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* FORM 5: Технологични карти */}
+                      <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
+                        <div className="border-b border-brand-green/5 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl">
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-serif text-base font-bold text-brand-green">5. Технологични карти</h3>
+                              <p className="text-[9px] text-brand-dark/50">Проверка за наличност и спазване на картите</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-4 print:hidden">
+                          <button
+                            type="button"
+                            onClick={() => setLogTechCards({ ...logTechCards, reviewed: !logTechCards.reviewed })}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex items-start gap-4 ${
+                              logTechCards.reviewed 
+                                ? "bg-brand-green/[0.02] border-brand-gold shadow-md shadow-brand-gold/5" 
+                                : "bg-white border-brand-green/10 hover:border-brand-green/30"
+                            }`}
+                          >
+                            <div className={`p-1.5 rounded-lg shrink-0 border transition-all ${
+                              logTechCards.reviewed 
+                                ? "bg-brand-gold text-brand-dark border-brand-gold" 
+                                : "bg-brand-light text-brand-dark/25 border-brand-green/10"
+                            }`}>
+                              {logTechCards.reviewed ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className={`text-xs font-serif font-bold block ${logTechCards.reviewed ? "text-brand-green" : "text-brand-dark"}`}>
+                                Картите са налични на работното място
+                              </span>
+                              <span className="text-[10px] text-brand-dark/50 leading-normal block">
+                                Персоналът има достъп до всички технологични карти за деня
+                              </span>
+                            </div>
+                          </button>
+                        </div>
+                        <div className="hidden print:block space-y-3.5 text-[10px]">
+                          <div className="flex items-center gap-3">
+                            <span className="w-4 h-4 border border-brand-dark flex items-center justify-center font-bold font-mono">
+                              {logTechCards.reviewed ? "X" : ""}
+                            </span>
+                            <span>Технологичните карти за произвежданите продукти са налични и се спазват строго.</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* FORM 6: Култура по безопасност на храните */}
+                      <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
+                        <div className="border-b border-brand-green/5 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-2 bg-brand-gold/15 text-brand-gold rounded-xl">
+                              <ShieldCheck className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-serif text-base font-bold text-brand-green">6. Култура по безопасност на храните</h3>
+                              <p className="text-[9px] text-brand-dark/50">Вътрешен инструктаж и спазване на правилата</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="space-y-4 print:hidden">
+                          <button
+                            type="button"
+                            onClick={() => setLogSafetyCulture({ ...logSafetyCulture, briefingDone: !logSafetyCulture.briefingDone })}
+                            className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 cursor-pointer flex items-start gap-4 ${
+                              logSafetyCulture.briefingDone 
+                                ? "bg-brand-green/[0.02] border-brand-gold shadow-md shadow-brand-gold/5" 
+                                : "bg-white border-brand-green/10 hover:border-brand-green/30"
+                            }`}
+                          >
+                            <div className={`p-1.5 rounded-lg shrink-0 border transition-all ${
+                              logSafetyCulture.briefingDone 
+                                ? "bg-brand-gold text-brand-dark border-brand-gold" 
+                                : "bg-brand-light text-brand-dark/25 border-brand-green/10"
+                            }`}>
+                              {logSafetyCulture.briefingDone ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className={`text-xs font-serif font-bold block ${logSafetyCulture.briefingDone ? "text-brand-green" : "text-brand-dark"}`}>
+                                Проведен ежедневен инструктаж
+                              </span>
+                              <span className="text-[10px] text-brand-dark/50 leading-normal block">
+                                Персоналът е запознат с рисковете и правилата за работа с храни
+                              </span>
+                            </div>
+                          </button>
+                        </div>
+                        <div className="hidden print:block space-y-3.5 text-[10px]">
+                          <div className="flex items-center gap-3">
+                            <span className="w-4 h-4 border border-brand-dark flex items-center justify-center font-bold font-mono">
+                              {logSafetyCulture.briefingDone ? "X" : ""}
+                            </span>
+                            <span>Персоналът е инструктиран и спазва културата по безопасност на храните.</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* NICHE-SPECIFIC FORM: 7. Термична Обработка (cooking temp log) - Rendered if Niche is Заведение or Пекарна/Производство */}
                     {(getSectorForNiche(firmInfo.niche) === "Заведения за обществено хранене (ЗОХ)" || getSectorForNiche(firmInfo.niche).includes("Производство") || getSectorForNiche(firmInfo.niche).includes("Консервирани") || getSectorForNiche(firmInfo.niche).includes("Сладкарски")) && (
                       <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
                         <div className="flex items-center justify-between border-b border-brand-green/5 pb-3">
@@ -4969,7 +5109,7 @@ export default function ProfilePage() {
                               <Activity className="h-5 w-5" />
                             </div>
                             <div>
-                              <h3 className="font-serif text-base font-bold text-brand-green">5. Дневник за температурна (термична) обработка</h3>
+                              <h3 className="font-serif text-base font-bold text-brand-green">7. Дневник за температурна (термична) обработка</h3>
                               <p className="text-[9px] text-brand-dark/50">Проверка на минимална температура от 75°C в ядрото на храната</p>
                             </div>
                           </div>
@@ -5108,7 +5248,7 @@ export default function ProfilePage() {
                       </div>
                     )}
 
-                    {/* NICHE-SPECIFIC FORM: 6. Контрол на фритюрна мазнина - Rendered if Niche is Заведение or Каравана */}
+                    {/* NICHE-SPECIFIC FORM: 8. Контрол на фритюрна мазнина - Rendered if Niche is Заведение or Каравана */}
                     {(getSectorForNiche(firmInfo.niche) === "Заведения за обществено хранене (ЗОХ)" || getSectorForNiche(firmInfo.niche) === "МТХ – Мобилни търговски обекти") && (
                       <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-4 break-inside-avoid">
                         <div className="border-b border-brand-green/5 pb-3">
@@ -5117,7 +5257,7 @@ export default function ProfilePage() {
                               <CheckCircle className="h-5 w-5" />
                             </div>
                             <div>
-                              <h3 className="font-serif text-base font-bold text-brand-green">6. Дневник за фритюрна мазнина</h3>
+                              <h3 className="font-serif text-base font-bold text-brand-green">8. Дневник за фритюрна мазнина</h3>
                               <p className="text-[9px] text-brand-dark/50">Проверка за годност и подмяна на фритюрно олио</p>
                             </div>
                           </div>
@@ -5437,11 +5577,22 @@ export default function ProfilePage() {
                               )}
                             </div>
 
-                            <div className="shrink-0">
+                            <div className="shrink-0 flex items-center gap-2">
                               {material.status === "completed" ? (
-                                <span className="inline-flex items-center gap-1 text-xs text-green-600 font-bold bg-green-100/50 px-3 py-1.5 rounded-lg">
-                                  <CheckCircle className="h-4 w-4" /> Изпълнен
-                                </span>
+                                <>
+                                  <span className="inline-flex items-center gap-1 text-xs text-green-600 font-bold bg-green-100/50 px-3 py-1.5 rounded-lg">
+                                    <CheckCircle className="h-4 w-4" /> Изпълнен
+                                  </span>
+                                  {material.type === "test" && material.score !== undefined && material.score >= 80 && (
+                                    <button
+                                      onClick={() => alert("Сертификатът за това обучение успешно се генерира (демо). В пълната версия тук се изтегля PDF.")}
+                                      className="px-3 py-1.5 bg-brand-gold hover:bg-amber-500 text-brand-dark font-bold text-[10px] uppercase rounded-lg flex items-center gap-1 transition-colors shadow-sm cursor-pointer border-0"
+                                      title="Изтегли сертификат за преминато обучение"
+                                    >
+                                      <Download className="h-3.5 w-3.5" /> Сертификат
+                                    </button>
+                                  )}
+                                </>
                               ) : (
                                 <button
                                   onClick={() => {

@@ -119,7 +119,7 @@ export const etiketiraneNaHrani: LibraryMaterial = {
   title: "15 златни правила за етикетиране на храните",
   tagline:
     "Практическо ръководство по изискванията на Регламент (ЕС) № 1169/2011 — съставки, алергени, хранителна декларация, шрифтове.",
-  priceEur: 49.9,
+  priceEur: 11.9,
   type: "pdf",
   // Replace with the real Google Drive / S3 URL once content is ready.
   contentUrl: "https://drive.google.com/file/d/REPLACE_ME/view",

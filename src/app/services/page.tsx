@@ -27,22 +27,7 @@ interface ServiceItem {
 }
 
 const SERVICES: ServiceItem[] = [
-  {
-    title: "ВИП Абонаментна Система „Дигитално Спокойствие“",
-    badge: "Премиум ВИП Услуга",
-    icon: Sparkles,
-    desc: "Пълно дигитално управление на безопасността на храните във Вашия обект. Заменяме всички хартиени папки и досадни дневници с иновативна, автоматизирана платформа. Вие получавате пълно нормативно съответствие и директна денонощна връзка с д-р Данка Николова.",
-    scope: [
-      "Автоматизирано попълване на ежедневните БАБХ дневници (температурен режим, хигиенно състояние, ДДД и входящ контрол) с едно кликване",
-      "Постоянен 24/7 директен чат и консултации с д-р Данка Николова при извънредни казуси или изненадващи проверки",
-      "Вграден генератор на легални БАБХ етикети за отворени продукти с автоматично изчисляване и следене на сроковете за годност",
-      "Приоритетно изготвяне на писмени становища и пълна защита на бизнеса Ви при съставени предписания или актове от БАБХ",
-      "Дигитално обучение за персонала по хигиенни норми с интерактивни тестове и автоматично издаване на валидни сертификати",
-      "Автоматична софтуерна актуализация на НАССР плановете при промяна на меню, персонал, асортимент или държавни закони",
-    ],
-    benefits: "Спестява над 45 часа документална работа месечно, премахва риска от човешка грешка и гарантира 100% защита от глоби.",
-    isVip: true,
-  },
+
   {
     title: "НАССР Системи (ХАСЕП)",
     badge: "Задължително по Закон",
@@ -155,8 +140,143 @@ export default function Services() {
         </div>
       </section>
 
+      {/* VIP SYSTEM SECTION */}
+      <section className="py-16 bg-white border-b border-brand-green/10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-br from-[#FBF5E6] via-[#F2DFAC] to-[#DCBF7A] border border-brand-gold rounded-[2.5rem] shadow-2xl relative overflow-hidden text-brand-dark p-8 sm:p-12 lg:p-16">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/30 rounded-full blur-3xl -z-10 pointer-events-none translate-x-24 -translate-y-24" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-brand-green/10 rounded-full blur-3xl -z-10 pointer-events-none -translate-x-24 translate-y-24" />
+
+            <div className="text-center max-w-4xl mx-auto space-y-6 mb-16">
+              <span className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest bg-brand-green text-white px-4 py-2 rounded-full shadow-md animate-pulse">
+                <Sparkles className="h-4 w-4 text-brand-gold" /> Премиум Услуга
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-brand-green leading-tight">
+                ВИП Абонаментна Система <br className="hidden sm:block" />
+                <span className="text-brand-dark">„Дигитално Спокойствие“</span>
+              </h2>
+              <p className="text-lg sm:text-xl font-medium text-brand-dark/90 italic">
+                Пълно дигитално управление на безопасността на храните във Вашия обект
+              </p>
+              <div className="text-sm sm:text-base text-brand-dark/80 leading-relaxed space-y-4 max-w-3xl mx-auto">
+                <p>
+                  <strong>Забравете за претрупаните папки, изгубените дневници и постоянния страх от проверки.</strong><br />
+                  С ВИП Абонаментна Система „Дигитално Спокойствие“ получавате иновативно дигитално решение за управление на безопасността на храните, което автоматизира ежедневните процеси, поддържа обекта Ви в нормативно съответствие и Ви осигурява директна връзка с д-р Данка Николова.
+                </p>
+                <p>
+                  Системата е създадена специално за производители и търговци на храни, които искат спокойствие, сигурност и професионална защита на бизнеса си.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+              <div className="space-y-8">
+                <h3 className="font-serif text-2xl font-bold text-brand-green mb-6 border-b border-brand-green/10 pb-4">Какво получавате?</h3>
+                
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                  <h4 className="font-bold flex items-center gap-2"><ClipboardList className="h-5 w-5 text-brand-green" /> Автоматизирани БАБХ дневници</h4>
+                  <p className="text-sm text-brand-dark/80">Автоматично и лесно попълване на ежедневните записи за:</p>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-brand-dark/80 pl-2">
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Температурен режим</li>
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Хигиена на обекта</li>
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Входящ контрол</li>
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Проследимост</li>
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Технологични карти</li>
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Здраве на персонала</li>
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Обучение на персонала</li>
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Управление на отпадъци</li>
+                    <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Контролни записи</li>
+                  </ul>
+                  <p className="text-xs font-bold text-brand-green mt-2 bg-brand-green/10 p-2 rounded-lg inline-block">Всичко се попълва дигитално с минимално време и риск от грешки.</p>
+                </div>
+
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                  <h4 className="font-bold flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-brand-green" /> 24/7 връзка с д-р Николова</h4>
+                  <p className="text-sm text-brand-dark/80">Получавате постоянен директен чат и експертни консултации при:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["Изненадващи проверки", "Предписания от БАБХ", "Извънредни ситуации", "Въпроси по безопасност"].map(i => (
+                      <span key={i} className="text-[10px] uppercase tracking-wider font-bold bg-white px-2 py-1 rounded-md border border-brand-green/10 text-brand-dark/80">{i}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                  <h4 className="font-bold flex items-center gap-2"><ListTodo className="h-5 w-5 text-brand-green" /> Защита при проверки и актове</h4>
+                  <p className="text-sm text-brand-dark/80">Приоритетно съдействие и експертна подкрепа при:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {["Предписания", "Актове", "Несъответствия", "Писмени становища", "Комуникация с органи"].map(i => (
+                      <span key={i} className="text-[10px] uppercase tracking-wider font-bold bg-white px-2 py-1 rounded-md border border-brand-green/10 text-brand-dark/80">{i}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-8">
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3 mt-0 lg:mt-[5.5rem]">
+                  <h4 className="font-bold flex items-center gap-2"><FileText className="h-5 w-5 text-brand-green" /> Интелигентен генератор на етикети</h4>
+                  <p className="text-sm text-brand-dark/80">Системата автоматично генерира легални етикети за отворени продукти с автоматично изчисляване на срокове, следене на годност и проследимост.</p>
+                </div>
+
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                  <h4 className="font-bold flex items-center gap-2"><BookOpen className="h-5 w-5 text-brand-green" /> Дигитално обучение на персонала</h4>
+                  <p className="text-sm text-brand-dark/80">Онлайн обучение по безопасност на храните и хигиенни практики с интерактивни тестове, дигитални сертификати и автоматично проследяване.</p>
+                </div>
+
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                  <h4 className="font-bold flex items-center gap-2"><Layers className="h-5 w-5 text-brand-green" /> Автоматични актуализации</h4>
+                  <p className="text-sm text-brand-dark/80">При промяна на меню, персонал, процеси или закони — системата автоматично актуализира необходимите НАССР и ДПХП документи.</p>
+                </div>
+
+                <div className="mt-10 p-6 sm:p-8 bg-brand-green text-white rounded-2xl shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/20 rounded-full blur-2xl pointer-events-none translate-x-10 -translate-y-10" />
+                  <h4 className="font-serif text-xl font-bold text-brand-gold mb-4">За кого е създадена системата?</h4>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs font-medium text-white/90">
+                    <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1" />Ресторанти и заведения</li>
+                    <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1" />Производства на храни</li>
+                    <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1" />Сладкарски и хлебопекарни</li>
+                    <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1" />Магазини за храни</li>
+                    <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1" />Мандри и месопреработвателни</li>
+                    <li className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1" />Складове за търговия</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-16 text-center space-y-8 bg-white/40 p-8 sm:p-12 rounded-3xl border border-white/60">
+              <div className="max-w-3xl mx-auto space-y-4">
+                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-brand-green">Вашият бизнес заслужава спокойствие</h3>
+                <p className="text-base text-brand-dark/80 leading-relaxed">
+                  Вместо да губите време в хартии, проверки и притеснения, ВИП системата „Дигитално Спокойствие“ Ви помага да управлявате безопасността на храните модерно, лесно и професионално.
+                </p>
+                <p className="text-lg font-bold text-brand-green italic bg-brand-green/5 py-3 px-6 rounded-xl inline-block mt-4 border border-brand-green/10">
+                  „Защото спокойният бизнес е успешният бизнес.“
+                </p>
+              </div>
+              <div className="pt-6">
+                <Link
+                  href="/profile"
+                  className="inline-flex items-center justify-center px-10 py-5 text-sm sm:text-base font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer bg-brand-green hover:bg-[#12382b] text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 border border-brand-green"
+                >
+                  Кандидатствай за Абонамент
+                </Link>
+                <p className="text-[10px] text-brand-dark/50 text-center italic leading-relaxed mt-4">
+                  * Броят на местата е ограничен, за да гарантираме индивидуално внимание и качествено обслужване на всеки клиент.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Services Grid */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-brand-light">
+        <div className="text-center mb-12">
+          <SectionHeading
+            badgeText="ЕДНОКРАТНИ УСЛУГИ И СТАНДАРТИ"
+            title="Допълнителни Консултантски Услуги"
+            subtitle="Вижте нашите решения за разработка на HACCP, ISO сертификации и подготовка на документация."
+          />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {SERVICES.map((srv, index) => {
             const Icon = srv.icon;

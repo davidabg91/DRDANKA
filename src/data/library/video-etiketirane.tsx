@@ -188,7 +188,7 @@ export const videoEtiketirane: LibraryMaterial = {
   type: "video",
   contentUrl: "https://drive.google.com/drive/folders/1oZ-0OaHEbLF1YTH3Q45MTsOm0xbv0hUd",
   card: {
-    cover: "/Gemini_Generated_Image_bowz91bowz91bowz.png",
+    cover: "/viber_image_2026-05-27_15-28-53-163.jpg",
     badge: "Сертификат",
     accent: "gold",
   },

@@ -13,8 +13,10 @@ import { etiketiraneNaHrani } from "./etiketirane-na-hrani";
 import { videoEtiketirane } from "./video-etiketirane";
 import { mesoIMesniProdukti } from "./meso-i-mesni-produkti";
 import { etiketiraneKontrolZashtita } from "./etiketirane-kontrol-zashtita";
+import { haccpPrakticheskaSistema } from "./haccp-prakticheska-sistema";
 
 export const LIBRARY_MATERIALS: ReadonlyArray<LibraryMaterial> = [
+  haccpPrakticheskaSistema,
   etiketiraneNaHrani,
   videoEtiketirane,
   mesoIMesniProdukti,

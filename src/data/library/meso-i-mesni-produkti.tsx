@@ -142,11 +142,11 @@ export const mesoIMesniProdukti: LibraryMaterial = {
   slug: "meso-i-mesni-produkti",
   title: "Практическо ръководство: Готов ли е обектът ти за регистрация?",
   tagline: "Практическо мини ръководство за обекти с месо и месни продукти. Как да избегнеш отказ, забавяне и излишни разходи.",
-  priceEur: 19.99,
+  priceEur: 9.99,
   type: "pdf",
   contentUrl: "https://firebasestorage.googleapis.com/v0/b/danka-3e858.firebasestorage.app/o/library%2Fmeso-i-mesni-produkti%2Ffile.pdf?alt=media",
   card: {
-    cover: "/Screenshot 2026-05-26 155711.png",
+    cover: "/viber_image_2026-05-27_16-02-10-968.jpg",
     badge: "Ново",
     accent: "gold",
   },

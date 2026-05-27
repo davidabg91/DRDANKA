@@ -89,10 +89,10 @@ export default function About() {
 
       {/* Main Bio Section */}
       <section id="info" className="py-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-36">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-20">
           
           {/* Visual Portrait */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 lg:sticky lg:top-32 z-10">
             <div className="relative border border-brand-gold/30 rounded-2xl p-2 bg-white shadow-2xl">
               <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl">
                 <Image
@@ -128,39 +128,114 @@ export default function About() {
               badgeText="ЗА МЕН"
               title="Коя съм аз и защо да ми се доверите?"
             />
-            <div className="text-sm text-brand-dark/80 space-y-4 leading-relaxed">
-              <p>
-                Казвам се д-р Данка Николова — ветеринарен лекар с над 27 години реален опит в контрола и безопасността на храните. Познавам процеса отвътре — така, както повечето хора никога няма да го видят.
+            <div className="text-brand-dark/80 space-y-6 leading-relaxed">
+              <p className="text-base sm:text-lg text-brand-green font-medium leading-relaxed">
+                Казвам се д-р Данка Николова — ветеринарен лекар, специалист по ветеринарно-санитарна експертиза на хранителните продукти и експерт в областта на контрола и безопасността на храните с над 27 години реален практически опит.
               </p>
-              <div className="bg-white border border-brand-green/10 shadow-sm p-6 space-y-4 my-8 rounded-2xl relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-brand-gold"></div>
-                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-green/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none group-hover:bg-brand-green/10 transition-colors duration-500"></div>
-                
-                <div className="flex items-start gap-3 relative z-10">
-                  <BadgeCheck className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
-                  <p className="text-sm font-semibold text-brand-green leading-relaxed">
-                    Работила съм в системата на държавния контрол.
-                  </p>
+              <p className="text-sm sm:text-base">
+                Професионалният ми път преминава през системата на официалния контрол на храните, управлението на екипи и заемането на ръководна длъжност в системата на ОДБХ. През годините съм участвала активно в контрола на производствени предприятия, складове, магазини, заведения за обществено хранене и обекти за търговия с храни.
+              </p>
+              
+              <div className="flex items-center gap-4 py-4">
+                <div className="h-px bg-brand-gold/30 flex-grow"></div>
+                <p className="text-brand-gold font-serif font-bold text-lg sm:text-xl italic text-center px-4">
+                  Познавам процеса отвътре — така, както повечето хора никога няма да го видят.
+                </p>
+                <div className="h-px bg-brand-gold/30 flex-grow"></div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-8">
+                {[
+                  "Работила съм в системата на държавния контрол.",
+                  "Била съм пряка част от контролните органи.",
+                  "Заемала съм ръководни позиции в системата."
+                ].map((item, idx) => (
+                  <div key={idx} className="bg-white border border-brand-green/10 p-5 rounded-2xl shadow-sm hover:shadow-lg hover:border-brand-gold/40 transition-all duration-300 flex flex-col items-center text-center gap-3 group">
+                    <div className="p-2.5 bg-brand-green/5 rounded-xl text-brand-gold group-hover:scale-110 group-hover:bg-brand-gold/10 transition-all duration-300">
+                      <BadgeCheck className="w-6 h-6" />
+                    </div>
+                    <p className="text-xs font-bold text-brand-green leading-snug">
+                      {item}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-sm sm:text-base">
+                През своята кариера съм виждала десетки случаи, в които обекти получават отказ за регистрация, процедурите се забавят с месеци, а бизнесите губят хиляди левове още преди да започнат дейността си. И това често не се случва, защото идеята или обектът са лоши, а защото изискванията не са приложени правилно още от самото начало.
+              </p>
+              <p className="text-sm sm:text-base">
+                Благодарение на опита си от двете страни на процеса, знам в детайли какво реално се проверява при регистрация на обект, къде най-често се допускат грешки и как те могат да бъдат избегнати още от първия път.
+              </p>
+              
+              <div className="mt-10 mb-8 bg-brand-light border-y border-brand-gold/20 py-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-3xl pointer-events-none"></div>
+                <h4 className="font-serif text-brand-green font-bold text-xl sm:text-2xl mb-6 relative z-10 text-center">
+                  През годините придобих богат практически опит в:
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
+                  {[
+                    "Контрол и безопасност на храните",
+                    "HACCP системи и процедури",
+                    "Добри хигиенни и производствени практики (ДХП/ДПХП)",
+                    "ISO 22000, FSSC 22000, IFS Food и ISO 9001",
+                    "Регистрация на обекти по Закона за храните",
+                    "Технологични документации",
+                    "Етикетиране съгласно Регламент (ЕС) № 1169/2011",
+                    "Подготовка за проверки от ОДБХ и одити",
+                    "Обучения и внедряване на работещи системи за самоконтрол",
+                    "Одитиране и внедряване на системи по НАССР"
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-white p-3.5 rounded-xl border border-brand-green/5 shadow-sm hover:shadow-md transition-all">
+                      <div className="w-6 h-6 rounded-full bg-brand-gold/10 flex items-center justify-center shrink-0">
+                        <CheckCircle className="w-3.5 h-3.5 text-brand-gold" />
+                      </div>
+                      <span className="text-xs sm:text-sm font-medium text-brand-dark">{item}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-start gap-3 relative z-10">
-                  <BadgeCheck className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
-                  <p className="text-sm font-semibold text-brand-green leading-relaxed">
-                    Била съм пряка част от контролните органи.
+              </div>
+
+              <div className="bg-gradient-to-br from-brand-green to-[#0f2e22] text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden my-8">
+                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-brand-gold/20 rounded-full blur-2xl"></div>
+                <div className="relative z-10">
+                  <Quote className="w-10 h-10 text-brand-gold/40 mb-4" />
+                  <p className="text-sm sm:text-base leading-relaxed mb-4">
+                    В работата си не разчитам на „готови шаблони“ и документация само за пред проверяващите. Работя според реалната дейност в обекта, защото именно това е разликата между система, която съществува само на хартия, и система, която реално защитава бизнеса.
                   </p>
-                </div>
-                <div className="flex items-start gap-3 relative z-10">
-                  <BadgeCheck className="w-5 h-5 text-brand-gold shrink-0 mt-0.5" />
-                  <p className="text-sm font-semibold text-brand-green leading-relaxed">
-                    Заемала съм и ръководни позиции в системата.
+                  <p className="text-sm sm:text-base leading-relaxed text-brand-gold">
+                    В своите обучения и консултации показвам какво инспекторите действително гледат при проверка, кои са най-честите грешки на бизнес операторите и как да избегнете откази, санкции, забавяния и сериозни финансови загуби.
                   </p>
                 </div>
               </div>
-              <p>
-                През моята кариера съм виждала десетки случаи, в които обекти получават отказ за регистрация, процедурите се забавят с месеци, а бизнесите губят големи суми пари още преди да започнат. И това не се случва защото идеите или обектите им са лоши, а защото не знаят как да приложат изискванията правилно.
-              </p>
-              <p>
-                Благодарение на опита си от двете страни на процеса, знам в детайли какво реално се гледа при проверка за регистрация, къде най-често се допускат грешки и как да ги избегнете още от първия път. Имам богат практически опит в изграждането и внедряването на критични системи като <strong>HACCP</strong>, <strong>ДПХП/ДХП</strong>, <strong>ISO 22000</strong> и <strong>FSSC 22000</strong>.
-              </p>
+
+              <div className="bg-white border border-brand-gold/30 p-6 sm:p-8 rounded-2xl mt-8 mb-8 shadow-sm hover:shadow-lg transition-all relative">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4">
+                  <GraduationCap className="w-8 h-8 text-brand-gold" />
+                </div>
+                <h4 className="font-serif text-brand-green font-bold text-lg text-center mt-2 mb-6">Образование и професионална квалификация</h4>
+                <div className="space-y-4">
+                  {[
+                    "Експерт по контрол на храните и специалист по ветеринарно-санитарна експертиза",
+                    "Магистър по ветеринарна медицина",
+                    "Сертифициран одитор по международните стандарти ISO 22000, FSSC 22000, IFS Food и ISO 9001",
+                    "Одитор по НАССР системи",
+                    "Експерт по етикетиране на храните съгласно Регламент (ЕС) № 1169/2011",
+                    "Над 27 години професионален практически опит в системата на контрола и безопасността на храните"
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start gap-3 bg-brand-light p-4 rounded-xl">
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand-gold mt-1.5 shrink-0"></div>
+                      <span className="text-sm font-semibold text-brand-green">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-center py-6">
+                <p className="text-base sm:text-lg font-serif italic font-bold text-brand-dark/90 px-4">
+                  „Моята мисия е да помагам на производители и търговци на храни да изграждат спокоен, сигурен и успешен хранителен бизнес, който отговаря на законовите изисквания и печели доверието на клиентите.“
+                </p>
+              </div>
             </div>
           </div>
         </div>
