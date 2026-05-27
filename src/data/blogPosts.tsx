@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { BookOpen, GraduationCap, Video, ArrowRight } from "lucide-react";
 
 export interface BlogPost {
   id: string;
@@ -103,6 +104,27 @@ export const BLOG_POSTS: BlogPost[] = [
         <p>
           Не оставяйте бизнеса си на случайността или на неадаптирани чуждестранни софтуери. Изберете системата, която познава Вашия бизнес и Вашите инспектори.
         </p>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center sm:text-left">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <GraduationCap className="h-3.5 w-3.5" /> Обучения и Материали
+            </span>
+            <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+              Подгответе своя персонал и обекта си
+            </h4>
+            <p className="text-xs text-brand-dark/80 max-w-md">
+              Разгледайте пълния каталог с нашите професионални видео обучения, наръчници за БАБХ и курсове на живо с д-р Николова.
+            </p>
+          </div>
+          <Link 
+            href="/training" 
+            className="inline-flex items-center justify-center bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 hover:text-white group"
+          >
+            Вижте обученията
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
       </div>
     )
   },
@@ -152,6 +174,40 @@ export const BLOG_POSTS: BlogPost[] = [
         <p>
           Спрете да действате „на сляпо“ и „на късмет“. Най-сигурният начин е да направите предварителен одит на обекта преди официалното посещение на БАБХ. Чрез професионален анализ на пространството и документите ще разберете къде са слабите места и ще ги коригирате навреме, спестявайки нерви, време и пари.
         </p>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <GraduationCap className="h-3.5 w-3.5" /> Свързани обучения и ресурси
+            </span>
+          </div>
+          <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+            Предотвратете грешките при БАБХ регистрация още сега:
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white/80 p-4 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-gold uppercase">Ръководство (PDF)</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Готов ли е обектът ти за регистрация?</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Практически съвети как да избегнете скъпи преустройства и отказ от инспекторите.</p>
+              </div>
+              <Link href="/library/meso-i-mesni-produkti" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-3 cursor-pointer">
+                Към наръчника <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+            
+            <div className="bg-white/80 p-4 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-green uppercase">Онлайн курс на живо</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">НАССР Основи с д-р Николова</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Практическо внедряване на ДПХП и НАССР системи с Вашите реални казуси.</p>
+              </div>
+              <Link href="/live/haccp-osnovi" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-3 cursor-pointer">
+                Запиши се за курса <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     )
   },
@@ -201,6 +257,40 @@ export const BLOG_POSTS: BlogPost[] = [
         <p>
           Не оставяйте етикетите на случайността. Инвестицията в професионален преглед на етикетите или практическо обучение по етикетиране е в пъти по-ниска от цената на един спрян продукт или един административен акт.
         </p>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <GraduationCap className="h-3.5 w-3.5" /> Препоръчани обучения по етикетиране
+            </span>
+          </div>
+          <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+            Овладейте правилата за етикетиране и бъдете сигурни при проверки:
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white/80 p-4 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-gold uppercase">Видео обучение</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Практическо video обучение</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">22 детайлни видео лекции, онлайн тест и персонален сертификат от д-р Николова.</p>
+              </div>
+              <Link href="/library/video-etiketirane" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-3 cursor-pointer">
+                Към обучението <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+            
+            <div className="bg-white/80 p-4 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-green uppercase">Ръководство (PDF)</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Етикетиране: съответствие, контрол и защита</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Пълен наръчник с чек-листи на инспектора и съвети как да действате при санкции.</p>
+              </div>
+              <Link href="/library/etiketirane-kontrol-zashtita" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-3 cursor-pointer">
+                Към наръчника <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     )
   },
@@ -244,6 +334,40 @@ export const BLOG_POSTS: BlogPost[] = [
           <li><strong>Задължително измерване на температурата:</strong> Приемайте охладени и замразени продукти само след измерване на температурата с калибриран термометър и я вписвайте в дневника за входящ контрол.</li>
           <li><strong>Ясно обозначаване на алергени:</strong> Суровините, съдържащи алергени (ядки, глутен, яйца, соя, сусам), трябва да се съхраняват физически отделно от останалите, за да се избегне кръстосано замърсяване.</li>
         </ol>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <GraduationCap className="h-3.5 w-3.5" /> Свързани обучения и ресурси
+            </span>
+          </div>
+          <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+            Осигурете перфектен входящ контрол и проследимост:
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white/80 p-4 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-gold uppercase">Ръководство (PDF)</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Обекти с месо и животински продукти</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Мини ръководство за строгите санитарни изисквания и безопасност на суровините.</p>
+              </div>
+              <Link href="/library/meso-i-mesni-produkti" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-3 cursor-pointer">
+                Към наръчника <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+            
+            <div className="bg-white/80 p-4 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-green uppercase">Онлайн курс на живо</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">НАССР Основи с д-р Николова</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Практически Zoom сесии за внедряване и водене на дневници за самоконтрол.</p>
+              </div>
+              <Link href="/live/haccp-osnovi" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-3 cursor-pointer">
+                Запиши се за курса <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     )
   },
@@ -293,6 +417,40 @@ export const BLOG_POSTS: BlogPost[] = [
         <p>
           Присъствието на добавки в състава без коректно отразяване на етикета е сериозно нарушение, което се наказва с глоби при инспекция от БАБХ.
         </p>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <GraduationCap className="h-3.5 w-3.5" /> Свързани обучения и наръчници
+            </span>
+          </div>
+          <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+            Научете правилата за етикетиране на съставки и добавки:
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white/80 p-4 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-gold uppercase">Ръководство (PDF)</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">15 златни правила за етикетиране</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Практически наръчник за деклариране на съставки, алергени и хранителна стойност.</p>
+              </div>
+              <Link href="/library/etiketirane-na-hrani" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-3 cursor-pointer">
+                Към наръчника <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+            
+            <div className="bg-white/80 p-4 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-green uppercase">Видео курс</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Практическо видео обучение по етикетиране</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">22 видео лекции с примери, тест за проверка на знанията и официален сертификат.</p>
+              </div>
+              <Link href="/library/video-etiketirane" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-3 cursor-pointer">
+                Към курса <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     )
   },
@@ -334,6 +492,27 @@ export const BLOG_POSTS: BlogPost[] = [
           <li><strong>Практическо обучение на персонала:</strong> Инвестирайте време да обясните на служителите си защо дезинфекцията на плотовете се описва, какво е кръстосано замърсяване и как се контролират алергените. Когато хората разбират логиката, те попълват записите с лекота.</li>
           <li><strong>Реален вътрешен одит:</strong> Правете периодични проверки на дневниците и хигиената сами (или с външен одитор). Така ще откриете и отстраните грешките навреме, преди БАБХ да ги е видяла.</li>
         </ol>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center sm:text-left">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <Video className="h-3.5 w-3.5" /> Онлайн курс на живо
+            </span>
+            <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+              Практически курс „НАССР Основи“ с д-р Николова
+            </h4>
+            <p className="text-xs text-brand-dark/80 max-w-md">
+              Спрете да попълвате Дневниците „на око“. Включете се в нашия Zoom курс и разберете как да настроите и управлявате Вашата HACCP система реално и лесно.
+            </p>
+          </div>
+          <Link 
+            href="/live/haccp-osnovi" 
+            className="inline-flex items-center justify-center bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 hover:text-white group"
+          >
+            Запишете се за курса
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
       </div>
     )
   },
@@ -400,17 +579,47 @@ export const BLOG_POSTS: BlogPost[] = [
           <span className="text-xs font-semibold block text-brand-gold mt-2">— д-р Данка Николова</span>
         </div>
 
-        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-xl my-8 text-center">
-          <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green mb-2">Имате нужда от съдействие с Вашето меню?</h4>
-          <p className="text-xs sm:text-sm text-brand-dark/80 mb-4">
-            Ние можем да изготвим Вашето меню с алергени съгласно всички изисквания на БАБХ, да подготвим задължителната папка за обекта и да обучим екипа Ви.
-          </p>
-          <Link 
-            href="/services" 
-            className="inline-block bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3 rounded-lg transition-colors cursor-pointer"
-          >
-            Вижте услугата: Изготвяне на Меню с Алергени
-          </Link>
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 space-y-6">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <GraduationCap className="h-3.5 w-3.5" /> Внедряване на изискванията за алергени
+            </span>
+            <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+              Имате нужда от съдействие с Вашето меню?
+            </h4>
+            <p className="text-xs text-brand-dark/80">
+              Изберете най-удобния за Вас начин — професионално изготвяне от наш експерт или практическо обучение, за да се подготвите сами.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div className="bg-white/80 p-5 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-green uppercase">Готова услуга</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Изготвяне на Меню с Алергени</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Нашите експерти ще изработят Вашето меню съгласно изискванията на БАБХ и ще подготвят папката на обекта.</p>
+              </div>
+              <Link href="/services" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-4 cursor-pointer">
+                Вижте услугата <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+            
+            <div className="bg-white/80 p-5 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-gold uppercase">Обучение & Наръчници</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Правила за етикетиране и съставки</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Научете как сами да маркирате алергените с нашия практически наръчник или видео курс.</p>
+              </div>
+              <div className="flex gap-4 mt-4">
+                <Link href="/library/etiketirane-na-hrani" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline cursor-pointer">
+                  Наръчник (PDF)
+                </Link>
+                <Link href="/library/video-etiketirane" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline cursor-pointer">
+                  Видео курс
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Заключение</h3>
