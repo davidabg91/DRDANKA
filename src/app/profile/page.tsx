@@ -1105,7 +1105,7 @@ export default function ProfilePage() {
     const updatedUsers = usersList.map(u => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
         const nextStatus = currentStatus === "approved" ? "expired" as const : "approved" as const;
-        return { ...u, status: nextStatus };
+        return { ...u, status: nextStatus, subscriptionStatus: nextStatus };
       }
       return u;
     });
@@ -1201,13 +1201,13 @@ export default function ProfilePage() {
     URL.revokeObjectURL(url);
   };
 
-  // Non-subscribed buyers land on 'Моите курсове' tab — they can't see anything else anyway.
+  // Non-subscribed or expired buyers land on 'Моите курсове' tab — they can't see anything else anyway.
   useEffect(() => {
     if (userRole !== "user" || !currentUserEmail) return;
     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
     if (!me) return;
-    const subStatus = me.subscriptionStatus ?? "approved";
-    if (subStatus !== "approved" && activeTab !== "courses") {
+    const isSubscribed = me.status === "approved" && (me.subscriptionStatus ?? "approved") === "approved";
+    if (!isSubscribed && activeTab !== "courses") {
       setActiveTab("courses");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1240,7 +1240,7 @@ export default function ProfilePage() {
       u.expiresAt && (daysUntilExpiry(u.expiresAt) ?? 1) < 0
     );
     if (toExpire.length === 0) return;
-    toExpire.forEach(u => updateUser(u.email, { status: "expired" }));
+    toExpire.forEach(u => updateUser(u.email, { status: "expired", subscriptionStatus: "expired" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole, usersLoading, usersList.length]);
 
@@ -2815,10 +2815,16 @@ export default function ProfilePage() {
                   ) : (() => {
                     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
                     const subStatus = me?.subscriptionStatus ?? "approved"; // legacy default
-                    const isSubscribed = subStatus === "approved";
+                    const isSubscribed = me?.status === "approved" && subStatus === "approved";
                     const pendingCount = (me?.assignedDocs || []).filter(d => d.status === "pending").length;
 
-                    const lockedClick = () => setSubApplyOpen(true);
+                    const lockedClick = () => {
+                      if (me?.status === "expired") {
+                        alert("Абонаментът Ви е изтекъл. Моля, свържете се с д-р Николова от страницата за контакти, за да го подновите.");
+                      } else {
+                        setSubApplyOpen(true);
+                      }
+                    };
                     const lockedStyle = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-not-allowed text-left border-0 w-full bg-transparent text-brand-dark/35 hover:bg-brand-dark/5";
                     const activeStyle = (active: boolean) =>
                       `flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${active ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`;
@@ -4276,10 +4282,11 @@ export default function ProfilePage() {
                 <>
                   {(() => {
                     const currentUser = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+                    const status = currentUser?.status ?? "pending";
                     const subStatus = currentUser?.subscriptionStatus ?? "approved"; // legacy default = approved
-                    const isSubscribed = subStatus === "approved";
+                    const isSubscribed = status === "approved" && subStatus === "approved";
 
-                    // Bookstore-only buyer / pending applicant / awaiting payment:
+                    // Bookstore-only buyer / pending applicant / awaiting payment / expired:
                     // lock everything except "courses".
                     if (!isSubscribed && activeTab !== "courses") {
                       const feeEur = currentUser?.subscriptionFeeEur ?? 0;
@@ -4290,12 +4297,13 @@ export default function ProfilePage() {
                           </div>
                           <div className="space-y-2">
                             <h2 className="font-serif text-2xl font-bold text-brand-green">
-                              {subStatus === "awaiting_payment" ? `Плащане на абонамент` : `Заключена секция`}
+                              {subStatus === "awaiting_payment" ? `Плащане на абонамент` : status === "expired" || subStatus === "expired" ? `Изтекъл абонамент` : `Заключена секция`}
                             </h2>
                             <p className="text-sm text-brand-dark/70 leading-relaxed">
                               {subStatus === "pending" && `Вашето заявление за абонамент е получено и се преглежда от д-р Николова. След одобрение и заплащане на абонамента, всички функции на портала се отключват.`}
                               {subStatus === "awaiting_payment" && `Заявлението Ви е одобрено! За да активирате пълния достъп до портала, моля заплатете годишния абонамент по-долу.`}
-                              {(subStatus === "none" || subStatus === "expired") && `Тази секция е достъпна само за клиенти с активен абонамент „БАБХ Спокойствие". Закупените от Вас курсове можете да четете в таб „Моите Обучения".`}
+                              {(status === "expired" || subStatus === "expired") && `Вашият абонамент „БАБХ Спокойствие" е изтекъл. За да възстановите достъпа си до електронните дневници и НАССР документи, моля свържете се с д-р Николова.`}
+                              {status !== "expired" && subStatus !== "expired" && subStatus !== "pending" && subStatus !== "awaiting_payment" && `Тази секция е достъпна само за клиенти с активен абонамент „БАБХ Спокойствие". Закупените от Вас курсове можете да четете в таб „Моите Обучения".`}
                             </p>
                           </div>
                           <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 text-left text-xs text-brand-dark/70 space-y-1.5">
@@ -4329,7 +4337,15 @@ export default function ProfilePage() {
                             </div>
                           )}
 
-                          {(subStatus === "none" || subStatus === "expired") && (
+                          {(status === "expired" || subStatus === "expired") ? (
+                            <Link
+                              href="/contact"
+                              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-sm uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md shadow-brand-gold/20 text-center"
+                            >
+                              Свържи се за подновяване
+                              <ChevronRight className="h-4 w-4" />
+                            </Link>
+                          ) : subStatus === "none" && (
                             <button
                               onClick={() => setSubApplyOpen(true)}
                               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-sm uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md shadow-brand-gold/20"
