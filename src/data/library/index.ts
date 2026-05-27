@@ -10,9 +10,15 @@
  */
 import type { LibraryMaterial } from "./types";
 import { etiketiraneNaHrani } from "./etiketirane-na-hrani";
+import { videoEtiketirane } from "./video-etiketirane";
+import { mesoIMesniProdukti } from "./meso-i-mesni-produkti";
+import { etiketiraneKontrolZashtita } from "./etiketirane-kontrol-zashtita";
 
 export const LIBRARY_MATERIALS: ReadonlyArray<LibraryMaterial> = [
   etiketiraneNaHrani,
+  videoEtiketirane,
+  mesoIMesniProdukti,
+  etiketiraneKontrolZashtita,
 ];
 
 /** Convenience lookup by slug. Returns undefined if not found. */

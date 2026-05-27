@@ -6,7 +6,7 @@ import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments } from
 import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
-import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { Course } from "@/lib/courseTypes";
 import { Training, Enrollment } from "@/lib/trainingTypes";
@@ -253,6 +253,7 @@ export default function ProfilePage() {
     coverImageUrl: m.card.cover,
     fileSizeMb: 0,
     filePath: "",
+    externalUrl: m.contentUrl,
     published: true,
     createdAt: "",
     updatedAt: "",
@@ -412,8 +413,21 @@ export default function ProfilePage() {
   const [courseGrantEmail, setCourseGrantEmail] = useState("");
   const [courseGrantTargetId, setCourseGrantTargetId] = useState("");
   const [expandedCourseBuyers, setExpandedCourseBuyers] = useState<string | null>(null);
-  /** Per-material PDF upload progress (0..100, or null if idle). Keyed by slug. */
   const [libraryUploadProgress, setLibraryUploadProgress] = useState<Record<string, number | null>>({});
+  const [libraryPdfExists, setLibraryPdfExists] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (userRole !== "admin") return;
+    LIBRARY_MATERIALS.forEach(async (m) => {
+      if (m.type !== "pdf") return;
+      try {
+        await getMetadata(storageRef(storage, `library/${m.slug}/file.pdf`));
+        setLibraryPdfExists(prev => ({ ...prev, [m.slug]: true }));
+      } catch {
+        setLibraryPdfExists(prev => ({ ...prev, [m.slug]: false }));
+      }
+    });
+  }, [userRole, storage]);
 
   // Admin Materials form states
   const [materialType, setMaterialType] = useState<"document" | "test">("document");
@@ -1543,11 +1557,11 @@ export default function ProfilePage() {
       },
       () => {
         setLibraryUploadProgress(p => ({ ...p, [slug]: null }));
+        setLibraryPdfExists(p => ({ ...p, [slug]: true }));
         alert(`PDF-ът за „${slug}" е качен успешно!`);
       }
     );
   };
-
   const handleGrantCourse = async () => {
     const email = courseGrantEmail.trim().toLowerCase();
     if (!email || !courseGrantTargetId) {
@@ -3542,7 +3556,11 @@ export default function ProfilePage() {
                                         </span>
                                       </td>
                                       <td className="border border-brand-green/10 p-3 text-center">
-                                        {(() => {
+                                        {c.type === "link" ? (
+                                          <span className="text-[10px] text-brand-dark/45 font-medium italic">
+                                            Не се изисква (Видео)
+                                          </span>
+                                        ) : (() => {
                                           const progress = libraryUploadProgress[c.slug || c.id];
                                           if (progress !== null && progress !== undefined) {
                                             return (
@@ -3554,21 +3572,33 @@ export default function ProfilePage() {
                                               </div>
                                             );
                                           }
+                                          const exists = libraryPdfExists[c.slug || c.id];
                                           return (
-                                            <label className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer">
-                                              <Upload className="h-3 w-3" />
-                                              Качи PDF
-                                              <input
-                                                type="file"
-                                                accept="application/pdf"
-                                                className="hidden"
-                                                onChange={(e) => {
-                                                  const f = e.target.files?.[0];
-                                                  if (f) handleUploadLibraryPdf(c.slug || c.id, f);
-                                                  e.target.value = ""; // reset so the same file can be re-uploaded
-                                                }}
-                                              />
-                                            </label>
+                                            <div className="flex flex-col items-center gap-1.5 justify-center">
+                                              {exists ? (
+                                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                                                  <Check className="h-3 w-3" /> Качен
+                                                </span>
+                                              ) : (
+                                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                                  <AlertTriangle className="h-3 w-3" /> Липсва
+                                                </span>
+                                              )}
+                                              <label className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer">
+                                                <Upload className="h-3 w-3" />
+                                                {exists ? "Прекачи" : "Качи PDF"}
+                                                <input
+                                                  type="file"
+                                                  accept="application/pdf"
+                                                  className="hidden"
+                                                  onChange={(e) => {
+                                                    const f = e.target.files?.[0];
+                                                    if (f) handleUploadLibraryPdf(c.slug || c.id, f);
+                                                    e.target.value = ""; // reset so the same file can be re-uploaded
+                                                  }}
+                                                />
+                                              </label>
+                                            </div>
                                           );
                                         })()}
                                       </td>

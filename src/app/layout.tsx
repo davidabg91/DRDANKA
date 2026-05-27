@@ -72,7 +72,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
       </head>
-      <body className="min-h-full flex flex-col bg-brand-light text-brand-dark">
+      <body className="min-h-full flex flex-col bg-transparent text-brand-dark">
         <Header />
         <main className="flex-grow overflow-x-clip">{children}</main>
         <Footer />

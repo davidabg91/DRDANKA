@@ -55,10 +55,12 @@ export default function CourseViewerPage() {
         const slugQ = query(collection(db, "courses"), where("slug", "==", courseId as string), limit(1));
         const bySlug = await getDocs(slugQ);
         if (!bySlug.empty) {
-          courseData = bySlug.docs[0].data() as typeof courseData;
+          courseData = bySlug.docs[0].data() as { filePath?: string; externalUrl?: string; type?: "pdf" | "link" };
         } else {
           const courseSnap = await getDoc(doc(db, "courses", courseId as string));
-          if (courseSnap.exists()) courseData = courseSnap.data() as typeof courseData;
+          if (courseSnap.exists()) {
+            courseData = courseSnap.data() as { filePath?: string; externalUrl?: string; type?: "pdf" | "link" };
+          }
         }
         if (!courseData) {
           throw new Error("Курсът не съществува");
@@ -191,27 +193,32 @@ export default function CourseViewerPage() {
 
       {/* Page area + repeating watermark */}
       <div className="relative flex justify-center py-6 select-none">
-        <div className="relative">
-          <Document
-            file={pdfFile}
-            onLoadSuccess={onLoadSuccess}
-            onLoadError={(err) => setLoadError(err.message)}
-            loading={<div className="text-white/60 text-sm">Зареждане на страница…</div>}
-            error={<div className="text-red-300 text-sm">Грешка при четенето на PDF файла.</div>}
-          >
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-              className="shadow-2xl"
-            />
-          </Document>
+        <div className="relative overflow-hidden" style={{ WebkitTouchCallout: "none" }}>
+          {/* Protection overlay that intercepts right-click/long-press */}
+          <div className="absolute inset-0 z-10 bg-transparent select-none" style={{ WebkitTouchCallout: "none" }} />
+
+          <div className="pointer-events-none select-none">
+            <Document
+              file={pdfFile}
+              onLoadSuccess={onLoadSuccess}
+              onLoadError={(err) => setLoadError(err.message)}
+              loading={<div className="text-white/60 text-sm">Зареждане на страница…</div>}
+              error={<div className="text-red-300 text-sm">Грешка при четенето на PDF файла.</div>}
+            >
+              <Page
+                pageNumber={pageNumber}
+                scale={scale}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                className="shadow-2xl"
+              />
+            </Document>
+          </div>
 
           {/* Watermark overlay — pointer-events:none so it doesn't intercept anything,
               tiles the page with the viewer's email + date. */}
           <div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden"
+            className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center overflow-hidden"
             aria-hidden="true"
           >
             <div className="absolute inset-0 grid grid-cols-2 grid-rows-6 gap-4 rotate-[-30deg] opacity-15">

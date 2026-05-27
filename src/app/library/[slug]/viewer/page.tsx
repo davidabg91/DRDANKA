@@ -129,17 +129,23 @@ export default function LibraryViewerPage() {
       </div>
 
       {/* PDF + watermark overlay */}
-      <div ref={containerRef} className="relative max-w-5xl mx-auto py-8 px-4">
-        <div className="relative bg-white rounded shadow-2xl mx-auto" style={{ width: "fit-content" }}>
-          <Document
-            file={pdfFile}
-            onLoadSuccess={({ numPages }) => setPageCount(numPages)}
-            onLoadError={(err) => setLoadError(err.message)}
-          >
-            <Page pageNumber={pageNumber} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
-          </Document>
+      <div ref={containerRef} className="relative max-w-5xl mx-auto py-8 px-4 select-none">
+        <div className="relative bg-white rounded shadow-2xl mx-auto overflow-hidden" style={{ width: "fit-content", WebkitTouchCallout: "none" }}>
+          {/* Protection overlay that intercepts right-click/long-press */}
+          <div className="absolute inset-0 z-10 bg-transparent select-none" style={{ WebkitTouchCallout: "none" }} />
+
+          <div className="pointer-events-none select-none">
+            <Document
+              file={pdfFile}
+              onLoadSuccess={({ numPages }) => setPageCount(numPages)}
+              onLoadError={(err) => setLoadError(err.message)}
+            >
+              <Page pageNumber={pageNumber} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
+            </Document>
+          </div>
+
           {/* Watermark overlay */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none">
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center select-none">
             <div className="text-brand-dark/10 font-serif text-2xl sm:text-4xl rotate-[-30deg] whitespace-nowrap font-bold tracking-wide">
               {email} · {new Date().toLocaleDateString("bg-BG")}
             </div>

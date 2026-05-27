@@ -94,7 +94,7 @@ export default function LiveCourseDetailPage() {
         <div className="bg-white rounded-3xl shadow-lg border border-brand-green/5 overflow-hidden grid grid-cols-1 lg:grid-cols-12 lg:items-stretch">
           <div className="relative aspect-[4/3] lg:aspect-auto lg:col-span-5 bg-gradient-to-br from-brand-green/10 to-brand-gold/10 flex items-center justify-center overflow-hidden">
             {course.card.cover ? (
-              <Image src={course.card.cover} alt={course.title} fill sizes="(max-width: 1024px) 100vw, 42vw" className="object-cover" priority />
+              <Image src={course.card.cover} alt={course.title} fill sizes="(max-width: 1024px) 100vw, 42vw" className="object-cover object-left" priority />
             ) : (
               <Video className="h-24 w-24 text-brand-green/30" strokeWidth={1.5} />
             )}

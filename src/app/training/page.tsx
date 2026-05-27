@@ -182,7 +182,7 @@ export default function TrainingPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
-            { icon: Award, title: "Сертификат", text: "Официален документ след успешни тестове в портала." },
+            { icon: Award, title: "Сертификат за обучение", text: "Личен сертификат от д-р Николова, удостоверяващ преминатото обучение." },
             { icon: CheckCircle, title: "Актуални документи", text: "Шаблони, които отговарят на последните изисквания на БАБХ." },
             { icon: Building, title: "Практически примери", text: "Реални казуси от ресторанти, цехове и магазини." },
           ].map(({ icon: Icon, title, text }) => (

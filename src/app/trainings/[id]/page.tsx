@@ -266,9 +266,9 @@ export default function TrainingDetailPage() {
               <Award className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <p className="font-serif text-lg font-bold text-brand-green">Официален сертификат</p>
+              <p className="font-serif text-lg font-bold text-brand-green">Сертификат от д-р Данка Николова</p>
               <p className="text-sm text-brand-dark/70 leading-relaxed">
-                За издаване на сертификат е задължително успешното решаване на всички възложени тестове в Клиентския Портал.
+                След успешното решаване на тестовете в Клиентския Портал, ще получите личен сертификат, подписан от д-р Николова, който да удостовери Вашите знания.
               </p>
             </div>
           </div>

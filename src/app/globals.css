@@ -21,7 +21,7 @@
 }
 
 body {
-  background-color: var(--color-brand-light);
+  background-image: linear-gradient(to right, #FAF6EE, #F3EAD9, #E9D9BF);
   color: var(--color-brand-dark);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -176,5 +176,11 @@ html {
   .break-inside-avoid {
     page-break-inside: avoid !important;
   }
+}
+
+/* Make main page background transparent to reveal the body's gold gradient */
+main > div.bg-brand-light,
+main > article.bg-brand-light {
+  background-color: transparent !important;
 }
 

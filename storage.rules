@@ -12,7 +12,7 @@ service firebase.storage {
 
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email == "d.nikolova.haccp@gmail.com";
+        && request.auth.token.email.lower() == "d.nikolova.haccp@gmail.com";
     }
 
     // Check the buyer's /users/{email}.purchasedCourseIds for the courseId.

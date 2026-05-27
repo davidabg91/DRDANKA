@@ -1,8 +1,22 @@
 [
   {
-    "origin": ["http://localhost:3000", "https://localhost:3000"],
-    "method": ["GET"],
-    "responseHeader": ["Content-Type", "Content-Length", "Content-Range", "Accept-Ranges"],
+    "origin": ["*"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
+    "responseHeader": [
+      "Content-Type",
+      "Content-Length",
+      "Content-Range",
+      "Accept-Ranges",
+      "Range",
+      "Authorization",
+      "x-goog-resumable",
+      "ETag",
+      "X-Firebase-Storage-Version",
+      "X-Goog-Upload-Protocol",
+      "X-Goog-Upload-Command",
+      "X-Goog-Upload-Header-Content-Length",
+      "X-Goog-Upload-Header-Content-Type"
+    ],
     "maxAgeSeconds": 3600
   }
 ]
