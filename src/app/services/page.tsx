@@ -10,6 +10,7 @@ import {
   CalendarDays,
   FileSpreadsheet,
   Check,
+  CheckCircle,
   ChevronRight,
   Sparkles,
   TrendingUp
@@ -173,7 +174,7 @@ export default function Services() {
               <div className="space-y-8">
                 <h3 className="font-serif text-2xl font-bold text-brand-green mb-6 border-b border-brand-green/10 pb-4">Какво получавате?</h3>
                 
-                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3 relative overflow-hidden group hover:bg-white/80 transition-colors">
                   <h4 className="font-bold flex items-center gap-2"><ClipboardList className="h-5 w-5 text-brand-green" /> Автоматизирани БАБХ дневници</h4>
                   <p className="text-sm text-brand-dark/80">Автоматично и лесно попълване на ежедневните записи за:</p>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium text-brand-dark/80 pl-2">
@@ -188,9 +189,29 @@ export default function Services() {
                     <li className="flex items-start gap-1.5"><Check className="h-4 w-4 text-brand-green shrink-0" /> Контролни записи</li>
                   </ul>
                   <p className="text-xs font-bold text-brand-green mt-2 bg-brand-green/10 p-2 rounded-lg inline-block">Всичко се попълва дигитално с минимално време и риск от грешки.</p>
+
+                  {/* Mock UI: БАБХ Дневници */}
+                  <div className="mt-6 bg-white rounded-xl shadow-lg border border-brand-green/10 overflow-hidden relative group-hover:-translate-y-1 transition-transform duration-300">
+                    <div className="bg-gradient-to-r from-brand-green to-[#12382b] p-3 flex justify-between items-center text-white">
+                      <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5"><ClipboardList className="h-3 w-3 text-brand-gold"/> Дневник: Хладилници</span>
+                      <span className="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-medium">Днес</span>
+                    </div>
+                    <div className="p-4 flex items-center justify-between bg-brand-light/30">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-brand-dark/50 uppercase block">Хладилна витрина #1</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-black text-brand-green tracking-tighter">4.0°<span className="text-lg">C</span></span>
+                          <span className="text-[9px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded flex items-center gap-1"><CheckCircle className="h-2.5 w-2.5"/> В норма</span>
+                        </div>
+                      </div>
+                      <div className="bg-brand-gold text-brand-green px-4 py-2 rounded-lg shadow-md text-[10px] font-black uppercase tracking-wider">
+                        Запиши
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3 relative overflow-hidden group hover:bg-white/80 transition-colors">
                   <h4 className="font-bold flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-brand-green" /> 24/7 връзка с д-р Николова</h4>
                   <p className="text-sm text-brand-dark/80">Получавате постоянен директен чат и експертни консултации при:</p>
                   <div className="flex flex-wrap gap-2">
@@ -198,9 +219,34 @@ export default function Services() {
                       <span key={i} className="text-[10px] uppercase tracking-wider font-bold bg-white px-2 py-1 rounded-md border border-brand-green/10 text-brand-dark/80">{i}</span>
                     ))}
                   </div>
+
+                  {/* Mock UI: Чат */}
+                  <div className="mt-6 bg-white rounded-xl shadow-lg border border-brand-green/10 overflow-hidden relative group-hover:-translate-y-1 transition-transform duration-300">
+                    <div className="bg-brand-green/5 border-b border-brand-green/10 p-3 flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-brand-gold flex items-center justify-center relative">
+                          <span className="text-[10px] font-black text-brand-dark">ДН</span>
+                          <div className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></div>
+                        </div>
+                        <span className="text-[10px] font-bold text-brand-green uppercase">Чат с Експерт</span>
+                      </div>
+                    </div>
+                    <div className="p-4 space-y-3 bg-brand-light/30">
+                      <div className="flex flex-col gap-1 items-end">
+                        <div className="bg-brand-green text-white text-[10px] px-3 py-2 rounded-2xl rounded-tr-sm shadow-sm inline-block max-w-[85%]">
+                          Имаме проверка от БАБХ в момента. Какво да им покажа за дневниците?
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1 items-start">
+                        <div className="bg-white border border-brand-green/10 text-brand-dark text-[10px] px-3 py-2 rounded-2xl rounded-tl-sm shadow-sm inline-block max-w-[85%] font-medium">
+                          Здравейте! Спокойно, отворете &quot;Система&quot; и им покажете Дигиталния Дневник. Всичко Ви е наред.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3 relative overflow-hidden group hover:bg-white/80 transition-colors">
                   <h4 className="font-bold flex items-center gap-2"><ListTodo className="h-5 w-5 text-brand-green" /> Защита при проверки и актове</h4>
                   <p className="text-sm text-brand-dark/80">Приоритетно съдействие и експертна подкрепа при:</p>
                   <div className="flex flex-wrap gap-2">
@@ -208,23 +254,104 @@ export default function Services() {
                       <span key={i} className="text-[10px] uppercase tracking-wider font-bold bg-white px-2 py-1 rounded-md border border-brand-green/10 text-brand-dark/80">{i}</span>
                     ))}
                   </div>
+
+                  {/* Mock UI: Документ/Защита */}
+                  <div className="mt-6 bg-white rounded-xl shadow-lg border border-brand-green/10 overflow-hidden relative group-hover:-translate-y-1 transition-transform duration-300">
+                    <div className="bg-gradient-to-r from-brand-dark to-brand-green p-3 flex justify-between items-center text-white">
+                      <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5"><ShieldCheck className="h-3 w-3 text-brand-gold"/> Становище / Възражение</span>
+                    </div>
+                    <div className="p-4 bg-brand-light/30">
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
+                          <FileText className="h-4 w-4 text-red-600" />
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-bold text-brand-dark block leading-tight">Подготвено възражение срещу АУАН №12345</span>
+                          <span className="text-[9px] text-brand-dark/50 block">Състояние: Готово за изпращане</span>
+                          <div className="mt-2 inline-flex bg-brand-green/10 text-brand-green px-2 py-1 rounded text-[9px] font-black uppercase">
+                            Изтегли PDF
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               <div className="space-y-8">
-                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3 mt-0 lg:mt-[5.5rem]">
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3 mt-0 lg:mt-[5.5rem] relative overflow-hidden group hover:bg-white/80 transition-colors">
                   <h4 className="font-bold flex items-center gap-2"><FileText className="h-5 w-5 text-brand-green" /> Интелигентен генератор на етикети</h4>
                   <p className="text-sm text-brand-dark/80">Системата автоматично генерира легални етикети за отворени продукти с автоматично изчисляване на срокове, следене на годност и проследимост.</p>
+
+                  {/* Mock UI: Етикети */}
+                  <div className="mt-6 bg-white rounded-xl shadow-lg border border-brand-green/10 overflow-hidden relative group-hover:-translate-y-1 transition-transform duration-300 p-4 space-y-3">
+                    <div className="flex justify-between items-start border-b border-dashed border-brand-green/20 pb-3">
+                      <div>
+                        <span className="text-[10px] font-black uppercase text-brand-gold bg-brand-green px-2 py-0.5 rounded flex items-center gap-1 w-max mb-1.5"><FileText className="h-2.5 w-2.5"/> Етикет</span>
+                        <h5 className="font-bold text-brand-dark text-sm">Прясно мляко 3%</h5>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-[9px] font-bold text-brand-dark/40 uppercase">Партида</span>
+                        <span className="text-xs font-mono font-bold text-brand-dark">#L294A</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <span className="block text-[9px] font-bold text-brand-dark/40 uppercase">Отворено на</span>
+                        <span className="text-xs font-bold text-brand-dark">10 Окт, 14:00</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-[9px] font-bold text-brand-dark/40 uppercase">Годно до</span>
+                        <span className="text-xs font-black text-red-600 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded">12 Окт, 14:00</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3 relative overflow-hidden group hover:bg-white/80 transition-colors">
                   <h4 className="font-bold flex items-center gap-2"><BookOpen className="h-5 w-5 text-brand-green" /> Дигитално обучение на персонала</h4>
                   <p className="text-sm text-brand-dark/80">Онлайн обучение по безопасност на храните и хигиенни практики с интерактивни тестове, дигитални сертификати и автоматично проследяване.</p>
+
+                  {/* Mock UI: Обучение */}
+                  <div className="mt-6 bg-white rounded-xl shadow-lg border border-brand-green/10 overflow-hidden relative group-hover:-translate-y-1 transition-transform duration-300">
+                    <div className="bg-brand-green/5 border-b border-brand-green/10 p-3 flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-brand-green uppercase flex items-center gap-1"><BookOpen className="h-3 w-3"/> Обучителен модул</span>
+                      <span className="text-[9px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">100% Завършен</span>
+                    </div>
+                    <div className="p-4 space-y-3 bg-brand-light/30">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-brand-gold/20 flex items-center justify-center">
+                          <Award className="h-5 w-5 text-brand-gold" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-black text-brand-dark uppercase block">Иван Иванов (Готвач)</span>
+                          <span className="text-[9px] text-brand-dark/60 block">Тест: Лична хигиена</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-black/5 rounded-full h-1.5 overflow-hidden">
+                        <div className="bg-brand-gold w-full h-full"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3">
+                <div className="bg-white/60 p-6 rounded-2xl border border-white shadow-sm space-y-3 relative overflow-hidden group hover:bg-white/80 transition-colors">
                   <h4 className="font-bold flex items-center gap-2"><Layers className="h-5 w-5 text-brand-green" /> Автоматични актуализации</h4>
                   <p className="text-sm text-brand-dark/80">При промяна на меню, персонал, процеси или закони — системата автоматично актуализира необходимите НАССР и ДПХП документи.</p>
+
+                  {/* Mock UI: Актуализация */}
+                  <div className="mt-6 bg-white rounded-xl shadow-lg border border-brand-green/10 overflow-hidden relative group-hover:-translate-y-1 transition-transform duration-300 p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 w-2 h-2 rounded-full bg-brand-gold animate-pulse shrink-0"></div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-black uppercase text-brand-green block">Системно известие</span>
+                        <p className="text-[10px] text-brand-dark/80 leading-snug">
+                          Открита е промяна в Наредба №1. Вашата HACCP документация беше автоматично актуализирана до версия 2.4.
+                        </p>
+                        <span className="text-[9px] text-brand-dark/40 font-mono mt-1 block">Днес, 10:30 ч.</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-10 p-6 sm:p-8 bg-brand-green text-white rounded-2xl shadow-xl relative overflow-hidden">
