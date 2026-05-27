@@ -191,7 +191,8 @@ export const haccpDhppPraktika: LiveCourse = {
   title: "Практическо обучение за ДХПП и HACCP",
   tagline:
     "За разработване, внедряване и поддържане на добри хигиенни и производствени практики и процедури, основани на принципите на HACCP",
-  priceEur: 149.0,
+  priceEur: 79.0,
+  originalPriceEur: 111.0,
   platform: "zoom",
   hasCertificate: true,
   format: "Над 27 години опит",

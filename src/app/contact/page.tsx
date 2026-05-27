@@ -1,6 +1,7 @@
 import ContactForm from "@/components/ContactForm";
 import { Mail, Clock, MapPin, ShieldCheck, HelpCircle } from "lucide-react";
 import { Suspense } from "react";
+import PageHero from "@/components/PageHero";
 
 export default function Contact() {
   const contactDetails = [
@@ -21,22 +22,13 @@ export default function Contact() {
   ];
 
   return (
-    <div className="bg-brand-light pb-24">
+    <div className="min-h-screen pb-24">
       {/* Page Header */}
-      <section className="bg-brand-green py-20 text-center relative overflow-hidden border-b border-brand-gold/15">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-gold/5 via-transparent to-transparent opacity-75 pointer-events-none"></div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-4">
-          <span className="text-xs font-bold uppercase text-brand-gold tracking-widest block">
-            СВЪРЖЕТЕ СЕ С НАШИЯ ЕКИП
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white tracking-tight">
-            Контакти и Консултации
-          </h1>
-          <p className="text-sm sm:text-base text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Свържете се с д-р Данка Николова за бърз отговор на Вашите запитвания по безопасност и контрол на храните.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        badgeText="СВЪРЖЕТЕ СЕ С НАШИЯ ЕКИП"
+        title="Контакти и Консултации"
+        subtitle="Свържете се с д-р Данка Николова за бърз отговор на Вашите запитвания по безопасност и контрол на храните."
+      />
 
       {/* Main Grid: Form + Info */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

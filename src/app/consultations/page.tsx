@@ -2,6 +2,7 @@ import BookingCalendar from "@/components/BookingCalendar";
 import { Laptop, Clock, ShieldCheck, HelpCircle } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import ConsultationStepsWidget from "@/remotion/ConsultationStepsWidget";
+import PageHero from "@/components/PageHero";
 
 export default function Consultations() {
   const benefits = [
@@ -23,22 +24,13 @@ export default function Consultations() {
   ];
 
   return (
-    <div className="bg-brand-light pb-24">
+    <div className="min-h-screen pb-24">
       {/* Page Header */}
-      <section className="bg-brand-green py-20 text-center relative overflow-hidden border-b border-brand-gold/15">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-gold/5 via-transparent to-transparent opacity-75 pointer-events-none"></div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-4">
-          <span className="text-xs font-bold uppercase text-brand-gold tracking-widest block">
-            ДИСТАНЦИОННО СЪДЕЙСТВИЕ
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white tracking-tight">
-            Онлайн Консултации в цяла България
-          </h1>
-          <p className="text-sm sm:text-base text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Резервирайте Вашата виртуална среща с д-р Данка Николова за бърз, сигурен и законосъобразен отговор на Вашите въпроси.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        badgeText="ДИСТАНЦИОННО СЪДЕЙСТВИЕ"
+        title="Онлайн Консултации в цяла България"
+        subtitle="Резервирайте Вашата виртуална среща с д-р Данка Николова за бърз, сигурен и законосъобразен отговор на Вашите въпроси."
+      />
 
       {/* Sticky Navigation */}
       <div className="sticky top-[85px] z-30 w-full flex justify-center -mt-6 mb-6 px-2 sm:px-4 pointer-events-none transition-all duration-300">

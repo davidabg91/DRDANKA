@@ -112,10 +112,18 @@ export default function Home() {
   return (
     <div>
       {/* 1. Hero Section */}
-      <section className="bg-brand-green relative overflow-hidden pt-10 pb-20 sm:pt-12 sm:pb-20 md:pt-16 md:pb-28 border-b border-brand-gold/15">
-        {/* Decorative Grid Overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent opacity-70 pointer-events-none"></div>
-        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full bg-brand-gold/5 blur-3xl pointer-events-none"></div>
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] pt-10 pb-20 sm:pt-12 sm:pb-20 md:pt-16 md:pb-28 border-b border-brand-gold/20 z-10">
+        {/* Glow blobs */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-gold/15 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-green/30 rounded-full blur-[120px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
+        
+        {/* Subtle mesh pattern for texture */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          style={{
+            backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
+          }}
+        />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:items-start items-center pt-4 lg:pt-8">

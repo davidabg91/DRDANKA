@@ -5,6 +5,7 @@ import {
   GraduationCap, BookOpen, Award, ArrowRight, CheckCircle, Building,
   Video, ShieldCheck, Play, Sparkles,
 } from "lucide-react";
+import PageHero from "@/components/PageHero";
 
 /**
  * /training — landing for the two distinct paid offerings.
@@ -19,23 +20,14 @@ import {
 
 export default function TrainingPage() {
   return (
-    <div className="bg-brand-light min-h-screen pb-24">
+    <div className="min-h-screen pb-24">
       {/* Hero */}
-      <section className="bg-brand-green text-white py-16 border-b border-brand-gold/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-          <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-            <GraduationCap className="h-3.5 w-3.5" />
-            Обучения & Материали
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold leading-tight">
-            Обучения за хранителен бизнес
-          </h1>
-          <p className="text-sm sm:text-base text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
-            Подгответе персонала, документацията и обекта си за изискванията на БАБХ. Изберете формата, която
-            пасва на Вашето темпо — четене или живо обучение.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        badgeText="Обучения & Материали"
+        title="Обучения за хранителен бизнес"
+        subtitle="Подгответе персонала, документацията и обекта си за изискванията на БАБХ. Изберете формата, която пасва на Вашето темпо — четене или живо обучение."
+        icon={GraduationCap}
+      />
 
       {/* Three premium cards */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">

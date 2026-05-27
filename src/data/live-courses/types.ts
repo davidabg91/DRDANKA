@@ -19,6 +19,8 @@ export interface LiveCourse {
   tagline: string;
   /** Price in EUR — charged when group is confirmed. */
   priceEur: number;
+  /** Original price before promo (shown crossed out if present) */
+  originalPriceEur?: number;
   /** Live platform. */
   platform: LiveCoursePlatform;
   /** Issues an official certificate after portal tests are passed. */

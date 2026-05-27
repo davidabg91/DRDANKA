@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShieldCheck, Award, GraduationCap, CheckCircle, FileText, Heart, Quote, Star, BadgeCheck } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
+import PageHero from "@/components/PageHero";
 
 
 export default function About() {
@@ -39,41 +40,17 @@ export default function About() {
   ];
 
   return (
-    <div className="bg-brand-light pb-24">
+    <div className="min-h-screen pb-24">
       {/* Page Header */}
-      <section className="bg-brand-green py-12 sm:py-16 text-center relative overflow-hidden border-b border-brand-gold/20">
-        {/* Luxury Radial Glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-brand-gold/15 via-brand-green/95 to-brand-green pointer-events-none"></div>
-        {/* Subtle grid overlay for texture */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(197,168,128,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(197,168,128,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none"></div>
-        
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-4">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-gold/10 border border-brand-gold/30 rounded-full text-[9px] sm:text-[10px] font-black uppercase text-brand-gold tracking-[0.2em] shadow-sm">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-gold opacity-75"></span>
-              <span className="relative rounded-full h-1.5 w-1.5 bg-brand-gold"></span>
-            </span>
-            ЗА МЕН · ЕКСПЕРТИЗА И ДОВЕРИЕ
-          </span>
-          
-          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight max-w-4xl mx-auto">
-            За <span className="text-brand-gold italic font-medium font-serif block sm:inline-block hover:scale-[1.01] transition-transform duration-300">Д-р Данка Николова</span>
-          </h1>
-
-          <div className="flex items-center justify-center gap-3 py-1">
-            <div className="h-[1px] w-8 bg-gradient-to-r from-transparent to-brand-gold/45"></div>
-            <div className="w-1 h-1 rounded-full bg-brand-gold"></div>
-            <div className="h-[1px] w-8 bg-gradient-to-l from-transparent to-brand-gold/45"></div>
-          </div>
-
-          <p className="font-serif text-xs sm:text-sm lg:text-base text-white/95 max-w-2xl mx-auto leading-relaxed font-light italic text-pretty">
-            „Повече от четвърт век отдаденост на безопасността на храните, защитата на здравето и подкрепата на българския хранителен бизнес.“
-          </p>
-
-
-
-        </div>
-      </section>
+      <PageHero
+        badgeText="ЗА МЕН · ЕКСПЕРТИЗА И ДОВЕРИЕ"
+        title={
+          <>
+            За <span className="text-brand-gold italic font-medium font-serif inline-block">Д-р Данка Николова</span>
+          </>
+        }
+        subtitle="„Повече от четвърт век отдаденост на безопасността на храните, защитата на здравето и подкрепата на българския хранителен бизнес.“"
+      />
 
       {/* Sticky Navigation (Placed outside section to stick globally) */}
       <div className="sticky top-[85px] z-30 w-full flex justify-center -mt-6 mb-6 px-2 sm:px-4 pointer-events-none transition-all duration-300">
@@ -468,8 +445,17 @@ export default function About() {
         </div>
 
         {/* Final CTA link */}
-        <div className="text-center bg-brand-green text-white rounded-2xl p-8 sm:p-12 border border-brand-gold/20 shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent opacity-60 pointer-events-none"></div>
+        <div className="text-center bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-8 sm:p-12 border border-brand-gold/20 shadow-2xl relative overflow-hidden z-10">
+          {/* Glow blobs */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-[80px] pointer-events-none translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-green/20 rounded-full blur-[80px] pointer-events-none -translate-x-1/2 translate-y-1/2" />
+          {/* Subtle mesh pattern for texture */}
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-[0.03]"
+            style={{
+              backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
+            }}
+          />
           <div className="relative z-10 max-w-2xl mx-auto space-y-6">
             <h3 className="font-serif text-xl sm:text-3xl font-bold">Нека защитим бизнеса Ви заедно</h3>
             <p className="text-xs sm:text-sm text-white/80 leading-relaxed">

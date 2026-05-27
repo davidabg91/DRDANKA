@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
+import PageHero from "@/components/PageHero";
 
 /**
  * /library — public catalog of "ready" materials (PDF manuals + recorded videos).
@@ -19,22 +20,13 @@ export default function LibraryPage() {
   const { overrides } = usePriceOverrides();
   const trainingMaterials = LIBRARY_MATERIALS.filter(m => m.category === "training" || (!m.category && m.type === "video"));
   return (
-    <div className="bg-brand-light min-h-screen pb-24">
-      <section className="bg-brand-green text-white py-16 border-b border-brand-gold/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
-          <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-            <Video className="h-3.5 w-3.5" />
-            Обучения
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold">
-            Обучения за хранителен бизнес
-          </h1>
-          <p className="text-sm sm:text-base text-white/70 max-w-2xl mx-auto font-light">
-            Професионални обучения от д-р Данка Николова — получавате ги веднага след покупка и учите
-            във Вашето темпо.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen pb-24">
+      <PageHero
+        badgeText="Обучения"
+        title="Обучения за хранителен бизнес"
+        subtitle="Професионални обучения от д-р Данка Николова — получавате ги веднага след покупка и учите във Вашето темпо."
+        icon={Video}
+      />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         {trainingMaterials.length === 0 ? (

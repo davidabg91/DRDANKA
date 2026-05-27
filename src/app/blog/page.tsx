@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Calendar, Clock, ArrowRight } from "lucide-react";
+import { Calendar, Clock, ArrowRight, FileText } from "lucide-react";
 import { BLOG_POSTS } from "@/data/blogPosts";
+import PageHero from "@/components/PageHero";
 
 export const metadata = {
   title: "Блог за безопасност на храните | Д-р Данка Николова",
@@ -10,22 +11,14 @@ export const metadata = {
 
 export default function Blog() {
   return (
-    <div className="bg-brand-light min-h-screen pb-24">
+    <div className="min-h-screen pb-24">
       {/* Header section */}
-      <section className="bg-brand-green py-20 text-center relative overflow-hidden border-b border-brand-gold/15">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-gold/5 via-transparent to-transparent opacity-75 pointer-events-none"></div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-4">
-          <span className="text-xs font-bold uppercase text-brand-gold tracking-widest block">
-            ПОЛЕЗНИ СЪВЕТИ И СТАТИИ
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white tracking-tight">
-            Блог за безопасност на храните
-          </h1>
-          <p className="text-sm sm:text-base text-white/80 max-w-2xl mx-auto leading-relaxed">
-            Практическа информация, експертни анализи на законите на БАБХ и съвети за Вашия сигурен и безпроблемен бизнес.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        badgeText="ПОЛЕЗНИ СЪВЕТИ И СТАТИИ"
+        title="Блог за безопасност на храните"
+        subtitle="Практическа информация, експертни анализи на законите на БАБХ и съвети за Вашия сигурен и безпроблемен бизнес."
+        icon={FileText}
+      />
 
       {/* Grid of articles */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -97,8 +90,17 @@ export default function Blog() {
 
       {/* Testimonials Banner to Consultations */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-brand-green text-white rounded-2xl p-8 sm:p-12 border border-brand-gold/20 shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent opacity-60 pointer-events-none"></div>
+        <div className="bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-8 sm:p-12 border border-brand-gold/20 shadow-2xl relative overflow-hidden z-10">
+          {/* Glow blobs */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-[80px] pointer-events-none translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-brand-green/20 rounded-full blur-[80px] pointer-events-none -translate-x-1/2 translate-y-1/2" />
+          {/* Subtle mesh pattern for texture */}
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-[0.03]"
+            style={{
+              backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
+            }}
+          />
           <div className="relative z-10 max-w-2xl mx-auto text-center space-y-6">
             <h3 className="font-serif text-xl sm:text-3xl font-bold">Имате ли казус във Вашия обект?</h3>
             <p className="text-xs sm:text-sm text-white/80 leading-relaxed">

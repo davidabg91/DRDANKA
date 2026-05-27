@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
+import PageHero from "@/components/PageHero";
 
 /**
  * /library — public catalog of "ready" materials (PDF manuals + recorded videos).
@@ -19,21 +20,13 @@ export default function ManualsPage() {
   const { overrides } = usePriceOverrides();
   const manualMaterials = LIBRARY_MATERIALS.filter(m => m.category === "document" || (!m.category && m.type === "pdf"));
   return (
-    <div className="bg-brand-light min-h-screen pb-24">
-      <section className="bg-brand-green text-white py-16 border-b border-brand-gold/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
-          <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-            <BookOpen className="h-3.5 w-3.5" />
-            Документи и Наръчници
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold">
-            Наръчници и чек листи
-          </h1>
-          <p className="text-sm sm:text-base text-white/70 max-w-2xl mx-auto font-light">
-            Професионални наръчници, ръководства, чек листи и въпросници за проверка на документацията. Готови за изтегляне веднага след покупка.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen pb-24">
+      <PageHero
+        badgeText="Документи и Наръчници"
+        title="Наръчници и чек листи"
+        subtitle="Професионални наръчници, ръководства, чек листи и въпросници за проверка на документацията. Готови за изтегляне веднага след покупка."
+        icon={BookOpen}
+      />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         {manualMaterials.length === 0 ? (

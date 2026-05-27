@@ -168,8 +168,13 @@ export default function LiveCourseDetailPage() {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 block mb-2">Инвестиция във Вашия бизнес</span>
                     <div className="flex items-end gap-3 mb-3">
                       <div className="flex flex-col">
-                        <span className="font-serif text-5xl sm:text-6xl font-bold text-brand-gold leading-none drop-shadow-md">
-                          {livePrice.toFixed(2)}<span className="text-2xl text-brand-gold/70 font-sans ml-1">€</span>
+                        <span className="font-serif text-5xl sm:text-6xl font-bold text-brand-gold leading-none drop-shadow-md flex items-end gap-3">
+                          <span>{livePrice.toFixed(2)}<span className="text-2xl text-brand-gold/70 font-sans ml-1">€</span></span>
+                          {course.originalPriceEur && (
+                            <span className="text-xl sm:text-2xl font-sans font-medium text-white/40 line-through mb-2">
+                              {course.originalPriceEur.toFixed(2)}€
+                            </span>
+                          )}
                         </span>
                       </div>
                     </div>

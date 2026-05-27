@@ -55,10 +55,10 @@ export default function RemotionVideoWidget() {
               <span>Кандидатствай за Абонамент</span>
             </Link>
             <Link
-              href="/profile?tab=login"
+              href="/services#vip-system"
               className="w-full flex items-center justify-center gap-2.5 py-3 px-6 border border-white/10 hover:bg-white/5 text-white font-bold text-[11px] uppercase tracking-[0.12em] transition-all duration-300 rounded-xl cursor-pointer"
             >
-              <span>Вход в портала</span>
+              <span>Виж Информация</span>
             </Link>
           </div>
         </div>

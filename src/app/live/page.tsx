@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { LIVE_COURSES } from "@/data/live-courses";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
+import PageHero from "@/components/PageHero";
 
 /**
  * /live — catalog of group online courses (Zoom / Google Meet) run by Dr. Danka.
@@ -18,22 +19,13 @@ import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
 export default function LiveCoursesPage() {
   const { overrides } = usePriceOverrides();
   return (
-    <div className="bg-brand-light min-h-screen pb-24">
-      <section className="bg-brand-green text-white py-16 border-b border-brand-gold/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
-          <span className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-            <Video className="h-3.5 w-3.5" />
-            Live онлайн обучения
-          </span>
-          <h1 className="font-serif text-3xl sm:text-5xl font-bold">
-            Курсове с д-р Данка в Zoom
-          </h1>
-          <p className="text-sm sm:text-base text-white/70 max-w-2xl mx-auto font-light">
-            Групови live сесии с лична обратна връзка по Вашите казуси. Записвате се, ние Ви пишем с дата, когато
-            се сформира група.
-          </p>
-        </div>
-      </section>
+    <div className="min-h-screen pb-24">
+      <PageHero
+        badgeText="Live онлайн обучения"
+        title="Курсове с д-р Данка в Zoom"
+        subtitle="Групови live сесии с лична обратна връзка по Вашите казуси. Записвате се, ние Ви пишем с дата, когато се сформира група."
+        icon={Video}
+      />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
         {LIVE_COURSES.length === 0 ? (
@@ -97,10 +89,17 @@ export default function LiveCoursesPage() {
 
                   <div className="flex items-end justify-between pt-4 mt-auto border-t border-brand-green/5">
                     <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/40 block leading-none">Цена</span>
-                      <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold leading-tight">
-                        {resolvePrice(c.slug, overrides, c.priceEur).toFixed(2)}<span className="text-sm text-brand-dark/50 font-sans ml-0.5">€</span>
-                      </span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/40 block leading-none mb-1">Цена</span>
+                      <div className="flex items-end gap-2">
+                        <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold leading-tight">
+                          {resolvePrice(c.slug, overrides, c.priceEur).toFixed(2)}<span className="text-sm text-brand-dark/50 font-sans ml-0.5">€</span>
+                        </span>
+                        {c.originalPriceEur && (
+                          <span className="text-sm sm:text-base font-sans font-medium text-brand-dark/40 line-through mb-1.5">
+                            {c.originalPriceEur.toFixed(2)}€
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <span className="relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-green group-hover:bg-brand-gold text-white group-hover:text-brand-dark font-bold text-[10px] uppercase tracking-widest rounded-full shadow-md group-hover:shadow-lg group-hover:shadow-brand-gold/40 transition-all duration-300">
                       <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none" />

@@ -48,14 +48,30 @@ export default function Header() {
     <>
       <header
         className={`sticky top-0 z-50 transition-all duration-300 print:hidden ${
-          isOpen
-            ? "bg-brand-green py-3 border-b border-brand-gold/20"
-            : isScrolled
-            ? "bg-brand-green/95 backdrop-blur-md shadow-lg py-3 border-b border-brand-gold/20"
-            : "bg-brand-green py-5 border-b border-brand-gold/10"
+          isOpen || isScrolled ? "py-3 shadow-xl" : "py-5"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Background Layers for smooth transition */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+          {/* Scrolled glassmorphism backdrop (Base layer) */}
+          <div className="absolute inset-0 bg-[#0A1F18]/90 backdrop-blur-xl border-b border-brand-gold/20" />
+          
+          {/* Base gradient (Fades out when scrolled, unless menu is open) */}
+          <div 
+            className={`absolute inset-0 bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] border-b transition-all duration-300 ${
+              isOpen || !isScrolled ? "opacity-100 border-brand-gold/10" : "opacity-0 border-brand-gold/20"
+            }`}
+          />
+          {/* Subtle mesh pattern for texture */}
+          <div 
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
+            }}
+          />
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3 group shrink-0">
