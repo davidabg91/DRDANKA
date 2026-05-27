@@ -208,8 +208,16 @@ export default function Home() {
       </section>
 
       {/* 2. Stats Section — Medium Elegant Cards */}
-      <section className="bg-gradient-to-r from-[#FAF6EE] via-[#F3EAD9] to-[#E9D9BF] py-10 border-y border-brand-gold/25">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-r from-[#A4855C] via-[#C5A880] to-[#A4855C] py-10 border-y border-[#A4855C]/50 relative overflow-hidden shadow-inner z-10">
+        {/* Subtle mesh pattern for texture */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.1]"
+          style={{
+            backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
+          }}
+        />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
 
             {/* Stat 1 */}
