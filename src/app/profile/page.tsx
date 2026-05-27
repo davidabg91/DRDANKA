@@ -1113,10 +1113,16 @@ export default function ProfilePage() {
   };
 
   // Admin deletes user
-  const handleDeleteUser = (email: string) => {
+  const handleDeleteUser = async (email: string) => {
     if (!confirm(`Сигурни ли сте, че искате да изтриете потребител ${email}?`)) return;
-    const updatedUsers = usersList.filter(u => u.email.toLowerCase() !== email.toLowerCase());
-    saveUsers(updatedUsers);
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      await deleteDoc(doc(db, "users", cleanEmail));
+      const updatedUsers = usersList.filter(u => u.email.toLowerCase() !== cleanEmail);
+      setUsersList(updatedUsers);
+    } catch (err: any) {
+      alert("Грешка при изтриване: " + (err?.message || err));
+    }
   };
 
   // Subscription expiry helpers.
