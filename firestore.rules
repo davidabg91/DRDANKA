@@ -48,7 +48,12 @@ service cloud.firestore {
         isSignedIn() &&
         authEmail() == email.lower() &&
         unchanged("role") &&
-        unchanged("status")
+        unchanged("status") &&
+        unchanged("subscriptionStatus") &&
+        unchanged("expiresAt") &&
+        unchanged("subscriptionFeeEur") &&
+        unchanged("subscriptionPaidAt") &&
+        unchanged("purchasedCourseIds")
       );
 
       allow delete: if isAdmin();

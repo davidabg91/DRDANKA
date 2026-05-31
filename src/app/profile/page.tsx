@@ -1052,18 +1052,28 @@ export default function ProfilePage() {
       alert("Моля въведете валидна сума в EUR (или 0 за платено в кеш).");
       return;
     }
-    const updates: Partial<DankaUser> = fee === 0
-      ? {
-          status: "approved",
-          subscriptionStatus: "approved",
-          subscriptionFeeEur: 0,
-          subscriptionPaidAt: new Date().toISOString(),
-        }
-      : {
-          status: "approved",
-          subscriptionStatus: "awaiting_payment",
-          subscriptionFeeEur: Math.round(fee * 100) / 100,
-        };
+
+    let updates: Partial<DankaUser>;
+    if (fee === 0) {
+      const oneYear = new Date();
+      oneYear.setFullYear(oneYear.getFullYear() + 1);
+      const expiresAt = oneYear.toISOString().split("T")[0]; // YYYY-MM-DD
+
+      updates = {
+        status: "approved",
+        subscriptionStatus: "approved",
+        subscriptionFeeEur: 0,
+        subscriptionPaidAt: new Date().toISOString(),
+        expiresAt,
+      };
+    } else {
+      updates = {
+        status: "approved",
+        subscriptionStatus: "awaiting_payment",
+        subscriptionFeeEur: Math.round(fee * 100) / 100,
+      };
+    }
+
     const ok = await updateUser(feeModalEmail, updates);
     if (ok) {
       const targetEmail = feeModalEmail;
@@ -1091,20 +1101,32 @@ export default function ProfilePage() {
     }
     setSubPayError("");
     setSubPayStatus("processing");
-    const ok = await updateUser(currentUserEmail, {
-      subscriptionStatus: "approved",
-      subscriptionPaidAt: new Date().toISOString(),
-    });
-    if (ok) {
-      setSubPayStatus("success");
-      setTimeout(() => {
-        setSubPayOpen(false);
-        setSubPayStatus("idle");
-        setActiveTab("logs");
-      }, 1500);
-    } else {
+
+    try {
+      const res = await fetch("/api/subscription/test-pay", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: currentUserEmail }),
+      });
+
+      if (res.ok) {
+        setSubPayStatus("success");
+        setTimeout(() => {
+          setSubPayOpen(false);
+          setSubPayStatus("idle");
+          setActiveTab("logs");
+        }, 1500);
+      } else {
+        const errData = await res.json();
+        setSubPayStatus("error");
+        setSubPayError(errData.error === "user_not_found" ? "Потребителят не е намерен." : "Грешка при плащане на абонамента.");
+      }
+    } catch (err) {
+      console.error("Subscription payment error:", err);
       setSubPayStatus("error");
-      setSubPayError("Грешка при обновяване — опитайте отново.");
+      setSubPayError("Грешка при комуникация със сървъра.");
     }
   };
 
@@ -1214,7 +1236,7 @@ export default function ProfilePage() {
     if (userRole !== "user" || !currentUserEmail) return;
     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
     if (!me) return;
-    const isSubscribed = me.status === "approved" && (me.subscriptionStatus ?? "approved") === "approved";
+    const isSubscribed = me.status === "approved" && (me.subscriptionStatus ?? "approved") === "approved" && (me.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true);
     if (!isSubscribed && activeTab !== "courses") {
       setActiveTab("courses");
     }
@@ -2823,7 +2845,7 @@ export default function ProfilePage() {
                   ) : (() => {
                     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
                     const subStatus = me?.subscriptionStatus ?? "approved"; // legacy default
-                    const isSubscribed = me?.status === "approved" && subStatus === "approved";
+                    const isSubscribed = me?.status === "approved" && subStatus === "approved" && (me?.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true);
                     const pendingCount = (me?.assignedDocs || []).filter(d => d.status === "pending").length;
 
                     const lockedClick = () => {
@@ -4292,7 +4314,7 @@ export default function ProfilePage() {
                     const currentUser = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
                     const status = currentUser?.status ?? "pending";
                     const subStatus = currentUser?.subscriptionStatus ?? "approved"; // legacy default = approved
-                    const isSubscribed = status === "approved" && subStatus === "approved";
+                    const isSubscribed = status === "approved" && subStatus === "approved" && (currentUser?.expiresAt ? (daysUntilExpiry(currentUser.expiresAt) ?? 0) >= 0 : true);
 
                     // Bookstore-only buyer / pending applicant / awaiting payment / expired:
                     // lock everything except "courses".

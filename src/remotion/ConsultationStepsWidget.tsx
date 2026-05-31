@@ -10,7 +10,7 @@ export default function ConsultationStepsWidget() {
   const [dimensions, setDimensions] = useState({ w: 800, h: 650 });
 
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 0);
     const updateDimensions = () => {
       if (window.innerWidth < 640) {
         setDimensions({ w: 400, h: 750 });
@@ -20,7 +20,10 @@ export default function ConsultationStepsWidget() {
     };
     updateDimensions();
     window.addEventListener("resize", updateDimensions);
-    return () => window.removeEventListener("resize", updateDimensions);
+    return () => {
+      window.removeEventListener("resize", updateDimensions);
+      clearTimeout(timer);
+    };
   }, []);
 
   return (
@@ -36,6 +39,7 @@ export default function ConsultationStepsWidget() {
       <div className="w-full relative h-[750px] sm:h-[650px] -ml-2 sm:-ml-4">
         {isMounted && (
           <Player
+            acknowledgeRemotionLicense={true}
             component={ConsultationStepsVideo}
             durationInFrames={300} // 10 seconds total loop
             compositionWidth={dimensions.w}

@@ -91,6 +91,39 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
     email: "",
     note: "",
   });
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [mockPaymentData, setMockPaymentData] = useState<{url: string} | null>(null);
+
+  const priceNum = parseFloat(selectedPackage.price.replace(/[^0-9.]/g, ''));
+  const isFree = isNaN(priceNum) || priceNum <= 0;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get("session_id");
+      
+      if (sessionId) {
+        const savedBooking = sessionStorage.getItem("pendingBooking");
+        if (savedBooking) {
+          try {
+            const data = JSON.parse(savedBooking);
+            setSelectedPackage(data.selectedPackage);
+            setSelectedDate(data.selectedDate);
+            setSelectedTime(data.selectedTime);
+            setClientInfo(data.clientInfo);
+            setStep(4);
+            sessionStorage.removeItem("pendingBooking");
+            
+            // Clean up URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+          } catch (e) {
+            console.error("Failed to restore booking", e);
+          }
+        }
+      }
+    }
+  }, []);
 
   const scrollToContainerTop = () => {
     if (containerRef.current) {
@@ -155,13 +188,56 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
     setClientInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (!clientInfo.name || !clientInfo.phone || !clientInfo.email) {
       alert("Моля, попълнете всички задължителни полета.");
       return;
     }
-    setStep(4);
-    scrollToContainerTop();
+    
+    if (isFree) {
+      setStep(4);
+      scrollToContainerTop();
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      sessionStorage.setItem("pendingBooking", JSON.stringify({
+        selectedPackage,
+        selectedDate,
+        selectedTime,
+        clientInfo
+      }));
+      
+      const returnUrl = window.location.origin + window.location.pathname;
+      
+      const res = await fetch("/api/checkout/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packageName: selectedPackage.name,
+          priceEur: priceNum,
+          buyerEmail: clientInfo.email,
+          returnUrl
+        }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Грешка при плащане");
+      
+      if (data.mockStripe) {
+        setMockPaymentData({ url: data.url });
+        setIsProcessing(false);
+      } else if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("Missing checkout URL");
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert("Възникна грешка при свързване със Stripe: " + error.message);
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -439,10 +515,11 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
               </button>
               <button
                 onClick={handleBook}
-                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors flex items-center cursor-pointer"
+                disabled={isProcessing}
+                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors flex items-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {mode === "training" ? "Заяви обучението" : "Резервирай консултация"}
-                <CheckCircle className="h-4 w-4 ml-2 text-brand-gold" />
+                {isProcessing ? "Обработка..." : mode === "training" ? "Заяви обучението" : (isFree ? "Резервирай консултация" : "Продължи към плащане")}
+                {!isProcessing && <CheckCircle className="h-4 w-4 ml-2 text-brand-gold" />}
               </button>
             </div>
           </div>
@@ -504,6 +581,56 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
           </div>
         )}
       </div>
+
+      {/* Mock Stripe Modal */}
+      {mockPaymentData && (
+        <div className="fixed inset-0 bg-brand-dark/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-brand-green/10">
+            <div className="bg-brand-light px-6 py-4 border-b border-brand-green/10 flex items-center justify-between">
+              <span className="font-bold text-brand-green text-lg">Тестово плащане</span>
+              <span className="bg-brand-gold text-brand-dark text-[10px] uppercase font-bold px-2 py-1 rounded">Симулация</span>
+            </div>
+            <div className="p-6">
+              <p className="text-xs text-brand-dark/70 mb-5 leading-relaxed">
+                Тъй като нямате конфигуриран Stripe ключ, виждате този тестов екран. 
+                Моля, въведете някаква тестова карта, за да завършите симулацията.
+              </p>
+              
+              <div className="space-y-4">
+                 <div>
+                    <label className="block text-xs font-bold text-brand-dark mb-1">Номер на карта</label>
+                    <input type="text" placeholder="4242 4242 4242 4242" className="w-full bg-white border border-brand-green/20 rounded-lg px-4 py-3 text-sm focus:border-brand-gold focus:outline-none transition-colors font-mono" />
+                 </div>
+                 <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-brand-dark mb-1">ММ/ГГ</label>
+                      <input type="text" placeholder="12/30" className="w-full bg-white border border-brand-green/20 rounded-lg px-4 py-3 text-sm focus:border-brand-gold focus:outline-none transition-colors font-mono" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-brand-dark mb-1">CVC</label>
+                      <input type="text" placeholder="123" className="w-full bg-white border border-brand-green/20 rounded-lg px-4 py-3 text-sm focus:border-brand-gold focus:outline-none transition-colors font-mono" />
+                    </div>
+                 </div>
+                 <button 
+                   onClick={() => window.location.href = mockPaymentData.url}
+                   className="w-full bg-brand-green text-white py-3.5 rounded-lg font-bold text-sm mt-6 hover:bg-brand-green/90 transition-colors shadow-lg shadow-brand-green/20"
+                 >
+                   Плати {selectedPackage.price}
+                 </button>
+                 <button 
+                   onClick={() => {
+                      setMockPaymentData(null);
+                      sessionStorage.removeItem("pendingBooking");
+                   }}
+                   className="w-full text-brand-dark/50 text-xs mt-3 py-2 hover:text-brand-dark transition-colors"
+                 >
+                   Отказ
+                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

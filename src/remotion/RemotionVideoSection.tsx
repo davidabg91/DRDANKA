@@ -9,7 +9,8 @@ export default function RemotionVideoSection() {
   const [isMounted, setIsMounted] = React.useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -28,6 +29,7 @@ export default function RemotionVideoSection() {
         <div className="max-w-4xl mx-auto rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(212,175,55,0.15)] border border-white/10 aspect-video bg-black">
           {isMounted && (
             <Player
+              acknowledgeRemotionLicense={true}
               component={SubscriptionVideo}
               durationInFrames={300}
               compositionWidth={1280}

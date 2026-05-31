@@ -65,6 +65,7 @@ export default function RootLayout({
     <html
       lang="bg"
       className={`${inter.variable} ${playfair.variable} ${cormorant.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
     >
       <head>
         {/* Pre-warm the TLS connection to Firebase Storage so cover images

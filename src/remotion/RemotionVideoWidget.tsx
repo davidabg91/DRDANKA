@@ -9,7 +9,8 @@ export default function RemotionVideoWidget() {
   const [isMounted, setIsMounted] = React.useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -22,6 +23,7 @@ export default function RemotionVideoWidget() {
         <div className="w-full relative flex-grow min-h-[300px]">
           {isMounted && (
             <Player
+              acknowledgeRemotionLicense={true}
               component={SubscriptionVideo}
               durationInFrames={300}
               compositionWidth={1000}
