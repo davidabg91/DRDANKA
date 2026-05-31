@@ -339,12 +339,12 @@ export default function ProfilePage() {
     if (!authLoading) {
       if (firebaseUser) {
         setIsLoggedIn(true);
-        setCurrentUserEmail(firebaseUser.email || "");
+        setCurrentUserEmail((firebaseUser.email || "").toLowerCase());
 
-        if (firebaseUser.email === ADMIN_EMAIL) {
+        if ((firebaseUser.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
           setUserRole("admin");
         } else {
-          const matchedUser = firebaseUsers.find(u => u.email === firebaseUser.email);
+          const matchedUser = firebaseUsers.find(u => u.email.toLowerCase() === (firebaseUser.email || "").toLowerCase());
           if (matchedUser) {
             setUserRole(matchedUser.role);
             setFirmInfo({
@@ -562,6 +562,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
+    setAuditSelectedDate(today);
 
     // Initialize danka_users if not present
     let users: DankaUser[] = [];
@@ -691,7 +692,7 @@ export default function ProfilePage() {
   // as a one-way migration if a Firestore doc doesn't exist yet, then written
   // to Firestore. After that, Firestore is the single source of truth.
   const logKeyFor = (email: string, date: string) =>
-    `danka_logs_${email.replace(/@/g, "_").replace(/\./g, "_")}_${date}`;
+    `danka_logs_${email.toLowerCase().replace(/@/g, "_").replace(/\./g, "_")}_${date}`;
 
   // Sync date-based logs from Firestore when selectedDate or user changes.
   useEffect(() => {
@@ -1671,7 +1672,7 @@ export default function ProfilePage() {
       setLogIncoming(defaults.incoming);
       setLogFridges(defaults.fridges);
       
-      const key = `danka_logs_${currentUserEmail.replace("@", "_").replace(".", "_")}_${selectedDate}`;
+      const key = logKeyFor(currentUserEmail, selectedDate);
       const storedLogs = localStorage.getItem(key);
       if (storedLogs) {
         const parsed = JSON.parse(storedLogs);
