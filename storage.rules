@@ -68,5 +68,16 @@ service firebase.storage {
         && request.resource.size < 200 * 1024 * 1024
         && request.resource.contentType == 'application/pdf';
     }
+
+    // Documents assigned to users (shared by admin).
+    // Accessible only by the recipient (case-insensitive) or admin, or all if recipient == 'all'.
+    match /assigned_docs/{recipient}/{fileName} {
+      allow read: if request.auth != null && (
+        isAdmin() ||
+        recipient == "all" ||
+        request.auth.token.email.lower() == recipient.lower()
+      );
+      allow write: if isAdmin();
+    }
   }
 }

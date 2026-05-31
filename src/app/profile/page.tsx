@@ -52,7 +52,8 @@ import {
   PlusCircle,
   Eye,
   XCircle,
-  X
+  X,
+  Paperclip
 } from "lucide-react";
 
 export interface AssignedMaterial {
@@ -73,6 +74,8 @@ export interface AssignedMaterial {
   userAnswers?: number[];
   score?: number; // percentage
   status: 'pending' | 'completed';
+  fileUrl?: string;
+  fileName?: string;
 }
 
 export interface Message {
@@ -436,6 +439,9 @@ export default function ProfilePage() {
   const [newMaterialContent, setNewMaterialContent] = useState("");
   const [newMaterialTarget, setNewMaterialTarget] = useState("all");
   const [newTestQuestions, setNewTestQuestions] = useState<Array<{ id: string; text: string; options: string[]; correctIdx: number }>>([]);
+  const [assignedFile, setAssignedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   
   // Draft Question builder states
   const [draftQuestionText, setDraftQuestionText] = useState("");
@@ -1723,11 +1729,55 @@ export default function ProfilePage() {
   };
 
   // Admin assigns document
-  const handleAssignDocument = (e: React.FormEvent) => {
+  const handleAssignDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMaterialTitle || !newMaterialContent) {
       alert("Моля попълнете заглавие и съдържание.");
       return;
+    }
+
+    let fileUrl = "";
+    let fileName = "";
+
+    if (assignedFile) {
+      setIsUploading(true);
+      setUploadProgress(0);
+      try {
+        // Upload path: assigned_docs/{recipient}/{timestamp}_{filename}
+        const recipientFolder = newMaterialTarget === "all" ? "all" : newMaterialTarget.toLowerCase();
+        const storagePath = `assigned_docs/${recipientFolder}/${Date.now()}_${assignedFile.name}`;
+        const fileRef = storageRef(storage, storagePath);
+        
+        const uploadTask = uploadBytesResumable(fileRef, assignedFile);
+        
+        // Wait for upload task to complete with progress callback
+        await new Promise<void>((resolve, reject) => {
+          uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+              const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+              setUploadProgress(progress);
+            },
+            (error) => {
+              reject(error);
+            },
+            () => {
+              resolve();
+            }
+          );
+        });
+
+        fileUrl = await getDownloadURL(fileRef);
+        fileName = assignedFile.name;
+      } catch (err: any) {
+        console.error("Error uploading file:", err);
+        alert(`Грешка при качване на файла: ${err.message || err}`);
+        setIsUploading(false);
+        setUploadProgress(null);
+        return;
+      }
+      setIsUploading(false);
+      setUploadProgress(null);
     }
 
     const newDoc: AssignedMaterial = {
@@ -1736,14 +1786,15 @@ export default function ProfilePage() {
       content: newMaterialContent,
       type: "document",
       assignedAt: new Date().toISOString().split("T")[0],
-      status: "pending"
+      status: "pending",
+      ...(fileUrl ? { fileUrl, fileName } : {})
     };
 
     const updatedUsers = usersList.map(u => {
       if (u.role === "user" && (newMaterialTarget === "all" || u.email.toLowerCase() === newMaterialTarget.toLowerCase())) {
         return {
           ...u,
-          assignedDocs: [...u.assignedDocs, newDoc]
+          assignedDocs: [...(u.assignedDocs || []), newDoc]
         };
       }
       return u;
@@ -1754,6 +1805,7 @@ export default function ProfilePage() {
     // Reset inputs
     setNewMaterialTitle("");
     setNewMaterialContent("");
+    setAssignedFile(null);
     alert("Документът беше успешно изпратен!");
   };
 
@@ -3364,11 +3416,62 @@ export default function ProfilePage() {
                                     className="w-full text-xs border border-brand-green/20 rounded-lg p-3 bg-brand-light focus:outline-none focus:border-brand-gold leading-relaxed font-mono text-brand-dark"
                                   />
                                 </div>
+
+                                <div className="space-y-2">
+                                  <label className="text-[11px] font-bold text-brand-dark uppercase tracking-wider block">Прикачен файл (незадължително):</label>
+                                  <div className="flex flex-wrap items-center gap-3">
+                                    <label className={`flex items-center gap-2 px-4 py-2.5 bg-white border border-brand-green/20 hover:border-brand-gold rounded-lg cursor-pointer transition-all shadow-sm text-xs font-bold text-brand-green ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                      <Paperclip className="h-4 w-4 text-brand-gold" />
+                                      {assignedFile ? "Избери друг файл" : "Избери файл"}
+                                      <input 
+                                        type="file" 
+                                        disabled={isUploading}
+                                        onChange={(e) => setAssignedFile(e.target.files?.[0] || null)}
+                                        className="hidden"
+                                      />
+                                    </label>
+                                    {assignedFile && (
+                                      <div className="flex items-center gap-2 bg-brand-light px-3 py-1.5 rounded-lg border border-brand-green/5 text-xs text-brand-dark">
+                                        <span className="font-medium truncate max-w-[200px]">{assignedFile.name}</span>
+                                        <button 
+                                          type="button" 
+                                          disabled={isUploading}
+                                          onClick={() => setAssignedFile(null)}
+                                          className="text-red-500 hover:text-red-700 p-0.5 rounded-full hover:bg-red-50 transition-colors border-0 bg-transparent cursor-pointer disabled:opacity-50"
+                                        >
+                                          <X className="h-3.5 w-3.5" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="text-[10px] text-brand-dark/40 font-medium">Поддържат се всякакви документи/изображения до 200MB.</p>
+                                  
+                                  {isUploading && uploadProgress !== null && (
+                                    <div className="space-y-1.5 font-sans">
+                                      <div className="flex justify-between text-[10px] font-bold text-brand-green">
+                                        <span>Качване на файл...</span>
+                                        <span>{Math.round(uploadProgress)}%</span>
+                                      </div>
+                                      <div className="w-full bg-brand-green/10 h-1.5 rounded-full overflow-hidden">
+                                        <div className="bg-brand-gold h-full rounded-full transition-all duration-150" style={{ width: `${uploadProgress}%` }}></div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
                                 <button 
                                   type="submit"
-                                  className="w-full bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer border-0"
+                                  disabled={isUploading}
+                                  className="w-full bg-brand-green hover:bg-brand-green/90 disabled:bg-brand-green/60 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg transition-colors cursor-pointer border-0 flex items-center justify-center gap-2"
                                 >
-                                  Изпрати документа
+                                  {isUploading ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 animate-spin text-brand-gold" />
+                                      Изпращане на документа...
+                                    </>
+                                  ) : (
+                                    "Изпрати документа"
+                                  )}
                                 </button>
                               </form>
                             ) : (
@@ -5668,13 +5771,20 @@ export default function ProfilePage() {
                             }`}
                           >
                             <div className="space-y-1">
-                              <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                                material.type === "test" 
-                                  ? "bg-amber-100 text-amber-800" 
-                                  : "bg-blue-100 text-blue-800"
-                              }`}>
-                                {material.type === "test" ? "Тест" : "Документ"}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                                  material.type === "test" 
+                                    ? "bg-amber-100 text-amber-800" 
+                                    : "bg-blue-100 text-blue-800"
+                                }`}>
+                                  {material.type === "test" ? "Тест" : "Документ"}
+                                </span>
+                                {material.fileName && (
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-brand-gold/10 text-brand-gold px-2 py-0.5 rounded-full">
+                                    <Paperclip className="h-3 w-3" /> Файл
+                                  </span>
+                                )}
+                              </div>
                               <h3 className="font-serif text-base font-bold text-brand-green">{material.title}</h3>
                               <p className="text-[10px] text-brand-dark/50 font-mono">
                                 Изпратен на: {new Date(material.assignedAt).toLocaleDateString("bg-BG")}
@@ -6239,6 +6349,32 @@ export default function ProfilePage() {
                     <p key={i} className="mb-4 leading-relaxed">{para}</p>
                   ))}
                 </div>
+                {activeAssignedMaterial.fileUrl && (
+                  <div className="bg-brand-light/40 border border-brand-green/10 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-brand-gold/10 text-brand-gold rounded-xl">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <div className="space-y-0.5">
+                        <h4 className="font-bold text-xs text-brand-green uppercase tracking-wider">Прикачен официален документ</h4>
+                        <p className="text-sm font-medium text-brand-dark max-w-[280px] sm:max-w-md truncate animate-fade-in" title={activeAssignedMaterial.fileName}>
+                          {activeAssignedMaterial.fileName}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+                      <a 
+                        href={activeAssignedMaterial.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 sm:flex-initial text-center px-4 py-2.5 bg-brand-gold hover:bg-amber-500 text-brand-dark hover:text-brand-dark font-bold text-xs uppercase tracking-wider rounded-lg transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer no-underline"
+                      >
+                        <Download className="h-4 w-4" />
+                        Изтегли / Отвори
+                      </a>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4 border-t border-brand-green/10">
                   <button
                     onClick={() => handlePrintText(activeAssignedMaterial.title, activeAssignedMaterial.content)}
