@@ -118,6 +118,7 @@ export interface DankaUser {
   purchasedCourseIds?: string[];
   assignedDocs: AssignedMaterial[];
   messages: Message[];
+  customFridges?: string[];
 }
 
 // Mock templates for HACCP/DHP document generator
@@ -697,10 +698,16 @@ export default function ProfilePage() {
     if (!isLoggedIn || !selectedDate || userRole !== "user" || !currentUserEmail) return;
     let cancelled = false;
     const defaults = getDefaultLogsForNiche(firmInfo.niche || "Ресторант/Кафе");
+
+    const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+    const userFridges = me?.customFridges && me.customFridges.length > 0
+      ? me.customFridges.map(name => ({ name, tempAm: "", tempPm: "" }))
+      : defaults.fridges;
+
     const applyDefaults = () => {
       if (cancelled) return;
       setLogIncoming(defaults.incoming);
-      setLogFridges(defaults.fridges);
+      setLogFridges(userFridges);
       setLogHygiene({ desinfection: false, surfaces: false, floors: false, waste: false });
       setLogStaff({ checkPassed: false, healthy: true });
       setLogThermal([
@@ -718,7 +725,7 @@ export default function ProfilePage() {
         if (snap.exists()) {
           const parsed: any = snap.data();
           setLogIncoming(parsed.incoming || defaults.incoming);
-          setLogFridges(parsed.fridges || defaults.fridges);
+          setLogFridges(parsed.fridges || userFridges);
           setLogHygiene(parsed.hygiene || { desinfection: false, surfaces: false, floors: false, waste: false });
           setLogStaff(parsed.staff || { checkPassed: false, healthy: true });
           setLogThermal(parsed.thermal || []);
@@ -734,7 +741,7 @@ export default function ProfilePage() {
           await setDoc(doc(db, "logs", key), parsed);
           if (cancelled) return;
           setLogIncoming(parsed.incoming || defaults.incoming);
-          setLogFridges(parsed.fridges || defaults.fridges);
+          setLogFridges(parsed.fridges || userFridges);
           setLogHygiene(parsed.hygiene || { desinfection: false, surfaces: false, floors: false, waste: false });
           setLogStaff(parsed.staff || { checkPassed: false, healthy: true });
           setLogThermal(parsed.thermal || []);
@@ -751,6 +758,23 @@ export default function ProfilePage() {
     })();
     return () => { cancelled = true; };
   }, [selectedDate, isLoggedIn, userRole, currentUserEmail, firmInfo.niche]);
+
+  // Load custom fridges when user data becomes available
+  useEffect(() => {
+    if (!currentUserEmail || !usersList.length) return;
+    const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+    if (!me?.customFridges || me.customFridges.length === 0) return;
+
+    // Check if the current logFridges is using the hardcoded defaults
+    const defaults = getDefaultLogsForNiche(firmInfo.niche || "Ресторант/Кафе");
+    const isDefault = logFridges.length === defaults.fridges.length &&
+      logFridges.every((f, i) => f.name === defaults.fridges[i]?.name);
+
+    if (isDefault) {
+      setLogFridges(me.customFridges.map(name => ({ name, tempAm: "", tempPm: "" })));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [usersList, currentUserEmail, firmInfo.niche]);
 
   // Sync audited logs from Firestore when auditor selects another user/date.
   useEffect(() => {
@@ -2094,6 +2118,45 @@ export default function ProfilePage() {
     const updated = [...logFridges];
     updated[index][field] = value;
     setLogFridges(updated);
+  };
+
+  // Add custom fridge to list
+  const handleAddFridgePrompt = async () => {
+    const name = prompt("Въведете име за новото хладилно съоръжение (напр. 'Хладилна витрина 3'):");
+    if (!name) return;
+    const trimmed = name.trim();
+    if (!trimmed) return;
+
+    if (logFridges.some(f => f.name.toLowerCase() === trimmed.toLowerCase())) {
+      alert("Вече съществува съоръжение с това име.");
+      return;
+    }
+
+    const currentNames = logFridges.map(f => f.name);
+    const updatedNames = [...currentNames, trimmed];
+
+    // Update current day's log state
+    setLogFridges([...logFridges, { name: trimmed, tempAm: "", tempPm: "" }]);
+
+    // Persist to user profile
+    await updateUser(currentUserEmail, {
+      customFridges: updatedNames
+    });
+  };
+
+  // Delete custom fridge from list
+  const handleDeleteCustomFridge = async (index: number) => {
+    const fridgeToDelete = logFridges[index];
+    if (!confirm(`Сигурни ли сте, че искате да изтриете съоръжението "${fridgeToDelete.name}"?`)) return;
+
+    const updatedLogFridges = [...logFridges];
+    updatedLogFridges.splice(index, 1);
+    setLogFridges(updatedLogFridges);
+
+    const remainingNames = updatedLogFridges.map(f => f.name);
+    await updateUser(currentUserEmail, {
+      customFridges: remainingNames
+    });
   };
 
   // Run Self-Audit Evaluation
@@ -4747,13 +4810,23 @@ export default function ProfilePage() {
                                   : "border-brand-green/10 hover:border-brand-gold/30 shadow-sm"
                               }`}
                             >
-                              <div className="flex justify-between items-start">
-                                <span className="font-serif font-bold text-brand-green text-sm block leading-snug truncate max-w-[150px]">
-                                  {row.name}
-                                </span>
-                                <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${isFreezer ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`}>
-                                  {isFreezer ? "Фризер" : "Хладилник"}
-                                </span>
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <span className="font-serif font-bold text-brand-green text-sm block leading-snug truncate" title={row.name}>
+                                    {row.name}
+                                  </span>
+                                  <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded mt-1 inline-block ${isFreezer ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"}`}>
+                                    {isFreezer ? "Фризер" : "Хладилник"}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCustomFridge(idx)}
+                                  className="text-red-500 hover:text-red-700 p-1 hover:bg-red-50 rounded transition-colors cursor-pointer border-0 bg-transparent shrink-0"
+                                  title="Изтрий съоръжението"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
                               </div>
                               
                               <div className="grid grid-cols-2 gap-3">
@@ -4806,6 +4879,19 @@ export default function ProfilePage() {
                             </div>
                           );
                         })}
+
+                        {/* Card to add a new refrigerator */}
+                        <button 
+                          type="button"
+                          onClick={handleAddFridgePrompt}
+                          className="bg-brand-light/20 border border-dashed border-brand-green/30 rounded-2xl p-4.5 flex flex-col justify-center items-center text-center space-y-2 hover:border-brand-gold/50 hover:bg-brand-light/40 transition-all cursor-pointer h-full min-h-[160px] border-0"
+                        >
+                          <PlusCircle className="h-7 w-7 text-brand-green/60" />
+                          <div>
+                            <span className="font-serif font-bold text-brand-green text-sm block">Добави съоръжение</span>
+                            <span className="text-[9px] text-brand-dark/50 block">Хладилник или фризер с произволно име</span>
+                          </div>
+                        </button>
                       </div>
 
                       {/* Print-Only Table (BAFSA Compliant) */}
