@@ -2404,10 +2404,10 @@ export default function ProfilePage() {
 
 
               {/* Bento Grid Layout */}
-              <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 lg:gap-8 items-start relative z-10 max-w-6xl mx-auto">
+              <div className="flex flex-col xl:grid xl:grid-cols-3 gap-6 xl:gap-8 items-start relative z-10 max-w-6xl mx-auto">
               
                 {/* LEFT COLUMN: 3 Animated Panels */}
-                <div className="space-y-6 order-2 lg:order-1 w-full mt-8 lg:mt-0">
+                <div className="space-y-6 order-2 xl:order-1 w-full mt-8 xl:mt-0">
                   {/* Panel 1: HACCP Monitor */}
                   <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 rounded-3xl shadow-xl relative overflow-hidden transition-transform duration-500 hover:-translate-y-1">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-[50px] pointer-events-none"></div>
@@ -2486,7 +2486,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* CENTER COLUMN: Login/Register Card */}
-                <div className="lg:col-span-1 relative z-20 flex flex-col w-full mx-auto max-w-lg order-1 lg:order-2">
+                <div className="xl:col-span-1 relative z-20 flex flex-col w-full mx-auto max-w-lg order-1 xl:order-2">
 
                 <div className={`bg-white/[0.03] backdrop-blur-3xl text-white p-6 sm:p-8 rounded-3xl shadow-2xl space-y-6 relative overflow-hidden border border-white/10 transition-all duration-500 ${authMode === "register" ? "h-full flex flex-col justify-center" : ""}`}>
                   
@@ -2734,7 +2734,7 @@ export default function ProfilePage() {
               </div>
 
                 {/* RIGHT COLUMN: 2 Animated Panels */}
-                <div className="space-y-6 order-3 lg:order-3 w-full mt-6 lg:mt-0">
+                <div className="space-y-6 order-3 xl:order-3 w-full mt-6 xl:mt-0">
                   {/* Panel 3: Audit */}
                   <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-6 rounded-3xl shadow-xl relative overflow-hidden transition-transform duration-500 hover:-translate-y-1">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-[50px] pointer-events-none"></div>

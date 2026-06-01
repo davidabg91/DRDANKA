@@ -84,21 +84,21 @@ export default function Header() {
                 <span className="font-logo text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
                   Д-р Данка Николова
                 </span>
-                <span className="text-[10px] xl:text-xs text-brand-gold font-light tracking-widest uppercase block mt-1">
+                <span className="text-[10px] xl:text-xs text-brand-gold font-light tracking-widest uppercase hidden md:block mt-1">
                   Академия сигурен хранителен бизнес
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center justify-center flex-grow gap-x-1 xl:gap-x-2 px-4 xl:px-8">
+            <nav className="hidden xl:flex items-center justify-center flex-grow gap-x-1 xl:gap-x-2 px-4 xl:px-8">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`relative lg:text-[11px] xl:text-[12px] font-semibold tracking-wider transition-all duration-200 uppercase whitespace-nowrap px-3 py-1.5 rounded-full cursor-pointer ${
+                    className={`relative xl:text-[12px] font-semibold tracking-wider transition-all duration-200 uppercase whitespace-nowrap px-3 py-1.5 rounded-full cursor-pointer ${
                       isActive
                         ? "text-brand-dark bg-brand-gold shadow-sm"
                         : "text-white/75 hover:text-white hover:bg-white/10"
@@ -111,11 +111,11 @@ export default function Header() {
             </nav>
 
             {/* Desktop Call to Action */}
-            <div className="hidden lg:flex items-center shrink-0 space-x-2.5">
+            <div className="hidden xl:flex items-center shrink-0 space-x-2.5">
               {/* Primary CTA — gold pill with shimmer */}
               <Link
                 href="/consultations"
-                className="relative inline-flex items-center justify-center overflow-hidden xl:px-5 lg:px-3.5 py-2 text-[11px] xl:text-[12px] font-bold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-full shadow-md hover:shadow-lg hover:shadow-brand-gold/30 transition-all duration-300 whitespace-nowrap cursor-pointer group"
+                className="relative inline-flex items-center justify-center overflow-hidden xl:px-5 py-2 text-[12px] font-bold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-full shadow-md hover:shadow-lg hover:shadow-brand-gold/30 transition-all duration-300 whitespace-nowrap cursor-pointer group"
               >
                 {/* shimmer sweep */}
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
@@ -124,14 +124,14 @@ export default function Header() {
               {/* Secondary CTA — glass pill */}
               <Link
                 href="/profile"
-                className="inline-flex items-center justify-center xl:px-5 lg:px-3.5 py-2 text-[11px] xl:text-[12px] font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer"
+                className="inline-flex items-center justify-center xl:px-5 py-2 text-[12px] font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer"
               >
                 Вход / Портал
               </Link>
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="lg:hidden flex items-center">
+            <div className="xl:hidden flex items-center">
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="text-white hover:text-brand-gold focus:outline-none p-1.5 rounded-lg hover:bg-brand-gold/10 transition-colors"
@@ -146,7 +146,7 @@ export default function Header() {
 
       {/* Mobile Drawer Navigation */}
       <div
-        className={`lg:hidden fixed inset-0 top-0 z-40 bg-brand-green transition-all duration-300 transform ${
+        className={`xl:hidden fixed inset-0 top-0 z-40 bg-brand-green transition-all duration-300 transform ${
           isOpen
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-10 pointer-events-none invisible"
