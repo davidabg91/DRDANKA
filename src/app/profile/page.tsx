@@ -1001,8 +1001,8 @@ export default function ProfilePage() {
         messages: []
       };
       
-      const updatedList = [...usersList, pendingUser];
-      saveUsers(updatedList);
+      const ok = await setFullUser(cleanRegEmail, pendingUser);
+      if (!ok) return;
 
       setPendingEmail(cleanRegEmail);
       setPendingFirmName(applyFirmName);

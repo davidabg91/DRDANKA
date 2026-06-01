@@ -112,7 +112,7 @@ export function useDankaUsers() {
     }
   };
 
-  const setFullUser = async (email: string, data: DankaUser) => {
+  const setFullUser = async (email: string, data: DankaUser): Promise<boolean> => {
     const docId = email.trim().toLowerCase();
     try {
       const userRef = doc(db, "users", docId);
@@ -120,9 +120,11 @@ export function useDankaUsers() {
       const { password: _omitPassword, ...safeData } = data;
       // Also store email in lowercase form to match the doc id.
       await setDoc(userRef, { ...safeData, email: docId });
+      return true;
     } catch (error: any) {
       console.error("Error setting user:", error);
       alert("Грешка при запис в базата данни (Firebase): " + error.message + "\n\nМоля, проверете вашите Firestore Security Rules в Firebase Console!");
+      return false;
     }
   };
 
