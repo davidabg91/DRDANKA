@@ -2353,7 +2353,7 @@ export default function ProfilePage() {
       {!isLoggedIn && (
         <div className="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 print:hidden animate-fade-in">
           {isPendingApproval ? (
-            <div className="max-w-xl mx-auto bg-white border border-brand-gold/30 p-8 rounded-2xl shadow-xl space-y-6 text-center animate-fade-in">
+            <div className="max-w-xl mx-auto bg-[#FDFBF7] border border-brand-gold/45 p-8 rounded-2xl shadow-xl space-y-6 text-center animate-fade-in text-brand-dark">
               <div className="relative w-16 h-16 mx-auto">
                 <div className="absolute inset-0 rounded-full bg-brand-gold/10 animate-ping"></div>
                 <div className="relative w-16 h-16 rounded-full bg-brand-gold/25 text-brand-gold flex items-center justify-center border border-brand-gold/45">
@@ -2363,36 +2363,36 @@ export default function ProfilePage() {
               
               <div className="space-y-2">
                 <h2 className="font-serif text-2xl font-bold text-brand-green">Профилът Ви чака одобрение</h2>
-                <p className="text-xs text-brand-gold font-bold uppercase tracking-widest">Статус: В процес на разглеждане</p>
-                <p className="text-sm text-brand-dark/75 max-w-md mx-auto leading-relaxed pt-2">
-                  Заявлението за обект <span className="font-bold text-brand-green">{pendingFirmName || "Вашия обект"}</span> е регистрирано успешно с имейл <code className="bg-brand-light px-1.5 py-0.5 rounded border font-mono text-xs">{pendingEmail}</code>.
+                <p className="text-xs text-brand-gold-dark font-bold uppercase tracking-widest">Статус: В процес на разглеждане</p>
+                <p className="text-sm text-brand-dark/90 max-w-md mx-auto leading-relaxed pt-2">
+                  Заявлението за обект <span className="font-bold text-brand-green">{pendingFirmName || "Вашия обект"}</span> е регистрирано успешно с имейл <code className="bg-[#FAF6EE] border border-brand-gold/30 px-1.5 py-0.5 rounded font-mono text-xs text-brand-dark">{pendingEmail}</code>.
                 </p>
-                <p className="text-xs text-brand-dark/65 max-w-sm mx-auto leading-normal">
+                <p className="text-xs text-brand-dark/75 max-w-sm mx-auto leading-normal">
                   За да се гарантира съответствието на НАССР документацията, д-р Данка Николова трябва лично да прегледа описаната дейност на обекта и да активира акаунта Ви. Това обикновено отнема до 24 часа.
                 </p>
               </div>
 
               {/* Visual Process Timeline */}
               <div className="grid grid-cols-3 gap-2 py-4 relative">
-                <div className="absolute top-1/2 left-[15%] right-[15%] h-[1px] bg-brand-green/10 -z-10"></div>
+                <div className="absolute top-1/2 left-[15%] right-[15%] h-[1px] bg-brand-green/20 -z-10"></div>
                 <div className="space-y-1.5">
                   <div className="w-6 h-6 rounded-full bg-brand-green text-white flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-green">✓</div>
-                  <span className="text-[9px] font-bold uppercase block text-brand-dark/50">1. Кандидатстване</span>
+                  <span className="text-[9px] font-bold uppercase block text-brand-dark/70">1. Кандидатстване</span>
                 </div>
                 <div className="space-y-1.5">
-                  <div className="w-6 h-6 rounded-full bg-brand-gold text-brand-dark flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-gold animate-pulse">2</div>
-                  <span className="text-[9px] font-bold uppercase block text-brand-green">2. Преглед</span>
+                  <div className="w-6 h-6 rounded-full bg-brand-gold text-brand-green flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-gold animate-pulse">2</div>
+                  <span className="text-[9px] font-bold uppercase block text-brand-green font-bold">2. Преглед</span>
                 </div>
                 <div className="space-y-1.5">
-                  <div className="w-6 h-6 rounded-full bg-brand-light text-brand-dark/45 flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-green/15">3</div>
-                  <span className="text-[9px] font-bold uppercase block text-brand-dark/45">3. Одобрение & Вход</span>
+                  <div className="w-6 h-6 rounded-full bg-[#FAF6EE] text-brand-dark/50 flex items-center justify-center text-[10px] font-bold mx-auto border border-brand-gold/30">3</div>
+                  <span className="text-[9px] font-bold uppercase block text-brand-dark/50">3. Одобрение & Вход</span>
                 </div>
               </div>
 
               <div className="pt-2">
                 <button
                   onClick={() => { setIsPendingApproval(false); setAuthMode("login"); }}
-                  className="text-xs text-brand-dark/50 hover:text-brand-green underline"
+                  className="text-xs text-brand-dark/60 hover:text-brand-green font-semibold underline cursor-pointer transition-colors duration-200"
                 >
                   ← Обратно към Вход
                 </button>
