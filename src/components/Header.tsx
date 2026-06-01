@@ -71,7 +71,7 @@ export default function Header() {
           />
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 xl:px-4 2xl:px-8 relative">
+        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 relative">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3 group shrink-0">
@@ -84,7 +84,7 @@ export default function Header() {
                 <span className="font-logo text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
                   Д-р Данка Николова
                 </span>
-                <span className="text-[10px] xl:text-xs text-brand-gold font-light tracking-widest uppercase hidden 2xl:block mt-1">
+                <span className="text-[10px] xl:text-xs text-brand-gold font-light tracking-widest uppercase hidden xl:block mt-1">
                   Академия сигурен хранителен бизнес
                 </span>
               </div>
