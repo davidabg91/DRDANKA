@@ -20,6 +20,12 @@
   --font-logo: var(--font-logo);
 }
 
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
 body {
   background-image: linear-gradient(to right, #FAF6EE, #F3EAD9, #E9D9BF);
   color: var(--color-brand-dark);
