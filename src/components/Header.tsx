@@ -3,12 +3,29 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ShieldCheck } from "lucide-react";
+import { Menu, X, ShieldCheck, UserCircle2 } from "lucide-react";
+import { useAuth, useDankaUsers } from "@/lib/firebaseHooks";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+
+  // Показваме името на фирмата / потребителя вместо „Вход“, когато е логнат.
+  const { user: firebaseUser } = useAuth();
+  const { users } = useDankaUsers();
+  const myDoc = firebaseUser?.email
+    ? users.find((u) => u.email.toLowerCase() === firebaseUser.email!.toLowerCase())
+    : undefined;
+  const portalLabel = firebaseUser
+    ? (myDoc?.firmName?.trim() ||
+       myDoc?.contact?.trim() ||
+       myDoc?.manager?.trim() ||
+       (firebaseUser.email || "").split("@")[0] ||
+       "Моят профил")
+    : null;
+  const portalLabelShort =
+    portalLabel && portalLabel.length > 22 ? portalLabel.slice(0, 21) + "…" : portalLabel;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -124,9 +141,17 @@ export default function Header() {
               {/* Secondary CTA — glass pill */}
               <Link
                 href="/profile"
-                className="inline-flex items-center justify-center xl:px-3.5 2xl:px-5 py-1.5 2xl:py-2 text-[11px] 2xl:text-[12px] font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer"
+                title={portalLabel || undefined}
+                className="inline-flex items-center justify-center gap-1.5 xl:px-3.5 2xl:px-5 py-1.5 2xl:py-2 text-[11px] 2xl:text-[12px] font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer max-w-[220px]"
               >
-                Вход / Портал
+                {portalLabelShort ? (
+                  <>
+                    <UserCircle2 className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{portalLabelShort}</span>
+                  </>
+                ) : (
+                  "Вход / Портал"
+                )}
               </Link>
             </div>
 
@@ -175,9 +200,16 @@ export default function Header() {
             <Link
               href="/profile"
               onClick={() => setIsOpen(false)}
-              className="w-full text-center block px-6 py-3 text-sm font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm cursor-pointer"
+              className="w-full text-center flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm cursor-pointer"
             >
-              Вход / Портал
+              {portalLabelShort ? (
+                <>
+                  <UserCircle2 className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{portalLabelShort}</span>
+                </>
+              ) : (
+                "Вход / Портал"
+              )}
             </Link>
             <Link
               href="/consultations"

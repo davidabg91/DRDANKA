@@ -131,6 +131,8 @@ export interface DankaUser {
   /** Обектът има топла точка (скара, фритюрник, дюнер…) — включва допълнителните контролни карти.
    *  Missing → derived from the business sector (ЗОХ / МТХ default to true). */
   hasHotPoint?: boolean;
+  /** Уредите от топлата точка в обекта (ids от HOT_APPLIANCES) — филтрират картите и дневните напомняния. */
+  hotAppliances?: string[];
 }
 
 // Mock templates for HACCP/DHP document generator
@@ -3888,6 +3890,7 @@ export default function ProfilePage() {
                             freezers={auditTarget.customFreezers ?? []}
                             employees={auditTarget.customEmployees ?? []}
                             hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
+                            hotAppliances={auditTarget.hotAppliances ?? []}
                             readOnly
                           />
                         )}
@@ -3993,6 +3996,7 @@ export default function ProfilePage() {
                   freezers={currentUser?.customFreezers ?? ["Фризер №1"]}
                   employees={currentUser?.customEmployees ?? []}
                   hotPoint={currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(firmInfo.niche))}
+                  hotAppliances={currentUser?.hotAppliances ?? []}
                   onSaveEquipment={async (patch) => { await updateUser(currentUserEmail, patch); }}
                 />
               )}

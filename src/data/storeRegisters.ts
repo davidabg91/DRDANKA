@@ -1174,6 +1174,68 @@ export const HOT_POINT_REGISTERS: RegisterDef[] = [
   },
 ];
 
+/* ================================================================== */
+/*  УРЕДИ ОТ ТОПЛАТА ТОЧКА                                             */
+/*  Връзка уред → контролни карти, които трябва да се попълнят,        */
+/*  когато уредът е използван през деня.                               */
+/* ================================================================== */
+
+export interface HotAppliance {
+  id: string;
+  label: string;
+  /** Емоджи за бърза визуална идентификация в панела „използвани днес" */
+  emoji: string;
+  /** Карти, които се изискват в ден, в който уредът е използван */
+  registers: string[];
+}
+
+export const HOT_APPLIANCES: HotAppliance[] = [
+  { id: "grill", label: "Скара", emoji: "🍖", registers: ["grill-temp", "grill-batch"] },
+  { id: "fryer", label: "Фритюрник", emoji: "🍟", registers: ["fryer-oil-temp"] },
+  { id: "duner", label: "Дюнер", emoji: "🌯", registers: ["duner"] },
+  { id: "oven", label: "Фурна (закуски, питки, козунаци)", emoji: "🥐", registers: ["baking"] },
+  { id: "stove", label: "Котлон — готвени ястия", emoji: "🍲", registers: ["cooked-meals", "meals-batch"] },
+  { id: "alaminut", label: "Аламинути / предястия", emoji: "🍳", registers: ["alaminut", "starters-batch"] },
+  { id: "hot-display", label: "Топла витрина / бен мари", emoji: "♨️", registers: ["hot-display"] },
+  { id: "princess", label: "Принцесник / тостер", emoji: "🥪", registers: ["princess-batch"] },
+  { id: "soups", label: "Производство на супи", emoji: "🥣", registers: ["soups-production", "soups-cooling"] },
+  { id: "sauces", label: "Приготвяне на сосове", emoji: "🥫", registers: ["sauces-batch"] },
+  { id: "desserts", label: "Приготвяне на десерти", emoji: "🍮", registers: ["desserts"] },
+  { id: "flour", label: "Работа с брашно (пресяване)", emoji: "🌾", registers: ["flour-sift"] },
+];
+
+export const HOT_APPLIANCE_BY_ID: Record<string, HotAppliance> = Object.fromEntries(
+  HOT_APPLIANCES.map((a) => [a.id, a])
+);
+
+/** Обратна връзка: карта → уред, който я изисква. */
+export const REGISTER_APPLIANCE: Record<string, string> = Object.fromEntries(
+  HOT_APPLIANCES.flatMap((a) => a.registers.map((r) => [r, a.id]))
+);
+
+/** Карти от топлата точка, които важат независимо от конкретните уреди. */
+export const UNIVERSAL_HOT_REGISTERS = [
+  "prework-check",
+  "disinfectant-residue",
+  "supplier-eval",
+  "allergen-menu",
+];
+
+/**
+ * Видимите карти за обект: базовите + (при топла точка) универсалните
+ * и картите на притежаваните уреди. Ако уредите не са конфигурирани,
+ * се показват всички карти от топлата точка.
+ */
+export function visibleRegistersFor(hotPoint: boolean, ownedAppliances: string[]): RegisterDef[] {
+  if (!hotPoint) return STORE_REGISTERS;
+  if (ownedAppliances.length === 0) return [...STORE_REGISTERS, ...HOT_POINT_REGISTERS];
+  const allowed = new Set<string>(UNIVERSAL_HOT_REGISTERS);
+  ownedAppliances.forEach((id) => HOT_APPLIANCE_BY_ID[id]?.registers.forEach((r) => allowed.add(r)));
+  // Унищожаване на мазнина има смисъл само при фритюрник
+  if (ownedAppliances.includes("fryer")) allowed.add("fryer-oil-destroy");
+  return [...STORE_REGISTERS, ...HOT_POINT_REGISTERS.filter((r) => allowed.has(r.id))];
+}
+
 export const REGISTER_BY_ID: Record<string, RegisterDef> = Object.fromEntries(
   [...STORE_REGISTERS, ...HOT_POINT_REGISTERS].map((r) => [r.id, r])
 );

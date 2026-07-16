@@ -29,6 +29,10 @@ import {
   CLEANING_SCOPE,
   SAMPLE_ALLERGEN_MENU,
   SurveyGroup,
+  HOT_APPLIANCES,
+  HOT_APPLIANCE_BY_ID,
+  REGISTER_APPLIANCE,
+  visibleRegistersFor,
 } from "@/data/storeRegisters";
 import {
   buildRegisterSection,
@@ -1148,6 +1152,7 @@ function EquipmentModal({
   freezers,
   employees,
   hotPoint,
+  hotAppliances,
   onSave,
   onClose,
 }: {
@@ -1155,13 +1160,21 @@ function EquipmentModal({
   freezers: string[];
   employees: Employee[];
   hotPoint: boolean;
-  onSave: (patch: { customFridges: string[]; customFreezers: string[]; customEmployees: Employee[]; hasHotPoint: boolean }) => void | Promise<void>;
+  hotAppliances: string[];
+  onSave: (patch: {
+    customFridges: string[];
+    customFreezers: string[];
+    customEmployees: Employee[];
+    hasHotPoint: boolean;
+    hotAppliances: string[];
+  }) => void | Promise<void>;
   onClose: () => void;
 }) {
   const [localFridges, setLocalFridges] = useState<string[]>(fridges);
   const [localFreezers, setLocalFreezers] = useState<string[]>(freezers);
   const [localEmployees, setLocalEmployees] = useState<Employee[]>(employees);
   const [localHotPoint, setLocalHotPoint] = useState<boolean>(hotPoint);
+  const [localAppliances, setLocalAppliances] = useState<string[]>(hotAppliances);
   const [newFridge, setNewFridge] = useState("");
   const [newFreezer, setNewFreezer] = useState("");
   const [newEmpName, setNewEmpName] = useState("");
@@ -1176,6 +1189,7 @@ function EquipmentModal({
         customFreezers: localFreezers,
         customEmployees: localEmployees,
         hasHotPoint: localHotPoint,
+        hotAppliances: localHotPoint ? localAppliances : [],
       });
       onClose();
     } finally {
@@ -1230,6 +1244,47 @@ function EquipmentModal({
             </span>
           </span>
         </button>
+
+        {/* Избор на конкретните уреди от топлата точка */}
+        {localHotPoint && (
+          <div className="space-y-2 border border-brand-gold/25 bg-brand-gold/5 rounded-2xl p-4">
+            <h4 className="text-[10px] font-black uppercase text-brand-green flex items-center gap-1.5">
+              <Flame className="h-3.5 w-3.5 text-brand-gold" /> Кои уреди има в обекта?
+            </h4>
+            <p className="text-[10px] text-brand-dark/50 leading-snug">
+              Системата ще показва само картите за избраните уреди и всеки ден ще пита кои от тях са използвани, за да
+              напомня какво да се попълни.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {HOT_APPLIANCES.map((a) => {
+                const on = localAppliances.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() =>
+                      setLocalAppliances(on ? localAppliances.filter((x) => x !== a.id) : [...localAppliances, a.id])
+                    }
+                    className={`px-3 py-2 rounded-xl text-[10px] font-bold border cursor-pointer transition-colors flex items-center gap-1.5 ${
+                      on
+                        ? "bg-brand-green text-white border-brand-green"
+                        : "bg-white text-brand-dark/55 border-brand-green/15 hover:border-brand-gold"
+                    }`}
+                  >
+                    <span className="text-sm leading-none">{a.emoji}</span>
+                    {a.label}
+                    {on && <Check className="h-3 w-3" />}
+                  </button>
+                );
+              })}
+            </div>
+            {localAppliances.length === 0 && (
+              <p className="text-[10px] text-amber-700 font-bold">
+                Няма избрани уреди — ще се показват всички карти от топлата точка.
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="space-y-2">
@@ -1339,16 +1394,22 @@ interface RegistersTabProps {
   employees: Employee[];
   /** Обектът има топла точка (скара, фритюрник, дюнер, печене…) — добавя контролните карти за топла точка */
   hotPoint?: boolean;
+  /** Уредите от топлата точка, налични в обекта (ids от HOT_APPLIANCES) */
+  hotAppliances?: string[];
   /** Записва оборудване/персонал в профила на потребителя */
   onSaveEquipment?: (patch: {
     customFridges?: string[];
     customFreezers?: string[];
     customEmployees?: Employee[];
     hasHotPoint?: boolean;
+    hotAppliances?: string[];
   }) => void | Promise<void>;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
 }
+
+/** Псевдо-регистър за отбелязване кои уреди са използвани през деня. */
+const DAILY_USAGE_ID = "daily-usage";
 
 export default function RegistersTab({
   email,
@@ -1357,6 +1418,7 @@ export default function RegistersTab({
   freezers,
   employees,
   hotPoint = false,
+  hotAppliances = [],
   onSaveEquipment,
   readOnly = false,
 }: RegistersTabProps) {
@@ -1372,7 +1434,21 @@ export default function RegistersTab({
   docsRef.current = docs;
   const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
+  /** Всички регистри за зареждане на данни (пълният комплект при топла точка). */
   const activeRegisters = useMemo(() => registersFor(hotPoint), [hotPoint]);
+  /** Видимите карти — филтрирани по притежаваните уреди. */
+  const visibleRegisters = useMemo(
+    () => visibleRegistersFor(hotPoint, hotAppliances),
+    [hotPoint, hotAppliances]
+  );
+  /** Уредите, които панелът „използвани днес" показва. */
+  const ownedAppliances = useMemo(
+    () =>
+      hotAppliances.length > 0
+        ? HOT_APPLIANCES.filter((a) => hotAppliances.includes(a.id))
+        : HOT_APPLIANCES,
+    [hotAppliances]
+  );
 
   const units = useMemo(
     () => [
@@ -1395,15 +1471,20 @@ export default function RegistersTab({
     setLoading(true);
     (async () => {
       const results: Record<string, RegisterDocData> = {};
+      const toLoad: { id: string; period: string }[] = [
+        ...activeRegisters.map((def) => ({ id: def.id, period: periodFor(def, month) })),
+        // Псевдо-документ: кои уреди от топлата точка са използвани по дни.
+        ...(hotPoint ? [{ id: DAILY_USAGE_ID, period: month }] : []),
+      ];
       await Promise.all(
-        activeRegisters.map(async (def) => {
+        toLoad.map(async ({ id, period }) => {
           try {
-            const key = registerDocKey(email, def.id, periodFor(def, month));
+            const key = registerDocKey(email, id, period);
             const snap = await getDoc(doc(db, "logs", key));
-            results[def.id] = snap.exists() ? (snap.data() as RegisterDocData) : {};
+            results[id] = snap.exists() ? (snap.data() as RegisterDocData) : {};
           } catch (err) {
-            console.error("Register load error", def.id, err);
-            results[def.id] = {};
+            console.error("Register load error", id, err);
+            results[id] = {};
           }
         })
       );
@@ -1416,16 +1497,16 @@ export default function RegistersTab({
     return () => {
       cancelled = true;
     };
-  }, [email, month, activeRegisters]);
+  }, [email, month, activeRegisters, hotPoint]);
 
   /* ------------------ Запис (автоматичен, с дебаунс) ------------------ */
   const persistRegister = useCallback(
     async (registerId: string) => {
       const def = REGISTER_BY_ID[registerId];
-      if (!def) return;
+      if (!def && registerId !== DAILY_USAGE_ID) return;
       setSaveState((s) => ({ ...s, [registerId]: "saving" }));
       try {
-        const key = registerDocKey(email, registerId, periodFor(def, month));
+        const key = registerDocKey(email, registerId, def ? periodFor(def, month) : month);
         const data = { ...(docsRef.current[registerId] || {}), updatedAt: new Date().toISOString() };
         await setDoc(doc(db, "logs", key), data);
         setSaveState((s) => ({ ...s, [registerId]: "saved" }));
@@ -1583,7 +1664,25 @@ export default function RegistersTab({
         });
       }
 
-      // Карти на 3 дни: смяна на мазнина и остатъчни дезинфектанти
+      // Умна връзка: използван уред днес → изискват се неговите карти
+      const usedToday = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
+      const filledToday = (id: string) => (docs[id]?.entries || []).some((e) => e.date === today);
+      ownedAppliances.forEach((app) => {
+        if (usedToday[app.id] !== "1") return;
+        app.registers.forEach((regId) => {
+          const def = REGISTER_BY_ID[regId];
+          if (!def) return;
+          if (!filledToday(regId)) {
+            list.push({
+              level: "urgent",
+              registerId: regId,
+              text: `${app.emoji} Използвахте „${app.label}“ днес — попълнете картата „${def.shortTitle}“.`,
+            });
+          }
+        });
+      });
+
+      // Карти на 3 дни: смяна на мазнина (само при фритюрник) и остатъчни дезинфектанти
       const lastEntryDate = (id: string) => {
         const dates = (docs[id]?.entries || []).map((e) => String(e.date || "")).filter(Boolean).sort();
         return dates.length ? dates[dates.length - 1] : "";
@@ -1592,15 +1691,18 @@ export default function RegistersTab({
         if (!iso) return Infinity;
         return Math.floor((Date.now() - new Date(iso + "T00:00:00").getTime()) / 86400000);
       };
-      const oilDays = daysAgo(lastEntryDate("fryer-oil-destroy"));
-      if (oilDays >= 3) {
-        list.push({
-          level: "warn",
-          registerId: "fryer-oil-destroy",
-          text: oilDays === Infinity
-            ? "Няма запис за унищожаване на използвана мазнина този месец (попълва се на всеки 3 дни)."
-            : `Последната смяна на пържилната мазнина е преди ${oilDays} дни — попълва се на всеки 3 дни.`,
-        });
+      const hasFryer = hotAppliances.length === 0 || hotAppliances.includes("fryer");
+      if (hasFryer) {
+        const oilDays = daysAgo(lastEntryDate("fryer-oil-destroy"));
+        if (oilDays >= 3) {
+          list.push({
+            level: "warn",
+            registerId: "fryer-oil-destroy",
+            text: oilDays === Infinity
+              ? "Няма запис за унищожаване на използвана мазнина този месец (попълва се на всеки 3 дни)."
+              : `Последната смяна на пържилната мазнина е преди ${oilDays} дни — попълва се на всеки 3 дни.`,
+          });
+        }
       }
       const resDays = daysAgo(lastEntryDate("disinfectant-residue"));
       if (resDays >= 3) {
@@ -1615,7 +1717,7 @@ export default function RegistersTab({
     }
 
     return list;
-  }, [docs, loading, month, units, employees, hotPoint]);
+  }, [docs, loading, month, units, employees, hotPoint, hotAppliances, ownedAppliances]);
 
   /* ------------------ Статус на регистър за картите ------------------ */
   const registerStatus = useCallback(
@@ -1670,6 +1772,17 @@ export default function RegistersTab({
         }
         default:
           break;
+      }
+      // Карти, свързани с уред от топлата точка: статус според „използван днес"
+      const applianceId = REGISTER_APPLIANCE[def.id];
+      if (applianceId && isCurrent) {
+        const usedToday = docs[DAILY_USAGE_ID]?.rows?.[dayNum]?.[applianceId] === "1";
+        if (usedToday) {
+          const today = todayISO();
+          return (d.entries || []).some((e) => e.date === today)
+            ? { label: "Днес: попълнено ✓", tone: "ok" }
+            : { label: `${HOT_APPLIANCE_BY_ID[applianceId]?.emoji || ""} Днес: изисква се!`, tone: "due" };
+        }
       }
       const count =
         (d.entries || []).length ||
@@ -1761,6 +1874,73 @@ export default function RegistersTab({
         </div>
       </div>
 
+      {/* Топла точка: кои уреди са използвани днес */}
+      {hotPoint && !loading && month === currentMonth() && (() => {
+        const dayNum = String(new Date().getDate());
+        const usedToday = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
+        const usedCount = ownedAppliances.filter((a) => usedToday[a.id] === "1").length;
+        const nothingMarked = Object.keys(usedToday).length === 0;
+        const toggleAppliance = (id: string) => {
+          if (readOnly) return;
+          makeUpdater(DAILY_USAGE_ID)((prev) => {
+            const day = { ...((prev.rows || {})[dayNum] || {}) };
+            day[id] = day[id] === "1" ? "0" : "1";
+            return { ...prev, rows: { ...(prev.rows || {}), [dayNum]: day } };
+          });
+        };
+        return (
+          <div
+            className={`rounded-3xl border p-5 space-y-3 bg-white ${
+              nothingMarked && !readOnly ? "border-brand-gold/50 shadow-lg shadow-brand-gold/10" : "border-brand-green/10 shadow-md"
+            }`}
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <Flame className="h-4 w-4 text-brand-gold" />
+                <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
+                  Топла точка — какво използвахте днес?
+                </h3>
+              </div>
+              <span className="text-[10px] font-bold text-brand-dark/45">
+                {usedCount > 0
+                  ? `${usedCount} уред${usedCount === 1 ? "" : "а"} в употреба днес`
+                  : readOnly
+                    ? "Няма отбелязани уреди за днес"
+                    : "Отбележете и системата ще Ви напомни кои карти да попълните"}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {ownedAppliances.map((a) => {
+                const on = usedToday[a.id] === "1";
+                return (
+                  <button
+                    key={a.id}
+                    disabled={readOnly}
+                    onClick={() => toggleAppliance(a.id)}
+                    title={on ? `Използван днес — изискват се: ${a.registers.map((r) => REGISTER_BY_ID[r]?.shortTitle).filter(Boolean).join(", ")}` : "Кликнете, ако уредът е използван днес"}
+                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors cursor-pointer disabled:cursor-default flex items-center gap-1.5 ${
+                      on
+                        ? "bg-brand-gold text-brand-dark border-brand-gold shadow-md shadow-brand-gold/20"
+                        : "bg-white text-brand-dark/55 border-brand-green/15 hover:border-brand-gold"
+                    }`}
+                  >
+                    <span className="text-sm leading-none">{a.emoji}</span>
+                    {a.label}
+                    {on && <Check className="h-3 w-3" />}
+                  </button>
+                );
+              })}
+            </div>
+            {hotAppliances.length === 0 && !readOnly && (
+              <p className="text-[10px] text-brand-dark/40 leading-snug">
+                Съвет: изберете кои уреди реално има в обекта от „Оборудване и персонал“ — списъкът тук и картите ще се
+                съобразят автоматично.
+              </p>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Напомняния */}
       {!readOnly && reminders.length > 0 && (
         <div
@@ -1797,7 +1977,8 @@ export default function RegistersTab({
           </div>
         </div>
       )}
-      {!readOnly && !loading && reminders.length === 0 && month === currentMonth() && (
+      {!readOnly && !loading && reminders.length === 0 && month === currentMonth() &&
+        (!hotPoint || Object.keys(docs[DAILY_USAGE_ID]?.rows?.[String(new Date().getDate())] || {}).length > 0) && (
         <div className="rounded-3xl border border-green-200 bg-green-50/70 p-4 flex items-center gap-3">
           <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
           <p className="text-xs text-green-800 font-bold">
@@ -2026,9 +2207,9 @@ export default function RegistersTab({
         /* ------------------ Списък с карти ------------------ */
         <div className="space-y-6">
           {[
-            { title: "Основни дневници по самоконтрол", defs: activeRegisters.filter((d) => d.num <= 15) },
+            { title: "Основни дневници по самоконтрол", defs: visibleRegisters.filter((d) => d.num <= 15) },
             ...(hotPoint
-              ? [{ title: "Топла точка — контролни и партидни карти", defs: activeRegisters.filter((d) => d.num > 15) }]
+              ? [{ title: "Топла точка — контролни и партидни карти", defs: visibleRegisters.filter((d) => d.num > 15) }]
               : []),
           ].map((group) => (
             <div key={group.title} className="space-y-3">
@@ -2096,6 +2277,7 @@ export default function RegistersTab({
           freezers={freezers}
           employees={employees}
           hotPoint={hotPoint}
+          hotAppliances={hotAppliances}
           onSave={async (patch) => {
             await onSaveEquipment?.(patch);
           }}
