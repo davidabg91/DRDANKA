@@ -42,6 +42,7 @@ import {
   PrintFirmInfo,
   RegisterDocData,
 } from "./registerPrint";
+import RegistersTour, { TourStep } from "./RegistersTour";
 import {
   Bell,
   Check,
@@ -163,6 +164,52 @@ const FREQUENCY_LABELS: Record<string, string> = {
 
 const inputCls =
   "w-full text-xs border border-brand-green/15 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold text-brand-dark disabled:bg-brand-light/60 disabled:text-brand-dark/60";
+
+/** Стъпките на обиколката при първо влизане в дневниците. */
+const TOUR_STEPS: TourStep[] = [
+  {
+    target: "header",
+    emoji: "👋",
+    title: "Добре дошли във Вашите електронни дневници!",
+    text: "Това е цялата Ви папка по самоконтрол — на едно място, винаги попълнена и готова за проверка. Ще Ви разведем за минута какво да въвеждате и какво да следите.",
+  },
+  {
+    target: "equipment",
+    emoji: "⚙️",
+    title: "Стъпка 1: Настройте обекта си",
+    text: "Започнете оттук! Въведете хладилниците, фризерите и служителите си — а ако имате топла точка, отбележете и уредите (скара, фритюрник…). Системата ги използва автоматично във всички дневници.",
+  },
+  {
+    target: "calendar",
+    emoji: "📅",
+    title: "Календарът Ви пази",
+    text: "Всеки ден свети зелено (всичко е попълнено) или червено (има пропуски). Кликнете върху ден, за да видите какво липсва и да го попълните — дори със задна дата.",
+  },
+  {
+    target: "usage",
+    emoji: "🔥",
+    title: "Кажете какво използвахте днес",
+    text: "Отбележете с едно докосване кои уреди от топлата точка са работили днес. Системата сама ще Ви напомни кои контролни карти трябва да попълните за тях.",
+  },
+  {
+    target: "reminders",
+    emoji: "🔔",
+    title: "Напомнянията — Вашият дневен списък",
+    text: "Тук виждате какво чака попълване днес: температури, хигиена, преглед на персонала… Кликнете върху напомняне и отивате направо в съответния дневник.",
+  },
+  {
+    target: "cards",
+    emoji: "📋",
+    title: "Дневниците — по една карта за всеки",
+    text: "Кликнете върху карта, за да я попълните. Има бързи бутони („✓ за днес“, „Час сега“), падащи списъци и автоматичен запис — нищо не се губи. Статусът на всяка карта показва какво е свършено.",
+  },
+  {
+    target: "print",
+    emoji: "🖨️",
+    title: "При проверка: печат с един бутон",
+    text: "БАБХ на вратата? Този бутон отпечатва всички попълнени дневници за месеца в официален вид А4 — с данните на фирмата, легенди и места за подпис. Успех!",
+  },
+];
 
 /* Норми за температурните съоръжения */
 const tempNorm = (type: "fridge" | "freezer") =>
@@ -1429,6 +1476,10 @@ interface RegistersTabProps {
   }) => void | Promise<void>;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
+  /** Потребителят вече е виждал обиколката (пази се в профила) */
+  tourSeen?: boolean;
+  /** Извиква се, когато обиколката приключи/бъде пропусната — за траен запис */
+  onTourDone?: () => void | Promise<void>;
 }
 
 /** Псевдо-регистър за отбелязване кои уреди са използвани през деня. */
@@ -1444,6 +1495,8 @@ export default function RegistersTab({
   hotAppliances = [],
   onSaveEquipment,
   readOnly = false,
+  tourSeen = false,
+  onTourDone,
 }: RegistersTabProps) {
   const [month, setMonth] = useState(currentMonth());
   /** Избраният ден — календарът, напомнянията и бързите действия работят спрямо него. */
@@ -1454,6 +1507,24 @@ export default function RegistersTab({
   const [saveState, setSaveState] = useState<Record<string, "dirty" | "saving" | "saved">>({});
   const [showSettings, setShowSettings] = useState(false);
   const [activeTempUnit, setActiveTempUnit] = useState<string>("");
+  const [showTour, setShowTour] = useState(false);
+
+  // Обиколка при първо влизане: пази се в профила + localStorage (за мигновена защита от повторно показване)
+  const tourStorageKey = `danka_registers_tour_${email.toLowerCase()}`;
+  useEffect(() => {
+    if (loading || readOnly || tourSeen || !email) return;
+    if (typeof window !== "undefined" && localStorage.getItem(tourStorageKey)) return;
+    const t = setTimeout(() => setShowTour(true), 900);
+    return () => clearTimeout(t);
+  }, [loading, readOnly, tourSeen, email, tourStorageKey]);
+
+  const finishTour = useCallback(() => {
+    setShowTour(false);
+    try {
+      localStorage.setItem(tourStorageKey, "1");
+    } catch {}
+    onTourDone?.();
+  }, [tourStorageKey, onTourDone]);
 
   const docsRef = useRef<Record<string, RegisterDocData>>({});
   docsRef.current = docs;
@@ -1878,7 +1949,7 @@ export default function RegistersTab({
   return (
     <div className="space-y-6">
       {/* Заглавна лента */}
-      <div className="bg-white border border-brand-green/10 p-5 rounded-3xl shadow-xl flex flex-wrap gap-4 items-center justify-between">
+      <div data-tour="header" className="bg-white border border-brand-green/10 p-5 rounded-3xl shadow-xl flex flex-wrap gap-4 items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-brand-green/10 text-brand-green rounded-xl border border-brand-green/10">
             <ClipboardList className="h-5 w-5" />
@@ -1904,6 +1975,7 @@ export default function RegistersTab({
           </div>
           {!readOnly && (
             <button
+              data-tour="equipment"
               onClick={() => setShowSettings(true)}
               className="border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer bg-white"
             >
@@ -1912,6 +1984,7 @@ export default function RegistersTab({
             </button>
           )}
           <button
+            data-tour="print"
             onClick={printAll}
             className="bg-brand-gold hover:bg-brand-gold-light hover:scale-[1.02] active:scale-[0.98] text-brand-dark font-black text-xs uppercase px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-brand-gold/10 border-0 duration-150"
           >
@@ -1926,7 +1999,7 @@ export default function RegistersTab({
         const today = todayISO();
         const n = daysInMonth(month);
         return (
-          <div className="bg-white border border-brand-green/10 rounded-3xl p-5 shadow-md space-y-3">
+          <div data-tour="calendar" className="bg-white border border-brand-green/10 rounded-3xl p-5 shadow-md space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
                 <CalendarDays className="h-4 w-4 text-brand-green/70" />
@@ -2011,6 +2084,7 @@ export default function RegistersTab({
         };
         return (
           <div
+            data-tour="usage"
             className={`rounded-3xl border p-5 space-y-3 bg-white ${
               nothingMarked && !readOnly ? "border-brand-gold/50 shadow-lg shadow-brand-gold/10" : "border-brand-green/10 shadow-md"
             }`}
@@ -2065,6 +2139,7 @@ export default function RegistersTab({
       {/* Напомняния */}
       {!readOnly && reminders.length > 0 && (
         <div
+          data-tour="reminders"
           className={`rounded-3xl border p-5 space-y-2.5 ${urgentCount > 0 ? "bg-red-50/70 border-red-200" : "bg-amber-50/70 border-amber-200"}`}
         >
           <div className="flex items-center gap-2">
@@ -2340,7 +2415,7 @@ export default function RegistersTab({
         </div>
       ) : (
         /* ------------------ Списък с карти ------------------ */
-        <div className="space-y-6">
+        <div data-tour="cards" className="space-y-6">
           {[
             { title: "Основни дневници по самоконтрол", defs: visibleRegisters.filter((d) => d.num <= 15) },
             ...(hotPoint
@@ -2405,6 +2480,8 @@ export default function RegistersTab({
           ))}
         </div>
       )}
+
+      {showTour && !readOnly && <RegistersTour steps={TOUR_STEPS} onClose={finishTour} />}
 
       {showSettings && !readOnly && (
         <EquipmentModal

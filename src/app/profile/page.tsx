@@ -133,6 +133,8 @@ export interface DankaUser {
   hasHotPoint?: boolean;
   /** Уредите от топлата точка в обекта (ids от HOT_APPLIANCES) — филтрират картите и дневните напомняния. */
   hotAppliances?: string[];
+  /** Обиколката на дневниците е показана веднъж — не се повтаря. */
+  registersTourSeen?: boolean;
 }
 
 // Mock templates for HACCP/DHP document generator
@@ -3997,6 +3999,8 @@ export default function ProfilePage() {
                   employees={currentUser?.customEmployees ?? []}
                   hotPoint={currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(firmInfo.niche))}
                   hotAppliances={currentUser?.hotAppliances ?? []}
+                  tourSeen={currentUser?.registersTourSeen ?? false}
+                  onTourDone={async () => { await updateUser(currentUserEmail, { registersTourSeen: true }); }}
                   onSaveEquipment={async (patch) => { await updateUser(currentUserEmail, patch); }}
                 />
               )}
