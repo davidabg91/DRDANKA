@@ -125,7 +125,7 @@ export const haccpOsnovi: LiveCourse = {
   groupSize: "8–14 участници",
   nextBatch: "Следваща група: при достигане на 6 записани",
   card: {
-    cover: "/viber_image_2026-05-27_16-15-03-570.jpg",
+    cover: "/cover-haccp-osnovi.webp",
     badge: "Live с д-р Данка",
     accent: "green",
   },

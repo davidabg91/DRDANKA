@@ -73,7 +73,7 @@ export default function About() {
             <div className="relative border border-brand-gold/30 rounded-2xl p-2 bg-white shadow-2xl">
               <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl">
                 <Image
-                  src="/698517272_122192018888592298_1962692581428285218_n.jpg"
+                  src="/danka-portrait.webp"
                   alt="Д-р Данка Николова"
                   fill
                   sizes="(max-w-768px) 100vw, 33vw"

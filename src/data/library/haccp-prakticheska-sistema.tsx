@@ -197,7 +197,7 @@ export const haccpPrakticheskaSistema: LibraryMaterial = {
   category: "training",
   contentUrl: "#", // Add the course link here when available
   card: {
-    cover: "/haccp-prakticheska-sistema.png",
+    cover: "/haccp-prakticheska-sistema.webp",
     badge: "-50% Отстъпка",
     accent: "gold",
   },

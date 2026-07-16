@@ -199,7 +199,7 @@ export const haccpDhppPraktika: LiveCourse = {
   groupSize: "Малки групи",
   nextBatch: "Следваща група: при достигане на нужния брой записани",
   card: {
-    cover: "/viber_image_2026-05-27_16-44-06-389.jpg",
+    cover: "/cover-haccp-dhpp-praktika.webp",
     badge: "Live с д-р Данка",
     accent: "green",
   },

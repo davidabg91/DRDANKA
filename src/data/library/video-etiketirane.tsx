@@ -37,7 +37,7 @@ function VideoEtiketiranePage() {
         <div className="md:col-span-5 relative flex justify-center">
           <div className="relative group overflow-hidden rounded-2xl border-2 border-brand-gold/30 shadow-lg hover:border-brand-gold transition-all duration-300 max-w-sm w-full aspect-[4/3] bg-brand-light">
             <Image
-              src="/viber_image_2026-05-20_23-01-44-208.jpg"
+              src="/video-etiketirane-still.webp"
               alt="Сертификат за обучение по етикетиране на храни"
               fill
               sizes="(max-width: 768px) 100vw, 30vw"
@@ -188,7 +188,7 @@ export const videoEtiketirane: LibraryMaterial = {
   type: "video",
   contentUrl: "https://drive.google.com/drive/folders/1oZ-0OaHEbLF1YTH3Q45MTsOm0xbv0hUd",
   card: {
-    cover: "/viber_image_2026-05-27_15-28-53-163.jpg",
+    cover: "/cover-video-etiketirane.webp",
     badge: "Сертификат",
     accent: "gold",
   },

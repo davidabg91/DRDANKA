@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     ],
     // Reasonable max widths for our covers (catalog + detail).
     deviceSizes: [320, 480, 640, 768, 1024, 1280, 1536],
+    // Static covers never change once deployed — cache the optimized
+    // variants for 31 days instead of re-optimizing on every visit.
+    minimumCacheTTL: 2678400,
   },
 };
 

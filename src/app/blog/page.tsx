@@ -34,7 +34,7 @@ export default function Blog() {
                     src={post.image} 
                     alt={post.title}
                     fill
-                    sizes="(max-w-768px) 100vw, 33vw"
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 </div>

@@ -146,7 +146,7 @@ export const mesoIMesniProdukti: LibraryMaterial = {
   type: "pdf",
   contentUrl: "https://firebasestorage.googleapis.com/v0/b/danka-3e858.firebasestorage.app/o/library%2Fmeso-i-mesni-produkti%2Ffile.pdf?alt=media",
   card: {
-    cover: "/viber_image_2026-05-27_16-02-10-968.jpg",
+    cover: "/cover-meso-produkti.webp",
     badge: "Ново",
     accent: "gold",
   },

@@ -20,7 +20,7 @@ export const BLOG_POSTS: BlogPost[] = [
     summary: "НОВИНА: Представяме ви първата и единствена по рода си система в България, която съчетава специализиран софтуер, професионални обучения и 24/7 човешка експертиза за 100% сигурност пред БАБХ.",
     date: "22 май 2026 г.",
     readTime: "5 мин. четене",
-    image: "/blog_subscription_exclusive.png",
+    image: "/blog_subscription_exclusive.webp",
     tags: ["Ексклузивно", "Новини", "Иновация", "Абонамент"],
     content: (
       <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
@@ -134,7 +134,7 @@ export const BLOG_POSTS: BlogPost[] = [
     summary: "Много бизнеси губят време и пари още преди да започнат. Разберете кои са критичните пропуски при БАБХ проверка и как да ги избегнете.",
     date: "18 май 2026 г.",
     readTime: "4 мин. четене",
-    image: "/blog_registration.png",
+    image: "/blog_registration.webp",
     tags: ["Регистрация", "БАБХ", "Старт на бизнес"],
     content: (
       <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
@@ -217,7 +217,7 @@ export const BLOG_POSTS: BlogPost[] = [
     summary: "Над 90% от производителите и търговците имат пропуски в етикетите си без да подозират. Научете как една липсваща дума може да спре бизнеса Ви.",
     date: "14 май 2026 г.",
     readTime: "5 мин. четене",
-    image: "/blog_labeling.png",
+    image: "/blog_labeling.webp",
     tags: ["Етикетиране", "Санкции", "Нормативна уредба"],
     content: (
       <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
@@ -300,7 +300,7 @@ export const BLOG_POSTS: BlogPost[] = [
     summary: "Повечето проблеми в производството започват от място, което не гледате — суровината. Научете защо влагата, температурите и записите са ключови.",
     date: "10 май 2026 г.",
     readTime: "4 мин. четене",
-    image: "/blog_raw_materials.png",
+    image: "/blog_raw_materials.webp",
     tags: ["Производство", "Суровини", "Качество"],
     content: (
       <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
@@ -377,7 +377,7 @@ export const BLOG_POSTS: BlogPost[] = [
     summary: "Страхувате ли се от Е-номерата? Научете кои добавки са всъщност напълно естествени витамини и какви са законите за тяхното деклариране.",
     date: "05 май 2026 г.",
     readTime: "3 мин. четене",
-    image: "/blog_additives.png",
+    image: "/blog_additives.webp",
     tags: ["Хранителни добавки", "Е-номера", "Потребители"],
     content: (
       <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
@@ -460,7 +460,7 @@ export const BLOG_POSTS: BlogPost[] = [
     summary: "HACCP и ДПХП не са просто купчина хартия за пред БАБХ инспектора. Научете как да обучите персонала си и да превърнете системата в реална защита.",
     date: "01 май 2026 г.",
     readTime: "4 мин. четене",
-    image: "/blog_staff_training.png",
+    image: "/blog_staff_training.webp",
     tags: ["Документи", "Обучение на персонал", "HACCP"],
     content: (
       <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
@@ -522,7 +522,7 @@ export const BLOG_POSTS: BlogPost[] = [
     summary: "Как правилно да маркирате алергените в менюто на каравана, камион за храна или друг преместваем обект. Специфични изисквания и съвети за съвместимост с БАБХ.",
     date: "21 май 2026 г.",
     readTime: "4 мин. четене",
-    image: "/food_truck_cover.png",
+    image: "/food_truck_cover.webp",
     tags: ["Алергени", "Подвижен обект", "БАБХ изисквания", "Каравана"],
     content: (
       <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
@@ -535,7 +535,7 @@ export const BLOG_POSTS: BlogPost[] = [
 
         <div className="my-8">
           <img 
-            src="/alergeni.jpg" 
+            src="/alergeni.webp" 
             alt="Списък и маркиране на алергени в менюто на каравана" 
             className="w-full max-w-2xl mx-auto rounded-2xl shadow-lg border border-brand-gold/30"
           />
