@@ -14,6 +14,8 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   STORE_REGISTERS,
+  REGISTER_BY_ID,
+  registersFor,
   RegisterDef,
   RegisterColumn,
   CHECK_CYCLE,
@@ -25,6 +27,7 @@ import {
   SAFETY_CULTURE_CHECKLIST,
   SURVEY_SCALE_LABELS,
   CLEANING_SCOPE,
+  SAMPLE_ALLERGEN_MENU,
   SurveyGroup,
 } from "@/data/storeRegisters";
 import {
@@ -58,6 +61,12 @@ import {
   GraduationCap,
   Sparkles,
   X,
+  Flame,
+  Utensils,
+  Droplets,
+  Soup,
+  ChefHat,
+  Star,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -110,6 +119,29 @@ const REGISTER_ICONS: Record<string, any> = {
   training: GraduationCap,
   "safety-survey": FileText,
   "safety-checklist": ClipboardList,
+  // Топла точка
+  "fryer-oil-temp": Flame,
+  "fryer-oil-destroy": Droplets,
+  "grill-temp": Flame,
+  "fry-depth": Flame,
+  duner: Flame,
+  baking: ChefHat,
+  "cooked-meals": Utensils,
+  alaminut: Utensils,
+  desserts: Star,
+  "hot-display": Thermometer,
+  "grill-batch": Utensils,
+  "flour-sift": ChefHat,
+  "soups-production": Soup,
+  "soups-cooling": Soup,
+  "princess-batch": ChefHat,
+  "sauces-batch": Droplets,
+  "meals-batch": Utensils,
+  "starters-batch": Utensils,
+  "prework-check": ClipboardList,
+  "disinfectant-residue": Droplets,
+  "supplier-eval": Star,
+  "allergen-menu": FileText,
 };
 
 const FREQUENCY_LABELS: Record<string, string> = {
@@ -121,6 +153,7 @@ const FREQUENCY_LABELS: Record<string, string> = {
   delivery: "При доставка",
   event: "При събитие",
   permanent: "Постоянен списък",
+  "3days": "На 3 дни",
 };
 
 const inputCls =
@@ -217,13 +250,23 @@ function CellInput({
     );
   }
   const typeAttr = col.type === "date" ? "date" : col.type === "time" ? "time" : "text";
+  // Валидация по норма за температурни клетки (напр. ≥75°C, ≤170°C, 0–4°C)
+  let outOfNorm = false;
+  if (col.type === "temp" && col.norm && String(value).trim() !== "") {
+    const n = parseFloat(String(value).replace(",", "."));
+    if (!isNaN(n)) {
+      if (col.norm.min !== undefined && n < col.norm.min) outOfNorm = true;
+      if (col.norm.max !== undefined && n > col.norm.max) outOfNorm = true;
+    }
+  }
   return (
     <input
       type={typeAttr}
-      className={`${inputCls} ${col.narrow ? "min-w-[76px]" : "min-w-[110px]"}`}
+      className={`${inputCls} ${col.narrow ? "min-w-[76px]" : "min-w-[110px]"} ${outOfNorm ? "!border-red-400 !bg-red-50 text-red-700 font-bold" : ""}`}
       value={value}
       placeholder={col.type === "temp" ? "°C" : col.placeholder || ""}
       disabled={readOnly}
+      title={outOfNorm ? "Стойността е извън нормата! Впишете корективни действия." : undefined}
       onChange={(e) => onChange(e.target.value)}
     />
   );
@@ -319,6 +362,20 @@ function RowsEditor({
               title="Добавя ред за всеки служител с отметки „всичко наред“ — коригирайте само отклоненията"
             >
               <Sparkles className="h-3.5 w-3.5" /> Всички служители днес — наред
+            </button>
+          )}
+          {def.id === "allergen-menu" && entries.length === 0 && (
+            <button
+              onClick={() =>
+                onUpdate((prev) => ({
+                  ...prev,
+                  entries: [...(prev.entries || []), ...SAMPLE_ALLERGEN_MENU.map((r) => ({ ...r }))],
+                }))
+              }
+              className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors"
+              title="Зарежда 31-те примерни продукта от документа — после ги коригирайте според Вашето меню"
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Зареди примерно меню (31 продукта)
             </button>
           )}
         </div>
@@ -1090,18 +1147,21 @@ function EquipmentModal({
   fridges,
   freezers,
   employees,
+  hotPoint,
   onSave,
   onClose,
 }: {
   fridges: string[];
   freezers: string[];
   employees: Employee[];
-  onSave: (patch: { customFridges: string[]; customFreezers: string[]; customEmployees: Employee[] }) => void | Promise<void>;
+  hotPoint: boolean;
+  onSave: (patch: { customFridges: string[]; customFreezers: string[]; customEmployees: Employee[]; hasHotPoint: boolean }) => void | Promise<void>;
   onClose: () => void;
 }) {
   const [localFridges, setLocalFridges] = useState<string[]>(fridges);
   const [localFreezers, setLocalFreezers] = useState<string[]>(freezers);
   const [localEmployees, setLocalEmployees] = useState<Employee[]>(employees);
+  const [localHotPoint, setLocalHotPoint] = useState<boolean>(hotPoint);
   const [newFridge, setNewFridge] = useState("");
   const [newFreezer, setNewFreezer] = useState("");
   const [newEmpName, setNewEmpName] = useState("");
@@ -1115,6 +1175,7 @@ function EquipmentModal({
         customFridges: localFridges,
         customFreezers: localFreezers,
         customEmployees: localEmployees,
+        hasHotPoint: localHotPoint,
       });
       onClose();
     } finally {
@@ -1144,6 +1205,31 @@ function EquipmentModal({
           Тези списъци се използват автоматично във всички дневници — температурни чек-листове, контролна карта за
           персонала, здравни книжки, обучения и работно облекло.
         </p>
+
+        {/* Топла точка */}
+        <button
+          type="button"
+          onClick={() => setLocalHotPoint(!localHotPoint)}
+          className={`w-full flex items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition-colors cursor-pointer ${
+            localHotPoint ? "bg-brand-gold/10 border-brand-gold/40" : "bg-brand-light/40 border-brand-green/10 hover:border-brand-gold/30"
+          }`}
+        >
+          <span
+            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 font-black text-sm ${
+              localHotPoint ? "bg-brand-gold border-brand-gold text-brand-dark" : "border-brand-green/25 text-transparent"
+            }`}
+          >
+            ✓
+          </span>
+          <Flame className={`h-5 w-5 shrink-0 ${localHotPoint ? "text-brand-gold" : "text-brand-dark/30"}`} />
+          <span className="flex-1">
+            <span className="block text-xs font-black uppercase tracking-wide text-brand-green">Обектът има топла точка</span>
+            <span className="block text-[10px] text-brand-dark/50 leading-snug mt-0.5">
+              Скара, фритюрник, дюнер, печене, готвене, топла витрина… Включва допълнителните контролни и партидни карти
+              (термична обработка, мазнина, супи, алергени и др.).
+            </span>
+          </span>
+        </button>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div className="space-y-2">
@@ -1251,11 +1337,14 @@ interface RegistersTabProps {
   fridges: string[];
   freezers: string[];
   employees: Employee[];
+  /** Обектът има топла точка (скара, фритюрник, дюнер, печене…) — добавя контролните карти за топла точка */
+  hotPoint?: boolean;
   /** Записва оборудване/персонал в профила на потребителя */
   onSaveEquipment?: (patch: {
     customFridges?: string[];
     customFreezers?: string[];
     customEmployees?: Employee[];
+    hasHotPoint?: boolean;
   }) => void | Promise<void>;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
@@ -1267,6 +1356,7 @@ export default function RegistersTab({
   fridges,
   freezers,
   employees,
+  hotPoint = false,
   onSaveEquipment,
   readOnly = false,
 }: RegistersTabProps) {
@@ -1281,6 +1371,8 @@ export default function RegistersTab({
   const docsRef = useRef<Record<string, RegisterDocData>>({});
   docsRef.current = docs;
   const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const activeRegisters = useMemo(() => registersFor(hotPoint), [hotPoint]);
 
   const units = useMemo(
     () => [
@@ -1304,7 +1396,7 @@ export default function RegistersTab({
     (async () => {
       const results: Record<string, RegisterDocData> = {};
       await Promise.all(
-        STORE_REGISTERS.map(async (def) => {
+        activeRegisters.map(async (def) => {
           try {
             const key = registerDocKey(email, def.id, periodFor(def, month));
             const snap = await getDoc(doc(db, "logs", key));
@@ -1324,12 +1416,12 @@ export default function RegistersTab({
     return () => {
       cancelled = true;
     };
-  }, [email, month]);
+  }, [email, month, activeRegisters]);
 
   /* ------------------ Запис (автоматичен, с дебаунс) ------------------ */
   const persistRegister = useCallback(
     async (registerId: string) => {
-      const def = STORE_REGISTERS.find((r) => r.id === registerId);
+      const def = REGISTER_BY_ID[registerId];
       if (!def) return;
       setSaveState((s) => ({ ...s, [registerId]: "saving" }));
       try {
@@ -1479,8 +1571,51 @@ export default function RegistersTab({
       });
     }
 
+    // ─── Топла точка ───
+    if (hotPoint) {
+      // Чек-лист преди работа — ежедневно
+      const preworkToday = (docs["prework-check"]?.entries || []).some((e) => e.date === today);
+      if (!preworkToday) {
+        list.push({
+          level: "urgent",
+          registerId: "prework-check",
+          text: "Чек-листът „Хигиена и техническо състояние“ не е попълнен днес (попълва се преди започване на работа).",
+        });
+      }
+
+      // Карти на 3 дни: смяна на мазнина и остатъчни дезинфектанти
+      const lastEntryDate = (id: string) => {
+        const dates = (docs[id]?.entries || []).map((e) => String(e.date || "")).filter(Boolean).sort();
+        return dates.length ? dates[dates.length - 1] : "";
+      };
+      const daysAgo = (iso: string) => {
+        if (!iso) return Infinity;
+        return Math.floor((Date.now() - new Date(iso + "T00:00:00").getTime()) / 86400000);
+      };
+      const oilDays = daysAgo(lastEntryDate("fryer-oil-destroy"));
+      if (oilDays >= 3) {
+        list.push({
+          level: "warn",
+          registerId: "fryer-oil-destroy",
+          text: oilDays === Infinity
+            ? "Няма запис за унищожаване на използвана мазнина този месец (попълва се на всеки 3 дни)."
+            : `Последната смяна на пържилната мазнина е преди ${oilDays} дни — попълва се на всеки 3 дни.`,
+        });
+      }
+      const resDays = daysAgo(lastEntryDate("disinfectant-residue"));
+      if (resDays >= 3) {
+        list.push({
+          level: "warn",
+          registerId: "disinfectant-residue",
+          text: resDays === Infinity
+            ? "Няма тест за остатъчни дезинфектанти този месец (извършва се на всеки 3 дни с тест ленти)."
+            : `Последният тест за остатъчни дезинфектанти е преди ${resDays} дни — извършва се на всеки 3 дни.`,
+        });
+      }
+    }
+
     return list;
-  }, [docs, loading, month, units, employees]);
+  }, [docs, loading, month, units, employees, hotPoint]);
 
   /* ------------------ Статус на регистър за картите ------------------ */
   const registerStatus = useCallback(
@@ -1526,6 +1661,13 @@ export default function RegistersTab({
           return (d.entries || []).length > 0
             ? { label: "Този месец: ✓", tone: "ok" }
             : { label: "Този месец: предстои", tone: "due" };
+        case "prework-check": {
+          if (!isCurrent) break;
+          const today = todayISO();
+          return (d.entries || []).some((e) => e.date === today)
+            ? { label: "Днес: попълнено ✓", tone: "ok" }
+            : { label: "Днес: непопълнено", tone: "due" };
+        }
         default:
           break;
       }
@@ -1559,7 +1701,7 @@ export default function RegistersTab({
   };
 
   const printAll = () => {
-    const sections = STORE_REGISTERS.filter((def) => hasData(def)).map((def) =>
+    const sections = activeRegisters.filter((def) => hasData(def)).map((def) =>
       buildRegisterSection(def, docs[def.id] || {}, firm, month)
     );
     if (sections.length === 0) {
@@ -1570,7 +1712,7 @@ export default function RegistersTab({
   };
 
   /* ------------------ Изглед ------------------ */
-  const openDef = openId ? STORE_REGISTERS.find((r) => r.id === openId) : null;
+  const openDef = openId ? activeRegisters.find((r) => r.id === openId) : null;
   const urgentCount = reminders.filter((r) => r.level === "urgent").length;
 
   return (
@@ -1882,47 +2024,69 @@ export default function RegistersTab({
         </div>
       ) : (
         /* ------------------ Списък с карти ------------------ */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {STORE_REGISTERS.map((def) => {
-            const Icon = REGISTER_ICONS[def.id] || FileText;
-            const status = registerStatus(def);
-            return (
-              <button
-                key={def.id}
-                onClick={() => setOpenId(def.id)}
-                className="text-left bg-white border border-brand-green/10 rounded-3xl p-5 shadow-md hover:shadow-xl hover:border-brand-gold/40 transition-all cursor-pointer group flex flex-col gap-3"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="p-2.5 bg-brand-green/10 text-brand-green rounded-2xl border border-brand-green/10 group-hover:scale-105 transition-transform">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <span className="text-[8px] font-black uppercase tracking-wider bg-brand-light text-brand-dark/50 px-2 py-1 rounded-full">
-                    {FREQUENCY_LABELS[def.frequency]}
-                  </span>
+        <div className="space-y-6">
+          {[
+            { title: "Основни дневници по самоконтрол", defs: activeRegisters.filter((d) => d.num <= 15) },
+            ...(hotPoint
+              ? [{ title: "Топла точка — контролни и партидни карти", defs: activeRegisters.filter((d) => d.num > 15) }]
+              : []),
+          ].map((group) => (
+            <div key={group.title} className="space-y-3">
+              {hotPoint && (
+                <div className="flex items-center gap-2.5 px-1">
+                  {group.title.startsWith("Топла") ? (
+                    <Flame className="h-4 w-4 text-brand-gold" />
+                  ) : (
+                    <ClipboardList className="h-4 w-4 text-brand-green/60" />
+                  )}
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.15em] text-brand-dark/60">{group.title}</h3>
+                  <div className="flex-1 h-px bg-brand-green/10" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-serif text-sm font-bold text-brand-green leading-snug">
-                    {def.num}. {def.shortTitle}
-                  </h3>
-                  <p className="text-[10px] text-brand-dark/45 leading-snug mt-1 line-clamp-2">{def.fillWhen}</p>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full ${
-                      status.tone === "ok"
-                        ? "bg-green-100 text-green-700"
-                        : status.tone === "due"
-                          ? "bg-red-100 text-red-600"
-                          : "bg-brand-light text-brand-dark/45"
-                    }`}
-                  >
-                    {status.label}
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-brand-dark/25 group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all" />
-                </div>
-              </button>
-            );
-          })}
+              )}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {group.defs.map((def) => {
+                  const Icon = REGISTER_ICONS[def.id] || FileText;
+                  const status = registerStatus(def);
+                  return (
+                    <button
+                      key={def.id}
+                      onClick={() => setOpenId(def.id)}
+                      className="text-left bg-white border border-brand-green/10 rounded-3xl p-5 shadow-md hover:shadow-xl hover:border-brand-gold/40 transition-all cursor-pointer group flex flex-col gap-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="p-2.5 bg-brand-green/10 text-brand-green rounded-2xl border border-brand-green/10 group-hover:scale-105 transition-transform">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <span className="text-[8px] font-black uppercase tracking-wider bg-brand-light text-brand-dark/50 px-2 py-1 rounded-full">
+                          {FREQUENCY_LABELS[def.frequency]}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-serif text-sm font-bold text-brand-green leading-snug">
+                          {def.num}. {def.shortTitle}
+                        </h3>
+                        <p className="text-[10px] text-brand-dark/45 leading-snug mt-1 line-clamp-2">{def.fillWhen}</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full ${
+                            status.tone === "ok"
+                              ? "bg-green-100 text-green-700"
+                              : status.tone === "due"
+                                ? "bg-red-100 text-red-600"
+                                : "bg-brand-light text-brand-dark/45"
+                          }`}
+                        >
+                          {status.label}
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-brand-dark/25 group-hover:text-brand-gold group-hover:translate-x-0.5 transition-all" />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -1931,6 +2095,7 @@ export default function RegistersTab({
           fridges={fridges}
           freezers={freezers}
           employees={employees}
+          hotPoint={hotPoint}
           onSave={async (patch) => {
             await onSaveEquipment?.(patch);
           }}

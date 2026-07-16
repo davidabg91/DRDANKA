@@ -34,7 +34,7 @@ export type RegisterKind =
   | "checklist3"; // чек-лист със скала 1–3 по служител
 
 export type RegisterFrequency =
-  | "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "delivery" | "event" | "permanent";
+  | "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "delivery" | "event" | "permanent" | "3days";
 
 export interface InfoPanel {
   title: string;
@@ -630,9 +630,563 @@ export const STORE_REGISTERS: RegisterDef[] = [
   },
 ];
 
+/* ================================================================== */
+/*  ТОПЛА ТОЧКА — допълнителни контролни карти                         */
+/*  (по документа „МАГАЗИН СЪС ТОПЛА ТОЧКА")                           */
+/* ================================================================== */
+
+export const GRILL_ITEMS = [
+  "Свинска пържола котлет",
+  "Свинска вратна пържола",
+  "Свинско шишче",
+  "Свински ребърца",
+  "Кюфте",
+  "Кебапче",
+  "Кърначе",
+  "Наденица",
+  "Пилешка пържола филе",
+  "Пилешка пържола бутче",
+  "Пилешко шишче",
+  "Зеленчуци на скара",
+];
+
+export const SOUP_TYPES = [
+  "Телешко варено",
+  "Пилешка супа",
+  "Супа топчета",
+  "Агнешка супа",
+  "Шкембе чорба",
+  "Зеленчукова супа",
+  "Рибена чорба",
+  "Боб чорба",
+  "Таратор",
+];
+
+export const SOUP_ALLERGENS_INFO = [
+  "Пилешка супа — яйца (при застройка), целина, мляко (при масло/сметана)",
+  "Телешка супа — целина, мляко, яйца (при застройка)",
+  "Крем-супа (месна) — мляко, глутен (при брашно), целина",
+  "Шкембе чорба — мляко, глутен (при брашно)",
+  "Агнешка супа — целина, яйца (при застройка), мляко",
+  "Рибена супа — риба, целина",
+  "Супа топчета — глутен (хляб/галета), яйца, целина",
+  "Крем-супа (картофена, зеленчукова) — мляко, глутен, целина",
+  "Таратор — мляко, ядки",
+  "Супа леща — целина",
+  "Боб чорба — целина",
+  "Алергените се определят според действително използваната рецептура в обекта.",
+];
+
+export const PREWORK_ZONES = [
+  "Под",
+  "Стени",
+  "Таван",
+  "Врати",
+  "Осветителни тела",
+  "Закачалка за работно облекло",
+  "Мивка",
+  "Работен плот",
+  "Топлинни уреди (скара, фритюрник, партигрил, принцесник, дюнер, хот-дог)",
+  "Кафе машина / машина за наливна бира",
+  "Фризер",
+  "Хладилни съоръжения",
+  "Бен мари",
+  "Студена витрина",
+  "Демонстрационна витрина безалкохолни",
+  "Хладилна витрина малотрайни сладкарски изделия",
+  "Рафтови стелажи",
+  "Плот продажби",
+  "Инвентар",
+];
+
+export const RESIDUE_SURFACES = [
+  "Работен плот",
+  "Бен мари",
+  "Студена витрина — тавички",
+  "Щипки за скара",
+  "Плот обработка на салати",
+  "Инвентар",
+  "Друго",
+];
+
+export const ALLERGEN_LIST = [
+  "1. Зърнени култури, съдържащи глутен",
+  "2. Ракообразни",
+  "3. Яйца",
+  "4. Риба",
+  "5. Фъстъци",
+  "6. Соя",
+  "7. Мляко",
+  "8. Ядки",
+  "9. Целина",
+  "10. Синап",
+  "11. Сусам",
+  "12. Серен диоксид и сулфити",
+  "13. Лупина",
+  "14. Мекотели",
+];
+
+/** Примерно меню с алергени от документа — зарежда се с един бутон. */
+export const SAMPLE_ALLERGEN_MENU: Record<string, string>[] = [
+  { product: "Кебапче", ingredients: "месо, подправки", allergens: "няма", expiry: "", batch: "" },
+  { product: "Кюфте", ingredients: "кайма, лук, подправки", allergens: "няма / 1 (глутен)*", expiry: "", batch: "" },
+  { product: "Шишче", ingredients: "месо, подправки", allergens: "няма", expiry: "", batch: "" },
+  { product: "Пилешки шницел / хапки", ingredients: "пилешко месо, панировка", allergens: "1, 3", expiry: "", batch: "" },
+  { product: "Хапки топено сирене", ingredients: "топено сирене, панировка", allergens: "1, 3, 7", expiry: "", batch: "" },
+  { product: "Пържени картофи", ingredients: "картофи, мазнина", allergens: "няма", expiry: "", batch: "" },
+  { product: "Дюнер", ingredients: "месо, питка, зеленчуци, сос", allergens: "1, 3, 7, 10", expiry: "", batch: "" },
+  { product: "Хамбургер", ingredients: "хлебче, месо, зеленчуци, сосове", allergens: "1, 3, 7, 10, 11", expiry: "", batch: "" },
+  { product: "Хот дог", ingredients: "хлебче, наденица, сосове", allergens: "1, 10", expiry: "", batch: "" },
+  { product: "Принцеса с кайма", ingredients: "хляб, кайма", allergens: "1", expiry: "", batch: "" },
+  { product: "Принцеса кайма и кашкавал", ingredients: "хляб, кайма, кашкавал", allergens: "1, 7", expiry: "", batch: "" },
+  { product: "Принцеса шунка и кашкавал", ingredients: "хляб, шунка, кашкавал", allergens: "1, 7", expiry: "", batch: "" },
+  { product: "Принцеса кашкавал", ingredients: "хляб, кашкавал", allergens: "1, 7", expiry: "", batch: "" },
+  { product: "Принцеса луканка и кашкавал", ingredients: "хляб, луканка, кашкавал", allergens: "1, 7", expiry: "", batch: "" },
+  { product: "Арабска питка / лаваш", ingredients: "брашно, вода", allergens: "1", expiry: "", batch: "" },
+  { product: "Хлебче със сусам", ingredients: "брашно, сусам", allergens: "1, 11", expiry: "по доставка", batch: "по доставка" },
+  { product: "Зеленчуци (домати, краставици, зеле, лук)", ingredients: "пресни зеленчуци", allergens: "няма", expiry: "1–3 дни", batch: "-" },
+  { product: "Чеснов сос", ingredients: "млечна основа, майонеза, чесън", allergens: "3, 7, 10", expiry: "по етикет / 15 дни след отваряне", batch: "" },
+  { product: "Сладко-кисел сос", ingredients: "млечна основа, майонеза, захар", allergens: "3, 7, 10", expiry: "по етикет / 15 дни", batch: "" },
+  { product: "Лют сос", ingredients: "доматен сос, подправки", allergens: "10", expiry: "по етикет", batch: "" },
+  { product: "Самурай сос", ingredients: "майонеза, подправки", allergens: "3, 10", expiry: "по етикет", batch: "" },
+  { product: "Кетчуп", ingredients: "домати, захар", allergens: "няма", expiry: "по етикет", batch: "" },
+  { product: "Майонеза", ingredients: "яйца, олио", allergens: "3, 10", expiry: "по етикет", batch: "" },
+  { product: "Горчица", ingredients: "синапено семе", allergens: "10", expiry: "по етикет", batch: "" },
+  { product: "Кашкавал", ingredients: "мляко", allergens: "7", expiry: "по доставка", batch: "" },
+  { product: "Шунка", ingredients: "месо", allergens: "6**", expiry: "по доставка", batch: "" },
+  { product: "Яйце", ingredients: "яйце", allergens: "3", expiry: "по доставка", batch: "" },
+  { product: "Айрян", ingredients: "мляко", allergens: "7", expiry: "по етикет", batch: "" },
+  { product: "Бира", ingredients: "ечемик", allergens: "1", expiry: "по етикет", batch: "" },
+  { product: "Безалкохолни / сокове", ingredients: "вода, захар", allergens: "няма", expiry: "по етикет", batch: "" },
+  { product: "Кафе / топли напитки", ingredients: "кафе, вода", allergens: "7", expiry: "-", batch: "" },
+];
+
+/** Общи колони „Корективни действия / Резултат / Подпис" */
+const CRS_COLS: RegisterColumn[] = [
+  { key: "actions", label: "Корективни действия", type: "text" },
+  { key: "result", label: "Резултат след корективни действия", type: "select", options: ["Норма", "Несъответствие", "Отстранено"], narrow: true },
+  { key: "sign", label: "Подпис на отговорника", type: "text", narrow: true },
+];
+
+export const HOT_POINT_REGISTERS: RegisterDef[] = [
+  {
+    id: "fryer-oil-temp",
+    num: 16,
+    title: "Контролна карта — термична обработка: температура на пържилната мазнина",
+    shortTitle: "Пържилна мазнина",
+    fillWhen: "Води се при всяко пържене. Норма: температура на мазнината ≤ 170°C.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта, партида", type: "text" },
+      { key: "temp", label: "Температура на мазнината (≤170°C)", type: "temp", norm: { max: 170 }, narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "fryer-oil-destroy",
+    num: 17,
+    title: "Контролна карта — унищожаване на използвана мазнина",
+    shortTitle: "Смяна на мазнина",
+    fillWhen: "Попълва се един път на три дни — при всяка смяна и предаване на използваната пържилна мазнина.",
+    frequency: "3days",
+    period: "month",
+    kind: "rows",
+    remind: true,
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "fryer", label: "№ на фритюрника", type: "text", narrow: true },
+      { key: "qty", label: "Количество и вид на мазнината", type: "text" },
+      { key: "destination", label: "Направление", type: "text" },
+      { key: "protocol", label: "Номер на протокол", type: "text", narrow: true },
+      { key: "sign", label: "Подпис", type: "text", narrow: true },
+    ],
+  },
+  {
+    id: "grill-temp",
+    num: 18,
+    title: "Контролна карта — термична обработка на скара / температура в дълбочина",
+    shortTitle: "Скара",
+    fillWhen: "Попълва се при всяко приготвяне на скара. Норма: температура в дълбочина ≥ 75°C.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта, партида", type: "text" },
+      { key: "temp", label: "Температура в дълбочина (≥75°C)", type: "temp", norm: { min: 75 }, narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "fry-depth",
+    num: 19,
+    title: "Контролна карта — термична обработка пържене / паниране",
+    shortTitle: "Пържене / паниране",
+    fillWhen: "Попълва се при всяко пържене / паниране. Норма: температура в дълбочина ≥ 75°C.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта", type: "text" },
+      { key: "temp", label: "Температура в дълбочина (≥75°C)", type: "temp", norm: { min: 75 }, narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "duner",
+    num: 20,
+    title: "Контролна карта — изпичане на дюнер",
+    shortTitle: "Дюнер",
+    fillWhen: "Отчита се и се попълва ежедневно при всяко печене. Норма: ≥ 75°C в дълбочина; време за печене 2–6 часа.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта", type: "text" },
+      { key: "temp", label: "Температура в дълбочина (≥75°C)", type: "temp", norm: { min: 75 }, narrow: true },
+      { key: "time", label: "Време за печене (2–6 часа)", type: "text", narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "baking",
+    num: 21,
+    title: "Контролна карта — изпичане на тестени изделия (закуски, козунаци, питки, пърленки)",
+    shortTitle: "Изпичане",
+    fillWhen: "Попълва се при всяко изпичане. Норма: температура на печене 200–220°C (до 250°C за закуски); време за печене 10–30 мин.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта", type: "text" },
+      { key: "temp", label: "Температура на печене (200–250°C)", type: "temp", norm: { min: 200, max: 250 }, narrow: true },
+      { key: "time", label: "Време за печене (10–30 мин)", type: "text", narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "cooked-meals",
+    num: 22,
+    title: "Контролна карта — готвени ястия",
+    shortTitle: "Готвени ястия",
+    fillWhen: "Попълва се при всяко готвене. Норма: температура на готвене 200–220°C; време 30–90 мин; температура в дълбочина ≥ 75°C.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта", type: "text" },
+      { key: "tempCook", label: "Температура на готвене (200–220°C)", type: "temp", narrow: true },
+      { key: "time", label: "Време за готвене (30–90 мин)", type: "text", narrow: true },
+      { key: "tempCore", label: "Температура в дълбочина (≥75°C)", type: "temp", norm: { min: 75 }, narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "alaminut",
+    num: 23,
+    title: "Контролна карта — термична обработка аламинути",
+    shortTitle: "Аламинути",
+    fillWhen: "Попълва се при всяко приготвяне на аламинути. Норма: температура в дълбочина ≥ 75°C.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта", type: "text" },
+      { key: "temp", label: "Температура в дълбочина (≥75°C)", type: "temp", norm: { min: 75 }, narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "desserts",
+    num: 24,
+    title: "Контролна карта — десерти",
+    shortTitle: "Десерти",
+    fillWhen: "Попълва се при всяко приготвяне на десерти. Норма: варене 200–220°C; време 30–90 мин; температура в дълбочина ≥ 75°C.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта", type: "text" },
+      { key: "tempCook", label: "Температура на варене (200–220°C)", type: "temp", narrow: true },
+      { key: "time", label: "Време за варене (30–90 мин)", type: "text", narrow: true },
+      { key: "tempCore", label: "Температура в дълбочина (≥75°C)", type: "temp", norm: { min: 75 }, narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "hot-display",
+    num: 25,
+    title: "Контролна карта — съхранение в топла витрина",
+    shortTitle: "Топла витрина",
+    fillWhen:
+      "Попълва се при всяко зареждане на топлата витрина. Норма: температура на съхранение ≥ 63°C; престой до 3 часа от поставянето.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Вид на продукта", type: "text" },
+      { key: "timeIn", label: "Час на поставяне", type: "time", narrow: true },
+      { key: "temp", label: "Температура на съхранение (≥63°C)", type: "temp", norm: { min: 63 }, narrow: true },
+      { key: "timeOut", label: "Час на отстраняване (до 3 часа)", type: "time", narrow: true },
+      { key: "actions", label: "Корективни действия", type: "text" },
+      { key: "sign", label: "Подпис на отговорника", type: "text", narrow: true },
+    ],
+  },
+  {
+    id: "grill-batch",
+    num: 26,
+    title: "Ястия на скара — срок на годност и партида",
+    shortTitle: "Скара — партиди",
+    fillWhen: "Попълва се ежедневно при зареждане — за всяко изделие се вписват срок на годност и партиден номер.",
+    frequency: "daily",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "item", label: "Вид на изделието", type: "select", options: GRILL_ITEMS },
+      { key: "expiry", label: "Срок на годност", type: "date", narrow: true },
+      { key: "batch", label: "Партиден номер", type: "text", narrow: true },
+    ],
+  },
+  {
+    id: "flour-sift",
+    num: 27,
+    title: "Контролна карта — пресяване на брашно (ККТ1Ф)",
+    shortTitle: "Пресяване брашно",
+    fillWhen:
+      "Попълва се при всяко пресяване на брашно. Проверява се здравината на ситото (здраво / с нарушена повърхност над 1%).",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на пресяване", type: "date", narrow: true },
+      { key: "time", label: "Час на пресяване", type: "time", narrow: true },
+      { key: "sieve", label: "Здравина на ситото", type: "select", options: ["Здраво", "С нарушена повърхност над 1%"] },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "soups-production",
+    num: 28,
+    title: "Производствен дневник — супи",
+    shortTitle: "Супи — производство",
+    fillWhen:
+      "Попълва се при всяко производство на супи — вписват се използваните суровини с партидите им и произведените количества.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "soup", label: "Вид на супата", type: "select", options: SOUP_TYPES },
+      { key: "ingredients", label: "Суровини и партиди (L)", type: "text" },
+      { key: "qty", label: "Количество", type: "text", narrow: true },
+      { key: "batch", label: "№ на партидата", type: "text", narrow: true },
+      { key: "expiry", label: "Срок на годност", type: "date", narrow: true },
+      { key: "sign", label: "Подпис", type: "text", narrow: true },
+    ],
+    infoPanels: [{ title: "Таблица на алергените за супи и чорби", items: SOUP_ALLERGENS_INFO }],
+  },
+  {
+    id: "soups-cooling",
+    num: 29,
+    title: "Контролна карта — охлаждане на супи",
+    shortTitle: "Супи — охлаждане",
+    fillWhen:
+      "Попълва се при всяко охлаждане. Норма: хладилното съоръжение 0–4°C; температура в дълбочина 0–4°C до 90 минути от зареждането.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "fridgeTime", label: "Час (хлад. съоръжение)", type: "time", narrow: true },
+      { key: "fridgeTemp", label: "Темп. на съоръжението (0–4°C)", type: "temp", norm: { min: 0, max: 4 }, narrow: true },
+      { key: "soup", label: "Вид на супата", type: "select", options: SOUP_TYPES },
+      { key: "timeIn", label: "Час на зареждане", type: "time", narrow: true },
+      { key: "tempCore", label: "Темп. в дълбочина 0–4°C до 90 мин", type: "temp", norm: { min: 0, max: 4 }, narrow: true },
+      { key: "timeOut", label: "Час на експедиция", type: "time", narrow: true },
+      { key: "sign", label: "Подпис", type: "text", narrow: true },
+    ],
+  },
+  {
+    id: "princess-batch",
+    num: 30,
+    title: "Партидна карта — принцеси",
+    shortTitle: "Принцеси",
+    fillWhen: "Попълва се при всяко приготвяне на принцеси.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на производство", type: "date", narrow: true },
+      { key: "ingredient", label: "Суровина", type: "text" },
+      { key: "qty", label: "Количество", type: "text", narrow: true },
+      { key: "batchIn", label: "№ на партидата на суровината", type: "text", narrow: true },
+      { key: "produced", label: "Произведени принцеси (брой, партида)", type: "text" },
+      { key: "sign", label: "Подпис", type: "text", narrow: true },
+    ],
+  },
+  {
+    id: "sauces-batch",
+    num: 31,
+    title: "Партидна карта — приготвяне на сосове",
+    shortTitle: "Сосове",
+    fillWhen: "Попълва се при приготвяне на сос.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на приготвяне", type: "date", narrow: true },
+      { key: "ingredient", label: "Вид на суровината", type: "text" },
+      { key: "batchIn", label: "Количество и партиден № на суровината", type: "text" },
+      { key: "product", label: "Вид и количество на соса", type: "text" },
+      { key: "expiry", label: "Срок на годност", type: "date", narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "meals-batch",
+    num: 32,
+    title: "Партидна карта — приготвяне на готвени ястия",
+    shortTitle: "Ястия — партиди",
+    fillWhen: "Попълва се при приготвяне на всяко ястие.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на приготвяне", type: "date", narrow: true },
+      { key: "ingredient", label: "Вид на суровината", type: "text" },
+      { key: "batchIn", label: "Количество и партиден № на суровината", type: "text" },
+      { key: "product", label: "Вид и количество на ястието", type: "text" },
+      { key: "expiry", label: "Срок на годност", type: "date", narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "starters-batch",
+    num: 33,
+    title: "Партидна карта — приготвяне на предястия и аламинути",
+    shortTitle: "Предястия",
+    fillWhen: "Попълва се при приготвяне на всяко предястие / аламинут.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на приготвяне", type: "date", narrow: true },
+      { key: "ingredient", label: "Вид на суровината", type: "text" },
+      { key: "batchIn", label: "Количество и партиден № на суровината", type: "text" },
+      { key: "product", label: "Вид и количество", type: "text" },
+      { key: "expiry", label: "Срок на годност", type: "date", narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "prework-check",
+    num: 34,
+    title: "Чек-лист — хигиена и техническо състояние на обекта (преди работа)",
+    shortTitle: "Преди работа",
+    fillWhen:
+      "Попълва се ежедневно преди започване на работа — проверяват се техническото състояние и хигиената на помещенията и оборудването.",
+    frequency: "daily",
+    period: "month",
+    kind: "rows",
+    remind: true,
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "zone", label: "Помещение / зона / оборудване", type: "select", options: PREWORK_ZONES },
+      { key: "technical", label: "Техническо състояние", type: "check", narrow: true },
+      { key: "hygiene", label: "Хигиена", type: "check", narrow: true },
+      ...CRS_COLS,
+    ],
+    legend: [
+      "✓ — изправно / чисто",
+      "✗ — неизправно / замърсено (вписва се корективно действие)",
+      "НП — не се прилага",
+    ],
+  },
+  {
+    id: "disinfectant-residue",
+    num: 35,
+    title: "Контролна карта — остатъчни количества дезинфектанти",
+    shortTitle: "Остатъчни дезинфектанти",
+    fillWhen:
+      "Попълва се един път на три дни (два пъти седмично). Тестването се извършва след измиване и дезинфекция — в последните промивни води, с тест ленти за остатъци от основи и/или киселини (pH).",
+    frequency: "3days",
+    period: "month",
+    kind: "rows",
+    remind: true,
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "surface", label: "Проверявана повърхност", type: "select", options: RESIDUE_SURFACES },
+      { key: "residue", label: "Остатъци от измиващи и дезинф. средства", type: "select", options: ["НЕ", "ДА"], narrow: true },
+      ...CRS_COLS,
+    ],
+  },
+  {
+    id: "supplier-eval",
+    num: 36,
+    title: "Чек-лист за оценка на доставчиците",
+    shortTitle: "Оценка доставчици",
+    fillWhen:
+      "Попълва се еднократно за всеки доставчик от НАССР екипа. Всеки критерий се оценява с 1–6 точки. Категория: Основен (20–30 т.), Резервен (10–20 т.), Неприемлив (под 10 т.).",
+    frequency: "event",
+    period: "all",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "supplier", label: "Доставчик / производител", type: "select", optionsFrom: "suppliers" },
+      { key: "q1", label: "Постоянно високо качество (1–6)", type: "number", narrow: true },
+      { key: "q2", label: "Внедрена система за безопасност (1–6)", type: "number", narrow: true },
+      { key: "q3", label: "Отсъствие на рекламации (1–6)", type: "number", narrow: true },
+      { key: "q4", label: "Доставки със съпътстващи документи (1–6)", type: "number", narrow: true },
+      { key: "q5", label: "Доставки в срок (1–6)", type: "number", narrow: true },
+      { key: "total", label: "Общо точки", type: "number", narrow: true },
+      { key: "category", label: "Категория", type: "select", options: ["Основен (20–30)", "Резервен (10–20)", "Неприемлив (под 10)"] },
+    ],
+  },
+  {
+    id: "allergen-menu",
+    num: 37,
+    title: "Меню с алергени",
+    shortTitle: "Меню с алергени",
+    fillWhen:
+      "Попълва се при въвеждане на нов продукт в асортимента и се актуализира при промяна на рецептурата. Алергените се посочват с номерата от списъка на 14-те основни алергена.",
+    frequency: "permanent",
+    period: "all",
+    kind: "rows",
+    columns: [
+      { key: "product", label: "Вид продукт", type: "text" },
+      { key: "ingredients", label: "Съставки", type: "text" },
+      { key: "allergens", label: "Алергени", type: "text", narrow: true },
+      { key: "expiry", label: "Срок на годност", type: "text", narrow: true },
+      { key: "batch", label: "Партида", type: "text", narrow: true },
+    ],
+    infoPanels: [{ title: "14-те основни алергена", items: ALLERGEN_LIST }],
+  },
+];
+
 export const REGISTER_BY_ID: Record<string, RegisterDef> = Object.fromEntries(
-  STORE_REGISTERS.map((r) => [r.id, r])
+  [...STORE_REGISTERS, ...HOT_POINT_REGISTERS].map((r) => [r.id, r])
 );
+
+/** Пълният списък регистри според това дали обектът има топла точка. */
+export function registersFor(hotPoint: boolean): RegisterDef[] {
+  return hotPoint ? [...STORE_REGISTERS, ...HOT_POINT_REGISTERS] : STORE_REGISTERS;
+}
+
+/** Сектори, при които топлата точка е включена по подразбиране. */
+export function defaultHotPointForSector(sector: string): boolean {
+  return sector.includes("Заведения") || sector.includes("МТХ");
+}
 
 /** Стойности, през които преминава „check" клетка при кликване */
 export const CHECK_CYCLE = ["", "✓", "✗", "НП"] as const;

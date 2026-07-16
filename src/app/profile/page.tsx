@@ -15,6 +15,7 @@ import { LIBRARY_MATERIALS } from "@/data/library";
 import { LIVE_COURSES } from "@/data/live-courses";
 import { usePriceOverrides, setPriceOverride, resolvePrice } from "@/lib/priceOverrides";
 import RegistersTab from "@/components/registers/RegistersTab";
+import { defaultHotPointForSector } from "@/data/storeRegisters";
 
 import { 
   User, 
@@ -127,6 +128,9 @@ export interface DankaUser {
   customFreezers?: string[];
   /** Staff list used across the self-control registers (staff hygiene card, health books, trainings, workwear). */
   customEmployees?: { name: string; role: string }[];
+  /** Обектът има топла точка (скара, фритюрник, дюнер…) — включва допълнителните контролни карти.
+   *  Missing → derived from the business sector (ЗОХ / МТХ default to true). */
+  hasHotPoint?: boolean;
 }
 
 // Mock templates for HACCP/DHP document generator
@@ -3883,6 +3887,7 @@ export default function ProfilePage() {
                             fridges={auditTarget.customFridges ?? []}
                             freezers={auditTarget.customFreezers ?? []}
                             employees={auditTarget.customEmployees ?? []}
+                            hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
                             readOnly
                           />
                         )}
@@ -3987,6 +3992,7 @@ export default function ProfilePage() {
                   fridges={currentUser?.customFridges ?? ["Хладилна витрина №1"]}
                   freezers={currentUser?.customFreezers ?? ["Фризер №1"]}
                   employees={currentUser?.customEmployees ?? []}
+                  hotPoint={currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(firmInfo.niche))}
                   onSaveEquipment={async (patch) => { await updateUser(currentUserEmail, patch); }}
                 />
               )}
