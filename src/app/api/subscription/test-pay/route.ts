@@ -21,6 +21,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "invalid_input" }, { status: 400 });
     }
 
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 && !process.env.FIREBASE_SERVICE_ACCOUNT) {
+      return NextResponse.json({
+        error: "missing_env_var",
+        detail: "Липсва FIREBASE_SERVICE_ACCOUNT_BASE64 или FIREBASE_SERVICE_ACCOUNT в Vercel Environment Variables. Моля, добавете го според STRIPE_SETUP.md."
+      }, { status: 500 });
+    }
+
     const db = adminDb();
     const userRef = db.collection("users").doc(email);
     const userSnap = await userRef.get();

@@ -986,7 +986,7 @@ export default function ProfilePage() {
       } else {
         const errData = await res.json();
         setSubPayStatus("error");
-        setSubPayError(errData.error === "user_not_found" ? "Потребителят не е намерен." : "Грешка при плащане на абонамента.");
+        setSubPayError(errData.detail || (errData.error === "user_not_found" ? "Потребителят не е намерен." : "Грешка при плащане на абонамента."));
       }
     } catch (err) {
       console.error("Subscription payment error:", err);
