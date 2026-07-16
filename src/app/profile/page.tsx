@@ -1990,7 +1990,7 @@ export default function ProfilePage() {
 
       {/* 2. AUTHENTICATION SCREENS (LOGIN / REGISTER / APPLY) - Hidden on print */}
       {!isLoggedIn && (
-        <div className="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 print:hidden animate-fade-in">
+        <div className="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8 print:hidden animate-fade-in relative z-10">
           {isPendingApproval ? (
             <div className="max-w-xl mx-auto bg-[#FDFBF7] border border-brand-gold/45 p-8 rounded-2xl shadow-xl space-y-6 text-center animate-fade-in text-brand-dark">
               <div className="relative w-16 h-16 mx-auto">
