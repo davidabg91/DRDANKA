@@ -71,6 +71,7 @@ import {
   Soup,
   ChefHat,
   Star,
+  CalendarDays,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -287,6 +288,8 @@ function RowsEditor({
   readOnly,
   employees,
   dynamicOptions,
+  refDate,
+  dayLbl,
 }: {
   def: RegisterDef;
   data: RegisterDocData;
@@ -294,6 +297,9 @@ function RowsEditor({
   readOnly: boolean;
   employees: Employee[];
   dynamicOptions: DynamicOptions;
+  /** ISO дата на избрания от календара ден — новите записи се създават за нея */
+  refDate: string;
+  dayLbl: string;
 }) {
   const cols = def.columns || [];
   const entries = data.entries || [];
@@ -302,7 +308,7 @@ function RowsEditor({
     const blank: Record<string, string> = {};
     cols.forEach((c) => {
       blank[c.key] = "";
-      if (c.type === "date" && (c.key === "date" || c.key === "from")) blank[c.key] = todayISO();
+      if (c.type === "date" && (c.key === "date" || c.key === "from")) blank[c.key] = refDate;
     });
     onUpdate((prev) => ({ ...prev, entries: [...(prev.entries || []), blank] }));
   };
@@ -324,11 +330,10 @@ function RowsEditor({
   };
 
   const quickAllStaff = () => {
-    const today = todayISO();
-    const existing = new Set(entries.filter((e) => e.date === today).map((e) => String(e.employee)));
+    const existing = new Set(entries.filter((e) => e.date === refDate).map((e) => String(e.employee)));
     const missing = employees.filter((e) => !existing.has(e.name));
     if (missing.length === 0) {
-      alert("Всички служители вече са отбелязани за днес.");
+      alert(`Всички служители вече са отбелязани за ${dayLbl}.`);
       return;
     }
     onUpdate((prev) => ({
@@ -336,7 +341,7 @@ function RowsEditor({
       entries: [
         ...(prev.entries || []),
         ...missing.map((e) => ({
-          date: today,
+          date: refDate,
           employee: e.name,
           hygiene: "(–) Добра",
           wounds: "(–) Няма",
@@ -365,7 +370,7 @@ function RowsEditor({
               className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors"
               title="Добавя ред за всеки служител с отметки „всичко наред“ — коригирайте само отклоненията"
             >
-              <Sparkles className="h-3.5 w-3.5" /> Всички служители днес — наред
+              <Sparkles className="h-3.5 w-3.5" /> Всички служители {dayLbl} — наред
             </button>
           )}
           {def.id === "allergen-menu" && entries.length === 0 && (
@@ -453,6 +458,10 @@ function GridEditor({
   onUpdate,
   readOnly,
   dynamicOptions,
+  selectedDay,
+  selectedDate,
+  dayLbl,
+  canTick,
 }: {
   def: RegisterDef;
   data: RegisterDocData;
@@ -462,11 +471,17 @@ function GridEditor({
   onUpdate: Updater;
   readOnly: boolean;
   dynamicOptions: DynamicOptions;
+  /** Ден от месеца (напр. "17") — избран от календара */
+  selectedDay: string;
+  /** ISO дата на избрания ден */
+  selectedDate: string;
+  /** Етикет: „днес" или „15.07" */
+  dayLbl: string;
+  /** Може ли да се отбелязва бързо за избрания ден (не е бъдещ) */
+  canTick: boolean;
 }) {
   const cols = def.columns || [];
   const rows = data.rows || {};
-  const isCurrent = month === currentMonth();
-  const todayKey = String(new Date().getDate());
 
   const updateCell = (rk: string, key: string, v: string) =>
     onUpdate((prev) => ({
@@ -474,17 +489,17 @@ function GridEditor({
       rows: { ...(prev.rows || {}), [rk]: { ...((prev.rows || {})[rk] || {}), [key]: v } },
     }));
 
-  const quickTickToday = () => {
+  const quickTickSelected = () => {
     const rk =
       def.kind === "grid-days"
-        ? todayKey
-        : ROMAN_WEEKS[Math.min(4, Math.floor((new Date().getDate() - 1) / 7))];
+        ? selectedDay
+        : ROMAN_WEEKS[Math.min(4, Math.floor((parseInt(selectedDay, 10) - 1) / 7))];
     onUpdate((prev) => {
       const row = { ...((prev.rows || {})[rk] || {}) };
       cols.forEach((c) => {
         if (c.type === "check" && !row[c.key]) row[c.key] = "✓";
         if (c.key === "grade" && !row[c.key]) row[c.key] = "Удовлетворителна";
-        if (c.type === "date" && !row[c.key]) row[c.key] = todayISO();
+        if (c.type === "date" && !row[c.key]) row[c.key] = selectedDate;
       });
       return { ...prev, rows: { ...(prev.rows || {}), [rk]: row } };
     });
@@ -492,14 +507,14 @@ function GridEditor({
 
   return (
     <div className="space-y-3">
-      {!readOnly && isCurrent && (
+      {!readOnly && canTick && (
         <button
-          onClick={quickTickToday}
+          onClick={quickTickSelected}
           className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors"
           title="Поставя ✓ на всички дейности — после коригирайте, ако нещо не е извършено"
         >
           <Check className="h-3.5 w-3.5" />
-          {def.kind === "grid-days" ? "Отбележи ✓ за днес" : "Отбележи ✓ за тази седмица"}
+          {def.kind === "grid-days" ? `Отбележи ✓ за ${dayLbl}` : "Отбележи ✓ за тази седмица"}
         </button>
       )}
       <div className="overflow-x-auto rounded-xl border border-brand-green/10 max-h-[560px] overflow-y-auto">
@@ -517,15 +532,15 @@ function GridEditor({
           <tbody>
             {rowKeys.map((rk) => {
               const row = rows[rk] || {};
-              const isToday = def.kind === "grid-days" && isCurrent && rk === todayKey;
+              const isSelected = def.kind === "grid-days" && rk === selectedDay;
               return (
                 <tr
                   key={rk}
-                  className={`border-b border-brand-green/5 align-top ${isToday ? "bg-brand-gold/10" : "hover:bg-brand-light/20"}`}
+                  className={`border-b border-brand-green/5 align-top ${isSelected ? "bg-brand-gold/10" : "hover:bg-brand-light/20"}`}
                 >
                   <td className="p-2 text-center font-bold text-brand-dark/60">
                     {rk}
-                    {isToday && <span className="block text-[8px] text-brand-gold font-black">днес</span>}
+                    {isSelected && <span className="block text-[8px] text-brand-gold font-black">{dayLbl}</span>}
                   </td>
                   {cols.map((c) => (
                     <td key={c.key} className="p-1.5">
@@ -560,6 +575,10 @@ function TempEditor({
   setActiveUnit,
   onUpdate,
   readOnly,
+  selectedDay,
+  dayLbl,
+  selIsToday,
+  canMark,
 }: {
   data: RegisterDocData;
   month: string;
@@ -568,9 +587,13 @@ function TempEditor({
   setActiveUnit: (n: string) => void;
   onUpdate: Updater;
   readOnly: boolean;
+  /** Ден от месеца (напр. "17"), избран от календара */
+  selectedDay: string;
+  dayLbl: string;
+  selIsToday: boolean;
+  /** Избраният ден не е в бъдещето */
+  canMark: boolean;
 }) {
-  const isCurrent = month === currentMonth();
-  const todayKey = String(new Date().getDate());
   const unit = units.find((u) => u.name === activeUnit) || units[0];
 
   if (units.length === 0) {
@@ -613,8 +636,8 @@ function TempEditor({
       {/* Избор на съоръжение */}
       <div className="flex flex-wrap gap-2">
         {units.map((u) => {
-          const r = data.units?.[u.name]?.rows?.[todayKey];
-          const filledToday = isCurrent && r && ((r.t1 || "").trim() !== "" || (r.t2 || "").trim() !== "");
+          const r = data.units?.[u.name]?.rows?.[selectedDay];
+          const filledOnDay = canMark && r && ((r.t1 || "").trim() !== "" || (r.t2 || "").trim() !== "");
           return (
             <button
               key={u.name}
@@ -627,7 +650,7 @@ function TempEditor({
             >
               {u.type === "freezer" ? <Snowflake className="h-3 w-3" /> : <Thermometer className="h-3 w-3" />}
               {u.name}
-              {isCurrent && <span className={`w-1.5 h-1.5 rounded-full ${filledToday ? "bg-green-400" : "bg-red-400"}`} />}
+              {canMark && <span className={`w-1.5 h-1.5 rounded-full ${filledOnDay ? "bg-green-400" : "bg-red-400"}`} />}
             </button>
           );
         })}
@@ -637,17 +660,17 @@ function TempEditor({
         <span className="text-[11px] font-bold text-brand-green">
           {unit.name} — норма: {normLabel}
         </span>
-        {!readOnly && isCurrent && (
+        {!readOnly && selIsToday && (
           <div className="flex gap-2">
             <button
-              onClick={() => updateCell(todayKey, "t1h", nowTime())}
+              onClick={() => updateCell(selectedDay, "t1h", nowTime())}
               className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 cursor-pointer flex items-center gap-1"
               title="Записва текущия час в Измерване 1 за днес"
             >
               <Clock className="h-3 w-3" /> Час сега — Измерване 1
             </button>
             <button
-              onClick={() => updateCell(todayKey, "t2h", nowTime())}
+              onClick={() => updateCell(selectedDay, "t2h", nowTime())}
               className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 cursor-pointer flex items-center gap-1"
             >
               <Clock className="h-3 w-3" /> Час сега — Измерване 2
@@ -673,14 +696,14 @@ function TempEditor({
           <tbody>
             {days.map((d) => {
               const row = rows[d] || {};
-              const isToday = isCurrent && d === todayKey;
+              const isSelected = d === selectedDay;
               const t1bad = tempOutOfNorm(row.t1 || "", unit.type);
               const t2bad = tempOutOfNorm(row.t2 || "", unit.type);
               return (
-                <tr key={d} className={`border-b border-brand-green/5 ${isToday ? "bg-brand-gold/10" : "hover:bg-brand-light/20"}`}>
+                <tr key={d} className={`border-b border-brand-green/5 ${isSelected ? "bg-brand-gold/10" : "hover:bg-brand-light/20"}`}>
                   <td className="p-1.5 text-center font-bold text-brand-dark/60">
                     {d}
-                    {isToday && <span className="block text-[8px] text-brand-gold font-black">днес</span>}
+                    {isSelected && <span className="block text-[8px] text-brand-gold font-black">{dayLbl}</span>}
                   </td>
                   <td className="p-1">
                     <input type="time" className={`${inputCls} min-w-[80px]`} value={row.t1h || ""} disabled={readOnly} onChange={(e) => updateCell(d, "t1h", e.target.value)} />
@@ -1423,6 +1446,8 @@ export default function RegistersTab({
   readOnly = false,
 }: RegistersTabProps) {
   const [month, setMonth] = useState(currentMonth());
+  /** Избраният ден — календарът, напомнянията и бързите действия работят спрямо него. */
+  const [refDate, setRefDate] = useState(todayISO());
   const [docs, setDocs] = useState<Record<string, RegisterDocData>>({});
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -1463,6 +1488,18 @@ export default function RegistersTab({
       setActiveTempUnit(units[0].name);
     }
   }, [units, activeTempUnit]);
+
+  // При смяна на месеца избраният ден се премества в него (днес, ако е текущият месец).
+  useEffect(() => {
+    if (!refDate.startsWith(month)) {
+      setRefDate(month === currentMonth() ? todayISO() : `${month}-01`);
+    }
+  }, [month, refDate]);
+
+  const isRefToday = refDate === todayISO();
+  const refDay = String(parseInt(refDate.slice(8, 10), 10));
+  /** „днес" или „15.07" — за заглавия и бутони */
+  const dayLabel = isRefToday ? "днес" : `${refDate.slice(8, 10)}.${refDate.slice(5, 7)}`;
 
   /* ------------------ Зареждане от Firestore ------------------ */
   useEffect(() => {
@@ -1548,47 +1585,85 @@ export default function RegistersTab({
     [docs, employees]
   );
 
+  /* ------------------ Задължения за конкретен ден ------------------ */
+  /** Ежедневните задължения, липсващи за дадена дата — за календара и напомнянията. */
+  const dayObligations = useCallback(
+    (dateISO: string): { registerId: string; text: string }[] => {
+      const dayNum = String(parseInt(dateISO.slice(8, 10), 10));
+      const missing: { registerId: string; text: string }[] = [];
+
+      const tempDoc = docs["temps"] || {};
+      const missingUnits = units.filter((u) => {
+        const row = tempDoc.units?.[u.name]?.rows?.[dayNum];
+        return !(row && (String(row.t1 || "").trim() !== "" || String(row.t2 || "").trim() !== ""));
+      });
+      if (units.length > 0 && missingUnits.length > 0) {
+        missing.push({
+          registerId: "temps",
+          text: `Температури: непопълнени ${missingUnits.length} от ${units.length} съоръжения (${missingUnits.map((u) => u.name).join(", ")}).`,
+        });
+      }
+
+      if (!isRowFilled(docs["hygiene-daily"]?.rows?.[dayNum])) {
+        missing.push({
+          registerId: "hygiene-daily",
+          text: "Дневникът за хигиена на обекта не е попълнен (попълва се след приключване на почистването).",
+        });
+      }
+
+      if (employees.length > 0) {
+        const checked = new Set(
+          (docs["staff-hygiene"]?.entries || []).filter((e) => e.date === dateISO).map((e) => String(e.employee || ""))
+        );
+        const miss = employees.filter((e) => !checked.has(e.name));
+        if (miss.length > 0) {
+          missing.push({
+            registerId: "staff-hygiene",
+            text: `Контролната карта за лична хигиена липсва за: ${miss.map((e) => e.name).join(", ")} (попълва се преди започване на работа).`,
+          });
+        }
+      }
+
+      if (hotPoint) {
+        if (!(docs["prework-check"]?.entries || []).some((e) => e.date === dateISO)) {
+          missing.push({
+            registerId: "prework-check",
+            text: "Чек-листът „Хигиена и техническо състояние“ не е попълнен (попълва се преди започване на работа).",
+          });
+        }
+        const used = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
+        ownedAppliances.forEach((app) => {
+          if (used[app.id] !== "1") return;
+          app.registers.forEach((regId) => {
+            const def = REGISTER_BY_ID[regId];
+            if (!def) return;
+            if (!(docs[regId]?.entries || []).some((e) => e.date === dateISO)) {
+              missing.push({
+                registerId: regId,
+                text: `${app.emoji} Използван е „${app.label}“ — попълнете картата „${def.shortTitle}“.`,
+              });
+            }
+          });
+        });
+      }
+
+      return missing;
+    },
+    [docs, units, employees, hotPoint, ownedAppliances]
+  );
+
   /* ------------------ Напомняния ------------------ */
   const reminders = useMemo(() => {
     const list: { level: "urgent" | "warn" | "info"; text: string; registerId: string }[] = [];
     if (loading) return list;
     const today = todayISO();
-    if (month !== currentMonth()) return list;
-    const dayNum = String(new Date().getDate());
+    // Напомнянията важат за избрания ден; за бъдещи дни не се показват.
+    if (!refDate.startsWith(month) || refDate > today) return list;
 
-    const tempDoc = docs["temps"] || {};
-    const missingUnits = units.filter((u) => {
-      const row = tempDoc.units?.[u.name]?.rows?.[dayNum];
-      return !(row && (String(row.t1 || "").trim() !== "" || String(row.t2 || "").trim() !== ""));
-    });
-    if (units.length > 0 && missingUnits.length > 0) {
-      list.push({
-        level: "urgent",
-        registerId: "temps",
-        text: `Температури за днес: непопълнени ${missingUnits.length} от ${units.length} съоръжения (${missingUnits.map((u) => u.name).join(", ")}).`,
-      });
-    }
-
-    if (!isRowFilled(docs["hygiene-daily"]?.rows?.[dayNum])) {
-      list.push({
-        level: "urgent",
-        registerId: "hygiene-daily",
-        text: "Дневникът за хигиена на обекта не е попълнен за днес (попълва се след приключване на почистването).",
-      });
-    }
-
-    if (employees.length > 0) {
-      const entries = docs["staff-hygiene"]?.entries || [];
-      const todayChecked = new Set(entries.filter((e) => e.date === today).map((e) => String(e.employee || "")));
-      const missing = employees.filter((e) => !todayChecked.has(e.name));
-      if (missing.length > 0) {
-        list.push({
-          level: "urgent",
-          registerId: "staff-hygiene",
-          text: `Контролната карта за лична хигиена не е попълнена днес за: ${missing.map((e) => e.name).join(", ")} (попълва се преди започване на работа).`,
-        });
-      }
-    }
+    // Ежедневни задължения за избрания ден
+    dayObligations(refDate).forEach((m) => list.push({ level: "urgent", ...m }));
+    // Периодичните проверки (седмични, месечни, срокове) важат само за днешния ден.
+    if (!isRefToday) return list;
 
     const weekIdx = Math.min(4, Math.floor((new Date().getDate() - 1) / 7));
     if (!isRowFilled(docs["hygiene-weekly"]?.rows?.[ROMAN_WEEKS[weekIdx]])) {
@@ -1654,34 +1729,6 @@ export default function RegistersTab({
 
     // ─── Топла точка ───
     if (hotPoint) {
-      // Чек-лист преди работа — ежедневно
-      const preworkToday = (docs["prework-check"]?.entries || []).some((e) => e.date === today);
-      if (!preworkToday) {
-        list.push({
-          level: "urgent",
-          registerId: "prework-check",
-          text: "Чек-листът „Хигиена и техническо състояние“ не е попълнен днес (попълва се преди започване на работа).",
-        });
-      }
-
-      // Умна връзка: използван уред днес → изискват се неговите карти
-      const usedToday = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
-      const filledToday = (id: string) => (docs[id]?.entries || []).some((e) => e.date === today);
-      ownedAppliances.forEach((app) => {
-        if (usedToday[app.id] !== "1") return;
-        app.registers.forEach((regId) => {
-          const def = REGISTER_BY_ID[regId];
-          if (!def) return;
-          if (!filledToday(regId)) {
-            list.push({
-              level: "urgent",
-              registerId: regId,
-              text: `${app.emoji} Използвахте „${app.label}“ днес — попълнете картата „${def.shortTitle}“.`,
-            });
-          }
-        });
-      });
-
       // Карти на 3 дни: смяна на мазнина (само при фритюрник) и остатъчни дезинфектанти
       const lastEntryDate = (id: string) => {
         const dates = (docs[id]?.entries || []).map((e) => String(e.date || "")).filter(Boolean).sort();
@@ -1717,7 +1764,7 @@ export default function RegistersTab({
     }
 
     return list;
-  }, [docs, loading, month, units, employees, hotPoint, hotAppliances, ownedAppliances]);
+  }, [docs, loading, month, refDate, refDay, isRefToday, dayObligations, employees, hotPoint, hotAppliances]);
 
   /* ------------------ Статус на регистър за картите ------------------ */
   const registerStatus = useCallback(
@@ -1725,31 +1772,33 @@ export default function RegistersTab({
       if (loading) return { label: "…", tone: "neutral" };
       const d = docs[def.id] || {};
       const isCurrent = month === currentMonth();
-      const dayNum = String(new Date().getDate());
+      // Статусите на дневните карти следват избрания ден от календара.
+      const dayMode = refDate.startsWith(month) && refDate <= todayISO();
+      const dayNum = refDay;
+      const dLbl = isRefToday ? "Днес" : dayLabel;
       switch (def.id) {
         case "temps": {
           if (units.length === 0) return { label: "Добавете съоръжения", tone: "due" };
-          if (!isCurrent) break;
+          if (!dayMode) break;
           const filled = units.filter((u) => {
             const row = d.units?.[u.name]?.rows?.[dayNum];
             return row && (String(row.t1 || "").trim() !== "" || String(row.t2 || "").trim() !== "");
           }).length;
           return filled === units.length
-            ? { label: "Днес: попълнено ✓", tone: "ok" }
-            : { label: `Днес: ${filled}/${units.length} съоръжения`, tone: "due" };
+            ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
+            : { label: `${dLbl}: ${filled}/${units.length} съоръжения`, tone: "due" };
         }
         case "hygiene-daily":
-          if (!isCurrent) break;
+          if (!dayMode) break;
           return isRowFilled(d.rows?.[dayNum])
-            ? { label: "Днес: попълнено ✓", tone: "ok" }
-            : { label: "Днес: непопълнено", tone: "due" };
+            ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
+            : { label: `${dLbl}: непопълнено`, tone: "due" };
         case "staff-hygiene": {
-          if (!isCurrent || employees.length === 0) break;
-          const today = todayISO();
-          const cnt = new Set((d.entries || []).filter((e) => e.date === today).map((e) => e.employee)).size;
+          if (!dayMode || employees.length === 0) break;
+          const cnt = new Set((d.entries || []).filter((e) => e.date === refDate).map((e) => e.employee)).size;
           return cnt >= employees.length
-            ? { label: "Днес: попълнено ✓", tone: "ok" }
-            : { label: `Днес: ${cnt}/${employees.length} служители`, tone: "due" };
+            ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
+            : { label: `${dLbl}: ${cnt}/${employees.length} служители`, tone: "due" };
         }
         case "hygiene-weekly": {
           if (!isCurrent) break;
@@ -1764,24 +1813,22 @@ export default function RegistersTab({
             ? { label: "Този месец: ✓", tone: "ok" }
             : { label: "Този месец: предстои", tone: "due" };
         case "prework-check": {
-          if (!isCurrent) break;
-          const today = todayISO();
-          return (d.entries || []).some((e) => e.date === today)
-            ? { label: "Днес: попълнено ✓", tone: "ok" }
-            : { label: "Днес: непопълнено", tone: "due" };
+          if (!dayMode) break;
+          return (d.entries || []).some((e) => e.date === refDate)
+            ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
+            : { label: `${dLbl}: непопълнено`, tone: "due" };
         }
         default:
           break;
       }
-      // Карти, свързани с уред от топлата точка: статус според „използван днес"
+      // Карти, свързани с уред от топлата точка: статус според „използван" за избрания ден
       const applianceId = REGISTER_APPLIANCE[def.id];
-      if (applianceId && isCurrent) {
-        const usedToday = docs[DAILY_USAGE_ID]?.rows?.[dayNum]?.[applianceId] === "1";
-        if (usedToday) {
-          const today = todayISO();
-          return (d.entries || []).some((e) => e.date === today)
-            ? { label: "Днес: попълнено ✓", tone: "ok" }
-            : { label: `${HOT_APPLIANCE_BY_ID[applianceId]?.emoji || ""} Днес: изисква се!`, tone: "due" };
+      if (applianceId && dayMode) {
+        const usedOnDay = docs[DAILY_USAGE_ID]?.rows?.[dayNum]?.[applianceId] === "1";
+        if (usedOnDay) {
+          return (d.entries || []).some((e) => e.date === refDate)
+            ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
+            : { label: `${HOT_APPLIANCE_BY_ID[applianceId]?.emoji || ""} ${dLbl}: изисква се!`, tone: "due" };
         }
       }
       const count =
@@ -1795,7 +1842,7 @@ export default function RegistersTab({
         ? { label: `${count} запис${count === 1 ? "" : "а"}`, tone: "neutral" }
         : { label: "Няма записи", tone: "neutral" };
     },
-    [docs, loading, month, units, employees]
+    [docs, loading, month, units, employees, refDate, refDay, isRefToday, dayLabel]
   );
 
   /* ------------------ Печат ------------------ */
@@ -1874,9 +1921,83 @@ export default function RegistersTab({
         </div>
       </div>
 
-      {/* Топла точка: кои уреди са използвани днес */}
-      {hotPoint && !loading && month === currentMonth() && (() => {
-        const dayNum = String(new Date().getDate());
+      {/* Календар на месеца: статус по дни */}
+      {!loading && (() => {
+        const today = todayISO();
+        const n = daysInMonth(month);
+        return (
+          <div className="bg-white border border-brand-green/10 rounded-3xl p-5 shadow-md space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <CalendarDays className="h-4 w-4 text-brand-green/70" />
+                <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
+                  Календар — {monthLabelBg(month)}
+                </h3>
+              </div>
+              <div className="flex items-center gap-3 text-[9px] font-bold text-brand-dark/50">
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-green-400" /> всичко попълнено</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-red-400" /> има непопълнено</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-brand-light border border-brand-green/15" /> предстоящ ден</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {Array.from({ length: n }, (_, i) => {
+                const day = i + 1;
+                const iso = `${month}-${String(day).padStart(2, "0")}`;
+                const isFuture = iso > today;
+                const missing = isFuture ? [] : dayObligations(iso);
+                const isSelected = iso === refDate;
+                const tone = isFuture
+                  ? "bg-brand-light/70 text-brand-dark/30 border-brand-green/10"
+                  : missing.length === 0
+                    ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
+                    : "bg-red-100 text-red-600 border-red-300 hover:bg-red-200";
+                return (
+                  <button
+                    key={iso}
+                    onClick={() => setRefDate(iso)}
+                    title={
+                      isFuture
+                        ? "Предстоящ ден"
+                        : missing.length === 0
+                          ? "Всичко е попълнено ✓"
+                          : `Непопълнено (${missing.length}):\n• ${missing.map((m) => m.text).join("\n• ")}`
+                    }
+                    className={`relative w-10 h-10 rounded-xl border text-[11px] font-black transition-colors cursor-pointer ${tone} ${
+                      isSelected ? "ring-2 ring-brand-gold ring-offset-1 scale-105" : ""
+                    } ${iso === today ? "underline underline-offset-2" : ""}`}
+                  >
+                    {day}
+                    {!isFuture && missing.length > 0 && (
+                      <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center leading-none">
+                        {missing.length}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {!isRefToday && (
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-brand-gold/10 border border-brand-gold/30 rounded-xl px-4 py-2.5">
+                <span className="text-[11px] font-bold text-brand-dark/75">
+                  Работите по <span className="text-brand-green font-black">{dayLabel}</span> — напомнянията, отметките и
+                  новите записи се отнасят за този ден.
+                </span>
+                <button
+                  onClick={() => { setMonth(currentMonth()); setRefDate(todayISO()); }}
+                  className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 cursor-pointer"
+                >
+                  ← Обратно към днес
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Топла точка: кои уреди са използвани през избрания ден */}
+      {hotPoint && !loading && refDate.startsWith(month) && refDate <= todayISO() && (() => {
+        const dayNum = refDay;
         const usedToday = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
         const usedCount = ownedAppliances.filter((a) => usedToday[a.id] === "1").length;
         const nothingMarked = Object.keys(usedToday).length === 0;
@@ -1898,14 +2019,14 @@ export default function RegistersTab({
               <div className="flex items-center gap-2.5">
                 <Flame className="h-4 w-4 text-brand-gold" />
                 <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
-                  Топла точка — какво използвахте днес?
+                  Топла точка — какво използвахте {dayLabel}?
                 </h3>
               </div>
               <span className="text-[10px] font-bold text-brand-dark/45">
                 {usedCount > 0
-                  ? `${usedCount} уред${usedCount === 1 ? "" : "а"} в употреба днес`
+                  ? `${usedCount} уред${usedCount === 1 ? "" : "а"} в употреба ${dayLabel}`
                   : readOnly
-                    ? "Няма отбелязани уреди за днес"
+                    ? `Няма отбелязани уреди за ${dayLabel}`
                     : "Отбележете и системата ще Ви напомни кои карти да попълните"}
               </span>
             </div>
@@ -1917,7 +2038,7 @@ export default function RegistersTab({
                     key={a.id}
                     disabled={readOnly}
                     onClick={() => toggleAppliance(a.id)}
-                    title={on ? `Използван днес — изискват се: ${a.registers.map((r) => REGISTER_BY_ID[r]?.shortTitle).filter(Boolean).join(", ")}` : "Кликнете, ако уредът е използван днес"}
+                    title={on ? `Използван ${dayLabel} — изискват се: ${a.registers.map((r) => REGISTER_BY_ID[r]?.shortTitle).filter(Boolean).join(", ")}` : `Кликнете, ако уредът е използван ${dayLabel}`}
                     className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors cursor-pointer disabled:cursor-default flex items-center gap-1.5 ${
                       on
                         ? "bg-brand-gold text-brand-dark border-brand-gold shadow-md shadow-brand-gold/20"
@@ -1949,7 +2070,7 @@ export default function RegistersTab({
           <div className="flex items-center gap-2">
             <Bell className={`h-4 w-4 ${urgentCount > 0 ? "text-red-500" : "text-amber-500"}`} />
             <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
-              Напомняния за днес ({reminders.length})
+              Напомняния за {dayLabel} ({reminders.length})
             </h3>
           </div>
           <div className="space-y-1.5">
@@ -1977,12 +2098,12 @@ export default function RegistersTab({
           </div>
         </div>
       )}
-      {!readOnly && !loading && reminders.length === 0 && month === currentMonth() &&
-        (!hotPoint || Object.keys(docs[DAILY_USAGE_ID]?.rows?.[String(new Date().getDate())] || {}).length > 0) && (
+      {!readOnly && !loading && reminders.length === 0 && refDate.startsWith(month) && refDate <= todayISO() &&
+        (!hotPoint || Object.keys(docs[DAILY_USAGE_ID]?.rows?.[refDay] || {}).length > 0) && (
         <div className="rounded-3xl border border-green-200 bg-green-50/70 p-4 flex items-center gap-3">
           <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
           <p className="text-xs text-green-800 font-bold">
-            Всичко за днес е попълнено — обектът е изряден! Системата ще напомни при следващо задължение.
+            Всичко за {dayLabel} е попълнено — обектът е изряден! Системата ще напомни при следващо задължение.
           </p>
         </div>
       )}
@@ -2054,6 +2175,8 @@ export default function RegistersTab({
               readOnly={readOnly}
               employees={employees}
               dynamicOptions={dynamicOptions}
+              refDate={refDate}
+              dayLbl={dayLabel}
             />
           )}
           {openDef.kind === "grid-days" && (
@@ -2066,6 +2189,10 @@ export default function RegistersTab({
               onUpdate={makeUpdater(openDef.id)}
               readOnly={readOnly}
               dynamicOptions={dynamicOptions}
+              selectedDay={refDay}
+              selectedDate={refDate}
+              dayLbl={dayLabel}
+              canTick={refDate.startsWith(month) && refDate <= todayISO()}
             />
           )}
           {openDef.kind === "grid-weeks" && (
@@ -2078,6 +2205,10 @@ export default function RegistersTab({
               onUpdate={makeUpdater(openDef.id)}
               readOnly={readOnly}
               dynamicOptions={dynamicOptions}
+              selectedDay={refDay}
+              selectedDate={refDate}
+              dayLbl={dayLabel}
+              canTick={refDate.startsWith(month) && refDate <= todayISO()}
             />
           )}
           {openDef.kind === "temp-units" && (
@@ -2089,6 +2220,10 @@ export default function RegistersTab({
               setActiveUnit={setActiveTempUnit}
               onUpdate={makeUpdater(openDef.id)}
               readOnly={readOnly}
+              selectedDay={refDay}
+              dayLbl={dayLabel}
+              selIsToday={isRefToday}
+              canMark={refDate.startsWith(month) && refDate <= todayISO()}
             />
           )}
           {openDef.kind === "training" && (
