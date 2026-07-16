@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { Player, PlayerRef } from "@remotion/player";
-import { SubscriptionVideo } from "./SubscriptionVideo";
+import { RegistersShowcaseVideo, REGISTERS_SHOWCASE_DURATION } from "./RegistersShowcaseVideo";
 import Link from "next/link";
 
 export default function RemotionVideoWidget() {
@@ -24,8 +24,8 @@ export default function RemotionVideoWidget() {
           {isMounted && (
             <Player
               acknowledgeRemotionLicense={true}
-              component={SubscriptionVideo}
-              durationInFrames={300}
+              component={RegistersShowcaseVideo}
+              durationInFrames={REGISTERS_SHOWCASE_DURATION}
               compositionWidth={1000}
               compositionHeight={800}
               fps={30}
