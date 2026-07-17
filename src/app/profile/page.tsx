@@ -969,6 +969,37 @@ export default function ProfilePage() {
   };
 
   /**
+   * Client selects a subscription package from the packages tab.
+   * This updates their subscriptionStatus to 'awaiting_payment' and sets their fee.
+   * The user then does a bank transfer, and the admin approves it from the admin panel.
+   */
+  const handleSelectPackage = async (packageName: string, fee: number) => {
+    if (!currentUserEmail) return;
+    if (!confirm(`Сигурни ли сте, че искате да изберете пакет „${packageName}“ за ${fee} € / месечно? Вашият акаунт ще бъде регистриран за плащане по банков път.`)) return;
+
+    try {
+      const updates = {
+        subscriptionStatus: "awaiting_payment" as const,
+        subscriptionFeeEur: fee
+      };
+
+      const ok = await updateUser(currentUserEmail, updates);
+      if (ok) {
+        alert("Планът е избран успешно! Моля, направете банков превод по сметката по-долу. Администраторът ще активира достъпа Ви веднага след получаване на превода.");
+        setTimeout(() => {
+          const el = document.getElementById("bank-details-card");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+      }
+    } catch (err) {
+      console.error("Select package error:", err);
+      alert("Възникна грешка при регистрацията на плана.");
+    }
+  };
+
+  /**
    * Client clicks "Pay subscription" — opens a test-mode payment modal
    * (analogous to the bookstore course purchase). Real Stripe checkout
    * would be wired here once env vars are set in production.
@@ -4888,10 +4919,7 @@ export default function ProfilePage() {
                         </ul>
                       </div>
                       <button
-                        onClick={() => {
-                          const el = document.getElementById("bank-details-card");
-                          el?.scrollIntoView({ behavior: "smooth" });
-                        }}
+                        onClick={() => handleSelectPackage("Базов", 50)}
                         className="w-full mt-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
                       >
                         Избери план
@@ -4923,10 +4951,7 @@ export default function ProfilePage() {
                         </ul>
                       </div>
                       <button
-                        onClick={() => {
-                          const el = document.getElementById("bank-details-card");
-                          el?.scrollIntoView({ behavior: "smooth" });
-                        }}
+                        onClick={() => handleSelectPackage("Обучения", 80)}
                         className="w-full mt-6 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
                       >
                         Избери план
@@ -4955,10 +4980,7 @@ export default function ProfilePage() {
                         </ul>
                       </div>
                       <button
-                        onClick={() => {
-                          const el = document.getElementById("bank-details-card");
-                          el?.scrollIntoView({ behavior: "smooth" });
-                        }}
+                        onClick={() => handleSelectPackage("VIP одит", 120)}
                         className="w-full mt-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
                       >
                         Избери план
