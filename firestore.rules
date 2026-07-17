@@ -22,7 +22,7 @@ service cloud.firestore {
     }
 
     function sanitizeEmail(email) {
-      return email.replace("@", "_").replace("[.]", "_");
+      return email.split("@").join("_").split('[.]').join("_");
     }
 
     function isOwnerOfKey(key, email) {
