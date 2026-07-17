@@ -21,19 +21,17 @@ service cloud.firestore {
       return request.auth.token.email.lower();
     }
 
-    function sanitizeEmail(email) {
-      return (email.split("@")[0].split(".").size() == 1 
-        ? email.split("@")[0] 
-        : email.split("@")[0].split(".")[0] + "_" + email.split("@")[0].split(".")[1]
-      ) + "_" + (
-        email.split("@")[1].split(".").size() == 2 
-          ? email.split("@")[1].split(".")[0] + "_" + email.split("@")[1].split(".")[1] 
-          : email.split("@")[1].split(".")[0] + "_" + email.split("@")[1].split(".")[1] + "_" + email.split("@")[1].split(".")[2]
-      );
-    }
-
     function isOwnerOfKey(key, email) {
-      return key.split("_reg_")[0] == "danka_logs_" + sanitizeEmail(email);
+      return key >= "danka_logs_" + (
+        email.split("@")[0].split(".").size() == 1 
+          ? email.split("@")[0].split(".")[0] 
+          : email.split("@")[0].split(".")[0] + "_" + email.split("@")[0].split(".")[1]
+      ) + "_" + email.split("@")[1].split(".")[0] && 
+      key < "danka_logs_" + (
+        email.split("@")[0].split(".").size() == 1 
+          ? email.split("@")[0].split(".")[0] 
+          : email.split("@")[0].split(".")[0] + "_" + email.split("@")[0].split(".")[1]
+      ) + "_" + email.split("@")[1].split(".")[0] + "~";
     }
 
     function isAdmin() {
