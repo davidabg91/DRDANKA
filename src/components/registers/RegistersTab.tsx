@@ -1676,7 +1676,6 @@ export default function RegistersTab({
         toLoad.map(async ({ id, period }) => {
           try {
             const key = registerDocKey(email, id, period);
-            console.log(`[DEBUG LOGS] Loading register '${id}' with key '${key}' for email '${email}'`);
             const snap = await getDoc(doc(db, "logs", key));
             results[id] = snap.exists() ? (snap.data() as RegisterDocData) : {};
           } catch (err) {
