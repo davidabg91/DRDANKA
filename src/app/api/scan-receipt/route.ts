@@ -89,8 +89,15 @@ export async function POST(req: Request) {
     if (!response.ok) {
       const errText = await response.text();
       console.error("Gemini API Error:", errText);
+      let detail = "Неуспешна комуникация с ИИ платформата на Google.";
+      try {
+        const parsedErr = JSON.parse(errText);
+        if (parsedErr.error?.message) {
+          detail += ` Детайли: ${parsedErr.error.message}`;
+        }
+      } catch {}
       return NextResponse.json(
-        { error: "Неуспешна комуникация с ИИ платформата на Google." },
+        { error: detail },
         { status: 500 }
       );
     }
