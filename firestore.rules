@@ -36,7 +36,7 @@ service cloud.firestore {
 
     function isOwnerOfKey(key, email) {
       return key >= "danka_logs_" + sanitizeEmail(email) + "_reg_" && 
-             key < "danka_logs_" + sanitizeEmail(email) + "_reg_\uf8ff";
+             key < "danka_logs_" + sanitizeEmail(email) + "_reg_~";
     }
 
     function isAdmin() {
