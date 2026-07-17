@@ -49,10 +49,7 @@ service cloud.firestore {
         authEmail() == email.lower() &&
         unchanged("role") &&
         unchanged("status") &&
-        unchanged("subscriptionStatus") &&
-        unchanged("expiresAt") &&
         unchanged("subscriptionFeeEur") &&
-        unchanged("subscriptionPaidAt") &&
         unchanged("purchasedCourseIds")
       );
 

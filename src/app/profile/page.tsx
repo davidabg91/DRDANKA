@@ -968,15 +968,20 @@ export default function ProfilePage() {
     setSubPayStatus("processing");
 
     try {
-      const res = await fetch("/api/subscription/test-pay", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: currentUserEmail }),
-      });
+      // Auto-calculate expiry date: exactly 1 year (365 days) from now
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      const expiresAt = oneYearFromNow.toISOString().split("T")[0]; // YYYY-MM-DD
 
-      if (res.ok) {
+      const updates = {
+        subscriptionStatus: "approved",
+        subscriptionPaidAt: new Date().toISOString(),
+        expiresAt,
+      };
+
+      const ok = await updateUser(currentUserEmail, updates);
+
+      if (ok) {
         setSubPayStatus("success");
         setTimeout(() => {
           setSubPayOpen(false);
@@ -984,14 +989,13 @@ export default function ProfilePage() {
           setActiveTab("logs");
         }, 1500);
       } else {
-        const errData = await res.json();
         setSubPayStatus("error");
-        setSubPayError(errData.detail || (errData.error === "user_not_found" ? "Потребителят не е намерен." : "Грешка при плащане на абонамента."));
+        setSubPayError("Грешка при обновяване на абонамента в базата данни.");
       }
     } catch (err) {
       console.error("Subscription payment error:", err);
       setSubPayStatus("error");
-      setSubPayError("Грешка при комуникация със сървъра.");
+      setSubPayError("Грешка при обработка на плащането.");
     }
   };
 
