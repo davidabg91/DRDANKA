@@ -21,6 +21,24 @@ service cloud.firestore {
       return request.auth.token.email.lower();
     }
 
+    function sanitizeEmail(email) {
+      return (email.split("@")[0].split("[.]").size() == 1 
+        ? email.split("@")[0] 
+        : (email.split("@")[0].split("[.]").size() == 2 
+            ? email.split("@")[0].split("[.]")[0] + "_" + email.split("@")[0].split("[.]")[1] 
+            : email.split("@")[0].split("[.]")[0] + "_" + email.split("@")[0].split("[.]")[1] + "_" + email.split("@")[0].split("[.]")[2])
+      ) + "_" + (
+        email.split("@")[1].split("[.]").size() == 2 
+          ? email.split("@")[1].split("[.]")[0] + "_" + email.split("@")[1].split("[.]")[1] 
+          : email.split("@")[1].split("[.]")[0] + "_" + email.split("@")[1].split("[.]")[1] + "_" + email.split("@")[1].split("[.]")[2]
+      );
+    }
+
+    function isOwnerOfKey(key, email) {
+      return key >= "danka_logs_" + sanitizeEmail(email) + "_reg_" && 
+             key < "danka_logs_" + sanitizeEmail(email) + "_reg_\uf8ff";
+    }
+
     function isAdmin() {
       return isSignedIn() && authEmail() == "d.nikolova.haccp@gmail.com";
     }
@@ -60,20 +78,7 @@ service cloud.firestore {
     //   - Admin reads/writes everything (audit).
     //   - Authenticated user reads/writes own logs.
     match /logs/{key} {
-      allow read, write: if isAdmin() || (
-        isSignedIn() &&
-        key.split("_reg_")[0] == "danka_logs_" + (
-          authEmail().split("@")[0].split("[.]").size() == 1 
-            ? authEmail().split("@")[0] 
-            : (authEmail().split("@")[0].split("[.]").size() == 2 
-                ? authEmail().split("@")[0].split("[.]")[0] + "_" + authEmail().split("@")[0].split("[.]")[1] 
-                : authEmail().split("@")[0].split("[.]")[0] + "_" + authEmail().split("@")[0].split("[.]")[1] + "_" + authEmail().split("@")[0].split("[.]")[2])
-        ) + "_" + (
-          authEmail().split("@")[1].split("[.]").size() == 2 
-            ? authEmail().split("@")[1].split("[.]")[0] + "_" + authEmail().split("@")[1].split("[.]")[1] 
-            : authEmail().split("@")[1].split("[.]")[0] + "_" + authEmail().split("@")[1].split("[.]")[1] + "_" + authEmail().split("@")[1].split("[.]")[2]
-        )
-      );
+      allow read, write: if isAdmin() || (isSignedIn() && isOwnerOfKey(key, authEmail()));
     }
 
     // Audit trail of admin actions: append-only, admin-only.
