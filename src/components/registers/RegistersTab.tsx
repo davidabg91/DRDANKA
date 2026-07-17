@@ -333,6 +333,47 @@ function CellInput({
 }
 
 /* ------------------------------------------------------------------ */
+/*  Помощна функция за свиване на снимки за ИИ сканиране             */
+/* ------------------------------------------------------------------ */
+const compressImage = (file: File): Promise<{ base64: string; mimeType: string }> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+        const MAX_SIZE = 1200;
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve({
+          base64: canvas.toDataURL("image/jpeg", 0.8),
+          mimeType: "image/jpeg",
+        });
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
+/* ------------------------------------------------------------------ */
 /*  Редактор: динамични редове                                          */
 /* ------------------------------------------------------------------ */
 
@@ -359,6 +400,10 @@ function RowsEditor({
   const cols = def.columns || [];
   const entries = data.entries || [];
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+
   const addRow = () => {
     const blank: Record<string, string> = {};
     cols.forEach((c) => {
@@ -366,6 +411,76 @@ function RowsEditor({
       if (c.type === "date" && (c.key === "date" || c.key === "from")) blank[c.key] = refDate;
     });
     onUpdate((prev) => ({ ...prev, entries: [...(prev.entries || []), blank] }));
+  };
+
+  const handleScanClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // Reset
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    setScanError(null);
+
+    try {
+      // 1. Compress image to avoid Vercel payload limit issues
+      const { base64, mimeType } = await compressImage(file);
+
+      // 2. Call local scan-receipt API route
+      const response = await fetch("/api/scan-receipt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image: base64, mimeType }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Възникна системна грешка при обработка на снимката.");
+      }
+
+      if (!result.items || result.items.length === 0) {
+        throw new Error("ИИ не намери продукти за входящ контрол в този документ.");
+      }
+
+      // 3. Map extracted items to table schema and update entries
+      const newEntries = result.items.map((item: any) => {
+        const row: Record<string, string> = {};
+        cols.forEach((c) => {
+          row[c.key] = "";
+        });
+
+        // Set properties based on register column keys
+        row.date = result.date || refDate;
+        row.supplier = result.supplier || "";
+        row.food = item.foodName || "";
+        row.batch = item.batch || "";
+        row.expiry = item.expiryDate || "";
+        row.qty = item.quantity || "";
+        row.docRef = result.documentNumber || "";
+        row.temp = "";
+        row.sign = "";
+
+        return row;
+      });
+
+      onUpdate((prev) => ({
+        ...prev,
+        entries: [...(prev.entries || []), ...newEntries],
+      }));
+    } catch (err: any) {
+      console.error("AI Scan Error:", err);
+      setScanError(err.message || "Грешка при сканиране. Моля, опитайте пак.");
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const updateCell = (idx: number, key: string, v: string) =>
@@ -412,35 +527,76 @@ function RowsEditor({
   return (
     <div className="space-y-3">
       {!readOnly && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={addRow}
-            className="bg-brand-green hover:bg-brand-green/90 text-white text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-green/15 transition-all hover:scale-[1.02]"
-          >
-            <Plus className="h-3.5 w-3.5" /> Добави запис
-          </button>
-          {def.id === "staff-hygiene" && employees.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
             <button
-              onClick={quickAllStaff}
-              className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors"
-              title="Добавя ред за всеки служител с отметки „всичко наред“ — коригирайте само отклоненията"
+              onClick={addRow}
+              disabled={isScanning}
+              className="bg-brand-green hover:bg-brand-green/90 text-white text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-green/15 transition-all hover:scale-[1.02] disabled:opacity-50"
             >
-              <Sparkles className="h-3.5 w-3.5" /> Всички служители {dayLbl} — наред
+              <Plus className="h-3.5 w-3.5" /> Добави запис
             </button>
-          )}
-          {def.id === "allergen-menu" && entries.length === 0 && (
-            <button
-              onClick={() =>
-                onUpdate((prev) => ({
-                  ...prev,
-                  entries: [...(prev.entries || []), ...SAMPLE_ALLERGEN_MENU.map((r) => ({ ...r }))],
-                }))
-              }
-              className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors"
-              title="Зарежда 31-те примерни продукта от документа — после ги коригирайте според Вашето меню"
-            >
-              <Sparkles className="h-3.5 w-3.5" /> Зареди примерно меню (31 продукта)
-            </button>
+            {def.id === "incoming" && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <button
+                  onClick={handleScanClick}
+                  disabled={isScanning}
+                  className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Снимай касов бон или фактура и ИИ автоматично ще попълни списъка с продукти"
+                >
+                  {isScanning ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Обработва се...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Сканирай документ (ИИ)
+                    </>
+                  )}
+                </button>
+              </>
+            )}
+            {def.id === "staff-hygiene" && employees.length > 0 && (
+              <button
+                onClick={quickAllStaff}
+                disabled={isScanning}
+                className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors disabled:opacity-50"
+                title="Добавя ред за всеки служител с отметки „всичко наред“ — коригирайте само отклоненията"
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Всички служители {dayLbl} — наред
+              </button>
+            )}
+            {def.id === "allergen-menu" && entries.length === 0 && (
+              <button
+                onClick={() =>
+                  onUpdate((prev) => ({
+                    ...prev,
+                    entries: [...(prev.entries || []), ...SAMPLE_ALLERGEN_MENU.map((r) => ({ ...r }))],
+                  }))
+                }
+                disabled={isScanning}
+                className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors disabled:opacity-50"
+                title="Зарежда 31-те примерни продукта от документа — после ги коригирайте според Вашето меню"
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Зареди примерно меню (31 продукта)
+              </button>
+            )}
+          </div>
+
+          {scanError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-[10px] rounded-xl px-4 py-2 flex items-center justify-between animate-fadeIn">
+              <span>{scanError}</span>
+              <button onClick={() => setScanError(null)} className="text-red-500 hover:text-red-700 font-bold p-1 cursor-pointer border-0 bg-transparent flex items-center">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
           )}
         </div>
       )}
