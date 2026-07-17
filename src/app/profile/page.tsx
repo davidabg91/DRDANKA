@@ -1031,6 +1031,37 @@ export default function ProfilePage() {
     }
   };
 
+  // Admin approves payment for subscription (bank transfer)
+  const handleConfirmSubscriptionPayment = (email: string) => {
+    if (!confirm(`Сигурни ли сте, че искате да потвърдите плащането по банкова сметка за ${email} и да активирате абонамента?`)) return;
+    const oneYear = new Date();
+    oneYear.setFullYear(oneYear.getFullYear() + 1);
+    const expiresAt = oneYear.toISOString().split("T")[0]; // YYYY-MM-DD
+
+    const updatedUsers = usersList.map(u => {
+      if (u.email.toLowerCase() === email.toLowerCase()) {
+        const oldMessages = u.messages || [];
+        const newMsg: Message = {
+          id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          sender: 'admin',
+          text: "Здравейте! Годишният Ви абонамент за БАБХ Спокойствие е активиран успешно, тъй като банковият Ви превод е получен. Всички функции на портала (дневници, НАССР документи и т.н.) са напълно отключени за период от 1 година. Благодарим Ви!",
+          sentAt: new Date().toISOString()
+        };
+        return {
+          ...u,
+          subscriptionStatus: "approved" as const,
+          subscriptionPaidAt: new Date().toISOString(),
+          expiresAt,
+          messages: [...oldMessages, newMsg]
+        };
+      }
+      return u;
+    });
+
+    saveUsers(updatedUsers);
+    alert(`Плащането за ${email} е потвърдено и абонаментът е активиран!`);
+  };
+
   // Admin deletes user
   const handleDeleteUser = async (email: string) => {
     if (!confirm(`Сигурни ли сте, че искате да изтриете потребител ${email}?`)) return;
@@ -2474,20 +2505,20 @@ export default function ProfilePage() {
             const fee = me?.subscriptionFeeEur ?? 0;
             return (
               <div className="mb-6 rounded-2xl border bg-gradient-to-r from-brand-gold/20 to-brand-gold/10 border-brand-gold/40 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <CreditCard className="h-6 w-6 text-brand-gold shrink-0" />
+                <Building className="h-6 w-6 text-brand-gold shrink-0" />
                 <div className="flex-1 text-sm">
                   <p className="font-bold text-brand-green mb-0.5">
                     Заявлението Ви за абонамент е одобрено!
                   </p>
                   <p className="text-xs text-brand-dark/70">
-                    За да активирате пълния достъп до портала, заплатете годишния абонамент от <strong className="text-brand-green">{fee.toFixed(2)} €</strong>.
+                    За да активирате пълния достъп до портала, моля направете банков превод на стойност <strong className="text-brand-green">{fee.toFixed(2)} €</strong>.
                   </p>
                 </div>
                 <button
-                  onClick={() => { setSubPayOpen(true); setSubPayStatus("idle"); setSubPayError(""); }}
-                  className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap shadow-md shadow-brand-gold/20"
+                  onClick={() => { setSubPayOpen(true); }}
+                  className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap shadow-md shadow-brand-gold/20 border-0"
                 >
-                  Плати {fee.toFixed(2)} €
+                  Данни за превод
                 </button>
               </div>
             );
@@ -2934,9 +2965,15 @@ export default function ProfilePage() {
                                       <p className="text-brand-dark/60 font-mono">{u.email}</p>
                                     </td>
                                     <td className="border border-brand-green/10 p-3 text-center">
-                                      <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${u.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                                        {u.status === "approved" ? "Активен" : "Изтекъл"}
-                                      </span>
+                                      {u.subscriptionStatus === "awaiting_payment" ? (
+                                        <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
+                                          Чака плащане ({u.subscriptionFeeEur} €)
+                                        </span>
+                                      ) : (
+                                        <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${u.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                          {u.status === "approved" ? "Активен" : "Изтекъл"}
+                                        </span>
+                                      )}
                                     </td>
                                     <td className="border border-brand-green/10 p-3 text-center">
                                       {(() => {
@@ -2965,12 +3002,21 @@ export default function ProfilePage() {
                                       })()}
                                     </td>
                                     <td className="border border-brand-green/10 p-3 text-center">
-                                      <button
-                                        onClick={() => handleToggleUserStatus(u.email, u.status)}
-                                        className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border ${u.status === "approved" ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"}`}
-                                      >
-                                        {u.status === "approved" ? "Спри абонамент" : "Активирай абонамент"}
-                                      </button>
+                                      {u.subscriptionStatus === "awaiting_payment" ? (
+                                        <button
+                                          onClick={() => handleConfirmSubscriptionPayment(u.email)}
+                                          className="px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 flex items-center justify-center gap-1 mx-auto"
+                                        >
+                                          <Check className="h-3 w-3" /> Потвърди плащането
+                                        </button>
+                                      ) : (
+                                        <button
+                                          onClick={() => handleToggleUserStatus(u.email, u.status)}
+                                          className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border ${u.status === "approved" ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"}`}
+                                        >
+                                          {u.status === "approved" ? "Спри абонамент" : "Активирай абонамент"}
+                                        </button>
+                                      )}
                                     </td>
                                     <td className="border border-brand-green/10 p-3 text-center">
                                       <button 
@@ -5049,82 +5095,75 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* ─────────── CLIENT: SUBSCRIPTION TEST-PAYMENT MODAL ─────────── */}
+      {/* ─────────── CLIENT: SUBSCRIPTION BANK-PAYMENT MODAL ─────────── */}
       {subPayOpen && (() => {
         const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
         const fee = me?.subscriptionFeeEur ?? 0;
         return (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden font-sans">
               <div className="bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-white/10 rounded-xl">
-                    <CreditCard className="h-5 w-5" />
+                    <Building className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Тестов режим</div>
-                    <div className="font-serif text-lg font-bold">Плати абонамента</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане</div>
+                    <div className="font-serif text-lg font-bold">Данни за банков превод</div>
                   </div>
                 </div>
                 <button
-                  onClick={() => { if (subPayStatus !== "processing") { setSubPayOpen(false); setSubPayStatus("idle"); } }}
-                  className="text-white/60 hover:text-white p-1 rounded-full cursor-pointer"
+                  onClick={() => { setSubPayOpen(false); }}
+                  className="text-white/60 hover:text-white p-1 rounded-full cursor-pointer border-0 bg-transparent"
+                  aria-label="Затвори"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
-              <div className="p-6 space-y-4">
-                {subPayStatus === "success" ? (
-                  <div className="text-center py-8 space-y-3">
-                    <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
-                    <h3 className="font-serif text-xl font-bold text-brand-green">Плащането е успешно!</h3>
-                    <p className="text-sm text-brand-dark/60">Профилът Ви е активиран.</p>
+              <div className="p-6 space-y-5">
+                <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
+                  <span className="text-sm font-bold text-brand-green">Годишен абонамент</span>
+                  <span className="font-serif text-2xl font-bold text-brand-gold">{fee.toFixed(2)} €</span>
+                </div>
+
+                <div className="bg-brand-green/5 border border-brand-green/10 rounded-2xl p-5 space-y-4 text-brand-dark">
+                  <div className="text-center font-bold text-sm uppercase tracking-wider text-brand-green pb-2 border-b border-brand-green/10">
+                    🏦 БАНКОВА СМЕТКА
                   </div>
-                ) : (
-                  <>
-                    <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
-                      <span className="text-sm font-bold text-brand-green">Годишен абонамент</span>
-                      <span className="font-serif text-2xl font-bold text-brand-gold">{fee.toFixed(2)} €</span>
+                  <div className="space-y-3 text-xs sm:text-sm">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">Получател</span>
+                      <span className="font-bold text-brand-dark/90">Данка Василева Николова</span>
                     </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Номер на карта</label>
-                      <input type="text" value={subPayCard} onChange={(e) => setSubPayCard(e.target.value)} className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono tracking-wider" disabled={subPayStatus === "processing"} />
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">Банка</span>
+                      <span className="font-semibold text-brand-dark/95">ЦКБ АД</span>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Валидна до</label>
-                        <input type="text" value={subPayExpiry} onChange={(e) => setSubPayExpiry(e.target.value)} className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={subPayStatus === "processing"} />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">CVC</label>
-                        <input type="text" value={subPayCvc} onChange={(e) => setSubPayCvc(e.target.value)} className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={subPayStatus === "processing"} />
-                      </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">IBAN</span>
+                      <span className="font-mono font-bold text-brand-green text-sm select-all bg-white px-2.5 py-1 rounded border border-brand-green/5 inline-block">BG98 CECB 9790 1008 5533 00</span>
                     </div>
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">BIC</span>
+                      <span className="font-mono font-semibold text-brand-dark/95 select-all bg-white px-2.5 py-1 rounded border border-brand-green/5 inline-block">CECBBGSF</span>
+                    </div>
+                  </div>
+                </div>
 
-                    {subPayError && (
-                      <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{subPayError}</div>
-                    )}
+                <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl p-4 leading-relaxed space-y-1.5">
+                  <p className="font-bold">💡 Важно:</p>
+                  <p>
+                    След като направите банков превод по посочената сметка, администраторът ще активира Вашите права в профила и ще бъдете известени по имейл и с чат съобщение.
+                  </p>
+                </div>
 
-                    <button
-                      onClick={handleSubscriptionTestPay}
-                      disabled={subPayStatus === "processing"}
-                      className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      {subPayStatus === "processing" ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>
-                      ) : (
-                        <>Плати {fee.toFixed(2)} €</>
-                      )}
-                    </button>
-
-                    <p className="text-[10px] text-center text-brand-dark/40">
-                      Тестов режим — никаква реална сума не се таксува.
-                    </p>
-                  </>
-                )}
+                <button
+                  onClick={() => setSubPayOpen(false)}
+                  className="w-full px-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
+                >
+                  Затвори
+                </button>
               </div>
             </div>
           </div>
