@@ -22,16 +22,7 @@ service cloud.firestore {
     }
 
     function sanitizeEmail(email) {
-      return (email.split("@")[0].split("[.]").size() == 1 
-        ? email.split("@")[0] 
-        : (email.split("@")[0].split("[.]").size() == 2 
-            ? email.split("@")[0].split("[.]")[0] + "_" + email.split("@")[0].split("[.]")[1] 
-            : email.split("@")[0].split("[.]")[0] + "_" + email.split("@")[0].split("[.]")[1] + "_" + email.split("@")[0].split("[.]")[2])
-      ) + "_" + (
-        email.split("@")[1].split("[.]").size() == 2 
-          ? email.split("@")[1].split("[.]")[0] + "_" + email.split("@")[1].split("[.]")[1] 
-          : email.split("@")[1].split("[.]")[0] + "_" + email.split("@")[1].split("[.]")[1] + "_" + email.split("@")[1].split("[.]")[2]
-      );
+      return email.replace("@", "_").replace("\\.", "_");
     }
 
     function isOwnerOfKey(key, email) {
