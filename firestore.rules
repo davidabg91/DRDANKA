@@ -61,7 +61,7 @@ service cloud.firestore {
     //   - Authenticated user reads/writes own logs.
     match /logs/{key} {
       function ownsKey() {
-        return key.split("_reg_")[0] == "danka_logs_" + authEmail().split("@").join("_").split(".").join("_");
+        return key.split("_reg_")[0] == "danka_logs_" + authEmail().split("@").join("_").split("[.]").join("_");
       }
 
       allow read, write: if isAdmin() || (isSignedIn() && ownsKey());
