@@ -22,13 +22,8 @@ service cloud.firestore {
     }
 
     function isOwnerOfKey(key, email) {
-      return (
-        email.split("@")[0].matches(".*[.].*")
-          ? key >= "danka_logs_" + email.split("@")[0].split(".")[0] + "_" + email.split("@")[0].split(".")[1] + "_" + email.split("@")[1].split(".")[0] + "_" + email.split("@")[1].split(".")[1] + "_reg_" &&
-            key < "danka_logs_" + email.split("@")[0].split(".")[0] + "_" + email.split("@")[0].split(".")[1] + "_" + email.split("@")[1].split(".")[0] + "_" + email.split("@")[1].split(".")[1] + "_reg_~"
-          : key >= "danka_logs_" + email.split("@")[0] + "_" + email.split("@")[1].split(".")[0] + "_" + email.split("@")[1].split(".")[1] + "_reg_" &&
-            key < "danka_logs_" + email.split("@")[0] + "_" + email.split("@")[1].split(".")[0] + "_" + email.split("@")[1].split(".")[1] + "_reg_~"
-      );
+      return key >= "danka_logs_" + email.split("@")[0].split(".")[0] + "_" && 
+             key < "danka_logs_" + email.split("@")[0].split(".")[0] + "_~";
     }
 
     function isAdmin() {
