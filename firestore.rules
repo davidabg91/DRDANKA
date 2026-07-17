@@ -22,8 +22,8 @@ service cloud.firestore {
     }
 
     function isOwnerOfKey(key, email) {
-      return key.split("_reg_")[0][11:].split("_") == 
-             email.split("@")[0].split('.').concat(email.split("@")[1].split('.'));
+      return key.split("_reg_")[0].split("_") == 
+             ["danka", "logs"].concat(email.split("@")[0].split('.')).concat(email.split("@")[1].split('.'));
     }
 
     function isAdmin() {
