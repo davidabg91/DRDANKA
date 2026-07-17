@@ -62,7 +62,17 @@ service cloud.firestore {
     match /logs/{key} {
       allow read, write: if isAdmin() || (
         isSignedIn() &&
-        key.split("_reg_")[0] == "danka_logs_" + authEmail().split("@").join("_").split("[.]").join("_")
+        key.split("_reg_")[0] == "danka_logs_" + (
+          authEmail().split("@")[0].split("[.]").size() == 1 
+            ? authEmail().split("@")[0] 
+            : (authEmail().split("@")[0].split("[.]").size() == 2 
+                ? authEmail().split("@")[0].split("[.]")[0] + "_" + authEmail().split("@")[0].split("[.]")[1] 
+                : authEmail().split("@")[0].split("[.]")[0] + "_" + authEmail().split("@")[0].split("[.]")[1] + "_" + authEmail().split("@")[0].split("[.]")[2])
+        ) + "_" + (
+          authEmail().split("@")[1].split("[.]").size() == 2 
+            ? authEmail().split("@")[1].split("[.]")[0] + "_" + authEmail().split("@")[1].split("[.]")[1] 
+            : authEmail().split("@")[1].split("[.]")[0] + "_" + authEmail().split("@")[1].split("[.]")[1] + "_" + authEmail().split("@")[1].split("[.]")[2]
+        )
       );
     }
 
