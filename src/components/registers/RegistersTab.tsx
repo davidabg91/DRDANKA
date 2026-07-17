@@ -1977,9 +1977,9 @@ export default function RegistersTab({
             <button
               data-tour="equipment"
               onClick={() => setShowSettings(true)}
-              className="border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 font-black text-[10px] uppercase px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer bg-white"
+              className="bg-brand-green/10 hover:bg-brand-green/20 border border-brand-green/30 hover:border-brand-green/60 text-brand-green font-black text-xs uppercase px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98] duration-150"
             >
-              <Settings className="h-3.5 w-3.5" />
+              <Settings className="h-4 w-4 text-brand-green" />
               Оборудване и персонал
             </button>
           )}
