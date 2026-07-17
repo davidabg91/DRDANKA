@@ -973,7 +973,7 @@ export default function ProfilePage() {
       oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
       const expiresAt = oneYearFromNow.toISOString().split("T")[0]; // YYYY-MM-DD
 
-      const updates = {
+      const updates: Partial<DankaUser> = {
         subscriptionStatus: "approved",
         subscriptionPaidAt: new Date().toISOString(),
         expiresAt,
