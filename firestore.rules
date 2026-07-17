@@ -27,7 +27,7 @@ service cloud.firestore {
 
     // True when the post-update value of `field` is unchanged.
     function unchanged(field) {
-      return request.resource.data[field] == resource.data[field];
+      return request.resource.data.get(field, null) == resource.data.get(field, null);
     }
 
     // /users/{email}
