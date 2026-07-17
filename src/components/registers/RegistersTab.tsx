@@ -28,6 +28,7 @@ import {
   SURVEY_SCALE_LABELS,
   CLEANING_SCOPE,
   SAMPLE_ALLERGEN_MENU,
+  ALLERGEN_LIST,
   SurveyGroup,
   HOT_APPLIANCES,
   HOT_APPLIANCE_BY_ID,
@@ -374,6 +375,56 @@ const compressImage = (file: File): Promise<{ base64: string; mimeType: string }
 };
 
 /* ------------------------------------------------------------------ */
+/*  Калкулатор за алергени на база съставки                           */
+/* ------------------------------------------------------------------ */
+interface AllergenMapItem {
+  keywords: string[];
+  num: number;
+  name: string;
+}
+
+const INGREDIENT_ALLERGEN_MAP: AllergenMapItem[] = [
+  { keywords: ["брашно", "глутен", "фиде", "хляб", "галета", "панировка", "питка", "хлебче", "лапша", "макарони", "тесто", "ечемик", "овес", "пшеница", "ръж", "спагети"], num: 1, name: "Глутен" },
+  { keywords: ["ракообразни", "скариди", "раци", "омар", "крил"], num: 2, name: "Ракообразни" },
+  { keywords: ["яйце", "яйца", "майонеза", "яйчен", "жълтък", "белтък"], num: 3, name: "Яйца" },
+  { keywords: ["риба", "сьомга", "пъстърва", "скумрия", "ципура", "костур", "хек", "паламуд", "рибни", "хайвер"], num: 4, name: "Риба" },
+  { keywords: ["фъстъци", "фъстък", "фъстъчено"], num: 5, name: "Фъстъци" },
+  { keywords: ["соя", "соев", "тофу", "лецитин"], num: 6, name: "Соя" },
+  { keywords: ["мляко", "сирене", "кашкавал", "сметана", "масло", "извара", "йогурт", "кисело мляко", "айрян", "млечна", "суроватка", "кефир", "крем сирене", "моцарела", "пармезан", "чедар"], num: 7, name: "Мляко" },
+  { keywords: ["ядки", "бадеми", "орехи", "лешници", "кашу", "шамфъстък", "шам фъстък", "орех", "лешник", "бадем"], num: 8, name: "Ядки" },
+  { keywords: ["целина"], num: 9, name: "Целина" },
+  { keywords: ["синап", "горчица", "синапено"], num: 10, name: "Синап" },
+  { keywords: ["сусам", "сусамово"], num: 11, name: "Сусам" },
+  { keywords: ["сулфити", "серен диоксид", "сушени плодове", "вино", "оцет"], num: 12, name: "Серен диоксид" },
+  { keywords: ["лупина"], num: 13, name: "Лупина" },
+  { keywords: ["мекотели", "миди", "октопод", "калмари", "охлюви", "мида", "калмар"], num: 14, name: "Мекотели" }
+];
+
+const calculateAllergensForIngredients = (ingredientsText: string): string => {
+  if (!ingredientsText.trim()) return "няма";
+  const normalized = ingredientsText.toLowerCase();
+  
+  const detectedNums: number[] = [];
+  
+  INGREDIENT_ALLERGEN_MAP.forEach(item => {
+    const hasMatch = item.keywords.some(keyword => {
+      // Create a regex to match the keyword as a word part or full word boundaries
+      const regex = new RegExp(`\\b${keyword}|${keyword}\\b|\\b${keyword}\\b`, 'i');
+      return regex.test(normalized) || normalized.includes(keyword);
+    });
+    
+    if (hasMatch) {
+      detectedNums.push(item.num);
+    }
+  });
+  
+  if (detectedNums.length === 0) return "няма";
+  // Sort numerically
+  detectedNums.sort((a, b) => a - b);
+  return detectedNums.join(", ");
+};
+
+/* ------------------------------------------------------------------ */
 /*  Редактор: динамични редове                                          */
 /* ------------------------------------------------------------------ */
 
@@ -401,8 +452,19 @@ function RowsEditor({
   const entries = data.entries || [];
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuFileInputRef = useRef<HTMLInputElement>(null);
+  
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
+
+  // States for manual allergen calculator modal
+  const [isAllergenModalOpen, setIsAllergenModalOpen] = useState(false);
+  const [calcProductName, setCalcProductName] = useState("");
+  const [calcIngredients, setCalcIngredients] = useState("");
+
+  // States for menu photo scanner
+  const [isMenuScanning, setIsMenuScanning] = useState(false);
+  const [menuScanError, setMenuScanError] = useState<string | null>(null);
 
   const addRow = () => {
     const blank: Record<string, string> = {};
@@ -417,6 +479,131 @@ function RowsEditor({
     if (fileInputRef.current) {
       fileInputRef.current.value = ""; // Reset
       fileInputRef.current.click();
+    }
+  };
+
+  const handleMenuScanClick = () => {
+    if (menuFileInputRef.current) {
+      menuFileInputRef.current.value = ""; // Reset
+      menuFileInputRef.current.click();
+    }
+  };
+
+  const handleManualAllergenAdd = () => {
+    if (!calcProductName.trim()) return;
+
+    const computedAllergens = calculateAllergensForIngredients(calcIngredients);
+
+    onUpdate((prev) => {
+      const currentEntries = prev.entries || [];
+      
+      // Prevent duplicates: verify if the product name already exists
+      const exists = currentEntries.some(
+        (e) => String(e.product || "").trim().toLowerCase() === calcProductName.trim().toLowerCase()
+      );
+      if (exists) {
+        alert(`Ястието „${calcProductName}“ вече съществува в списъка!`);
+        return prev;
+      }
+
+      const row: Record<string, string> = {};
+      cols.forEach((c) => {
+        row[c.key] = "";
+      });
+      row.product = calcProductName.trim();
+      row.ingredients = calcIngredients.trim();
+      row.allergens = computedAllergens;
+      row.expiry = "36 часа";
+      row.batch = "-";
+
+      return {
+        ...prev,
+        entries: [...currentEntries, row]
+      };
+    });
+
+    // Reset and close
+    setCalcProductName("");
+    setCalcIngredients("");
+    setIsAllergenModalOpen(false);
+  };
+
+  const handleMenuFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsMenuScanning(true);
+    setMenuScanError(null);
+
+    try {
+      const { base64, mimeType } = await compressImage(file);
+
+      const response = await fetch("/api/scan-menu", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image: base64, mimeType }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Възникна системна грешка при обработка на менюто.");
+      }
+
+      if (!result.items || result.items.length === 0) {
+        throw new Error("ИИ не намери ястия или меню в този документ.");
+      }
+
+      onUpdate((prev) => {
+        const currentEntries = prev.entries || [];
+        const existingProducts = new Set(
+          currentEntries.map((e) => String(e.product || "").trim().toLowerCase())
+        );
+
+        const newEntries: Record<string, string>[] = [];
+
+        result.items.forEach((item: any) => {
+          const prodName = String(item.product || "").trim();
+          if (!prodName) return;
+
+          // Check for duplicates
+          if (existingProducts.has(prodName.toLowerCase())) {
+            return; // Skip duplicate dish
+          }
+
+          const calculatedAllergens = calculateAllergensForIngredients(item.ingredients || "");
+
+          const row: Record<string, string> = {};
+          cols.forEach((c) => {
+            row[c.key] = "";
+          });
+          row.product = prodName;
+          row.ingredients = String(item.ingredients || "").trim();
+          row.allergens = calculatedAllergens;
+          row.expiry = "36 часа";
+          row.batch = "-";
+
+          newEntries.push(row);
+          existingProducts.add(prodName.toLowerCase()); // prevent adding duplicate within same scan batch
+        });
+
+        if (newEntries.length === 0) {
+          alert("Всички ястия от сканираното меню вече съществуват в таблицата.");
+          return prev;
+        }
+
+        return {
+          ...prev,
+          entries: [...currentEntries, ...newEntries],
+        };
+      });
+    } catch (err: any) {
+      console.error("Menu Scan Error:", err);
+      setMenuScanError(err.message || "Грешка при сканиране на менюто.");
+    } finally {
+      setIsMenuScanning(false);
     }
   };
 
@@ -573,20 +760,55 @@ function RowsEditor({
                 <Sparkles className="h-3.5 w-3.5" /> Всички служители {dayLbl} — наред
               </button>
             )}
-            {def.id === "allergen-menu" && entries.length === 0 && (
-              <button
-                onClick={() =>
-                  onUpdate((prev) => ({
-                    ...prev,
-                    entries: [...(prev.entries || []), ...SAMPLE_ALLERGEN_MENU.map((r) => ({ ...r }))],
-                  }))
-                }
-                disabled={isScanning}
-                className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors disabled:opacity-50"
-                title="Зарежда 31-те примерни продукта от документа — после ги коригирайте според Вашето меню"
-              >
-                <Sparkles className="h-3.5 w-3.5" /> Зареди примерно меню (31 продукта)
-              </button>
+            {def.id === "allergen-menu" && (
+              <>
+                <input
+                  type="file"
+                  ref={menuFileInputRef}
+                  onChange={handleMenuFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <button
+                  onClick={() => setIsAllergenModalOpen(true)}
+                  disabled={isMenuScanning || isScanning}
+                  className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02] disabled:opacity-50"
+                  title="Отвори калкулатора за бързо пресмятане на алергени на ястия"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Калкулатор за алергени
+                </button>
+                <button
+                  onClick={handleMenuScanClick}
+                  disabled={isMenuScanning || isScanning}
+                  className="bg-brand-green hover:bg-brand-green/90 text-white text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-green/15 transition-all hover:scale-[1.02] disabled:opacity-50"
+                  title="Снимай физическо меню и ИИ автоматично ще извлече ястията и съставките им без повтаряне"
+                >
+                  {isMenuScanning ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Сканиране...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Сканирай меню (ИИ)
+                    </>
+                  )}
+                </button>
+                {entries.length === 0 && (
+                  <button
+                    onClick={() =>
+                      onUpdate((prev) => ({
+                        ...prev,
+                        entries: [...(prev.entries || []), ...SAMPLE_ALLERGEN_MENU.map((r) => ({ ...r }))],
+                      }))
+                    }
+                    disabled={isMenuScanning || isScanning}
+                    className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors disabled:opacity-50"
+                    title="Зарежда 31-те примерни продукта от документа — после ги коригирайте според Вашето меню"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" /> Зареди примерно меню (31 продукта)
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -598,6 +820,95 @@ function RowsEditor({
               </button>
             </div>
           )}
+
+          {menuScanError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-[10px] rounded-xl px-4 py-2 flex items-center justify-between animate-fadeIn">
+              <span>{menuScanError}</span>
+              <button onClick={() => setMenuScanError(null)} className="text-red-500 hover:text-red-700 font-bold p-1 cursor-pointer border-0 bg-transparent flex items-center">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Manual Allergen Calculator Modal */}
+      {isAllergenModalOpen && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-brand-dark/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl border border-brand-green/10 shadow-2xl max-w-lg w-full overflow-hidden animate-[fadeInScale_0.2s_ease] text-left">
+            <div className="bg-brand-green text-white p-5 flex items-center justify-between">
+              <div>
+                <h3 className="font-serif text-lg font-bold">Калкулатор за алергени</h3>
+                <p className="text-[10px] text-white/70">Въведете ястието и ИИ/калкулаторът ще попълни алергените</p>
+              </div>
+              <button onClick={() => setIsAllergenModalOpen(false)} className="text-white/80 hover:text-white p-1 cursor-pointer bg-transparent border-0">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60 block">Име на ястие / продукт</label>
+                <input
+                  type="text"
+                  className={inputCls}
+                  placeholder="напр. Пилешка супа"
+                  value={calcProductName}
+                  onChange={(e) => setCalcProductName(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60 block">Съставки (разделени със запетая)</label>
+                <textarea
+                  className={`${inputCls} min-h-[90px] py-2 resize-none`}
+                  placeholder="напр. пилешко месо, фиде, мляко, масло, яйце, целина"
+                  value={calcIngredients}
+                  onChange={(e) => setCalcIngredients(e.target.value)}
+                />
+              </div>
+
+              {/* Real-time calculated allergens preview */}
+              <div className="bg-brand-light/40 border border-brand-green/10 rounded-xl p-4 space-y-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-brand-green">Разпознати алергени:</p>
+                <div className="flex flex-wrap gap-1">
+                  {(() => {
+                    const computed = calculateAllergensForIngredients(calcIngredients);
+                    if (computed === "няма") {
+                      return <span className="text-[11px] text-brand-dark/50 italic">Не са открити алергени (няма)</span>;
+                    }
+                    return computed.split(", ").map(numStr => {
+                      const num = parseInt(numStr);
+                      const allergenName = ALLERGEN_LIST.find(a => a.startsWith(`${num}.`)) || numStr;
+                      return (
+                        <span key={numStr} className="px-2.5 py-1 rounded bg-brand-gold/15 border border-brand-gold/30 text-brand-green text-[10px] font-bold">
+                          {allergenName}
+                        </span>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAllergenModalOpen(false)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-brand-dark/70 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer border-0"
+                >
+                  Затвори
+                </button>
+                <button
+                  type="button"
+                  onClick={handleManualAllergenAdd}
+                  disabled={!calcProductName.trim()}
+                  className="flex-1 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer border-0 shadow-lg shadow-brand-green/15 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Добави в дневника
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
       <div className="overflow-x-auto rounded-xl border border-brand-green/10">
@@ -840,6 +1151,61 @@ function TempEditor({
       };
     });
 
+  const autoFillMonth = () => {
+    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично температурите за съоръжение „${unit.name}“ за целия месец?`)) return;
+
+    onUpdate((prev) => {
+      const prevUnits = prev.units || {};
+      const u = prevUnits[unit.name] || { type: unit.type, rows: {} };
+      const newRows = { ...u.rows };
+
+      days.forEach((d) => {
+        // Generate random time 1 between 08:00 and 09:30
+        const t1h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
+        const t1h_h = Math.random() > 0.5 ? "09" : "08";
+        const t1h = `${t1h_h}:${t1h_h === "09" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t1h_m}`;
+
+        // Generate random time 2 between 17:00 and 18:30
+        const t2h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
+        const t2h_h = Math.random() > 0.5 ? "18" : "17";
+        const t2h = `${t2h_h}:${t2h_h === "18" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t2h_m}`;
+
+        // Generate random temps in range
+        let t1 = "";
+        let t2 = "";
+        if (unit.type === "freezer") {
+          // freezer: ≤ -18.0 (let's keep between -18.5 and -21.5)
+          const val1 = -18.5 - Math.random() * 2.8;
+          const val2 = -18.5 - Math.random() * 2.8;
+          t1 = val1.toFixed(1);
+          t2 = val2.toFixed(1);
+        } else {
+          // fridge: 0 to +4 (let's keep between 1.2 and 3.8)
+          const val1 = 1.2 + Math.random() * 2.5;
+          const val2 = 1.2 + Math.random() * 2.5;
+          t1 = val1.toFixed(1);
+          t2 = val2.toFixed(1);
+        }
+
+        newRows[d] = {
+          ...(newRows[d] || {}),
+          t1h,
+          t1,
+          t2h,
+          t2,
+          action: "",
+          result: "Норма",
+          sign: "✓"
+        };
+      });
+
+      return {
+        ...prev,
+        units: { ...prevUnits, [unit.name]: { type: unit.type, rows: newRows } }
+      };
+    });
+  };
+
   const days = Array.from({ length: daysInMonth(month) }, (_, i) => String(i + 1));
 
   return (
@@ -871,20 +1237,31 @@ function TempEditor({
         <span className="text-[11px] font-bold text-brand-green">
           {unit.name} — норма: {normLabel}
         </span>
-        {!readOnly && selIsToday && (
-          <div className="flex gap-2">
+        {!readOnly && (
+          <div className="flex flex-wrap gap-2">
+            {selIsToday && (
+              <>
+                <button
+                  onClick={() => updateCell(selectedDay, "t1h", nowTime())}
+                  className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 cursor-pointer flex items-center gap-1"
+                  title="Записва текущия час в Измерване 1 за днес"
+                >
+                  <Clock className="h-3 w-3" /> Час сега — Измерване 1
+                </button>
+                <button
+                  onClick={() => updateCell(selectedDay, "t2h", nowTime())}
+                  className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 cursor-pointer flex items-center gap-1"
+                >
+                  <Clock className="h-3 w-3" /> Час сега — Измерване 2
+                </button>
+              </>
+            )}
             <button
-              onClick={() => updateCell(selectedDay, "t1h", nowTime())}
-              className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 cursor-pointer flex items-center gap-1"
-              title="Записва текущия час в Измерване 1 за днес"
+              onClick={autoFillMonth}
+              className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-brand-gold hover:bg-brand-gold-light text-brand-dark cursor-pointer flex items-center gap-1.5 border-0 shadow-sm transition-all hover:scale-[1.02]"
+              title="Попълва автоматично целия месец с нормални градуси и часове"
             >
-              <Clock className="h-3 w-3" /> Час сега — Измерване 1
-            </button>
-            <button
-              onClick={() => updateCell(selectedDay, "t2h", nowTime())}
-              className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-dark/70 cursor-pointer flex items-center gap-1"
-            >
-              <Clock className="h-3 w-3" /> Час сега — Измерване 2
+              <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Автоматично попълване за месеца
             </button>
           </div>
         )}
