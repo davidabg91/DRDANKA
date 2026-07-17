@@ -69,7 +69,7 @@ service cloud.firestore {
     //   - Admin reads/writes everything (audit).
     //   - Authenticated user reads/writes own logs.
     match /logs/{key} {
-      allow read, write: if isAdmin() || (isSignedIn() && isOwnerOfKey(key, authEmail()));
+      allow read, write: if isAdmin() || (isSignedIn() && key >= "danka_logs_" && key < "danka_logs_~");
     }
 
     // Audit trail of admin actions: append-only, admin-only.
