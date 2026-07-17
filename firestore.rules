@@ -62,7 +62,7 @@ service cloud.firestore {
     match /logs/{key} {
       function ownsKey() {
         return key.matches(
-          "^danka_logs_" + authEmail().replace("@", "_").replace("[.]", "_") + "_.*$"
+          "^danka_logs_" + authEmail().split("@").join("_").split(".").join("_") + "_.*$"
         );
       }
 
