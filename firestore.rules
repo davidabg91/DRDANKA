@@ -21,20 +21,8 @@ service cloud.firestore {
       return request.auth.token.email.lower();
     }
 
-    function sanitizeUsername(username) {
-      return username.matches(".*[.].*")
-        ? username.split(".")[0] + "_" + username.split(".")[1]
-        : username;
-    }
-
-    function sanitizeDomain(domain) {
-      return domain.matches(".*[.].*[.].*")
-        ? domain.split(".")[0] + "_" + domain.split(".")[1] + "_" + domain.split(".")[2]
-        : domain.split(".")[0] + "_" + domain.split(".")[1];
-    }
-
     function isOwnerOfKey(key, email) {
-      return key.split("_reg_")[0] == "danka_logs_" + sanitizeUsername(email.split("@")[0]) + "_" + sanitizeDomain(email.split("@")[1]);
+      return key.matches("^danka_logs_" + email.split("@")[0] + "_" + email.split("@")[1].split(".")[0] + "_.*");
     }
 
     function isAdmin() {
