@@ -66,7 +66,7 @@ service cloud.firestore {
     }
 
     function sanitizeEmail(email) {
-      return sanitizePart(email.split("@")[0].split(".")) + "_" + sanitizePart(email.split("@")[1].split("."));
+      return sanitizePart(email.split("@")[0].split("[.]")) + "_" + sanitizePart(email.split("@")[1].split("[.]"));
     }
 
     // /logs/{key} — key format: danka_logs_<sanitizedEmail>_<YYYY-MM-DD>
