@@ -1189,6 +1189,16 @@ export interface HotAppliance {
   registers: string[];
 }
 
+/**
+ * Ежедневни дейности (не са уреди), които при отбелязване изискват карти —
+ * напр. доставка на продукти → дневник за входящ контрол. Важат за всеки обект,
+ * независимо дали има топла точка.
+ */
+export const DAILY_ACTIVITIES: HotAppliance[] = [
+  { id: "delivery", label: "Доставка на продукти", emoji: "📦", registers: ["incoming"] },
+  { id: "waste", label: "Брак / изхвърлена стока", emoji: "🗑️", registers: ["waste"] },
+];
+
 export const HOT_APPLIANCES: HotAppliance[] = [
   { id: "grill", label: "Скара", emoji: "🍖", registers: ["grill-temp", "grill-batch"] },
   { id: "fryer", label: "Фритюрник", emoji: "🍟", registers: ["fryer-oil-temp"] },
@@ -1208,9 +1218,16 @@ export const HOT_APPLIANCE_BY_ID: Record<string, HotAppliance> = Object.fromEntr
   HOT_APPLIANCES.map((a) => [a.id, a])
 );
 
-/** Обратна връзка: карта → уред, който я изисква. */
+/** Всички ежедневни „тригери" (дейности + уреди), които водят до карти. */
+export const ALL_DAILY_TRIGGERS: HotAppliance[] = [...DAILY_ACTIVITIES, ...HOT_APPLIANCES];
+
+export const TRIGGER_BY_ID: Record<string, HotAppliance> = Object.fromEntries(
+  ALL_DAILY_TRIGGERS.map((t) => [t.id, t])
+);
+
+/** Обратна връзка: карта → тригер (дейност/уред), който я изисква. */
 export const REGISTER_APPLIANCE: Record<string, string> = Object.fromEntries(
-  HOT_APPLIANCES.flatMap((a) => a.registers.map((r) => [r, a.id]))
+  ALL_DAILY_TRIGGERS.flatMap((a) => a.registers.map((r) => [r, a.id]))
 );
 
 /** Карти от топлата точка, които важат независимо от конкретните уреди. */

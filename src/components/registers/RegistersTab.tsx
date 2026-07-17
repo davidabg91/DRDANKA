@@ -31,6 +31,8 @@ import {
   SurveyGroup,
   HOT_APPLIANCES,
   HOT_APPLIANCE_BY_ID,
+  DAILY_ACTIVITIES,
+  TRIGGER_BY_ID,
   REGISTER_APPLIANCE,
   visibleRegistersFor,
   ADMIN_REMINDERS_ID,
@@ -1531,6 +1533,17 @@ export default function RegistersTab({
   const docsRef = useRef<Record<string, RegisterDocData>>({});
   docsRef.current = docs;
   const timersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const openedRef = useRef<HTMLDivElement>(null);
+
+  // При отваряне на карта (вкл. чрез клик на напомняне) — скролираме до нея,
+  // за да е видимо веднага, че се е отворила.
+  useEffect(() => {
+    if (!openId) return;
+    const t = setTimeout(() => {
+      openedRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+    return () => clearTimeout(t);
+  }, [openId]);
 
   /** Всички регистри за зареждане на данни (пълният комплект при топла точка). */
   const activeRegisters = useMemo(() => registersFor(hotPoint), [hotPoint]);
@@ -1539,13 +1552,19 @@ export default function RegistersTab({
     () => visibleRegistersFor(hotPoint, hotAppliances),
     [hotPoint, hotAppliances]
   );
-  /** Уредите, които панелът „използвани днес" показва. */
+  /** Уредите от топлата точка, които панелът показва. */
   const ownedAppliances = useMemo(
     () =>
       hotAppliances.length > 0
         ? HOT_APPLIANCES.filter((a) => hotAppliances.includes(a.id))
         : HOT_APPLIANCES,
     [hotAppliances]
+  );
+
+  /** Всички ежедневни тригери: дейности (винаги) + уреди (при топла точка). */
+  const dailyTriggers = useMemo(
+    () => [...DAILY_ACTIVITIES, ...(hotPoint ? ownedAppliances : [])],
+    [hotPoint, ownedAppliances]
   );
 
   const units = useMemo(
@@ -1583,8 +1602,8 @@ export default function RegistersTab({
       const results: Record<string, RegisterDocData> = {};
       const toLoad: { id: string; period: string }[] = [
         ...activeRegisters.map((def) => ({ id: def.id, period: periodFor(def, month) })),
-        // Псевдо-документ: кои уреди от топлата точка са използвани по дни.
-        ...(hotPoint ? [{ id: DAILY_USAGE_ID, period: month }] : []),
+        // Псевдо-документ: кои дейности/уреди са отбелязани по дни.
+        { id: DAILY_USAGE_ID, period: month },
         // Задачи, изпратени от администратора (постоянен документ).
         { id: ADMIN_REMINDERS_ID, period: "all" },
       ];
@@ -1707,25 +1726,30 @@ export default function RegistersTab({
             text: "Чек-листът „Хигиена и техническо състояние“ не е попълнен (попълва се преди започване на работа).",
           });
         }
-        const used = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
-        ownedAppliances.forEach((app) => {
-          if (used[app.id] !== "1") return;
-          app.registers.forEach((regId) => {
-            const def = REGISTER_BY_ID[regId];
-            if (!def) return;
-            if (!(docs[regId]?.entries || []).some((e) => e.date === dateISO)) {
-              missing.push({
-                registerId: regId,
-                text: `${app.emoji} Използван е „${app.label}“ — попълнете картата „${def.shortTitle}“.`,
-              });
-            }
-          });
-        });
       }
+
+      // Отбелязани дейности/уреди за деня → изискват своите карти.
+      const used = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
+      dailyTriggers.forEach((trig) => {
+        if (used[trig.id] !== "1") return;
+        trig.registers.forEach((regId) => {
+          const def = REGISTER_BY_ID[regId];
+          if (!def) return;
+          if (!(docs[regId]?.entries || []).some((e) => e.date === dateISO)) {
+            const isActivity = DAILY_ACTIVITIES.some((a) => a.id === trig.id);
+            missing.push({
+              registerId: regId,
+              text: isActivity
+                ? `${trig.emoji} Отбелязахте „${trig.label}“ — попълнете картата „${def.shortTitle}“.`
+                : `${trig.emoji} Използван е „${trig.label}“ — попълнете картата „${def.shortTitle}“.`,
+            });
+          }
+        });
+      });
 
       return missing;
     },
-    [docs, units, employees, hotPoint, ownedAppliances]
+    [docs, units, employees, hotPoint, dailyTriggers]
   );
 
   /* ------------------ Напомняния ------------------ */
@@ -1974,14 +1998,14 @@ export default function RegistersTab({
         default:
           break;
       }
-      // Карти, свързани с уред от топлата точка: статус според „използван" за избрания ден
-      const applianceId = REGISTER_APPLIANCE[def.id];
-      if (applianceId && dayMode) {
-        const usedOnDay = docs[DAILY_USAGE_ID]?.rows?.[dayNum]?.[applianceId] === "1";
-        if (usedOnDay) {
+      // Карти, свързани с дейност/уред: статус според „отбелязано" за избрания ден
+      const triggerId = REGISTER_APPLIANCE[def.id];
+      if (triggerId && dayMode) {
+        const markedOnDay = docs[DAILY_USAGE_ID]?.rows?.[dayNum]?.[triggerId] === "1";
+        if (markedOnDay) {
           return (d.entries || []).some((e) => e.date === refDate)
             ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
-            : { label: `${HOT_APPLIANCE_BY_ID[applianceId]?.emoji || ""} ${dLbl}: изисква се!`, tone: "due" };
+            : { label: `${TRIGGER_BY_ID[triggerId]?.emoji || ""} ${dLbl}: изисква се!`, tone: "due" };
         }
       }
       const count =
@@ -2160,13 +2184,13 @@ export default function RegistersTab({
         );
       })()}
 
-      {/* Топла точка: кои уреди са използвани през избрания ден */}
-      {hotPoint && !loading && refDate.startsWith(month) && refDate <= todayISO() && (() => {
+      {/* Какво се случи през избрания ден — дейности + уреди (топла точка) */}
+      {!loading && refDate.startsWith(month) && refDate <= todayISO() && (() => {
         const dayNum = refDay;
-        const usedToday = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
-        const usedCount = ownedAppliances.filter((a) => usedToday[a.id] === "1").length;
-        const nothingMarked = Object.keys(usedToday).length === 0;
-        const toggleAppliance = (id: string) => {
+        const marked = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
+        const markedCount = dailyTriggers.filter((t) => marked[t.id] === "1").length;
+        const nothingMarked = Object.keys(marked).length === 0;
+        const toggle = (id: string) => {
           if (readOnly) return;
           makeUpdater(DAILY_USAGE_ID)((prev) => {
             const day = { ...((prev.rows || {})[dayNum] || {}) };
@@ -2174,6 +2198,32 @@ export default function RegistersTab({
             return { ...prev, rows: { ...(prev.rows || {}), [dayNum]: day } };
           });
         };
+        const chip = (t: typeof dailyTriggers[number]) => {
+          const on = marked[t.id] === "1";
+          return (
+            <button
+              key={t.id}
+              disabled={readOnly}
+              onClick={() => toggle(t.id)}
+              title={
+                on
+                  ? `Отбелязано ${dayLabel} — изискват се: ${t.registers.map((r) => REGISTER_BY_ID[r]?.shortTitle).filter(Boolean).join(", ")}`
+                  : `Кликнете, ако това се е случило ${dayLabel}`
+              }
+              className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors cursor-pointer disabled:cursor-default flex items-center gap-1.5 ${
+                on
+                  ? "bg-brand-gold text-brand-dark border-brand-gold shadow-md shadow-brand-gold/20"
+                  : "bg-white text-brand-dark/55 border-brand-green/15 hover:border-brand-gold"
+              }`}
+            >
+              <span className="text-sm leading-none">{t.emoji}</span>
+              {t.label}
+              {on && <Check className="h-3 w-3" />}
+            </button>
+          );
+        };
+        const applianceChips = hotPoint ? dailyTriggers.filter((t) => HOT_APPLIANCE_BY_ID[t.id]) : [];
+        const activityChips = dailyTriggers.filter((t) => !HOT_APPLIANCE_BY_ID[t.id]);
         return (
           <div
             data-tour="usage"
@@ -2183,42 +2233,37 @@ export default function RegistersTab({
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <Flame className="h-4 w-4 text-brand-gold" />
+                <Sparkles className="h-4 w-4 text-brand-gold" />
                 <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
-                  Топла точка — какво използвахте {dayLabel}?
+                  Какво се случи {dayLabel}?
                 </h3>
               </div>
               <span className="text-[10px] font-bold text-brand-dark/45">
-                {usedCount > 0
-                  ? `${usedCount} уред${usedCount === 1 ? "" : "а"} в употреба ${dayLabel}`
+                {markedCount > 0
+                  ? `${markedCount} отбеляза${markedCount === 1 ? "но" : "ни"} за ${dayLabel}`
                   : readOnly
-                    ? `Няма отбелязани уреди за ${dayLabel}`
+                    ? `Няма отбелязани дейности за ${dayLabel}`
                     : "Отбележете и системата ще Ви напомни кои карти да попълните"}
               </span>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {ownedAppliances.map((a) => {
-                const on = usedToday[a.id] === "1";
-                return (
-                  <button
-                    key={a.id}
-                    disabled={readOnly}
-                    onClick={() => toggleAppliance(a.id)}
-                    title={on ? `Използван ${dayLabel} — изискват се: ${a.registers.map((r) => REGISTER_BY_ID[r]?.shortTitle).filter(Boolean).join(", ")}` : `Кликнете, ако уредът е използван ${dayLabel}`}
-                    className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors cursor-pointer disabled:cursor-default flex items-center gap-1.5 ${
-                      on
-                        ? "bg-brand-gold text-brand-dark border-brand-gold shadow-md shadow-brand-gold/20"
-                        : "bg-white text-brand-dark/55 border-brand-green/15 hover:border-brand-gold"
-                    }`}
-                  >
-                    <span className="text-sm leading-none">{a.emoji}</span>
-                    {a.label}
-                    {on && <Check className="h-3 w-3" />}
-                  </button>
-                );
-              })}
+
+            {/* Дейности (за всеки обект) */}
+            <div className="space-y-1.5">
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-dark/40">Дейности</span>
+              <div className="flex flex-wrap gap-2">{activityChips.map(chip)}</div>
             </div>
-            {hotAppliances.length === 0 && !readOnly && (
+
+            {/* Уреди от топлата точка */}
+            {hotPoint && applianceChips.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[9px] font-black uppercase tracking-widest text-brand-gold/70 flex items-center gap-1">
+                  <Flame className="h-3 w-3" /> Топла точка — използвани уреди
+                </span>
+                <div className="flex flex-wrap gap-2">{applianceChips.map(chip)}</div>
+              </div>
+            )}
+
+            {hotPoint && hotAppliances.length === 0 && !readOnly && (
               <p className="text-[10px] text-brand-dark/40 leading-snug">
                 Съвет: изберете кои уреди реално има в обекта от „Оборудване и персонал“ — списъкът тук и картите ще се
                 съобразят автоматично.
@@ -2297,7 +2342,7 @@ export default function RegistersTab({
         </div>
       )}
       {!readOnly && !loading && reminders.length === 0 && refDate.startsWith(month) && refDate <= todayISO() &&
-        (!hotPoint || Object.keys(docs[DAILY_USAGE_ID]?.rows?.[refDay] || {}).length > 0) && (
+        Object.keys(docs[DAILY_USAGE_ID]?.rows?.[refDay] || {}).length > 0 && (
         <div className="rounded-3xl border border-green-200 bg-green-50/70 p-4 flex items-center gap-3">
           <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
           <p className="text-xs text-green-800 font-bold">
@@ -2313,7 +2358,7 @@ export default function RegistersTab({
         </div>
       ) : openDef ? (
         /* ------------------ Отворен регистър ------------------ */
-        <div className="bg-white border border-brand-green/10 p-6 rounded-3xl shadow-xl space-y-5">
+        <div ref={openedRef} className="scroll-mt-24 bg-white border border-brand-gold/40 p-6 rounded-3xl shadow-xl space-y-5 animate-fade-in ring-1 ring-brand-gold/20">
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-brand-green/5 pb-4">
             <div className="flex items-start gap-3">
               <button
