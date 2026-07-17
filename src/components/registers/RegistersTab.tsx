@@ -1699,7 +1699,7 @@ export default function RegistersTab({
   const persistRegister = useCallback(
     async (registerId: string) => {
       const def = REGISTER_BY_ID[registerId];
-      if (!def && registerId !== DAILY_USAGE_ID) return;
+      if (!def && registerId !== DAILY_USAGE_ID && registerId !== ADMIN_REMINDERS_ID) return;
       setSaveState((s) => ({ ...s, [registerId]: "saving" }));
       try {
         const period = def ? periodFor(def, month) : registerId === ADMIN_REMINDERS_ID ? "all" : month;
