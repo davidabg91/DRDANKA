@@ -112,7 +112,8 @@ export interface DankaUser {
    *   - 'expired'           — subscription lapsed
    * Missing on legacy docs → treat as 'approved' so existing clients keep access.
    */
-  subscriptionStatus?: 'none' | 'pending' | 'awaiting_payment' | 'approved' | 'expired';
+  subscriptionStatus?: 'none' | 'pending' | 'awaiting_payment' | 'approved' | 'expired' | 'trial';
+  trialStartedAt?: string;
   /** Subscription fee in EUR set by admin upon approval. 0 = paid offline (cash). */
   subscriptionFeeEur?: number;
   /** ISO timestamp when subscription was actually paid (online or marked-cash). */
@@ -823,7 +824,7 @@ export default function ProfilePage() {
     try {
       const cleanRegEmail = regEmail.trim().toLowerCase();
       await createUserWithEmailAndPassword(auth, cleanRegEmail, regPassword);
-      const pendingUser: DankaUser = {
+      const newUser: DankaUser = {
         email: cleanRegEmail,
         firmName: applyFirmName,
         eik: applyEik || "Няма въведен",
@@ -834,19 +835,29 @@ export default function ProfilePage() {
         desc: applyDesc,
         address: applyAddress || "Не е въведен",
         manager: applyContact,
-        status: "pending",
+        status: "approved",
+        subscriptionStatus: "trial",
+        trialStartedAt: new Date().toISOString(),
         role: "user",
         assignedDocs: [],
         messages: []
       };
       
-      const ok = await setFullUser(cleanRegEmail, pendingUser);
+      const ok = await setFullUser(cleanRegEmail, newUser);
       if (!ok) return;
 
-      setPendingEmail(cleanRegEmail);
-      setPendingFirmName(applyFirmName);
-      setIsPendingApproval(true);
-      await signOut(auth);
+      // Clean registration form fields:
+      setRegEmail("");
+      setRegPassword("");
+      setRegConfirmPassword("");
+      setApplyFirmName("");
+      setApplyEik("");
+      setApplyContact("");
+      setApplyPhone("");
+      setApplyAddress("");
+      setApplyDesc("");
+      
+      setActiveTab("logs");
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
         alert("Този имейл вече е регистриран.");
@@ -1083,6 +1094,15 @@ export default function ProfilePage() {
     return Math.ceil((exp - Date.now()) / (1000 * 60 * 60 * 24));
   };
 
+  const trialDaysLeft = (trialStartedAt?: string): number => {
+    if (!trialStartedAt) return 0;
+    const start = new Date(trialStartedAt).getTime();
+    const fourteenDays = 14 * 24 * 60 * 60 * 1000;
+    const exp = start + fourteenDays;
+    const diff = exp - Date.now();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
+
   // Admin sets/changes the expiry date for a client.
   const handleSetExpiresAt = (email: string, expiresAt: string) => {
     const updatedUsers = usersList.map(u =>
@@ -1151,17 +1171,21 @@ export default function ProfilePage() {
     URL.revokeObjectURL(url);
   };
 
-  // Non-subscribed or expired buyers land on 'Моите курсове' tab — they can't see anything else anyway.
+  // Non-subscribed or expired buyers land on 'packages' tab if they try to access locked tabs.
   useEffect(() => {
     if (userRole !== "user" || !currentUserEmail) return;
     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
     if (!me) return;
-    const isSubscribed = me.status === "approved" && (me.subscriptionStatus ?? "approved") === "approved" && (me.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true);
-    if (!isSubscribed && activeTab !== "courses") {
-      setActiveTab("courses");
+    
+    const hasTrial = me.status === "approved" && me.subscriptionStatus === "trial" && trialDaysLeft(me.trialStartedAt) >= 0;
+    const hasSub = me.status === "approved" && (me.subscriptionStatus ?? "approved") === "approved" && (me.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true);
+    const isSubscribed = hasSub || hasTrial;
+
+    if (!isSubscribed && activeTab !== "courses" && activeTab !== "packages") {
+      setActiveTab("packages");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userRole, currentUserEmail, usersList.length]);
+  }, [userRole, currentUserEmail, usersList, activeTab]);
 
   // Auto-mark 'paid' enrollments as 'contacted' when admin opens the
   // Записани sub-tab. Clears the red badge — admin can still see them
@@ -2188,7 +2212,7 @@ export default function ProfilePage() {
                         onClick={() => setAuthMode("register")}
                         className={`flex-1 text-center py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider rounded-xl transition-all duration-300 cursor-pointer border-0 ${authMode === "register" ? "bg-brand-gold text-brand-green shadow-lg shadow-brand-gold/25" : "text-white/70 hover:text-white hover:bg-white/5"}`}
                       >
-                        Кандидатстване
+                        Регистрация
                       </button>
                     </div>
 
@@ -2242,9 +2266,9 @@ export default function ProfilePage() {
                     {authMode === "register" && (
                       <div className="space-y-5 animate-fade-in text-left">
                         <div className="space-y-1">
-                          <h3 className="font-serif text-xl font-bold text-white">Регистрация и Обект</h3>
+                          <h3 className="font-serif text-xl font-bold text-white">Регистрация (14 дни безплатен тест)</h3>
                           <p className="text-[11px] text-white/70 font-medium">
-                            Попълнете акаунта и данните за обекта. Заявлението ще бъде прегледано лично от д-р Данка Николова.
+                            Създайте профил за Вашия обект и получете незабавен 14-дневен пробен достъп до всички дневници и документи.
                           </p>
                         </div>
                         
@@ -2402,7 +2426,7 @@ export default function ProfilePage() {
                             type="submit" 
                             className="w-full bg-brand-gold hover:bg-brand-gold/90 text-brand-green font-black text-xs uppercase tracking-wider py-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-brand-gold/20 border-0 hover:scale-[1.01] active:scale-[0.99] duration-150 mt-3"
                           >
-                            Изпрати Заявление & Регистрирай обект
+                            Тествай за 14 дни безплатно!
                           </button>
                         </form>
                       </div>
@@ -2640,15 +2664,13 @@ export default function ProfilePage() {
                   ) : (() => {
                     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
                     const subStatus = me?.subscriptionStatus ?? "approved"; // legacy default
-                    const isSubscribed = me?.status === "approved" && subStatus === "approved" && (me?.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true);
+                    const hasTrial = me?.status === "approved" && subStatus === "trial" && trialDaysLeft(me?.trialStartedAt) >= 0;
+                    const hasSub = me?.status === "approved" && subStatus === "approved" && (me?.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true);
+                    const isSubscribed = hasSub || hasTrial;
                     const pendingCount = (me?.assignedDocs || []).filter(d => d.status === "pending").length;
 
                     const lockedClick = () => {
-                      if (me?.status === "expired") {
-                        alert("Абонаментът Ви е изтекъл. Моля, свържете се с д-р Николова от страницата за контакти, за да го подновите.");
-                      } else {
-                        setSubApplyOpen(true);
-                      }
+                      setActiveTab("packages");
                     };
                     const lockedStyle = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-not-allowed text-left border-0 w-full bg-transparent text-brand-dark/35 hover:bg-brand-dark/5";
                     const activeStyle = (active: boolean) =>
@@ -2716,6 +2738,12 @@ export default function ProfilePage() {
                         <button onClick={() => setActiveTab("courses")} className={activeStyle(activeTab === "courses")}>
                           <BookOpen className={`h-4 w-4 ${activeTab === "courses" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                           Моите Обучения
+                        </button>
+
+                        {/* ALWAYS OPEN: Абонаментни Пакети */}
+                        <button onClick={() => setActiveTab("packages")} className={activeStyle(activeTab === "packages")}>
+                          <Building className={`h-4 w-4 ${activeTab === "packages" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                          Абонаментни Пакети
                         </button>
 
                         {/* Premium tab: Чат */}
@@ -2969,7 +2997,18 @@ export default function ProfilePage() {
                                         <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
                                           Чака плащане ({u.subscriptionFeeEur} €)
                                         </span>
-                                      ) : (
+                                      ) : u.subscriptionStatus === "trial" ? (() => {
+                                        const d = trialDaysLeft(u.trialStartedAt);
+                                        return d >= 0 ? (
+                                          <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 animate-pulse">
+                                            Тест период ({d} дни)
+                                          </span>
+                                        ) : (
+                                          <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-orange-100 text-orange-800">
+                                            Изтекъл тест
+                                          </span>
+                                        );
+                                      })() : (
                                         <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${u.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                                           {u.status === "approved" ? "Активен" : "Изтекъл"}
                                         </span>
@@ -3009,6 +3048,21 @@ export default function ProfilePage() {
                                         >
                                           <Check className="h-3 w-3" /> Потвърди плащането
                                         </button>
+                                      ) : u.subscriptionStatus === "trial" ? (
+                                        <div className="flex flex-col gap-1.5 items-center justify-center">
+                                          <button
+                                            onClick={() => handleApproveCandidate(u.email)}
+                                            className="px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border bg-green-50 text-green-600 border-green-200 hover:bg-green-100 flex items-center gap-1"
+                                          >
+                                            <Check className="h-3 w-3" /> Активирай
+                                          </button>
+                                          <button
+                                            onClick={() => handleToggleUserStatus(u.email, u.status)}
+                                            className="px-3 py-1 rounded text-[9px] font-bold uppercase tracking-wide transition-colors cursor-pointer border bg-red-50 text-red-600 border-red-100 hover:bg-red-100"
+                                          >
+                                            Спри достъп
+                                          </button>
+                                        </div>
                                       ) : (
                                         <button
                                           onClick={() => handleToggleUserStatus(u.email, u.status)}
@@ -3970,11 +4024,13 @@ export default function ProfilePage() {
                     const currentUser = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
                     const status = currentUser?.status ?? "pending";
                     const subStatus = currentUser?.subscriptionStatus ?? "approved"; // legacy default = approved
-                    const isSubscribed = status === "approved" && subStatus === "approved" && (currentUser?.expiresAt ? (daysUntilExpiry(currentUser.expiresAt) ?? 0) >= 0 : true);
+                    const hasTrial = status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt) >= 0;
+                    const hasSub = status === "approved" && subStatus === "approved" && (currentUser?.expiresAt ? (daysUntilExpiry(currentUser.expiresAt) ?? 0) >= 0 : true);
+                    const isSubscribed = hasSub || hasTrial;
 
                     // Bookstore-only buyer / pending applicant / awaiting payment / expired:
-                    // lock everything except "courses".
-                    if (!isSubscribed && activeTab !== "courses") {
+                    // lock everything except "courses" and "packages".
+                    if (!isSubscribed && activeTab !== "courses" && activeTab !== "packages") {
                       const feeEur = currentUser?.subscriptionFeeEur ?? 0;
                       return (
                         <div className="bg-white border border-brand-green/5 p-8 sm:p-10 rounded-2xl shadow-md animate-fade-in space-y-6 max-w-2xl mx-auto text-center">
@@ -4756,6 +4812,190 @@ export default function ProfilePage() {
                       Запази настройките на фирмата
                     </button>
                   </form>
+                </div>
+              )}
+
+              {/* TAB 7: АБОНАМЕНТНИ ПАКЕТИ */}
+              {activeTab === "packages" && (
+                <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-8 animate-fade-in text-brand-dark">
+                  <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
+                    <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                      <Building className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h2 className="font-serif text-xl font-bold text-brand-green">Абонаментни Пакети „БАБХ Спокойствие“</h2>
+                      <p className="text-xs text-brand-dark/50">Изберете най-подходящия план за сигурността на Вашия бизнес</p>
+                    </div>
+                  </div>
+
+                  {status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt) < 0 && (
+                    <div className="bg-red-50 border border-red-200 text-red-900 rounded-2xl p-5 flex items-start gap-4">
+                      <AlertTriangle className="h-6 w-6 text-red-600 shrink-0 mt-0.5 animate-pulse" />
+                      <div className="space-y-1 text-sm font-sans text-left">
+                        <p className="font-bold text-base">Вашият 14-дневен безплатен пробен период изтече!</p>
+                        <p className="text-xs text-red-800/90 leading-relaxed">
+                          За да запазите достъпа си до дигиталните самоконтролни дневници и автоматичния НАССР генератор, моля изберете един от абонаментните ни планове по-долу и направете банков превод.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt) >= 0 && (
+                    <div className="bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-2xl p-5 flex items-start gap-4">
+                      <CheckCircle className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="space-y-1 text-sm font-sans text-left">
+                        <p className="font-bold text-base">Вие сте в безплатен пробен период!</p>
+                        <p className="text-xs text-emerald-900/80 leading-relaxed">
+                          Остават Ви още <strong className="text-emerald-700 font-black">{trialDaysLeft(currentUser?.trialStartedAt)} дни</strong> безплатен пробен достъп. За да си осигурите дългосрочно съответствие и сигурност, можете да изберете абонаментен пакет от предложените по-долу по всяко време.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {status === "approved" && subStatus === "approved" && (
+                    <div className="bg-brand-green/5 border border-brand-green/15 text-brand-green rounded-2xl p-5 flex items-start gap-4">
+                      <ShieldCheck className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
+                      <div className="space-y-1 text-sm font-sans text-left">
+                        <p className="font-bold text-base">Имате активен абонамент!</p>
+                        <p className="text-xs text-brand-dark/70 leading-relaxed">
+                          Вашият акаунт е напълно отключен и защитен. Абонаментът Ви изтича на: <strong className="font-mono text-brand-gold-dark font-bold">{currentUser?.expiresAt}</strong>.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Packages Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-left">
+                    {/* Basic Package */}
+                    <div className="border border-brand-green/10 rounded-3xl p-6 bg-brand-light/25 flex flex-col justify-between hover:border-brand-gold/45 transition-colors relative overflow-hidden">
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <h3 className="font-serif text-lg font-bold text-brand-green">БАБХ Спокойствие (Базов)</h3>
+                          <p className="text-[10px] text-brand-dark/50">За ресторанти, магазини и заведения</p>
+                        </div>
+                        <div className="font-serif text-3xl font-bold text-brand-gold">
+                          50 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месечно</span>
+                        </div>
+                        <p className="text-xs text-brand-dark/70 leading-relaxed">
+                          Идеално решение за дигитализация на самоконтрола и пълна готовност за внезапни БАБХ проверки.
+                        </p>
+                        <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
+                          <li className="flex items-start gap-2">✓ <span>Дигитални самоконтролни дневници</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Автоматично генериране на НАССР папка</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Смарт напомняния за дневни записи</span></li>
+                          <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Надзор от д-р Данка Николова</strong> (бивш директор на агенцията по храните)</li>
+                          <li className="flex items-start gap-2">✓ <span>100% БАБХ съответствие</span></li>
+                        </ul>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById("bank-details-card");
+                          el?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                        className="w-full mt-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
+                      >
+                        Избери план
+                      </button>
+                    </div>
+
+                    {/* Pro Package */}
+                    <div className="border-2 border-brand-gold rounded-3xl p-6 bg-white flex flex-col justify-between hover:border-brand-gold/80 transition-colors relative shadow-lg shadow-brand-gold/5">
+                      <div className="absolute top-0 right-0 bg-brand-gold text-brand-dark text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl">
+                        Препоръчан
+                      </div>
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <h3 className="font-serif text-lg font-bold text-brand-green">Спокойствие + Обучения</h3>
+                          <p className="text-[10px] text-brand-dark/50">За заведения с текучество на персонал</p>
+                        </div>
+                        <div className="font-serif text-3xl font-bold text-brand-gold">
+                          80 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месечно</span>
+                        </div>
+                        <p className="text-xs text-brand-dark/70 leading-relaxed">
+                          Комбинира ежедневния самоконтрол с професионално сертифициране и видео курсове за Вашите служители.
+                        </p>
+                        <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
+                          <li className="flex items-start gap-2 text-brand-green font-bold">✓ <span>Всичко от Базовия пакет</span></li>
+                          <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Достъп до всички видео лекции</strong> и материали в книжарницата</li>
+                          <li className="flex items-start gap-2">✓ <span>Онлайн тестове &amp; сертификати за персонала</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Здравни напомняния за служителите</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Приоритетен чат с д-р Николова</span></li>
+                        </ul>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById("bank-details-card");
+                          el?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                        className="w-full mt-6 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
+                      >
+                        Избери план
+                      </button>
+                    </div>
+
+                    {/* VIP Package */}
+                    <div className="border border-brand-green/10 rounded-3xl p-6 bg-brand-light/25 flex flex-col justify-between hover:border-brand-gold/45 transition-colors relative overflow-hidden">
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <h3 className="font-serif text-lg font-bold text-brand-green">Спокойствие VIP одит</h3>
+                          <p className="text-[10px] text-brand-dark/50">Пълна професионална защита</p>
+                        </div>
+                        <div className="font-serif text-3xl font-bold text-brand-gold">
+                          120 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месечно</span>
+                        </div>
+                        <p className="text-xs text-brand-dark/70 leading-relaxed">
+                          Включва персонален дистанционен одит от д-р Николова всеки месец и спешна телефонна линия.
+                        </p>
+                        <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
+                          <li className="flex items-start gap-2 text-brand-green font-bold">✓ <span>Всичко от пакет „Обучения“</span></li>
+                          <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Месечен одит</strong> с д-р Данка Николова</li>
+                          <li className="flex items-start gap-2">✓ <span>Изготвяне на технологична документация</span></li>
+                          <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Директна телефонна връзка</strong> при проверки</li>
+                          <li className="flex items-start gap-2">✓ <span>100% защита при казуси с БАБХ</span></li>
+                        </ul>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById("bank-details-card");
+                          el?.scrollIntoView({ behavior: "smooth" });
+                        }}
+                        className="w-full mt-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
+                      >
+                        Избери план
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Bank Account Details */}
+                  <div id="bank-details-card" className="bg-brand-green text-white p-6 sm:p-8 rounded-3xl space-y-4 shadow-xl border border-brand-gold/25 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-[80px] pointer-events-none"></div>
+                    <h3 className="font-serif text-xl font-bold flex items-center gap-2">
+                      <Building className="text-brand-gold h-6 w-6" />
+                      Данни за плащане по банков път
+                    </h3>
+                    <p className="text-xs text-white/80 leading-relaxed max-w-2xl font-sans text-left">
+                      За да активирате избрания пакет, моля направете банков превод по посочената сметка. В основанието за плащане задължително въведете имейл адреса на Вашия акаунт: <strong className="text-brand-gold">{currentUserEmail}</strong>. След като получим превода, Вашият абонамент ще бъде активиран и ще Ви известим.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 font-mono text-xs sm:text-sm text-left">
+                      <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">Получател</span>
+                        <span className="font-bold text-white">Данка Василева Николова</span>
+                      </div>
+                      <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">Банка</span>
+                        <span className="font-bold text-white">ЦКБ АД</span>
+                      </div>
+                      <div className="bg-white/5 p-4 rounded-xl border border-white/10 col-span-1 md:col-span-2 lg:col-span-1">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">IBAN</span>
+                        <span className="font-bold text-brand-gold select-all">BG98 CECB 9790 1008 5533 00</span>
+                      </div>
+                      <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">BIC</span>
+                        <span className="font-bold text-white select-all">CECBBGSF</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
