@@ -56,14 +56,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // /logs/{key} — key format: danka_logs_<sanitizedEmail>_<YYYY-MM-DD>
+    // /logs/{key} — key format: danka_logs_<sanitizedEmail>_reg_<registerId>_<period>
     //   - Admin reads/writes everything (audit).
     //   - Authenticated user reads/writes own logs.
     match /logs/{key} {
       function ownsKey() {
-        return key.matches(
-          "^danka_logs_" + authEmail().split("@").join("_").split(".").join("_") + "_.*$"
-        );
+        return key.split("_reg_")[0] == "danka_logs_" + authEmail().split("@").join("_").split(".").join("_");
       }
 
       allow read, write: if isAdmin() || (isSignedIn() && ownsKey());
