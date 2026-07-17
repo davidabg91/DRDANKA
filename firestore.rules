@@ -22,8 +22,12 @@ service cloud.firestore {
     }
 
     function isOwnerOfKey(key, email) {
-      return key >= "danka_logs_" + email.split("@")[0].split(".")[0] + "_" && 
-             key < "danka_logs_" + email.split("@")[0].split(".")[0] + "_~";
+      return key.split("_")[0] == "danka" &&
+             key.split("_")[1] == "logs" &&
+             key.split("_")[2] == email.split("@")[0].split(".")[0] &&
+             (key.split("_")[3] == email.split("@")[1].split(".")[0] ||
+              key.split("_")[4] == email.split("@")[1].split(".")[0] ||
+              key.split("_")[5] == email.split("@")[1].split(".")[0]);
     }
 
     function isAdmin() {
