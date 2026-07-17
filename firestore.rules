@@ -56,15 +56,17 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    function sanitizeEmail(email) {
+      return email.split("@").join("_").split(".").join("_");
+    }
+
     // /logs/{key} — key format: danka_logs_<sanitizedEmail>_<YYYY-MM-DD>
     //   - Admin reads/writes everything (audit).
     //   - Authenticated user reads/writes own logs.
-    //   NOTE: rules.String.replace uses REGEX patterns and replaces ALL matches,
-    //   so '.' must be escaped as '\\.' to match a literal dot, not "any char".
     match /logs/{key} {
       function ownsKey() {
         return key.matches(
-          "^danka_logs_" + authEmail().replace("@", "_").replace("[.]", "_") + "_.*$"
+          "^danka_logs_" + sanitizeEmail(authEmail()) + "_.*$"
         );
       }
 
