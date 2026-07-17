@@ -33,6 +33,8 @@ import {
   HOT_APPLIANCE_BY_ID,
   REGISTER_APPLIANCE,
   visibleRegistersFor,
+  ADMIN_REMINDERS_ID,
+  AdminReminder,
 } from "@/data/storeRegisters";
 import {
   buildRegisterSection,
@@ -1583,6 +1585,8 @@ export default function RegistersTab({
         ...activeRegisters.map((def) => ({ id: def.id, period: periodFor(def, month) })),
         // Псевдо-документ: кои уреди от топлата точка са използвани по дни.
         ...(hotPoint ? [{ id: DAILY_USAGE_ID, period: month }] : []),
+        // Задачи, изпратени от администратора (постоянен документ).
+        { id: ADMIN_REMINDERS_ID, period: "all" },
       ];
       await Promise.all(
         toLoad.map(async ({ id, period }) => {
@@ -1614,7 +1618,8 @@ export default function RegistersTab({
       if (!def && registerId !== DAILY_USAGE_ID) return;
       setSaveState((s) => ({ ...s, [registerId]: "saving" }));
       try {
-        const key = registerDocKey(email, registerId, def ? periodFor(def, month) : month);
+        const period = def ? periodFor(def, month) : registerId === ADMIN_REMINDERS_ID ? "all" : month;
+        const key = registerDocKey(email, registerId, period);
         const data = { ...(docsRef.current[registerId] || {}), updatedAt: new Date().toISOString() };
         await setDoc(doc(db, "logs", key), data);
         setSaveState((s) => ({ ...s, [registerId]: "saved" }));
@@ -1725,9 +1730,20 @@ export default function RegistersTab({
 
   /* ------------------ Напомняния ------------------ */
   const reminders = useMemo(() => {
-    const list: { level: "urgent" | "warn" | "info"; text: string; registerId: string }[] = [];
+    const list: { level: "urgent" | "warn" | "info" | "admin"; text: string; registerId: string; adminId?: string }[] = [];
     if (loading) return list;
     const today = todayISO();
+
+    // Задачи от администратора (д-р Николова) — показват се от датата им нататък,
+    // докато не бъдат отбелязани като изпълнени. Имат приоритет най-отгоре.
+    const adminItems = (docs[ADMIN_REMINDERS_ID]?.entries || []) as AdminReminder[];
+    adminItems.forEach((a) => {
+      if (a.done || !a.text) return;
+      const show = isRefToday ? String(a.date || "") <= today : String(a.date || "") === refDate;
+      if (show) {
+        list.push({ level: "admin", text: a.text, registerId: a.registerId || "", adminId: a.id });
+      }
+    });
     // Напомнянията важат за избрания ден; за бъдещи дни не се показват.
     if (!refDate.startsWith(month) || refDate > today) return list;
 
@@ -1798,6 +1814,62 @@ export default function RegistersTab({
       });
     }
 
+    // ── Логични връзки „имаш X, но липсва задължителен запис Y" ──
+
+    // Служител без вписана лична здравна книжка (работа с храни без ЛЗК е нарушение).
+    if (employees.length > 0) {
+      const hbNames = new Set(
+        (docs["health-books"]?.entries || []).map((e) => String(e.employee || "").trim().toLowerCase())
+      );
+      const missingHb = employees.filter((e) => !hbNames.has(e.name.trim().toLowerCase()));
+      if (missingHb.length > 0) {
+        list.push({
+          level: "warn",
+          registerId: "health-books",
+          text: `Няма вписана лична здравна книжка за: ${missingHb.map((e) => e.name).join(", ")}. Добавете ги в списъка на ЛЗК.`,
+        });
+      }
+    }
+
+    // Одобрен доставчик без попълнена оценка (карта „Оценка на доставчици").
+    if (hotPoint) {
+      const suppliers = (docs["suppliers"]?.entries || [])
+        .map((e) => String(e.firm || "").trim())
+        .filter(Boolean);
+      const evaluated = new Set(
+        (docs["supplier-eval"]?.entries || []).map((e) => String(e.supplier || "").trim().toLowerCase())
+      );
+      const notEvaluated = suppliers.filter((s) => !evaluated.has(s.toLowerCase()));
+      if (notEvaluated.length > 0) {
+        list.push({
+          level: "info",
+          registerId: "supplier-eval",
+          text: `Оценете доставчик${notEvaluated.length === 1 ? "" : "и"}: ${notEvaluated.slice(0, 4).join(", ")}${notEvaluated.length > 4 ? " и др." : ""} (попълва се веднъж за всеки доставчик).`,
+        });
+      }
+
+      // Меню с алергени още не е въведено (при топла точка е задължително).
+      if ((docs["allergen-menu"]?.entries || []).length === 0) {
+        list.push({
+          level: "warn",
+          registerId: "allergen-menu",
+          text: "Менюто с алергени още не е попълнено. Отворете картата и заредете примерно меню, после го редактирайте.",
+        });
+      }
+    }
+
+    // Хигиена се води, но няма нито един вписан почистващ/дезинфекционен препарат.
+    const anyHygiene =
+      (docs["hygiene-daily"]?.rows && Object.values(docs["hygiene-daily"].rows).some((r) => isRowFilled(r))) ||
+      false;
+    if (anyHygiene && (docs["cleaning-agents"]?.entries || []).length === 0) {
+      list.push({
+        level: "info",
+        registerId: "cleaning-agents",
+        text: "Води се хигиена, но няма вписани препарати. Добавете използваните препарати за почистване и дезинфекция.",
+      });
+    }
+
     // ─── Топла точка ───
     if (hotPoint) {
       // Карти на 3 дни: смяна на мазнина (само при фритюрник) и остатъчни дезинфектанти
@@ -1811,15 +1883,25 @@ export default function RegistersTab({
       };
       const hasFryer = hotAppliances.length === 0 || hotAppliances.includes("fryer");
       if (hasFryer) {
-        const oilDays = daysAgo(lastEntryDate("fryer-oil-destroy"));
-        if (oilDays >= 3) {
-          list.push({
-            level: "warn",
-            registerId: "fryer-oil-destroy",
-            text: oilDays === Infinity
-              ? "Няма запис за унищожаване на използвана мазнина този месец (попълва се на всеки 3 дни)."
-              : `Последната смяна на пържилната мазнина е преди ${oilDays} дни — попълва се на всеки 3 дни.`,
-          });
+        // Дни от месеца, в които е отбелязана употреба на фритюрника → ISO дати.
+        const usageRows = docs[DAILY_USAGE_ID]?.rows || {};
+        const fryerUseDates = Object.keys(usageRows)
+          .filter((dn) => usageRows[dn]?.fryer === "1")
+          .map((dn) => `${month}-${dn.padStart(2, "0")}`)
+          .sort();
+        const lastDisposal = lastEntryDate("fryer-oil-destroy");
+        // Начало на текущия 3-дневен цикъл = първата употреба на фритюрника
+        // след последната смяна на мазнина (или първата употреба изобщо).
+        const cycleStart = fryerUseDates.find((d) => !lastDisposal || d >= lastDisposal);
+        if (cycleStart) {
+          const oilDays = daysAgo(cycleStart);
+          if (oilDays >= 3) {
+            list.push({
+              level: "urgent",
+              registerId: "fryer-oil-destroy",
+              text: `🍟 Използвате фритюрника от ${oilDays} дни без смяна на мазнината — попълнете карта „Унищожаване на използвана мазнина“ (задължително на всеки 3 дни).`,
+            });
+          }
         }
       }
       const resDays = daysAgo(lastEntryDate("disinfectant-residue"));
@@ -1929,6 +2011,16 @@ export default function RegistersTab({
   const printOne = (def: RegisterDef) => {
     const section = buildRegisterSection(def, docs[def.id] || {}, firm, month);
     printHtml(buildPrintDocument(def.title, [section]));
+  };
+
+  // Обектът отбелязва задача от администратора като изпълнена.
+  const markAdminReminderDone = (adminId: string) => {
+    makeUpdater(ADMIN_REMINDERS_ID)((prev) => ({
+      ...prev,
+      entries: (prev.entries || []).map((e: any) =>
+        e.id === adminId ? { ...e, done: true, doneAt: new Date().toISOString() } : e
+      ),
+    }));
   };
 
   const printAll = () => {
@@ -2149,27 +2241,58 @@ export default function RegistersTab({
             </h3>
           </div>
           <div className="space-y-1.5">
-            {reminders.map((r, i) => (
-              <button
-                key={i}
-                onClick={() => setOpenId(r.registerId)}
-                className={`w-full text-left flex items-start gap-2 text-[11px] leading-snug rounded-xl px-3 py-2 cursor-pointer transition-colors border ${
-                  r.level === "urgent"
-                    ? "bg-white border-red-200 text-red-800 hover:border-red-400"
-                    : r.level === "warn"
-                      ? "bg-white border-amber-200 text-amber-800 hover:border-amber-400"
-                      : "bg-white border-brand-green/10 text-brand-dark/60 hover:border-brand-gold"
-                }`}
-              >
-                {r.level === "urgent" ? (
-                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                ) : (
-                  <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                )}
-                <span className="flex-1">{r.text}</span>
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 mt-0.5 opacity-50" />
-              </button>
-            ))}
+            {reminders.map((r, i) =>
+              r.level === "admin" ? (
+                <div
+                  key={i}
+                  className="w-full flex items-start gap-2 text-[11px] leading-snug rounded-xl px-3 py-2.5 border bg-brand-gold/10 border-brand-gold/40 text-brand-dark/85"
+                >
+                  <span className="shrink-0 mt-0.5 text-sm leading-none">📌</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[8px] font-black uppercase tracking-widest text-brand-gold/90 mb-0.5">
+                      Задача от д-р Николова
+                    </span>
+                    <span className="block">{r.text}</span>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {r.registerId && REGISTER_BY_ID[r.registerId] && (
+                        <button
+                          onClick={() => setOpenId(r.registerId)}
+                          className="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-green cursor-pointer"
+                        >
+                          Отвори картата →
+                        </button>
+                      )}
+                      <button
+                        onClick={() => r.adminId && markAdminReminderDone(r.adminId)}
+                        className="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-brand-green text-white border-0 cursor-pointer flex items-center gap-1"
+                      >
+                        <Check className="h-3 w-3" /> Готово
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  key={i}
+                  onClick={() => r.registerId && setOpenId(r.registerId)}
+                  className={`w-full text-left flex items-start gap-2 text-[11px] leading-snug rounded-xl px-3 py-2 cursor-pointer transition-colors border ${
+                    r.level === "urgent"
+                      ? "bg-white border-red-200 text-red-800 hover:border-red-400"
+                      : r.level === "warn"
+                        ? "bg-white border-amber-200 text-amber-800 hover:border-amber-400"
+                        : "bg-white border-brand-green/10 text-brand-dark/60 hover:border-brand-gold"
+                  }`}
+                >
+                  {r.level === "urgent" ? (
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  ) : (
+                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  )}
+                  <span className="flex-1">{r.text}</span>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 mt-0.5 opacity-50" />
+                </button>
+              )
+            )}
           </div>
         </div>
       )}

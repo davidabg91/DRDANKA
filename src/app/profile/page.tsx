@@ -15,6 +15,7 @@ import { LIBRARY_MATERIALS } from "@/data/library";
 import { LIVE_COURSES } from "@/data/live-courses";
 import { usePriceOverrides, setPriceOverride, resolvePrice } from "@/lib/priceOverrides";
 import RegistersTab from "@/components/registers/RegistersTab";
+import AdminReminderComposer from "@/components/registers/AdminReminderComposer";
 import { defaultHotPointForSector } from "@/data/storeRegisters";
 
 import { 
@@ -3888,17 +3889,24 @@ export default function ProfilePage() {
                             Моля, изберете клиентски обект от падащото меню горе, за да прегледате дневниците му по самоконтрол.
                           </div>
                         ) : (
-                          <RegistersTab
-                            key={auditTarget.email}
-                            email={auditTarget.email}
-                            firm={{ name: auditTarget.firmName, eik: auditTarget.eik, address: auditTarget.address, manager: auditTarget.manager || auditTarget.contact }}
-                            fridges={auditTarget.customFridges ?? []}
-                            freezers={auditTarget.customFreezers ?? []}
-                            employees={auditTarget.customEmployees ?? []}
-                            hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
-                            hotAppliances={auditTarget.hotAppliances ?? []}
-                            readOnly
-                          />
+                          <div className="space-y-6">
+                            <AdminReminderComposer
+                              key={`composer-${auditTarget.email}`}
+                              email={auditTarget.email}
+                              firmName={auditTarget.firmName}
+                            />
+                            <RegistersTab
+                              key={auditTarget.email}
+                              email={auditTarget.email}
+                              firm={{ name: auditTarget.firmName, eik: auditTarget.eik, address: auditTarget.address, manager: auditTarget.manager || auditTarget.contact }}
+                              fridges={auditTarget.customFridges ?? []}
+                              freezers={auditTarget.customFreezers ?? []}
+                              employees={auditTarget.customEmployees ?? []}
+                              hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
+                              hotAppliances={auditTarget.hotAppliances ?? []}
+                              readOnly
+                            />
+                          </div>
                         )}
                       </div>
                     );

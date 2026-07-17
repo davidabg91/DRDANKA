@@ -1245,6 +1245,26 @@ export function registersFor(hotPoint: boolean): RegisterDef[] {
   return hotPoint ? [...STORE_REGISTERS, ...HOT_POINT_REGISTERS] : STORE_REGISTERS;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Задачи от администратора към конкретен обект                       */
+/* ------------------------------------------------------------------ */
+
+/** Псевдо-документ (в /logs) с ръчни задачи, изпратени от д-р Николова. */
+export const ADMIN_REMINDERS_ID = "admin-reminders";
+
+export interface AdminReminder {
+  id: string;
+  /** Дата (YYYY-MM-DD), от която задачата да се появи в напомнянията на обекта. */
+  date: string;
+  text: string;
+  /** По избор: към коя карта да води кликването. */
+  registerId?: string;
+  createdAt: string;
+  done?: boolean;
+  /** ISO дата, на която обектът е отбелязал задачата за изпълнена. */
+  doneAt?: string;
+}
+
 /** Сектори, при които топлата точка е включена по подразбиране. */
 export function defaultHotPointForSector(sector: string): boolean {
   return sector.includes("Заведения") || sector.includes("МТХ");
