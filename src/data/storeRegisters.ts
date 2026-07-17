@@ -1197,7 +1197,13 @@ export interface HotAppliance {
 export const DAILY_ACTIVITIES: HotAppliance[] = [
   { id: "delivery", label: "Доставка на продукти", emoji: "📦", registers: ["incoming"] },
   { id: "waste", label: "Брак / изхвърлена стока", emoji: "🗑️", registers: ["waste"] },
+  { id: "repair", label: "Извършен ремонт", emoji: "🔧", registers: ["repairs"] },
 ];
+
+/** Първата колона от тип „date" в регистъра — служи за дата на записа. */
+export function recordDateKey(def: RegisterDef): string | null {
+  return def.columns?.find((c) => c.type === "date")?.key ?? null;
+}
 
 export const HOT_APPLIANCES: HotAppliance[] = [
   { id: "grill", label: "Скара", emoji: "🍖", registers: ["grill-temp", "grill-batch"] },

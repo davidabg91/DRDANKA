@@ -136,6 +136,10 @@ export interface DankaUser {
   hotAppliances?: string[];
   /** Обиколката на дневниците е показана веднъж — не се повтаря. */
   registersTourSeen?: boolean;
+  /** Нарисуван електронен подпис (PNG data URL) за автоматично попълване в картите/документите. */
+  signature?: string;
+  /** Как да се подписва обектът: "draw" — с електронния подпис; "manual" — на ръка след печат. */
+  signatureMode?: "draw" | "manual";
 }
 
 // Mock templates for HACCP/DHP document generator
@@ -3904,6 +3908,8 @@ export default function ProfilePage() {
                               employees={auditTarget.customEmployees ?? []}
                               hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
                               hotAppliances={auditTarget.hotAppliances ?? []}
+                              signature={auditTarget.signature}
+                              signatureMode={auditTarget.signatureMode ?? "manual"}
                               readOnly
                             />
                           </div>
@@ -4011,6 +4017,8 @@ export default function ProfilePage() {
                   employees={currentUser?.customEmployees ?? []}
                   hotPoint={currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(firmInfo.niche))}
                   hotAppliances={currentUser?.hotAppliances ?? []}
+                  signature={currentUser?.signature}
+                  signatureMode={currentUser?.signatureMode ?? "manual"}
                   tourSeen={currentUser?.registersTourSeen ?? false}
                   onTourDone={async () => { await updateUser(currentUserEmail, { registersTourSeen: true }); }}
                   onSaveEquipment={async (patch) => { await updateUser(currentUserEmail, patch); }}

@@ -17,6 +17,14 @@ export interface PrintFirmInfo {
   eik: string;
   address: string;
   manager: string;
+  /** Нарисуван електронен подпис (PNG data URL) — вгражда се на местата за подпис. */
+  signature?: string;
+}
+
+/** HTML за подпис: електронният подпис (ако има) над линия за подпис. */
+function signatureImg(sig?: string): string {
+  if (!sig) return `..............................`;
+  return `<img src="${sig}" alt="подпис" style="height:34px;max-width:150px;object-fit:contain;display:inline-block;vertical-align:middle" />`;
 }
 
 export interface TempUnitData {
@@ -63,12 +71,13 @@ function firmHeader(firm: PrintFirmInfo, periodLabel: string): string {
     <div class="period">${esc(periodLabel)}</div>`;
 }
 
-function signatureBlock(): string {
+function signatureBlock(firm: PrintFirmInfo): string {
+  const sig = signatureImg(firm.signature);
   return `
     <table class="sig-tbl">
       <tr>
-        <td>Отговорно лице: ..............................<br/><br/>Подпис: ..............................</td>
-        <td style="text-align:right">Управител: ..............................<br/><br/>Подпис: ..............................</td>
+        <td>Отговорно лице: ${esc(firm.manager || "..............................")}<br/><br/>Подпис: ${sig}</td>
+        <td style="text-align:right">Управител: ${esc(firm.manager || "..............................")}<br/><br/>Подпис: ${sig}</td>
       </tr>
     </table>`;
 }
@@ -196,8 +205,8 @@ function buildTrainingSection(data: RegisterDocData, firm: PrintFirmInfo): strin
           )}
         </div>
         <table class="sig-tbl"><tr>
-          <td>Лектор: ..............................<br/><br/>Подпис: ..............................</td>
-          <td style="text-align:right">Управител / Отговорно лице: ..............................<br/><br/>Подпис: ..............................</td>
+          <td>Лектор: ${esc(e.lecturer || "..............................")}<br/><br/>Подпис: ..............................</td>
+          <td style="text-align:right">Управител / Отговорно лице: ${esc(firm.manager || "..............................")}<br/><br/>Подпис: ${signatureImg(firm.signature)}</td>
         </tr></table>`;
     })
     .join("");
@@ -327,7 +336,7 @@ export function buildRegisterSection(
       <p class="fill-when"><b>Кога се попълва:</b> ${esc(def.fillWhen)}</p>
       ${body}
       ${legend}${instructions}${corrective}${info}
-      ${def.kind !== "training" ? signatureBlock() : ""}
+      ${def.kind !== "training" ? signatureBlock(firm) : ""}
     </section>`;
 }
 

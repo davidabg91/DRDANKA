@@ -34,6 +34,7 @@ import {
   DAILY_ACTIVITIES,
   TRIGGER_BY_ID,
   REGISTER_APPLIANCE,
+  recordDateKey,
   visibleRegistersFor,
   ADMIN_REMINDERS_ID,
   AdminReminder,
@@ -47,6 +48,7 @@ import {
   RegisterDocData,
 } from "./registerPrint";
 import RegistersTour, { TourStep } from "./RegistersTour";
+import SignaturePad from "./SignaturePad";
 import {
   Bell,
   Check,
@@ -77,6 +79,8 @@ import {
   ChefHat,
   Star,
   CalendarDays,
+  HelpCircle,
+  PenLine,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -1227,6 +1231,8 @@ function EquipmentModal({
   employees,
   hotPoint,
   hotAppliances,
+  signature,
+  signatureMode,
   onSave,
   onClose,
 }: {
@@ -1235,12 +1241,16 @@ function EquipmentModal({
   employees: Employee[];
   hotPoint: boolean;
   hotAppliances: string[];
+  signature?: string;
+  signatureMode: "draw" | "manual";
   onSave: (patch: {
     customFridges: string[];
     customFreezers: string[];
     customEmployees: Employee[];
     hasHotPoint: boolean;
     hotAppliances: string[];
+    signature?: string;
+    signatureMode?: "draw" | "manual";
   }) => void | Promise<void>;
   onClose: () => void;
 }) {
@@ -1249,6 +1259,8 @@ function EquipmentModal({
   const [localEmployees, setLocalEmployees] = useState<Employee[]>(employees);
   const [localHotPoint, setLocalHotPoint] = useState<boolean>(hotPoint);
   const [localAppliances, setLocalAppliances] = useState<string[]>(hotAppliances);
+  const [localSignature, setLocalSignature] = useState<string | undefined>(signature);
+  const [localSigMode, setLocalSigMode] = useState<"draw" | "manual">(signatureMode);
   const [newFridge, setNewFridge] = useState("");
   const [newFreezer, setNewFreezer] = useState("");
   const [newEmpName, setNewEmpName] = useState("");
@@ -1264,6 +1276,8 @@ function EquipmentModal({
         customEmployees: localEmployees,
         hasHotPoint: localHotPoint,
         hotAppliances: localHotPoint ? localAppliances : [],
+        signature: localSignature ?? "",
+        signatureMode: localSigMode,
       });
       onClose();
     } finally {
@@ -1435,6 +1449,50 @@ function EquipmentModal({
           </div>
         </div>
 
+        {/* Електронен подпис */}
+        <div className="space-y-3 border-t border-brand-green/10 pt-4">
+          <h4 className="text-[10px] font-black uppercase text-brand-green flex items-center gap-1.5">
+            <PenLine className="h-3.5 w-3.5" /> Електронен подпис
+          </h4>
+          <p className="text-[10px] text-brand-dark/50 leading-snug">
+            Нарисувайте подписа си веднъж и системата ще го поставя автоматично на местата за подпис при печат — за да не
+            се подписвате всеки път на ръка.
+          </p>
+
+          {/* Избор на режим */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setLocalSigMode("draw")}
+              className={`flex-1 min-w-[150px] text-left rounded-xl border px-3.5 py-2.5 cursor-pointer transition-colors ${
+                localSigMode === "draw" ? "bg-brand-gold/10 border-brand-gold/40" : "bg-white border-brand-green/15 hover:border-brand-gold/30"
+              }`}
+            >
+              <span className="block text-[11px] font-black text-brand-green">✍️ Електронен подпис</span>
+              <span className="block text-[9px] text-brand-dark/50">Поставя се автоматично при печат</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setLocalSigMode("manual")}
+              className={`flex-1 min-w-[150px] text-left rounded-xl border px-3.5 py-2.5 cursor-pointer transition-colors ${
+                localSigMode === "manual" ? "bg-brand-gold/10 border-brand-gold/40" : "bg-white border-brand-green/15 hover:border-brand-gold/30"
+              }`}
+            >
+              <span className="block text-[11px] font-black text-brand-green">🖊️ Ръчен подпис</span>
+              <span className="block text-[9px] text-brand-dark/50">Оставя празна линия за подпис на ръка</span>
+            </button>
+          </div>
+
+          {localSigMode === "draw" && (
+            <SignaturePad initial={localSignature} onSave={(url) => setLocalSignature(url || undefined)} />
+          )}
+          {localSigMode === "draw" && localSignature && (
+            <p className="text-[10px] text-green-700 font-bold flex items-center gap-1">
+              <Check className="h-3.5 w-3.5" /> Подписът е готов — ще се използва при печат.
+            </p>
+          )}
+        </div>
+
         <div className="flex justify-end gap-2 pt-2">
           <button
             onClick={onClose}
@@ -1470,6 +1528,9 @@ interface RegistersTabProps {
   hotPoint?: boolean;
   /** Уредите от топлата точка, налични в обекта (ids от HOT_APPLIANCES) */
   hotAppliances?: string[];
+  /** Електронен подпис (PNG data URL) и режим на подписване. */
+  signature?: string;
+  signatureMode?: "draw" | "manual";
   /** Записва оборудване/персонал в профила на потребителя */
   onSaveEquipment?: (patch: {
     customFridges?: string[];
@@ -1477,6 +1538,8 @@ interface RegistersTabProps {
     customEmployees?: Employee[];
     hasHotPoint?: boolean;
     hotAppliances?: string[];
+    signature?: string;
+    signatureMode?: "draw" | "manual";
   }) => void | Promise<void>;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
@@ -1497,6 +1560,8 @@ export default function RegistersTab({
   employees,
   hotPoint = false,
   hotAppliances = [],
+  signature,
+  signatureMode = "manual",
   onSaveEquipment,
   readOnly = false,
   tourSeen = false,
@@ -1735,7 +1800,8 @@ export default function RegistersTab({
         trig.registers.forEach((regId) => {
           const def = REGISTER_BY_ID[regId];
           if (!def) return;
-          if (!(docs[regId]?.entries || []).some((e) => e.date === dateISO)) {
+          const dk = recordDateKey(def) || "date";
+          if (!(docs[regId]?.entries || []).some((e) => e[dk] === dateISO)) {
             const isActivity = DAILY_ACTIVITIES.some((a) => a.id === trig.id);
             missing.push({
               registerId: regId,
@@ -2003,7 +2069,8 @@ export default function RegistersTab({
       if (triggerId && dayMode) {
         const markedOnDay = docs[DAILY_USAGE_ID]?.rows?.[dayNum]?.[triggerId] === "1";
         if (markedOnDay) {
-          return (d.entries || []).some((e) => e.date === refDate)
+          const dk = recordDateKey(def) || "date";
+          return (d.entries || []).some((e) => e[dk] === refDate)
             ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
             : { label: `${TRIGGER_BY_ID[triggerId]?.emoji || ""} ${dLbl}: изисква се!`, tone: "due" };
         }
@@ -2032,8 +2099,14 @@ export default function RegistersTab({
     return false;
   };
 
+  // Подписът се вгражда в печата само ако обектът е избрал електронен подпис.
+  const printFirm: PrintFirmInfo = {
+    ...firm,
+    signature: signatureMode === "draw" ? signature : undefined,
+  };
+
   const printOne = (def: RegisterDef) => {
-    const section = buildRegisterSection(def, docs[def.id] || {}, firm, month);
+    const section = buildRegisterSection(def, docs[def.id] || {}, printFirm, month);
     printHtml(buildPrintDocument(def.title, [section]));
   };
 
@@ -2049,7 +2122,7 @@ export default function RegistersTab({
 
   const printAll = () => {
     const sections = activeRegisters.filter((def) => hasData(def)).map((def) =>
-      buildRegisterSection(def, docs[def.id] || {}, firm, month)
+      buildRegisterSection(def, docs[def.id] || {}, printFirm, month)
     );
     if (sections.length === 0) {
       alert("Няма попълнени дневници за избрания месец.");
@@ -2233,7 +2306,7 @@ export default function RegistersTab({
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
-                <Sparkles className="h-4 w-4 text-brand-gold" />
+                <HelpCircle className="h-4 w-4 text-brand-gold" />
                 <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
                   Какво се случи {dayLabel}?
                 </h3>
@@ -2658,6 +2731,8 @@ export default function RegistersTab({
           employees={employees}
           hotPoint={hotPoint}
           hotAppliances={hotAppliances}
+          signature={signature}
+          signatureMode={signatureMode}
           onSave={async (patch) => {
             await onSaveEquipment?.(patch);
           }}
