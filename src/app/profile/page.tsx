@@ -475,6 +475,10 @@ export default function ProfilePage() {
   const [feeModalEmail, setFeeModalEmail] = useState<string | null>(null);
   const [feeModalAmount, setFeeModalAmount] = useState("");
 
+  // Client: package selection confirm + success modals
+  const [pkgConfirmModal, setPkgConfirmModal] = useState<{ name: string; fee: number } | null>(null);
+  const [pkgSuccessModal, setPkgSuccessModal] = useState<{ name: string; fee: number } | null>(null);
+
   // Client: subscription payment test-checkout modal
   const [subPayOpen, setSubPayOpen] = useState(false);
   const [subPayCard, setSubPayCard] = useState("4242 4242 4242 4242");
@@ -952,29 +956,30 @@ export default function ProfilePage() {
    * This updates their subscriptionStatus to 'awaiting_payment' and sets their fee.
    * The user then does a bank transfer, and the admin approves it from the admin panel.
    */
-  const handleSelectPackage = async (packageName: string, fee: number) => {
+  const handleSelectPackage = (packageName: string, fee: number) => {
     if (!currentUserEmail) return;
-    if (!confirm(`Сигурни ли сте, че искате да изберете пакет „${packageName}“ за ${fee} € / месечно? Вашият акаунт ще бъде регистриран за плащане по банков път.`)) return;
+    setPkgConfirmModal({ name: packageName, fee });
+  };
 
+  const handleConfirmSelectPackage = async () => {
+    if (!pkgConfirmModal || !currentUserEmail) return;
+    const { name, fee } = pkgConfirmModal;
+    setPkgConfirmModal(null);
     try {
       const updates = {
         subscriptionStatus: "awaiting_payment" as const,
         subscriptionFeeEur: fee
       };
-
       const ok = await updateUser(currentUserEmail, updates);
       if (ok) {
-        alert("Планът е избран успешно! Моля, направете банков превод по сметката по-долу. Администраторът ще активира достъпа Ви веднага след получаване на превода.");
+        setPkgSuccessModal({ name, fee });
         setTimeout(() => {
           const el = document.getElementById("bank-details-card");
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth" });
-          }
-        }, 100);
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }, 400);
       }
     } catch (err) {
       console.error("Select package error:", err);
-      alert("Възникна грешка при регистрацията на плана.");
     }
   };
 
@@ -5421,6 +5426,71 @@ export default function ProfilePage() {
           </div>
         );
       })()}
+
+      {/* Package Confirm Modal */}
+      {pkgConfirmModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{background: "rgba(10,30,20,0.65)", backdropFilter: "blur(8px)"}}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="bg-gradient-to-br from-brand-green to-brand-green/80 p-6 text-white text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(196,155,60,0.25),transparent_60%)] pointer-events-none" />
+              <div className="w-14 h-14 bg-white/15 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="w-7 h-7 text-brand-gold" />
+              </div>
+              <h3 className="font-serif text-xl font-bold">Избор на план</h3>
+              <p className="text-white/70 text-xs mt-1">Потвърдете Вашия абонаментен пакет</p>
+            </div>
+            <div className="p-6 space-y-4 font-sans">
+              <div className="bg-brand-light/60 border border-brand-green/10 rounded-2xl p-4 text-center space-y-1">
+                <p className="text-xs text-brand-dark/50 uppercase tracking-widest font-bold">Избран пакет</p>
+                <p className="font-serif text-2xl font-bold text-brand-green">{pkgConfirmModal.name}</p>
+                <p className="text-brand-gold font-bold text-lg font-mono">{pkgConfirmModal.fee} € <span className="text-brand-dark/40 text-xs font-sans font-normal">/ месечно</span></p>
+              </div>
+              <p className="text-xs text-brand-dark/65 leading-relaxed text-center">
+                Вашият акаунт ще бъде регистриран за плащане по банков път. Администраторът ще активира достъпа Ви веднага след получаване на превода.
+              </p>
+              <div className="flex gap-3 pt-2">
+                <button onClick={() => setPkgConfirmModal(null)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-brand-dark/70 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0">Отказ</button>
+                <button onClick={handleConfirmSelectPackage} className="flex-1 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0 shadow-lg shadow-brand-green/20">Потвърди</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Package Success Modal */}
+      {pkgSuccessModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{background: "rgba(10,30,20,0.65)", backdropFilter: "blur(8px)"}}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="bg-gradient-to-br from-brand-gold to-amber-400 p-6 text-brand-dark text-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.2),transparent_60%)] pointer-events-none" />
+              <div className="w-16 h-16 bg-white/30 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <CheckCircle className="w-8 h-8 text-brand-dark" />
+              </div>
+              <h3 className="font-serif text-xl font-bold">Планът е избран!</h3>
+              <p className="text-brand-dark/70 text-xs mt-1">Следвайте инструкциите за плащане по-долу</p>
+            </div>
+            <div className="p-6 space-y-4 font-sans">
+              <div className="bg-brand-light/60 border border-brand-gold/20 rounded-2xl p-4 text-center space-y-1">
+                <p className="text-xs text-brand-dark/50 uppercase tracking-widest font-bold">Активиран пакет</p>
+                <p className="font-serif text-2xl font-bold text-brand-green">{pkgSuccessModal.name}</p>
+                <p className="text-brand-gold font-bold text-lg font-mono">{pkgSuccessModal.fee} € <span className="text-brand-dark/40 text-xs font-sans font-normal">/ месечно</span></p>
+              </div>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
+                <p className="text-emerald-800 font-bold text-xs flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  Следващи стъпки:
+                </p>
+                <ol className="text-xs text-emerald-700 space-y-1.5 pl-6 list-decimal leading-relaxed">
+                  <li>Направете банков превод по сметката по-долу на тази страница.</li>
+                  <li>В основанието напишете имейла си: <strong className="font-mono">{currentUserEmail}</strong></li>
+                  <li>Администраторът ще активира достъпа Ви веднага след получаване.</li>
+                </ol>
+              </div>
+              <button onClick={() => setPkgSuccessModal(null)} className="w-full py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0 shadow-lg shadow-brand-green/20">Разбрано — виж банковите данни</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
