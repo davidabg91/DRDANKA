@@ -54,7 +54,7 @@ export default function RemotionVideoWidget() {
               href="/profile?tab=register"
               className="w-full flex items-center justify-center gap-2.5 py-3.5 px-6 bg-gradient-to-r from-brand-gold via-amber-400 to-brand-gold bg-[length:200%_auto] hover:bg-right-center text-brand-dark font-extrabold text-[11px] uppercase tracking-[0.12em] transition-all duration-500 rounded-xl shadow-lg shadow-brand-gold/25 hover:shadow-brand-gold/40 hover:scale-[1.02] active:scale-[0.98] cursor-pointer mb-3"
             >
-              <span>Кандидатствай за Абонамент</span>
+              <span>Тествай безплатно 14 дни</span>
             </Link>
             <Link
               href="/services#vip-system"

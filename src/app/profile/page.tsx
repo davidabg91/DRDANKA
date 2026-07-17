@@ -4118,7 +4118,7 @@ export default function ProfilePage() {
                               onClick={() => setSubApplyOpen(true)}
                               className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-sm uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md shadow-brand-gold/20"
                             >
-                              Кандидатствай за абонамент
+                              Тествай безплатно 14 дни
                               <ChevronRight className="h-4 w-4" />
                             </button>
                           )}
@@ -5194,7 +5194,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Абонамент</div>
-                  <div className="font-serif text-lg font-bold">Кандидатствай за БАБХ Спокойствие</div>
+                  <div className="font-serif text-lg font-bold">Тествай безплатно 14 дни</div>
                 </div>
               </div>
               <button onClick={() => setSubApplyOpen(false)} className="text-white/60 hover:text-white p-1 rounded-full cursor-pointer">

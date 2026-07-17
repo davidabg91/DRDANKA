@@ -50,7 +50,7 @@ export default function RemotionVideoSection() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-12">
           <Link href="/profile?tab=register" className="px-8 py-4 bg-brand-gold text-brand-dark font-bold rounded-xl hover:bg-yellow-400 transition-all transform hover:-translate-y-1 shadow-[0_0_20px_rgba(212,175,55,0.4)] text-lg">
-            Кандидатствай за Абонамент
+            Тествай безплатно 14 дни
           </Link>
           <Link href="/profile?tab=login" className="px-8 py-4 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-white/10 transition-all text-lg">
             Влез в профила си

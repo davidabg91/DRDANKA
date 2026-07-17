@@ -232,7 +232,7 @@ export default function Services() {
                         href="/profile"
                         className="w-full text-center px-8 py-4 text-xs font-black uppercase tracking-widest rounded-lg transition-colors cursor-pointer bg-brand-green hover:bg-brand-green/90 text-white shadow-lg"
                       >
-                        Кандидатствай за Абонамент
+                        Тествай безплатно 14 дни
                       </Link>
                       <p className="text-[10px] text-brand-dark/50 text-center italic leading-relaxed">
                         * Броят на местата е ограничен, за да гарантираме индивидуално внимание и качествено обслужване на всеки клиент.
@@ -544,7 +544,7 @@ export default function Services() {
                   href="/profile"
                   className="inline-flex items-center justify-center px-10 py-5 text-sm sm:text-base font-black uppercase tracking-widest rounded-xl transition-all cursor-pointer bg-brand-green hover:bg-[#12382b] text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 border border-brand-green"
                 >
-                  Кандидатствай за Абонамент
+                  Тествай безплатно 14 дни
                 </Link>
                 <p className="text-[10px] text-brand-dark/50 text-center italic leading-relaxed mt-4">
                   * Броят на местата е ограничен, за да гарантираме индивидуално внимание и качествено обслужване на всеки клиент.
