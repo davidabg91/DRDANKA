@@ -626,27 +626,6 @@ export default function ProfilePage() {
     }
 
     setUsersList(users);
-
-    // Simulated check auth
-    const storedAuth = localStorage.getItem("danka_auth_logged");
-    const storedEmail = localStorage.getItem("danka_current_user_email") || "";
-    if (storedAuth === "true" && storedEmail) {
-      const loggedUser = users.find(u => u.email.toLowerCase().trim() === storedEmail.toLowerCase().trim());
-      if (loggedUser) {
-        setIsLoggedIn(true);
-        setCurrentUserEmail(loggedUser.email);
-        setUserRole(loggedUser.role);
-        if (loggedUser.role === "user") {
-          setFirmInfo({
-            name: loggedUser.firmName,
-            eik: loggedUser.eik,
-            address: loggedUser.address,
-            manager: loggedUser.manager || loggedUser.contact,
-            niche: loggedUser.niche
-          });
-        }
-      }
-    }
   }, []);
 
   // Escape HTML to prevent XSS in print iframes (user-supplied strings)
@@ -1248,6 +1227,17 @@ export default function ProfilePage() {
     toExpire.forEach(u => updateUser(u.email, { status: "expired", subscriptionStatus: "expired" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole, usersLoading, usersList.length]);
+
+  if (authLoading || usersLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-brand-green border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-slate-500 font-medium animate-pulse">Зареждане на профила...</p>
+        </div>
+      </div>
+    );
+  }
 
   // ────────────────────────────────────────────────────────────────────────
   // Bookstore: admin upload / edit / delete / grant
