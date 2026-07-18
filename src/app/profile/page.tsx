@@ -4908,63 +4908,80 @@ export default function ProfilePage() {
                     </div>
                   )}
 
+                  {/* Program intro */}
+                  <div className="bg-brand-green/[0.04] border border-brand-green/10 rounded-3xl p-6 sm:p-7 text-left font-sans">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold-dark mb-2">Абонаментна програма</p>
+                    <h3 className="font-serif text-xl sm:text-2xl font-bold text-brand-green leading-snug">
+                      Подкрепа, внедряване и поддържане на системи за безопасност на храните
+                    </h3>
+                    <p className="text-sm text-brand-dark/75 leading-relaxed mt-3 max-w-3xl">
+                      Това не е поредното обучение, което ще изгледате и ще забравите. Това е <strong className="text-brand-green">жива професионална общност</strong>, в която всяка седмица работите заедно с д-р Данка Николова, за да изградите система по безопасност на храните, която работи ежедневно и Ви дава спокойствие при всяка проверка от БАБХ.
+                    </p>
+                  </div>
+
                   {/* Packages Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-left">
-                    {/* Basic Package */}
+                    {/* Търговски обекти */}
                     <div className="border border-brand-green/10 rounded-3xl p-6 bg-brand-light/25 flex flex-col justify-between hover:border-brand-gold/45 transition-colors relative overflow-hidden">
                       <div className="space-y-4">
                         <div className="space-y-1">
-                          <h3 className="font-serif text-lg font-bold text-brand-green">БАБХ Спокойствие (Базов)</h3>
-                          <p className="text-[10px] text-brand-dark/50">За ресторанти, магазини и заведения</p>
+                          <div className="inline-flex items-center gap-2 text-brand-green">
+                            <Users className="h-5 w-5 text-brand-gold" />
+                            <h3 className="font-serif text-lg font-bold">Търговски обекти</h3>
+                          </div>
+                          <p className="text-[10px] text-brand-dark/50">За магазини, складове, заведения, кетъринг и онлайн търговци на храни</p>
                         </div>
                         <div className="font-serif text-3xl font-bold text-brand-gold">
-                          50 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месечно</span>
+                          79 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месец</span>
                         </div>
                         <p className="text-xs text-brand-dark/70 leading-relaxed">
-                          Идеално решение за дигитализация на самоконтрола и пълна готовност за внезапни БАБХ проверки.
+                          Постоянна професионална подкрепа, за да поддържате документацията и системата си актуални без да разчитате на външни консултанти.
                         </p>
                         <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
-                          <li className="flex items-start gap-2">✓ <span>Дигитални самоконтролни дневници</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Автоматично генериране на НАССР папка</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Смарт напомняния за дневни записи</span></li>
-                          <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Надзор от д-р Данка Николова</strong> (бивш директор на агенцията по храните)</li>
-                          <li className="flex items-start gap-2">✓ <span>100% БАБХ съответствие</span></li>
+                          <li className="flex items-start gap-2">✓ <span><strong className="text-brand-green">Една среща на живо</strong> всяка седмица (онлайн)</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Решаване на реални казуси и отговори на въпросите Ви</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Авторски шаблони, чек-листи и образци на документи</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Достъп до записите от всички срещи</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Затворена <strong className="text-brand-green">Viber група</strong> за въпроси между срещите</span></li>
                         </ul>
                       </div>
                       <button
-                        onClick={() => handleSelectPackage("Базов", 50)}
+                        onClick={() => handleSelectPackage("Търговски обекти", 79)}
                         className="w-full mt-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
                       >
                         Избери план
                       </button>
                     </div>
 
-                    {/* Pro Package */}
+                    {/* Производители на храни */}
                     <div className="border-2 border-brand-gold rounded-3xl p-6 bg-white flex flex-col justify-between hover:border-brand-gold/80 transition-colors relative shadow-lg shadow-brand-gold/5">
                       <div className="absolute top-0 right-0 bg-brand-gold text-brand-dark text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl">
                         Препоръчан
                       </div>
                       <div className="space-y-4">
                         <div className="space-y-1">
-                          <h3 className="font-serif text-lg font-bold text-brand-green">Спокойствие + Обучения</h3>
-                          <p className="text-[10px] text-brand-dark/50">За заведения с текучество на персонал</p>
+                          <div className="inline-flex items-center gap-2 text-brand-green">
+                            <Building className="h-5 w-5 text-brand-gold" />
+                            <h3 className="font-serif text-lg font-bold">Производители на храни</h3>
+                          </div>
+                          <p className="text-[10px] text-brand-dark/50">За производители, мандри, месо- и рибопреработка, хлебни, сладкарски и готови храни</p>
                         </div>
                         <div className="font-serif text-3xl font-bold text-brand-gold">
-                          80 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месечно</span>
+                          119 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месец</span>
                         </div>
                         <p className="text-xs text-brand-dark/70 leading-relaxed">
-                          Комбинира ежедневния самоконтрол с професионално сертифициране и видео курсове за Вашите служители.
+                          Пълна подкрепа за производствени обекти — от НАССР и ДПХП до технологична документация и проследимост.
                         </p>
                         <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
-                          <li className="flex items-start gap-2 text-brand-green font-bold">✓ <span>Всичко от Базовия пакет</span></li>
-                          <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Достъп до всички видео лекции</strong> и материали в книжарницата</li>
-                          <li className="flex items-start gap-2">✓ <span>Онлайн тестове &amp; сертификати за персонала</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Здравни напомняния за служителите</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Приоритетен чат с д-р Николова</span></li>
+                          <li className="flex items-start gap-2 text-brand-green font-bold">✓ <span>Всичко за „Търговски обекти“</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Практически теми по <strong className="text-brand-green">НАССР, ДПХП и технологична документация</strong></span></li>
+                          <li className="flex items-start gap-2">✓ <span>Проследимост, етикетиране и добри производствени практики</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Подготовка за проверки и вътрешен контрол</span></li>
+                          <li className="flex items-start gap-2">✓ <span>Актуална информация при промени в законодателството</span></li>
                         </ul>
                       </div>
                       <button
-                        onClick={() => handleSelectPackage("Обучения", 80)}
+                        onClick={() => handleSelectPackage("Производители на храни", 119)}
                         className="w-full mt-6 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
                       >
                         Избери план
@@ -4975,17 +4992,20 @@ export default function ProfilePage() {
                     <div className="border border-brand-green/10 rounded-3xl p-6 bg-brand-light/25 flex flex-col justify-between hover:border-brand-gold/45 transition-colors relative overflow-hidden">
                       <div className="space-y-4">
                         <div className="space-y-1">
-                          <h3 className="font-serif text-lg font-bold text-brand-green">Спокойствие VIP одит</h3>
-                          <p className="text-[10px] text-brand-dark/50">Пълна професионална защита</p>
+                          <div className="inline-flex items-center gap-2 text-brand-green">
+                            <Sparkles className="h-5 w-5 text-brand-gold" />
+                            <h3 className="font-serif text-lg font-bold">Спокойствие VIP одит</h3>
+                          </div>
+                          <p className="text-[10px] text-brand-dark/50">Пълна професионална защита с персонално внимание</p>
                         </div>
                         <div className="font-serif text-3xl font-bold text-brand-gold">
-                          120 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месечно</span>
+                          199 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месец</span>
                         </div>
                         <p className="text-xs text-brand-dark/70 leading-relaxed">
                           Включва персонален дистанционен одит от д-р Николова всеки месец и спешна телефонна линия.
                         </p>
                         <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
-                          <li className="flex items-start gap-2 text-brand-green font-bold">✓ <span>Всичко от пакет „Обучения“</span></li>
+                          <li className="flex items-start gap-2 text-brand-green font-bold">✓ <span>Всичко за „Производители на храни“</span></li>
                           <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Месечен одит</strong> с д-р Данка Николова</li>
                           <li className="flex items-start gap-2">✓ <span>Изготвяне на технологична документация</span></li>
                           <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Директна телефонна връзка</strong> при проверки</li>
@@ -4993,11 +5013,118 @@ export default function ProfilePage() {
                         </ul>
                       </div>
                       <button
-                        onClick={() => handleSelectPackage("VIP одит", 120)}
+                        onClick={() => handleSelectPackage("VIP одит", 199)}
                         className="w-full mt-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
                       >
                         Избери план
                       </button>
+                    </div>
+                  </div>
+
+                  {/* What you get */}
+                  <div className="text-left font-sans">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-xl"><Sparkles className="h-5 w-5" /></div>
+                      <h3 className="font-serif text-lg font-bold text-brand-green">Какво получавате</h3>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {[
+                        { icon: Video, t: "Седмични срещи на живо", d: "Една онлайн среща всяка седмица с практически теми и демонстрации." },
+                        { icon: FileText, t: "Практически теми", d: "ДПХП, НАССР, технологична документация, проследимост, етикетиране и законодателство." },
+                        { icon: ShieldCheck, t: "Реални казуси", d: "Решаване на реални казуси и отговори на Вашите конкретни въпроси." },
+                        { icon: Download, t: "Достъп до записите", d: "Гледайте записите от всички срещи, ако не можете да присъствате на живо." },
+                        { icon: FileCheck, t: "Готови материали", d: "Авторски шаблони, чек-листи, образци на документи и практически материали." },
+                        { icon: MessageSquare, t: "Затворена Viber група", d: "Задавайте въпроси между срещите и получавайте професионални насоки." },
+                      ].map(({ icon: Icon, t, d }, i) => (
+                        <div key={i} className="bg-white border border-brand-green/10 rounded-2xl p-4 hover:border-brand-gold/40 transition-colors">
+                          <Icon className="h-5 w-5 text-brand-gold mb-2" />
+                          <p className="font-bold text-sm text-brand-green">{t}</p>
+                          <p className="text-xs text-brand-dark/65 leading-relaxed mt-1">{d}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* For whom / When it fits */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left font-sans">
+                    <div className="bg-brand-light/30 border border-brand-green/10 rounded-3xl p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-brand-green/10 text-brand-green rounded-xl"><Users className="h-5 w-5" /></div>
+                        <h3 className="font-serif text-lg font-bold text-brand-green">За кого е подходяща</h3>
+                      </div>
+                      <ul className="text-xs text-brand-dark/80 space-y-2 leading-relaxed columns-1 sm:columns-2 gap-x-6">
+                        {[
+                          "Производители на храни",
+                          "Малки и средни предприятия",
+                          "Мандри и месопреработка",
+                          "Производство на рибни продукти",
+                          "Хлебни и сладкарски изделия",
+                          "Производители на готови храни",
+                          "Плодове и зеленчуци",
+                          "Магазини и складове за храни",
+                          "Заведения за обществено хранене",
+                          "Кетъринг и онлайн търговци",
+                          "Ферми по Наредба № 26",
+                          "Стартиращи хранителни предприятия",
+                          "Отговорници по качеството и технолози",
+                          "Управители и собственици на обекти",
+                        ].map((x, i) => (
+                          <li key={i} className="flex items-start gap-2 break-inside-avoid mb-2"><Check className="h-3.5 w-3.5 text-brand-gold shrink-0 mt-0.5" /><span>{x}</span></li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-brand-light/30 border border-brand-green/10 rounded-3xl p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-2 bg-brand-green/10 text-brand-green rounded-xl"><Sparkles className="h-5 w-5" /></div>
+                        <h3 className="font-serif text-lg font-bold text-brand-green">Подходяща е и ако...</h3>
+                      </div>
+                      <ul className="text-xs text-brand-dark/80 space-y-2.5 leading-relaxed">
+                        {[
+                          "Искате сами да поддържате документацията си, без постоянно да разчитате на външни консултанти.",
+                          "Предстои Ви регистрация на нов хранителен обект.",
+                          "Очаквате проверка от БАБХ.",
+                          "Искате да актуализирате НАССР системата и ДПХП.",
+                          "Срещате затруднения при воденето на документацията.",
+                          "Искате да сте информирани за всяка промяна в законодателството.",
+                          "Искате да обменяте опит и добри практики с други оператори.",
+                        ].map((x, i) => (
+                          <li key={i} className="flex items-start gap-2"><Check className="h-3.5 w-3.5 text-brand-gold shrink-0 mt-0.5" /><span>{x}</span></li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Important */}
+                  <div className="bg-amber-50/60 border border-amber-200/70 rounded-3xl p-6 text-left font-sans">
+                    <div className="flex items-center gap-3 mb-3">
+                      <AlertTriangle className="h-5 w-5 text-amber-600" />
+                      <h3 className="font-serif text-lg font-bold text-amber-900">Важно</h3>
+                    </div>
+                    <ul className="text-xs text-amber-900/85 space-y-2 leading-relaxed">
+                      <li className="flex items-start gap-2">✓ <span>Работя с <strong>ограничен брой участници</strong>, за да отделя лично внимание на всеки.</span></li>
+                      <li className="flex items-start gap-2">✓ <span>Програмата е изцяло практическа и базирана на реални казуси.</span></li>
+                      <li className="flex items-start gap-2">✓ <span>Нови теми се добавят всеки месец според промените в законодателството и въпросите на участниците.</span></li>
+                    </ul>
+                  </div>
+
+                  {/* My promise */}
+                  <div className="bg-brand-green text-white rounded-3xl p-6 sm:p-8 text-left font-sans relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-[80px] pointer-events-none"></div>
+                    <div className="flex items-center gap-3 mb-4 relative">
+                      <div className="p-2 bg-brand-gold/20 text-brand-gold rounded-xl"><ShieldCheck className="h-5 w-5" /></div>
+                      <h3 className="font-serif text-xl font-bold">Моето обещание</h3>
+                    </div>
+                    <div className="space-y-3 text-sm text-white/85 leading-relaxed max-w-3xl relative">
+                      <p>
+                        Като <strong className="text-brand-gold">бивш директор на Областна дирекция по безопасност на храните</strong> и експерт с над 25 години практически опит, ще бъда до Вас, за да решавате реални казуси, да намирате навременни решения и да избягвате грешките, които водят до предписания, санкции или загуба на време и средства.
+                      </p>
+                      <p>
+                        Заедно няма просто да създаваме документация. Ще изграждаме система, която работи ежедневно, защитава бизнеса Ви и Ви дава увереност при всяка проверка от БАБХ. Защото добрата документация се разработва веднъж, но добрата система се поддържа, усъвършенства и развива всеки ден.
+                      </p>
+                      <p className="text-brand-gold font-semibold">
+                        Моята цел е една — вашият бизнес да бъде сигурен, подготвен и спокоен.
+                      </p>
                     </div>
                   </div>
 
@@ -5015,11 +5142,11 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 font-mono text-xs sm:text-sm text-left">
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">Получател</span>
-                        <span className="font-bold text-white">Данка Василева Николова</span>
+                        <span className="font-bold text-white">Данка Василева Крамолинска</span>
                       </div>
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">Банка</span>
-                        <span className="font-bold text-white">ЦКБ АД</span>
+                        <span className="font-bold text-white">ЦКБ АД – Клон Плевен</span>
                       </div>
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10 col-span-1 md:col-span-2 lg:col-span-1">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">IBAN</span>
