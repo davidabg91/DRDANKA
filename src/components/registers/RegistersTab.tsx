@@ -674,6 +674,8 @@ function RowsEditor({
   dayLbl,
   autoDuner = false,
   autoPrework = false,
+  autoFillActive = false,
+  onToggleAutoFill,
   onSaveEquipment,
 }: {
   def: RegisterDef;
@@ -687,6 +689,8 @@ function RowsEditor({
   dayLbl: string;
   autoDuner?: boolean;
   autoPrework?: boolean;
+  autoFillActive?: boolean;
+  onToggleAutoFill?: (checked: boolean) => void | Promise<void>;
   onSaveEquipment?: (patch: {
     customFridges?: string[];
     customFreezers?: string[];
@@ -1194,90 +1198,22 @@ function RowsEditor({
               </>
             )}
             {def.id === "duner" && (
-              <>
-                <button
-                  onClick={autoFillDunerMonth}
-                  className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
-                  title="Попълва автоматично изпичанията на дюнер за всеки ден от месеца с нормални градуси и часове"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
-                </button>
-                <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
-                  <input
-                    type="checkbox"
-                    checked={autoDuner}
-                    onChange={async (e) => {
-                      const checked = e.target.checked;
-                      await onSaveEquipment?.({ autoDuner: checked });
-                      if (checked && (!entries || entries.length === 0)) {
-                        const maxDay = getMaxFillDay(refDate.slice(0, 7));
-                        const newEntries: any[] = [];
-                        for (let i = 1; i <= maxDay; i++) {
-                          const dayNum = String(i).padStart(2, "0");
-                          const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
-                          const tempVal = 75.5 + Math.random() * 8.0;
-                          const timeVal = Math.random() > 0.5 ? (Math.random() > 0.5 ? "3 часа" : "4 часа") : "2.5 часа";
-                          newEntries.push({
-                            date: dateStr,
-                            product: "Пилешки дюнер",
-                            temp: tempVal.toFixed(1),
-                            time: timeVal,
-                            action: "",
-                            result: "Норма",
-                            sign: "✓"
-                          });
-                        }
-                        onUpdate((prev) => ({ ...prev, entries: newEntries }));
-                      }
-                    }}
-                    className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
-                  />
-                  Попълвай автоматично всеки месец
-                </label>
-              </>
+              <button
+                onClick={autoFillDunerMonth}
+                className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                title="Попълва автоматично изпичанията на дюнер за всеки ден от месеца с нормални градуси и часове"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+              </button>
             )}
             {def.id === "prework-check" && (
-              <>
-                <button
-                  onClick={autoFillPreworkMonth}
-                  className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
-                  title="Попълва автоматично чек-листа за хигиена и техническо състояние за всеки ден от месеца"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
-                </button>
-                <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
-                  <input
-                    type="checkbox"
-                    checked={autoPrework}
-                    onChange={async (e) => {
-                      const checked = e.target.checked;
-                      await onSaveEquipment?.({ autoPrework: checked });
-                      if (checked && (!entries || entries.length === 0)) {
-                        const maxDay = getMaxFillDay(refDate.slice(0, 7));
-                        const newEntries: any[] = [];
-                        for (let i = 1; i <= maxDay; i++) {
-                          const dayNum = String(i).padStart(2, "0");
-                          const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
-                          PREWORK_ZONES.forEach((zone) => {
-                            newEntries.push({
-                              date: dateStr,
-                              zone: zone,
-                              technical: "✓",
-                              hygiene: "✓",
-                              action: "",
-                              result: "Норма",
-                              sign: "✓"
-                            });
-                          });
-                        }
-                        onUpdate((prev) => ({ ...prev, entries: newEntries }));
-                      }
-                    }}
-                    className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
-                  />
-                  Попълвай автоматично всеки месец
-                </label>
-              </>
+              <button
+                onClick={autoFillPreworkMonth}
+                className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                title="Попълва автоматично чек-листа за хигиена и техническо състояние за всеки ден от месеца"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+              </button>
             )}
             {def.id === "staff-hygiene" && employees.length > 0 && (
               <>
@@ -1383,6 +1319,29 @@ function RowsEditor({
               >
                 <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
+            )}
+            {["duner", "prework-check", "staff-hygiene", "fryer-oil-destroy", "baking", "cooked-meals", "disinfectant-residue"].includes(def.id) && (
+              <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
+                <input
+                  type="checkbox"
+                  checked={autoFillActive}
+                  onChange={async (e) => {
+                    const checked = e.target.checked;
+                    onToggleAutoFill?.(checked);
+                    if (checked && (!entries || entries.length === 0)) {
+                      if (def.id === "duner") autoFillDunerMonth();
+                      if (def.id === "prework-check") autoFillPreworkMonth();
+                      if (def.id === "staff-hygiene") autoFillStaffHygieneMonth();
+                      if (def.id === "fryer-oil-destroy") autoFillFryerOilDestroyMonth();
+                      if (def.id === "baking") autoFillBakingMonth();
+                      if (def.id === "cooked-meals") autoFillCookedMealsMonth();
+                      if (def.id === "disinfectant-residue") autoFillDisinfectantResidueMonth();
+                    }
+                  }}
+                  className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
+                />
+                Попълвай автоматично всеки месец
+              </label>
             )}
           </div>
 
@@ -1721,6 +1680,8 @@ function GridEditor({
   selectedDate,
   dayLbl,
   canTick,
+  autoFillActive = false,
+  onToggleAutoFill,
 }: {
   def: RegisterDef;
   data: RegisterDocData;
@@ -1738,6 +1699,8 @@ function GridEditor({
   dayLbl: string;
   /** Може ли да се отбелязва бързо за избрания ден (не е бъдещ) */
   canTick: boolean;
+  autoFillActive?: boolean;
+  onToggleAutoFill?: (checked: boolean) => void | Promise<void>;
 }) {
   const cols = def.columns || [];
   const rows = data.rows || {};
@@ -1815,6 +1778,21 @@ function GridEditor({
           >
             <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
           </button>
+          <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
+            <input
+              type="checkbox"
+              checked={autoFillActive}
+              onChange={async (e) => {
+                const checked = e.target.checked;
+                onToggleAutoFill?.(checked);
+                if (checked) {
+                  autoFillGridMonth();
+                }
+              }}
+              className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
+            />
+            Попълвай автоматично всеки месец
+          </label>
         </div>
       )}
       <div className="overflow-x-auto rounded-xl border border-brand-green/10 max-h-[560px] overflow-y-auto">
@@ -1879,6 +1857,8 @@ function TempEditor({
   dayLbl,
   selIsToday,
   canMark,
+  autoFillActive = false,
+  onToggleAutoFill,
 }: {
   data: RegisterDocData;
   month: string;
@@ -1893,6 +1873,8 @@ function TempEditor({
   selIsToday: boolean;
   /** Избраният ден не е в бъдещето */
   canMark: boolean;
+  autoFillActive?: boolean;
+  onToggleAutoFill?: (checked: boolean) => void | Promise<void>;
 }) {
   const unit = units.find((u) => u.name === activeUnit) || units[0];
 
@@ -2045,6 +2027,21 @@ function TempEditor({
             >
               <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Автоматично попълване за месеца
             </button>
+            <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
+              <input
+                type="checkbox"
+                checked={autoFillActive}
+                onChange={async (e) => {
+                  const checked = e.target.checked;
+                  onToggleAutoFill?.(checked);
+                  if (checked) {
+                    autoFillMonth();
+                  }
+                }}
+                className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
+              />
+              Попълвай автоматично всеки месец
+            </label>
           </div>
         )}
       </div>
@@ -2848,6 +2845,13 @@ interface RegistersTabProps {
   signatureMode?: "draw" | "manual";
   autoDuner?: boolean;
   autoPrework?: boolean;
+  autoTemps?: boolean;
+  autoStaffHygiene?: boolean;
+  autoCleaning?: boolean;
+  autoFryerOil?: boolean;
+  autoBaking?: boolean;
+  autoCookedMeals?: boolean;
+  autoResidue?: boolean;
   /** Записва оборудване/персонал в профила на потребителя */
   onSaveEquipment?: (patch: {
     customFridges?: string[];
@@ -2859,6 +2863,13 @@ interface RegistersTabProps {
     signatureMode?: "draw" | "manual";
     autoDuner?: boolean;
     autoPrework?: boolean;
+    autoTemps?: boolean;
+    autoStaffHygiene?: boolean;
+    autoCleaning?: boolean;
+    autoFryerOil?: boolean;
+    autoBaking?: boolean;
+    autoCookedMeals?: boolean;
+    autoResidue?: boolean;
   }) => void | Promise<void>;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
@@ -2883,6 +2894,13 @@ export default function RegistersTab({
   signatureMode = "manual",
   autoDuner = false,
   autoPrework = false,
+  autoTemps = false,
+  autoStaffHygiene = false,
+  autoCleaning = false,
+  autoFryerOil = false,
+  autoBaking = false,
+  autoCookedMeals = false,
+  autoResidue = false,
   onSaveEquipment,
   readOnly = false,
   tourSeen = false,
@@ -2898,6 +2916,36 @@ export default function RegistersTab({
   const [showSettings, setShowSettings] = useState(false);
   const [activeTempUnit, setActiveTempUnit] = useState<string>("");
   const [showTour, setShowTour] = useState(false);
+
+  const autoFillSettings: Record<string, boolean> = {
+    "temps": autoTemps,
+    "prework-check": autoPrework,
+    "duner": autoDuner,
+    "staff-hygiene": autoStaffHygiene,
+    "cleaning-logs": autoCleaning,
+    "fryer-oil-destroy": autoFryerOil,
+    "baking": autoBaking,
+    "cooked-meals": autoCookedMeals,
+    "disinfectant-residue": autoResidue
+  };
+
+  const toggleAutoFillSetting = async (registerId: string, checked: boolean) => {
+    const patchKeyMap: Record<string, string> = {
+      "temps": "autoTemps",
+      "prework-check": "autoPrework",
+      "duner": "autoDuner",
+      "staff-hygiene": "autoStaffHygiene",
+      "cleaning-logs": "autoCleaning",
+      "fryer-oil-destroy": "autoFryerOil",
+      "baking": "autoBaking",
+      "cooked-meals": "autoCookedMeals",
+      "disinfectant-residue": "autoResidue"
+    };
+    const patchKey = patchKeyMap[registerId];
+    if (patchKey) {
+      await onSaveEquipment?.({ [patchKey]: checked });
+    }
+  };
 
   // Обиколка при първо влизане: пази се в профила + localStorage (за мигновена защита от повторно показване)
   const tourStorageKey = `danka_registers_tour_${email.toLowerCase()}`;
@@ -2974,83 +3022,296 @@ export default function RegistersTab({
     }
   }, [month, refDate]);
 
-  // Автоматично попълване за Карта 20 (Дюнер) при включена настройка
+  // Единен фонов ефект за автоматично попълване на всички активирани дневници до днешна дата (за текущия месец)
   useEffect(() => {
-    if (loading || readOnly || !autoDuner || !email) return;
-    const dunerDoc = docs["duner"];
-    if (dunerDoc && (!dunerDoc.entries || dunerDoc.entries.length === 0)) {
-      const maxDay = getMaxFillDay(month);
-      const newEntries: any[] = [];
-      for (let i = 1; i <= maxDay; i++) {
-        const dayNum = String(i).padStart(2, "0");
-        const dateStr = `${month}-${dayNum}`;
-        const tempVal = 75.5 + Math.random() * 8.0;
-        const timeVal = Math.random() > 0.5 ? (Math.random() > 0.5 ? "3 часа" : "4 часа") : "2.5 часа";
-        newEntries.push({
-          date: dateStr,
-          product: "Пилешки дюнер",
-          temp: tempVal.toFixed(1),
-          time: timeVal,
-          action: "",
-          result: "Норма",
-          sign: "✓"
-        });
-      }
-      
-      const updatedDoc = { ...dunerDoc, entries: newEntries, updatedAt: new Date().toISOString() };
-      
-      // Update local state
-      setDocs((prev) => ({
-        ...prev,
-        "duner": updatedDoc
-      }));
-      
-      // Persist to database immediately
-      const dunerKey = registerDocKey(email, "duner", month);
-      setDoc(doc(db, "logs", dunerKey), updatedDoc).catch((err) => {
-        console.error("Auto-duner persist error:", err);
-      });
-    }
-  }, [loading, readOnly, autoDuner, month, email, docs, db]);
+    if (loading || readOnly || !email) return;
+    
+    const maxDay = getMaxFillDay(month);
+    if (maxDay <= 0) return; // бъдещ месец: не се попълва нищо
 
-  // Автоматично попълване за Карта 34 (Преди работа) при включена настройка
-  useEffect(() => {
-    if (loading || readOnly || !autoPrework || !email) return;
-    const preworkDoc = docs["prework-check"];
-    if (preworkDoc && (!preworkDoc.entries || preworkDoc.entries.length === 0)) {
-      const maxDay = getMaxFillDay(month);
-      const newEntries: any[] = [];
-      for (let i = 1; i <= maxDay; i++) {
-        const dayNum = String(i).padStart(2, "0");
-        const dateStr = `${month}-${dayNum}`;
-        PREWORK_ZONES.forEach((zone) => {
-          newEntries.push({
-            date: dateStr,
-            zone: zone,
-            technical: "✓",
-            hygiene: "✓",
-            action: "",
-            result: "Норма",
-            sign: "✓"
-          });
+    let stateChanged = false;
+    const updatedDocs: Record<string, RegisterDocData> = {};
+
+    const autoPopulateDoc = async (registerId: string, generateEntries: () => any) => {
+      const docData = docs[registerId];
+      if (docData && (!docData.entries || docData.entries.length === 0)) {
+        const newEntries = generateEntries();
+        const updatedDoc = { ...docData, entries: newEntries, updatedAt: new Date().toISOString() };
+        updatedDocs[registerId] = updatedDoc;
+        stateChanged = true;
+        
+        const docKey = registerDocKey(email, registerId, month);
+        await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
+          console.error(`Auto fill background error for ${registerId}:`, err);
         });
       }
-      
-      const updatedDoc = { ...preworkDoc, entries: newEntries, updatedAt: new Date().toISOString() };
-      
-      // Update local state
-      setDocs((prev) => ({
-        ...prev,
-        "prework-check": updatedDoc
-      }));
-      
-      // Persist to database immediately
-      const preworkKey = registerDocKey(email, "prework-check", month);
-      setDoc(doc(db, "logs", preworkKey), updatedDoc).catch((err) => {
-        console.error("Auto-prework-check persist error:", err);
-      });
-    }
-  }, [loading, readOnly, autoPrework, month, email, docs, db]);
+    };
+
+    const autoPopulateGrid = async (registerId: string) => {
+      const docData = docs[registerId];
+      if (docData && (!docData.rows || Object.keys(docData.rows).length === 0)) {
+        const updatedRows: Record<string, any> = {};
+        const def = REGISTER_BY_ID[registerId];
+        const cols = def?.columns || [];
+        
+        for (let d = 1; d <= maxDay; d++) {
+          const rk = String(d);
+          const row: Record<string, string> = {};
+          cols.forEach((c) => {
+            if (c.type === "check") row[c.key] = "✓";
+            if (c.key === "grade") row[c.key] = "Удовлетворителна";
+            if (c.type === "date") row[c.key] = `${month}-${String(d).padStart(2, "0")}`;
+          });
+          updatedRows[rk] = row;
+        }
+
+        const updatedDoc = { ...docData, rows: updatedRows, updatedAt: new Date().toISOString() };
+        updatedDocs[registerId] = updatedDoc;
+        stateChanged = true;
+
+        const docKey = registerDocKey(email, registerId, periodFor(def, month));
+        await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
+          console.error(`Auto fill grid background error for ${registerId}:`, err);
+        });
+      }
+    };
+
+    const autoPopulateTemps = async () => {
+      const tempDoc = docs["temps"];
+      if (tempDoc) {
+        let tempChanged = false;
+        const prevUnits = tempDoc.units || {};
+        const updatedUnits = { ...prevUnits };
+
+        units.forEach((unit) => {
+          const u = prevUnits[unit.name] || { type: unit.type, rows: {} };
+          if (!u.rows || Object.keys(u.rows).length === 0) {
+            tempChanged = true;
+            const newRows: Record<string, any> = {};
+            for (let d = 1; d <= maxDay; d++) {
+              const dayStr = String(d);
+              const t1h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
+              const t1h_h = Math.random() > 0.5 ? "09" : "08";
+              const t1h = `${t1h_h}:${t1h_h === "09" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t1h_m}`;
+              const t2h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
+              const t2h_h = Math.random() > 0.5 ? "18" : "17";
+              const t2h = `${t2h_h}:${t2h_h === "18" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t2h_m}`;
+
+              let t1 = "";
+              let t2 = "";
+              if (unit.type === "freezer") {
+                t1 = (-18.5 - Math.random() * 2.8).toFixed(1);
+                t2 = (-18.5 - Math.random() * 2.8).toFixed(1);
+              } else {
+                t1 = (1.2 + Math.random() * 2.5).toFixed(1);
+                t2 = (1.2 + Math.random() * 2.5).toFixed(1);
+              }
+
+              newRows[dayStr] = {
+                t1h,
+                t1,
+                t2h,
+                t2,
+                action: "",
+                result: "Норма",
+                sign: "✓"
+              };
+            }
+            updatedUnits[unit.name] = { ...u, rows: newRows };
+          }
+        });
+
+        if (tempChanged) {
+          const updatedDoc = { ...tempDoc, units: updatedUnits, updatedAt: new Date().toISOString() };
+          updatedDocs["temps"] = updatedDoc;
+          stateChanged = true;
+          const docKey = registerDocKey(email, "temps", periodFor(REGISTER_BY_ID["temps"], month));
+          await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
+            console.error("Auto fill temps background error:", err);
+          });
+        }
+      }
+    };
+
+    (async () => {
+      // 1. Температури (temps)
+      if (autoTemps) {
+        await autoPopulateTemps();
+      }
+
+      // 2. Дюнер (duner)
+      if (autoDuner) {
+        await autoPopulateDoc("duner", () => {
+          const entries: any[] = [];
+          for (let i = 1; i <= maxDay; i++) {
+            const dayNum = String(i).padStart(2, "0");
+            const dateStr = `${month}-${dayNum}`;
+            const tempVal = 75.5 + Math.random() * 8.0;
+            const timeVal = Math.random() > 0.5 ? (Math.random() > 0.5 ? "3 часа" : "4 часа") : "2.5 часа";
+            entries.push({
+              date: dateStr,
+              product: "Пилешки дюнер",
+              temp: tempVal.toFixed(1),
+              time: timeVal,
+              action: "",
+              result: "Норма",
+              sign: "✓"
+            });
+          }
+          return entries;
+        });
+      }
+
+      // 3. Преди работа (prework-check)
+      if (autoPrework) {
+        await autoPopulateDoc("prework-check", () => {
+          const entries: any[] = [];
+          for (let i = 1; i <= maxDay; i++) {
+            const dayNum = String(i).padStart(2, "0");
+            const dateStr = `${month}-${dayNum}`;
+            PREWORK_ZONES.forEach((zone) => {
+              entries.push({
+                date: dateStr,
+                zone: zone,
+                technical: "✓",
+                hygiene: "✓",
+                action: "",
+                result: "Норма",
+                sign: "✓"
+              });
+            });
+          }
+          return entries;
+        });
+      }
+
+      // 4. Хигиена персонал (staff-hygiene)
+      if (autoStaffHygiene) {
+        await autoPopulateDoc("staff-hygiene", () => {
+          const entries: any[] = [];
+          for (let i = 1; i <= maxDay; i++) {
+            const dayNum = String(i).padStart(2, "0");
+            const dateStr = `${month}-${dayNum}`;
+            employees.forEach((emp) => {
+              entries.push({
+                date: dateStr,
+                employee: emp.name,
+                hygiene: "✓",
+                health: "✓",
+                result: "Допуснат до работа",
+                sign: "✓"
+              });
+            });
+          }
+          return entries;
+        });
+      }
+
+      // 5. Почистване (cleaning-logs)
+      if (autoCleaning) {
+        await autoPopulateGrid("cleaning-logs");
+      }
+
+      // 6. Пържилна мазнина (fryer-oil-destroy)
+      if (autoFryerOil) {
+        await autoPopulateDoc("fryer-oil-destroy", () => {
+          const entries: any[] = [];
+          for (let i = 1; i <= maxDay; i++) {
+            if (i % 3 === 0) {
+              const dayNum = String(i).padStart(2, "0");
+              const dateStr = `${month}-${dayNum}`;
+              entries.push({
+                date: dateStr,
+                fryer: "Фритюрник №1",
+                qty: "5 л. олио",
+                destination: "За рециклиране",
+                protocol: `Декларация №${String(Math.floor(1000 + Math.random() * 9000))}`,
+                sign: "✓"
+              });
+            }
+          }
+          return entries;
+        });
+      }
+
+      // 7. Тестени изделия (baking)
+      if (autoBaking) {
+        await autoPopulateDoc("baking", () => {
+          const entries: any[] = [];
+          for (let i = 1; i <= maxDay; i++) {
+            const dayNum = String(i).padStart(2, "0");
+            const dateStr = `${month}-${dayNum}`;
+            const tempVal = 200 + Math.floor(Math.random() * 21);
+            const timeVal = `${15 + Math.floor(Math.random() * 11)} мин`;
+            entries.push({
+              date: dateStr,
+              product: "Закуски / Козунаци",
+              temp: String(tempVal),
+              time: timeVal,
+              action: "",
+              result: "Норма",
+              sign: "✓"
+            });
+          }
+          return entries;
+        });
+      }
+
+      // 8. Готвени ястия (cooked-meals)
+      if (autoCookedMeals) {
+        await autoPopulateDoc("cooked-meals", () => {
+          const entries: any[] = [];
+          for (let i = 1; i <= maxDay; i++) {
+            const dayNum = String(i).padStart(2, "0");
+            const dateStr = `${month}-${dayNum}`;
+            const tempCookVal = 200 + Math.floor(Math.random() * 16);
+            const timeVal = `${40 + Math.floor(Math.random() * 21)} мин`;
+            const tempCoreVal = 76.5 + Math.random() * 6.5;
+            entries.push({
+              date: dateStr,
+              product: "Готвени ястия (супа / готвено)",
+              tempCook: String(tempCookVal),
+              time: timeVal,
+              tempCore: tempCoreVal.toFixed(1),
+              action: "",
+              result: "Норма",
+              sign: "✓"
+            });
+          }
+          return entries;
+        });
+      }
+
+      // 9. Остатъчни дезинфектанти (disinfectant-residue)
+      if (autoResidue) {
+        await autoPopulateDoc("disinfectant-residue", () => {
+          const entries: any[] = [];
+          for (let i = 1; i <= maxDay; i++) {
+            if (i % 3 === 0) {
+              const dayNum = String(i).padStart(2, "0");
+              const dateStr = `${month}-${dayNum}`;
+              const surfaces = [RESIDUE_SURFACES[0], RESIDUE_SURFACES[2], RESIDUE_SURFACES[4]];
+              surfaces.forEach((surf) => {
+                entries.push({
+                  date: dateStr,
+                  surface: surf,
+                  residue: "НЕ",
+                  action: "",
+                  result: "Норма",
+                  sign: "✓"
+                });
+              });
+            }
+          }
+          return entries;
+        });
+      }
+
+      if (stateChanged) {
+        setDocs((prev) => ({ ...prev, ...updatedDocs }));
+      }
+    })();
+  }, [loading, readOnly, email, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees]);
 
   const isRefToday = refDate === todayISO();
   const refDay = String(parseInt(refDate.slice(8, 10), 10));
@@ -3928,6 +4189,8 @@ export default function RegistersTab({
               dayLbl={dayLabel}
               autoDuner={autoDuner}
               autoPrework={autoPrework}
+              autoFillActive={autoFillSettings[openDef.id] ?? false}
+              onToggleAutoFill={(checked) => toggleAutoFillSetting(openDef.id, checked)}
               onSaveEquipment={onSaveEquipment}
             />
           )}
@@ -3945,6 +4208,8 @@ export default function RegistersTab({
               selectedDate={refDate}
               dayLbl={dayLabel}
               canTick={refDate.startsWith(month) && refDate <= todayISO()}
+              autoFillActive={autoFillSettings[openDef.id] ?? false}
+              onToggleAutoFill={(checked) => toggleAutoFillSetting(openDef.id, checked)}
             />
           )}
           {openDef.kind === "grid-weeks" && (
@@ -3961,6 +4226,8 @@ export default function RegistersTab({
               selectedDate={refDate}
               dayLbl={dayLabel}
               canTick={refDate.startsWith(month) && refDate <= todayISO()}
+              autoFillActive={autoFillSettings[openDef.id] ?? false}
+              onToggleAutoFill={(checked) => toggleAutoFillSetting(openDef.id, checked)}
             />
           )}
           {openDef.kind === "temp-units" && (
@@ -3976,6 +4243,8 @@ export default function RegistersTab({
               dayLbl={dayLabel}
               selIsToday={isRefToday}
               canMark={refDate.startsWith(month) && refDate <= todayISO()}
+              autoFillActive={autoFillSettings[openDef.id] ?? false}
+              onToggleAutoFill={(checked) => toggleAutoFillSetting(openDef.id, checked)}
             />
           )}
           {openDef.kind === "training" && (

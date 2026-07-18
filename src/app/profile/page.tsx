@@ -139,6 +139,13 @@ export interface DankaUser {
   registersTourSeen?: boolean;
   autoDuner?: boolean;
   autoPrework?: boolean;
+  autoTemps?: boolean;
+  autoStaffHygiene?: boolean;
+  autoCleaning?: boolean;
+  autoFryerOil?: boolean;
+  autoBaking?: boolean;
+  autoCookedMeals?: boolean;
+  autoResidue?: boolean;
   /** Нарисуван електронен подпис (PNG data URL) за автоматично попълване в картите/документите. */
   signature?: string;
   /** Как да се подписва обектът: "draw" — с електронния подпис; "manual" — на ръка след печат. */
@@ -4150,8 +4157,15 @@ export default function ProfilePage() {
                   signature={currentUser?.signature}
                   signatureMode={currentUser?.signatureMode ?? "manual"}
                   tourSeen={currentUser?.registersTourSeen ?? false}
-                  autoDuner={currentUser?.autoDuner ?? false}
+                   autoDuner={currentUser?.autoDuner ?? false}
                   autoPrework={currentUser?.autoPrework ?? false}
+                  autoTemps={currentUser?.autoTemps ?? false}
+                  autoStaffHygiene={currentUser?.autoStaffHygiene ?? false}
+                  autoCleaning={currentUser?.autoCleaning ?? false}
+                  autoFryerOil={currentUser?.autoFryerOil ?? false}
+                  autoBaking={currentUser?.autoBaking ?? false}
+                  autoCookedMeals={currentUser?.autoCookedMeals ?? false}
+                  autoResidue={currentUser?.autoResidue ?? false}
                   onTourDone={async () => { await updateUser(currentUserEmail, { registersTourSeen: true }); }}
                   onSaveEquipment={async (patch) => { await updateUser(currentUserEmail, patch); }}
                 />
