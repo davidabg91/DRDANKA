@@ -138,6 +138,7 @@ export interface DankaUser {
   /** Обиколката на дневниците е показана веднъж — не се повтаря. */
   registersTourSeen?: boolean;
   autoDuner?: boolean;
+  autoPrework?: boolean;
   /** Нарисуван електронен подпис (PNG data URL) за автоматично попълване в картите/документите. */
   signature?: string;
   /** Как да се подписва обектът: "draw" — с електронния подпис; "manual" — на ръка след печат. */
@@ -4150,6 +4151,7 @@ export default function ProfilePage() {
                   signatureMode={currentUser?.signatureMode ?? "manual"}
                   tourSeen={currentUser?.registersTourSeen ?? false}
                   autoDuner={currentUser?.autoDuner ?? false}
+                  autoPrework={currentUser?.autoPrework ?? false}
                   onTourDone={async () => { await updateUser(currentUserEmail, { registersTourSeen: true }); }}
                   onSaveEquipment={async (patch) => { await updateUser(currentUserEmail, patch); }}
                 />

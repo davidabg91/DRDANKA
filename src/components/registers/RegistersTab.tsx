@@ -29,6 +29,7 @@ import {
   CLEANING_SCOPE,
   SAMPLE_ALLERGEN_MENU,
   ALLERGEN_LIST,
+  PREWORK_ZONES,
   SurveyGroup,
   HOT_APPLIANCES,
   HOT_APPLIANCE_BY_ID,
@@ -660,6 +661,7 @@ function RowsEditor({
   refDate,
   dayLbl,
   autoDuner = false,
+  autoPrework = false,
   onSaveEquipment,
 }: {
   def: RegisterDef;
@@ -672,6 +674,7 @@ function RowsEditor({
   refDate: string;
   dayLbl: string;
   autoDuner?: boolean;
+  autoPrework?: boolean;
   onSaveEquipment?: (patch: {
     customFridges?: string[];
     customFreezers?: string[];
@@ -681,6 +684,7 @@ function RowsEditor({
     signature?: string;
     signatureMode?: "draw" | "manual";
     autoDuner?: boolean;
+    autoPrework?: boolean;
   }) => void | Promise<void>;
 }) {
   const cols = def.columns || [];
@@ -734,6 +738,28 @@ function RowsEditor({
         action: "",
         result: "Норма",
         sign: "✓"
+      });
+    }
+    onUpdate((prev) => ({ ...prev, entries: newEntries }));
+  };
+
+  const autoFillPreworkMonth = () => {
+    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично чек-листа за хигиена и техническо състояние за целия месец?`)) return;
+    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const newEntries: any[] = [];
+    for (let i = 1; i <= daysCount; i++) {
+      const dayNum = String(i).padStart(2, "0");
+      const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
+      PREWORK_ZONES.forEach((zone) => {
+        newEntries.push({
+          date: dateStr,
+          zone: zone,
+          technical: "✓",
+          hygiene: "✓",
+          action: "",
+          result: "Норма",
+          sign: "✓"
+        });
       });
     }
     onUpdate((prev) => ({ ...prev, entries: newEntries }));
@@ -1046,6 +1072,49 @@ function RowsEditor({
                             action: "",
                             result: "Норма",
                             sign: "✓"
+                          });
+                        }
+                        onUpdate((prev) => ({ ...prev, entries: newEntries }));
+                      }
+                    }}
+                    className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
+                  />
+                  Попълвай автоматично всеки месец
+                </label>
+              </>
+            )}
+            {def.id === "prework-check" && (
+              <>
+                <button
+                  onClick={autoFillPreworkMonth}
+                  className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                  title="Попълва автоматично чек-листа за хигиена и техническо състояние за всеки ден от месеца"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                </button>
+                <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
+                  <input
+                    type="checkbox"
+                    checked={autoPrework}
+                    onChange={async (e) => {
+                      const checked = e.target.checked;
+                      await onSaveEquipment?.({ autoPrework: checked });
+                      if (checked && (!entries || entries.length === 0)) {
+                        const daysCount = daysInMonth(refDate.slice(0, 7));
+                        const newEntries: any[] = [];
+                        for (let i = 1; i <= daysCount; i++) {
+                          const dayNum = String(i).padStart(2, "0");
+                          const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
+                          PREWORK_ZONES.forEach((zone) => {
+                            newEntries.push({
+                              date: dateStr,
+                              zone: zone,
+                              technical: "✓",
+                              hygiene: "✓",
+                              action: "",
+                              result: "Норма",
+                              sign: "✓"
+                            });
                           });
                         }
                         onUpdate((prev) => ({ ...prev, entries: newEntries }));
@@ -2535,6 +2604,7 @@ interface RegistersTabProps {
   signature?: string;
   signatureMode?: "draw" | "manual";
   autoDuner?: boolean;
+  autoPrework?: boolean;
   /** Записва оборудване/персонал в профила на потребителя */
   onSaveEquipment?: (patch: {
     customFridges?: string[];
@@ -2545,6 +2615,7 @@ interface RegistersTabProps {
     signature?: string;
     signatureMode?: "draw" | "manual";
     autoDuner?: boolean;
+    autoPrework?: boolean;
   }) => void | Promise<void>;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
@@ -2568,6 +2639,7 @@ export default function RegistersTab({
   signature,
   signatureMode = "manual",
   autoDuner = false,
+  autoPrework = false,
   onSaveEquipment,
   readOnly = false,
   tourSeen = false,
@@ -2697,6 +2769,45 @@ export default function RegistersTab({
       });
     }
   }, [loading, readOnly, autoDuner, month, email, docs, db]);
+
+  // Автоматично попълване за Карта 34 (Преди работа) при включена настройка
+  useEffect(() => {
+    if (loading || readOnly || !autoPrework || !email) return;
+    const preworkDoc = docs["prework-check"];
+    if (preworkDoc && (!preworkDoc.entries || preworkDoc.entries.length === 0)) {
+      const daysCount = daysInMonth(month);
+      const newEntries: any[] = [];
+      for (let i = 1; i <= daysCount; i++) {
+        const dayNum = String(i).padStart(2, "0");
+        const dateStr = `${month}-${dayNum}`;
+        PREWORK_ZONES.forEach((zone) => {
+          newEntries.push({
+            date: dateStr,
+            zone: zone,
+            technical: "✓",
+            hygiene: "✓",
+            action: "",
+            result: "Норма",
+            sign: "✓"
+          });
+        });
+      }
+      
+      const updatedDoc = { ...preworkDoc, entries: newEntries, updatedAt: new Date().toISOString() };
+      
+      // Update local state
+      setDocs((prev) => ({
+        ...prev,
+        "prework-check": updatedDoc
+      }));
+      
+      // Persist to database immediately
+      const preworkKey = registerDocKey(email, "prework-check", month);
+      setDoc(doc(db, "logs", preworkKey), updatedDoc).catch((err) => {
+        console.error("Auto-prework-check persist error:", err);
+      });
+    }
+  }, [loading, readOnly, autoPrework, month, email, docs, db]);
 
   const isRefToday = refDate === todayISO();
   const refDay = String(parseInt(refDate.slice(8, 10), 10));
@@ -3573,6 +3684,7 @@ export default function RegistersTab({
               refDate={refDate}
               dayLbl={dayLabel}
               autoDuner={autoDuner}
+              autoPrework={autoPrework}
               onSaveEquipment={onSaveEquipment}
             />
           )}
