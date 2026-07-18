@@ -23,11 +23,16 @@ import { Suspense } from "react";
 import RemotionVideoWidget from "@/remotion/RemotionVideoWidget";
 import SectionHeading from "@/components/SectionHeading";
 export default function Home() {
+  // Stats shown in the animated ticker band under the hero.
   const stats = [
-    { value: "27+", label: "Години трудов стаж в хранителния контрол" },
-    { value: "500+", label: "Успешно консултирани обекта в България" },
-    { value: "100%", label: "Одобрение от БАБХ при проверки" },
-    { value: "0 €", label: "Наложени глоби след наш предварителен одит" },
+    { num: "27", suffix: "+", label: "Години стаж в хранителния контрол", Icon: Award },
+    { num: "500", suffix: "+", label: "Консултирани обекта в България", Icon: Users },
+    { num: "100", suffix: "%", label: "Одобрение от БАБХ при проверки", Icon: ShieldCheck },
+    { num: "0", suffix: " €", label: "Глоби след предварителен одит", Icon: CheckCircle },
+    { num: "24", suffix: " ч.", label: "Реакция при спешни казуси", Icon: Zap },
+    { num: "3", suffix: "", label: "Стандарта: НАССР · ISO 22000 · IFS", Icon: FileCheck },
+    { num: "1000", suffix: "+", label: "Обучени служители по хигиена", Icon: ForkKnife },
+    { num: "", suffix: "БЪЛГАРИЯ", label: "Онлайн консултации в цялата страна", Icon: Truck },
   ];
 
   const industries = [
@@ -207,75 +212,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Stats Section — Medium Elegant Cards */}
-      <section className="bg-gradient-to-r from-[#A4855C] via-[#C5A880] to-[#A4855C] py-10 border-y border-[#A4855C]/50 relative overflow-hidden shadow-inner z-10">
+      {/* 2. Stats Ticker — thin animated band under the hero */}
+      <section className="bg-gradient-to-r from-[#A4855C] via-[#C5A880] to-[#A4855C] border-y border-[#A4855C]/50 relative overflow-hidden shadow-inner z-10">
         {/* Subtle mesh pattern for texture */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-[0.1]"
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.08]"
           style={{
             backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
           }}
         />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
 
-            {/* Stat 1 */}
-            <div className="bg-white/60 backdrop-blur-xl border border-brand-green/40 hover:border-brand-green rounded-2xl p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(15,56,43,0.15)] transition-all duration-500 flex flex-col items-center justify-center group relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-brand-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              <div className="w-10 h-10 rounded-xl bg-brand-green/10 group-hover:bg-brand-green/20 flex items-center justify-center mb-3 transition-colors duration-500 border border-brand-green/20">
-                <Award className="h-5 w-5 text-brand-green" />
+        <div className="marquee-viewport overflow-hidden py-3.5 relative z-10">
+          <div className="marquee-track">
+            {[0, 1].map((group) => (
+              <div key={group} className="flex items-center shrink-0" aria-hidden={group === 1}>
+                {stats.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2.5 px-6 sm:px-9 border-r border-brand-green/15 shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shrink-0">
+                      <s.Icon className="h-4 w-4 text-brand-green" />
+                    </div>
+                    <span className="font-logo text-2xl sm:text-[1.6rem] font-extrabold text-brand-green leading-none whitespace-nowrap tabular-nums">
+                      {s.num}<span className="text-brand-gold-dark text-lg font-sans">{s.suffix}</span>
+                    </span>
+                    <span className="text-xs font-bold text-brand-dark/75 whitespace-nowrap">
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <span className="font-logo text-4xl sm:text-5xl font-extrabold text-brand-green leading-none block mb-2 relative z-10">
-                27<span className="text-brand-gold text-2xl sm:text-3xl font-sans">+</span>
-              </span>
-              <p className="text-xs sm:text-sm text-brand-dark/80 font-bold leading-snug max-w-[180px] relative z-10">
-                Години стаж в хранителния контрол
-              </p>
-            </div>
-
-            {/* Stat 2 */}
-            <div className="bg-white/60 backdrop-blur-xl border border-brand-green/40 hover:border-brand-green rounded-2xl p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(15,56,43,0.15)] transition-all duration-500 flex flex-col items-center justify-center group relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-brand-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              <div className="w-10 h-10 rounded-xl bg-brand-green/10 group-hover:bg-brand-green/20 flex items-center justify-center mb-3 transition-colors duration-500 border border-brand-green/20">
-                <Users className="h-5 w-5 text-brand-green" />
-              </div>
-              <span className="font-logo text-4xl sm:text-5xl font-extrabold text-brand-green leading-none block mb-2 relative z-10">
-                500<span className="text-brand-gold text-2xl sm:text-3xl font-sans">+</span>
-              </span>
-              <p className="text-xs sm:text-sm text-brand-dark/80 font-bold leading-snug max-w-[180px] relative z-10">
-                Консултирани обекта в България
-              </p>
-            </div>
-
-            {/* Stat 3 */}
-            <div className="bg-white/60 backdrop-blur-xl border border-brand-green/40 hover:border-brand-green rounded-2xl p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(15,56,43,0.15)] transition-all duration-500 flex flex-col items-center justify-center group relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-brand-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              <div className="w-10 h-10 rounded-xl bg-brand-green/10 group-hover:bg-brand-green/20 flex items-center justify-center mb-3 transition-colors duration-500 border border-brand-green/20">
-                <ShieldCheck className="h-5 w-5 text-brand-green" />
-              </div>
-              <span className="font-logo text-4xl sm:text-5xl font-extrabold text-brand-green leading-none block mb-2 relative z-10">
-                100<span className="text-brand-gold text-2xl sm:text-3xl font-sans">%</span>
-              </span>
-              <p className="text-xs sm:text-sm text-brand-dark/80 font-bold leading-snug max-w-[180px] relative z-10">
-                Одобрение от БАБХ при проверки
-              </p>
-            </div>
-
-            {/* Stat 4 */}
-            <div className="bg-white/60 backdrop-blur-xl border border-brand-green/40 hover:border-brand-green rounded-2xl p-6 text-center shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(15,56,43,0.15)] transition-all duration-500 flex flex-col items-center justify-center group relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-b from-brand-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-              <div className="w-10 h-10 rounded-xl bg-brand-green/10 group-hover:bg-brand-green/20 flex items-center justify-center mb-3 transition-colors duration-500 border border-brand-green/20">
-                <TrendingUp className="h-5 w-5 text-brand-green" />
-              </div>
-              <span className="font-logo text-4xl sm:text-5xl font-extrabold text-brand-green leading-none block mb-2 relative z-10">
-                0<span className="text-brand-gold text-2xl sm:text-3xl font-sans">€</span>
-              </span>
-              <p className="text-xs sm:text-sm text-brand-dark/80 font-bold leading-snug max-w-[180px] relative z-10">
-                Глоби след предварителен одит
-              </p>
-            </div>
-
+            ))}
           </div>
         </div>
       </section>

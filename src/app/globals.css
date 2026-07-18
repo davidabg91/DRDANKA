@@ -211,3 +211,35 @@ main > article.bg-brand-light {
   }
 }
 
+/* Infinite horizontal stats ticker (marquee).
+   The track holds the list twice; translating by -50% loops seamlessly. */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x 40s linear infinite;
+}
+
+.marquee-viewport:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Edge fade so items appear/disappear smoothly at the band's ends. */
+.marquee-viewport {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track {
+    animation: none;
+    /* Fall back to a normal scrollable/wrapping row when motion is reduced. */
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
