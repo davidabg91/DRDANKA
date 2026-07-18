@@ -9,9 +9,10 @@ import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import {
-  ArrowLeft, ArrowRight, Video, Award, X, CreditCard, Loader2,
+  ArrowLeft, ArrowRight, Video, Award, X, Landmark, Loader2,
   ShieldCheck, CheckCircle, Calendar, Users, MessageSquare,
 } from "lucide-react";
+import BankTransferNotice from "@/components/BankTransferNotice";
 
 export default function LiveCourseDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -25,9 +26,6 @@ export default function LiveCourseDetailPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
-  const [cardNumber, setCardNumber] = useState("4242 4242 4242 4242");
-  const [cardExpiry, setCardExpiry] = useState("12 / 30");
-  const [cardCvc, setCardCvc] = useState("123");
   const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [error, setError] = useState("");
 
@@ -50,10 +48,6 @@ export default function LiveCourseDetailPage() {
       setError("Моля попълнете име, валиден email и телефон.");
       return;
     }
-    if (cardNumber.replace(/\s+/g, "") !== "4242424242424242") {
-      setError("Тестов режим — използвайте картата 4242 4242 4242 4242.");
-      return;
-    }
     setError("");
     setStatus("processing");
     try {
@@ -68,8 +62,7 @@ export default function LiveCourseDetailPage() {
         phone: phone.trim(),
         company: company.trim() || "",
         priceEur: livePrice,
-        status: "paid",
-        paidAt: new Date().toISOString(),
+        status: "awaiting_payment",
         createdAt: new Date().toISOString(),
       });
       setStatus("success");
@@ -226,16 +219,11 @@ export default function LiveCourseDetailPage() {
               {status === "success" ? (
                 <div className="text-center py-4 space-y-3">
                   <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
-                  <h3 className="font-serif text-xl font-bold text-brand-green">Записването е успешно!</h3>
+                  <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
                   <p className="text-sm text-brand-dark/70 leading-relaxed">
-                    Благодарим за записването за <strong>{course.title}</strong>.
+                    Благодарим за заявката за <strong>{course.title}</strong>. За да потвърдите мястото си, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще се свърже с Вас</strong> за уточняване на датите на live сесиите и достъпа.
                   </p>
-                  <div className="bg-brand-light/50 border border-brand-green/10 rounded-xl p-4 text-left text-xs text-brand-dark/70">
-                    <p className="flex items-start gap-2">
-                      <Calendar className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                      <span><strong className="text-brand-green">Следваща стъпка:</strong> Д-р Данка Николова ще се свърже с Вас при сформирана група, за да уточни датите на live сесиите.</span>
-                    </p>
-                  </div>
+                  <BankTransferNotice amount={`${livePrice.toFixed(2)} €`} reference={`${name.trim()} — ${course.title}`} />
                   <button onClick={() => { setEnrollOpen(false); setStatus("idle"); }} className="px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
                 </div>
               ) : (
@@ -262,21 +250,13 @@ export default function LiveCourseDetailPage() {
                     <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Фирма (по желание)</label>
                     <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Ресторант Витоша ЕООД" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
                   </div>
-                  <div className="border-t border-brand-green/5 pt-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4 text-brand-gold" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-brand-green">Плащане с карта</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 ml-auto">Тестов режим</span>
-                    </div>
-                    <input type="text" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono tracking-wider" disabled={status === "processing"} />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input type="text" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} className="text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} placeholder="MM / YY" />
-                      <input type="text" value={cardCvc} onChange={(e) => setCardCvc(e.target.value)} className="text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} placeholder="CVC" />
-                    </div>
+                  <div className="border-t border-brand-green/5 pt-4 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
+                    <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                    <span>Плащането е по банков път. След изпращане на заявката ще видите данните за превод. Мястото се запазва след постъпване на плащането.</span>
                   </div>
                   {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
                   <button onClick={submitEnrollment} disabled={status === "processing"} className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>) : (<>Запиши се и плати {livePrice.toFixed(2)} €</>)}
+                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Изпращане…</>) : (<>Изпрати заявка за записване</>)}
                   </button>
                 </>
               )}

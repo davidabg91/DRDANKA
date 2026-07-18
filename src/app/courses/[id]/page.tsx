@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { doc, getDoc, setDoc, updateDoc, getDoc as getDoc2, collection, query, where, getDocs, limit } from "firebase/firestore";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { useParams } from "next/navigation";
+import { doc, getDoc, setDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Course } from "@/lib/courseTypes";
-import { BookOpen, ShieldCheck, ChevronRight, ArrowLeft, CreditCard, X, CheckCircle, Loader2 } from "lucide-react";
+import { BookOpen, ShieldCheck, ChevronRight, ArrowLeft, Landmark, X, CheckCircle, Loader2 } from "lucide-react";
+import BankTransferNotice from "@/components/BankTransferNotice";
 
 /**
  * Course detail + buy flow.
@@ -26,7 +26,6 @@ const CHECKOUT_MODE: "test" | "stripe" =
 
 export default function CourseDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const courseId = params?.id;
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -34,12 +33,8 @@ export default function CourseDetailPage() {
   const [buyerEmail, setBuyerEmail] = useState("");
   const [buying, setBuying] = useState(false);
 
-  // Test-checkout modal state
+  // Bank-transfer request modal state
   const [testOpen, setTestOpen] = useState(false);
-  const [testCardNumber, setTestCardNumber] = useState("4242 4242 4242 4242");
-  const [testCardExpiry, setTestCardExpiry] = useState("12 / 30");
-  const [testCardCvc, setTestCardCvc] = useState("123");
-  const [testPassword, setTestPassword] = useState("");
   const [testStatus, setTestStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [testError, setTestError] = useState("");
 
@@ -107,85 +102,39 @@ export default function CourseDetailPage() {
   };
 
   /**
-   * TEST mode "payment". Validates the prefilled fake card (4242…) and the
-   * buyer's chosen password, then runs the grant flow client-side:
-   *   1. Creates Firebase Auth account (or signs in if it exists)
-   *   2. Adds courseId to /users/{email}.purchasedCourseIds
-   *   3. Redirects to /profile
-   *
-   * No Firebase Admin SDK and no Stripe credentials required.
+   * Bank-transfer access request. Records the buyer's request so д-р Данка
+   * Николова can confirm the payment and manually grant access (add the courseId
+   * to /users/{email}.purchasedCourseIds from the admin panel). No instant
+   * access is granted — the client pays by bank transfer first.
    */
-  const handleTestPay = async () => {
+  const handleRequestAccess = async () => {
     if (!course) return;
     const email = buyerEmail.trim().toLowerCase();
-    const cleanCard = testCardNumber.replace(/\s+/g, "");
-    if (cleanCard !== "4242424242424242") {
-      setTestError("Тестов режим — използвайте картата 4242 4242 4242 4242.");
-      return;
-    }
-    if (testPassword.length < 6) {
-      setTestError("Паролата трябва да е поне 6 символа.");
+    if (!validEmail(email)) {
+      setTestError("Моля въведете валиден email адрес.");
       return;
     }
     setTestError("");
     setTestStatus("processing");
-
     try {
-      // Try to create the auth account; if it exists, just sign in.
-      try {
-        await createUserWithEmailAndPassword(auth, email, testPassword);
-      } catch (err: any) {
-        if (err?.code === "auth/email-already-in-use") {
-          try {
-            await signInWithEmailAndPassword(auth, email, testPassword);
-          } catch (signinErr: any) {
-            if (signinErr?.code === "auth/invalid-credential" || signinErr?.code === "auth/wrong-password") {
-              throw new Error(
-                `За email ${email} вече има акаунт от предишен опит, но въведената парола е различна. ` +
-                `Използвайте оригиналната парола или опитайте с друг email адрес (или нулирайте паролата от /profile → „Забравена парола").`
-              );
-            }
-            throw signinErr;
-          }
-        } else {
-          throw err;
-        }
-      }
-
-      // Now we're signed in — update or create our user doc.
-      const userRef = doc(db, "users", email);
-      const existing = await getDoc2(userRef);
-      if (existing.exists()) {
-        const data = existing.data() as any;
-        const already: string[] = data.purchasedCourseIds || [];
-        if (!already.includes(course.id)) {
-          await updateDoc(userRef, { purchasedCourseIds: [...already, course.id] });
-        }
-      } else {
-        await setDoc(userRef, {
-          email,
-          firmName: "",
-          eik: "",
-          contact: "",
-          phone: "",
-          niche: "",
-          desc: "",
-          address: "",
-          manager: "",
-          status: "approved",
-          subscriptionStatus: "none",
-          role: "user",
-          assignedDocs: [],
-          messages: [],
-          purchasedCourseIds: [course.id],
-        });
-      }
-
+      const id = `enroll_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      await setDoc(doc(db, "enrollments", id), {
+        id,
+        trainingId: course.id,
+        trainingTitle: course.title,
+        trainingType: "course",
+        fullName: "",
+        email,
+        phone: "",
+        company: "",
+        priceEur: course.priceEur,
+        status: "awaiting_payment",
+        createdAt: new Date().toISOString(),
+      });
       setTestStatus("success");
-      setTimeout(() => router.push("/profile"), 1500);
     } catch (err: any) {
-      console.error("Test pay error:", err);
-      setTestError(err?.message || "Неуспешно тестово плащане");
+      console.error("Access request error:", err);
+      setTestError(err?.message || "Грешка при изпращане на заявката. Опитайте отново.");
       setTestStatus("error");
     }
   };
@@ -274,15 +223,13 @@ export default function CourseDetailPage() {
                 disabled={buying || !buyerEmail}
                 className="relative overflow-hidden w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-50 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 hover:shadow-xl hover:shadow-brand-gold/35 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group"
               >
-                {buying ? "Пренасочване…" : CHECKOUT_MODE === "test" ? "Купи с карта (тест)" : "Купи с карта"}
+                {buying ? "Обработка…" : "Заяви достъп"}
                 {!buying && <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />}
               </button>
 
-              {CHECKOUT_MODE === "test" && (
-                <div className="text-[10px] bg-amber-50 border border-amber-200 text-amber-900 rounded-lg px-3 py-2 leading-relaxed">
-                  <strong>Тестов режим:</strong> карта <code className="font-mono">4242 4242 4242 4242</code>, всяка бъдеща дата, всеки CVC.
-                </div>
-              )}
+              <div className="text-[10px] bg-brand-green/5 border border-brand-green/15 text-brand-dark/70 rounded-lg px-3 py-2 leading-relaxed">
+                Плащането е по банков път. След заявката ще получите данните за превод; достъпът се активира след постъпване на сумата.
+              </div>
             </div>
           </div>
         </div>
@@ -322,11 +269,11 @@ export default function CourseDetailPage() {
             <div className="bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 bg-white/10 rounded-xl">
-                  <CreditCard className="h-5 w-5" />
+                  <Landmark className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Тестов режим</div>
-                  <div className="font-serif text-lg font-bold">Плащане с карта</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане по банков път</div>
+                  <div className="font-serif text-lg font-bold">Заявка за достъп</div>
                 </div>
               </div>
               <button
@@ -340,10 +287,21 @@ export default function CourseDetailPage() {
 
             <div className="p-6 space-y-4">
               {testStatus === "success" ? (
-                <div className="text-center py-8 space-y-3">
-                  <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
-                  <h3 className="font-serif text-xl font-bold text-brand-green">Плащането е успешно!</h3>
-                  <p className="text-sm text-brand-dark/60">Пренасочваме Ви към профила…</p>
+                <div className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
+                    <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
+                    <p className="text-sm text-brand-dark/70 leading-relaxed">
+                      За да получите достъп до <strong>{course.title}</strong>, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще активира достъпа Ви</strong> и ще Ви уведоми на <span className="font-semibold">{buyerEmail.trim().toLowerCase()}</span>.
+                    </p>
+                  </div>
+                  <BankTransferNotice amount={`${course.priceEur.toFixed(2)} €`} reference={`${buyerEmail.trim().toLowerCase()} — ${course.title}`} />
+                  <button
+                    onClick={() => { setTestOpen(false); setTestStatus("idle"); }}
+                    className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer"
+                  >
+                    Затвори
+                  </button>
                 </div>
               ) : (
                 <>
@@ -355,51 +313,14 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Номер на карта</label>
-                    <input
-                      type="text"
-                      value={testCardNumber}
-                      onChange={(e) => setTestCardNumber(e.target.value)}
-                      className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-white font-mono tracking-wider"
-                      disabled={testStatus === "processing"}
-                    />
+                  <div className="bg-brand-light/40 rounded-xl px-4 py-2 flex items-center justify-between border border-brand-green/5">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/50">Email за достъп</span>
+                    <span className="text-sm font-semibold text-brand-green truncate ml-3">{buyerEmail.trim().toLowerCase()}</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Валидна до</label>
-                      <input
-                        type="text"
-                        value={testCardExpiry}
-                        onChange={(e) => setTestCardExpiry(e.target.value)}
-                        className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-white font-mono"
-                        disabled={testStatus === "processing"}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">CVC</label>
-                      <input
-                        type="text"
-                        value={testCardCvc}
-                        onChange={(e) => setTestCardCvc(e.target.value)}
-                        className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-white font-mono"
-                        disabled={testStatus === "processing"}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5 pt-3 border-t border-brand-green/5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Изберете парола за акаунта си</label>
-                    <input
-                      type="password"
-                      value={testPassword}
-                      onChange={(e) => setTestPassword(e.target.value)}
-                      placeholder="мин. 6 символа"
-                      className="w-full text-sm px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-white"
-                      disabled={testStatus === "processing"}
-                    />
-                    <p className="text-[10px] text-brand-dark/50">С тази парола ще влизате в профила си.</p>
+                  <div className="flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
+                    <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                    <span>Плащането е по банков път. След изпращане на заявката ще видите данните за превод. Достъпът се активира след постъпване на плащането.</span>
                   </div>
 
                   {testError && (
@@ -409,23 +330,19 @@ export default function CourseDetailPage() {
                   )}
 
                   <button
-                    onClick={handleTestPay}
+                    onClick={handleRequestAccess}
                     disabled={testStatus === "processing"}
                     className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {testStatus === "processing" ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Обработка…
+                        Изпращане…
                       </>
                     ) : (
-                      <>Плати {course.priceEur.toFixed(2)} €</>
+                      <>Изпрати заявка за достъп</>
                     )}
                   </button>
-
-                  <p className="text-[10px] text-center text-brand-dark/40">
-                    Тестов режим — никаква реална сума не се таксува.
-                  </p>
                 </>
               )}
             </div>

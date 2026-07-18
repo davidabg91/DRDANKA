@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, ArrowLeft, Landmark } from "lucide-react";
 
 interface Package {
   id: string;
@@ -91,39 +91,8 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
     email: "",
     note: "",
   });
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [mockPaymentData, setMockPaymentData] = useState<{url: string} | null>(null);
-
   const priceNum = parseFloat(selectedPackage.price.replace(/[^0-9.]/g, ''));
   const isFree = isNaN(priceNum) || priceNum <= 0;
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const sessionId = urlParams.get("session_id");
-      
-      if (sessionId) {
-        const savedBooking = sessionStorage.getItem("pendingBooking");
-        if (savedBooking) {
-          try {
-            const data = JSON.parse(savedBooking);
-            setSelectedPackage(data.selectedPackage);
-            setSelectedDate(data.selectedDate);
-            setSelectedTime(data.selectedTime);
-            setClientInfo(data.clientInfo);
-            setStep(4);
-            sessionStorage.removeItem("pendingBooking");
-            
-            // Clean up URL
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, document.title, newUrl);
-          } catch (e) {
-            console.error("Failed to restore booking", e);
-          }
-        }
-      }
-    }
-  }, []);
 
   const scrollToContainerTop = () => {
     if (containerRef.current) {
@@ -188,56 +157,15 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
     setClientInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleBook = async () => {
+  const handleBook = () => {
     if (!clientInfo.name || !clientInfo.phone || !clientInfo.email) {
       alert("Моля, попълнете всички задължителни полета.");
       return;
     }
-    
-    if (isFree) {
-      setStep(4);
-      scrollToContainerTop();
-      return;
-    }
-    
-    setIsProcessing(true);
-    try {
-      sessionStorage.setItem("pendingBooking", JSON.stringify({
-        selectedPackage,
-        selectedDate,
-        selectedTime,
-        clientInfo
-      }));
-      
-      const returnUrl = window.location.origin + window.location.pathname;
-      
-      const res = await fetch("/api/checkout/booking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packageName: selectedPackage.name,
-          priceEur: priceNum,
-          buyerEmail: clientInfo.email,
-          returnUrl
-        }),
-      });
-      
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Грешка при плащане");
-      
-      if (data.mockStripe) {
-        setMockPaymentData({ url: data.url });
-        setIsProcessing(false);
-      } else if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("Missing checkout URL");
-      }
-    } catch (error: any) {
-      console.error(error);
-      alert("Възникна грешка при свързване със Stripe: " + error.message);
-      setIsProcessing(false);
-    }
+    // Both free and paid bookings are confirmed here. Paid bookings are settled
+    // via bank transfer — the details and next steps are shown on the success step.
+    setStep(4);
+    scrollToContainerTop();
   };
 
   return (
@@ -515,11 +443,10 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
               </button>
               <button
                 onClick={handleBook}
-                disabled={isProcessing}
-                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors flex items-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors flex items-center cursor-pointer"
               >
-                {isProcessing ? "Обработка..." : mode === "training" ? "Заяви обучението" : (isFree ? "Резервирай консултация" : "Продължи към плащане")}
-                {!isProcessing && <CheckCircle className="h-4 w-4 ml-2 text-brand-gold" />}
+                {mode === "training" ? "Заяви обучението" : (isFree ? "Резервирай консултация" : "Потвърди заявката")}
+                <CheckCircle className="h-4 w-4 ml-2 text-brand-gold" />
               </button>
             </div>
           </div>
@@ -531,16 +458,16 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
             <CheckCircle className="h-16 w-16 text-brand-gold mx-auto animate-bounce" />
             <div className="space-y-2">
               <h4 className="font-serif text-2xl font-bold text-brand-green">
-                {mode === "training" ? "Заявката е изпратена успешно!" : "Часът е резервиран!"}
+                {isFree ? "Часът е резервиран!" : "Заявката е приета!"}
               </h4>
               <p className="text-sm text-brand-dark/80 max-w-lg mx-auto leading-relaxed">
-                {mode === "training" ? (
+                {isFree ? (
                   <>
-                    Потвърждение и проформа фактура за плащане са изпратени на имейл адрес <span className="font-semibold">{clientInfo.email}</span>. Д-р Данка Николова ще се свърже с Вас за подготовка на учебните материали и провеждането.
+                    Заявката Ви за <span className="font-semibold">{selectedPackage.name}</span> е записана на имейл адрес <span className="font-semibold">{clientInfo.email}</span>. Д-р Данка Николова ще се свърже с Вас за потвърждение и линк за онлайн срещата (Google Meet).
                   </>
                 ) : (
                   <>
-                    Потвърждение и линк за онлайн срещата (Google Meet) са изпратени на имейл адрес <span className="font-semibold">{clientInfo.email}</span>. Д-р Данка Николова ще се свърже с Вас за подготовка на срещата.
+                    За да потвърдите Вашия{mode === "training" ? "та заявка" : " час"}, направете банков превод по сметката по-долу. <span className="font-semibold text-brand-green">Веднага след като средствата постъпят, д-р Данка Николова ще се свърже с Вас</span> за организация и потвърждение.
                   </>
                 )}
               </p>
@@ -562,10 +489,42 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                 </span>
               </div>
               <div className="flex justify-between border-t border-brand-green/5 pt-2">
-                <span className="text-brand-dark/50 uppercase font-semibold">Цена:</span>
+                <span className="text-brand-dark/50 uppercase font-semibold">Сума за плащане:</span>
                 <span className="font-bold text-brand-gold">{selectedPackage.price}</span>
               </div>
             </div>
+
+            {/* Bank transfer details (paid bookings only) */}
+            {!isFree && (
+              <div className="max-w-md mx-auto bg-brand-green text-white rounded-2xl p-6 shadow-xl border border-brand-gold/25 relative overflow-hidden text-left">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-brand-gold/10 rounded-full blur-[60px] pointer-events-none"></div>
+                <h5 className="font-serif text-base font-bold flex items-center gap-2 relative">
+                  <Landmark className="h-5 w-5 text-brand-gold" />
+                  Данни за банков превод
+                </h5>
+                <p className="text-[11px] text-white/70 leading-relaxed mt-2 relative">
+                  В основанието за плащане въведете Вашето име и вида на услугата.
+                </p>
+                <div className="mt-4 space-y-2.5 relative">
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">Получател</span>
+                    <span className="font-semibold text-sm">Данка Василева Крамолинска</span>
+                  </div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">Банка</span>
+                    <span className="font-semibold text-sm">ЦКБ АД – Клон Плевен</span>
+                  </div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">IBAN</span>
+                    <span className="font-bold text-sm text-brand-gold font-mono select-all">BG98 CECB 9790 1008 5533 00</span>
+                  </div>
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">BIC</span>
+                    <span className="font-bold text-sm font-mono select-all">CECBBGSF</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button
               onClick={() => {
@@ -581,56 +540,6 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
           </div>
         )}
       </div>
-
-      {/* Mock Stripe Modal */}
-      {mockPaymentData && (
-        <div className="fixed inset-0 bg-brand-dark/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-brand-green/10">
-            <div className="bg-brand-light px-6 py-4 border-b border-brand-green/10 flex items-center justify-between">
-              <span className="font-bold text-brand-green text-lg">Тестово плащане</span>
-              <span className="bg-brand-gold text-brand-dark text-[10px] uppercase font-bold px-2 py-1 rounded">Симулация</span>
-            </div>
-            <div className="p-6">
-              <p className="text-xs text-brand-dark/70 mb-5 leading-relaxed">
-                Тъй като нямате конфигуриран Stripe ключ, виждате този тестов екран. 
-                Моля, въведете някаква тестова карта, за да завършите симулацията.
-              </p>
-              
-              <div className="space-y-4">
-                 <div>
-                    <label className="block text-xs font-bold text-brand-dark mb-1">Номер на карта</label>
-                    <input type="text" placeholder="4242 4242 4242 4242" className="w-full bg-white border border-brand-green/20 rounded-lg px-4 py-3 text-sm focus:border-brand-gold focus:outline-none transition-colors font-mono" />
-                 </div>
-                 <div className="flex gap-4">
-                    <div className="flex-1">
-                      <label className="block text-xs font-bold text-brand-dark mb-1">ММ/ГГ</label>
-                      <input type="text" placeholder="12/30" className="w-full bg-white border border-brand-green/20 rounded-lg px-4 py-3 text-sm focus:border-brand-gold focus:outline-none transition-colors font-mono" />
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-xs font-bold text-brand-dark mb-1">CVC</label>
-                      <input type="text" placeholder="123" className="w-full bg-white border border-brand-green/20 rounded-lg px-4 py-3 text-sm focus:border-brand-gold focus:outline-none transition-colors font-mono" />
-                    </div>
-                 </div>
-                 <button 
-                   onClick={() => window.location.href = mockPaymentData.url}
-                   className="w-full bg-brand-green text-white py-3.5 rounded-lg font-bold text-sm mt-6 hover:bg-brand-green/90 transition-colors shadow-lg shadow-brand-green/20"
-                 >
-                   Плати {selectedPackage.price}
-                 </button>
-                 <button 
-                   onClick={() => {
-                      setMockPaymentData(null);
-                      sessionStorage.removeItem("pendingBooking");
-                   }}
-                   className="w-full text-brand-dark/50 text-xs mt-3 py-2 hover:text-brand-dark transition-colors"
-                 >
-                   Отказ
-                 </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

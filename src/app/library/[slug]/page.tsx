@@ -3,23 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useParams, useRouter, notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 import { findLibraryMaterial } from "@/data/library";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
-import { auth, db } from "@/lib/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 import {
-  ArrowLeft, ArrowRight, BookOpen, Video, X, CreditCard, Loader2,
+  ArrowLeft, ArrowRight, BookOpen, Video, X, Landmark, Loader2,
   ShieldCheck, CheckCircle, Sparkles,
 } from "lucide-react";
-
-const CHECKOUT_MODE: "test" | "stripe" =
-  (process.env.NEXT_PUBLIC_CHECKOUT_MODE as "test" | "stripe") || "test";
+import BankTransferNotice from "@/components/BankTransferNotice";
 
 export default function LibraryMaterialPage() {
   const params = useParams<{ slug: string }>();
-  const router = useRouter();
   const slug = params?.slug;
   const material = slug ? findLibraryMaterial(slug) : undefined;
   const { overrides } = usePriceOverrides();
@@ -28,10 +24,6 @@ export default function LibraryMaterialPage() {
   // Hooks must be called unconditionally — declare them before any early return.
   const [buyOpen, setBuyOpen] = useState(false);
   const [buyEmail, setBuyEmail] = useState("");
-  const [buyPassword, setBuyPassword] = useState("");
-  const [buyCard, setBuyCard] = useState("4242 4242 4242 4242");
-  const [buyExpiry, setBuyExpiry] = useState("12 / 30");
-  const [buyCvc, setBuyCvc] = useState("123");
   const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [error, setError] = useState("");
 
@@ -48,66 +40,36 @@ export default function LibraryMaterialPage() {
   }
 
   const handleBuy = async () => {
+    if (!material) return;
     const email = buyEmail.trim().toLowerCase();
     if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
       setError("Моля въведете валиден email адрес.");
       return;
     }
-    if (CHECKOUT_MODE === "test") {
-      const clean = buyCard.replace(/\s+/g, "");
-      if (clean !== "4242424242424242") {
-        setError("Тестов режим — използвайте картата 4242 4242 4242 4242.");
-        return;
-      }
-      if (buyPassword.length < 6) {
-        setError("Паролата трябва да е поне 6 символа.");
-        return;
-      }
-    }
     setError("");
     setStatus("processing");
     try {
-      try {
-        await createUserWithEmailAndPassword(auth, email, buyPassword);
-      } catch (err: any) {
-        if (err?.code === "auth/email-already-in-use") {
-          try {
-            await signInWithEmailAndPassword(auth, email, buyPassword);
-          } catch {
-            throw new Error(`За email ${email} вече има акаунт от предишен опит, но паролата е различна. Опитайте друг email или нулирайте паролата от /profile.`);
-          }
-        } else {
-          throw err;
-        }
-      }
-
-      const userRef = doc(db, "users", email);
-      const existing = await getDoc(userRef);
-      if (existing.exists()) {
-        const data = existing.data() as any;
-        const already: string[] = data.purchasedCourseIds || [];
-        if (!already.includes(material.slug)) {
-          await updateDoc(userRef, { purchasedCourseIds: [...already, material.slug] });
-        }
-      } else {
-        await setDoc(userRef, {
-          email,
-          firmName: "", eik: "", contact: "", phone: "", niche: "",
-          desc: "", address: "", manager: "",
-          status: "approved",
-          subscriptionStatus: "none",
-          role: "user",
-          assignedDocs: [],
-          messages: [],
-          purchasedCourseIds: [material.slug],
-        });
-      }
-
+      // Record a bank-transfer access request. д-р Данка Николова confirms the
+      // payment and grants access (adds the slug to purchasedCourseIds) from the
+      // admin panel — no instant access before the funds arrive.
+      const id = `enroll_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      await setDoc(doc(db, "enrollments", id), {
+        id,
+        trainingId: material.slug,
+        trainingTitle: material.title,
+        trainingType: "library",
+        fullName: "",
+        email,
+        phone: "",
+        company: "",
+        priceEur: livePrice,
+        status: "awaiting_payment",
+        createdAt: new Date().toISOString(),
+      });
       setStatus("success");
-      setTimeout(() => router.push("/profile"), 1500);
     } catch (err: any) {
-      console.error("Library purchase error:", err);
-      setError(err?.message || "Грешка при покупката.");
+      console.error("Library purchase request error:", err);
+      setError(err?.message || "Грешка при изпращане на заявката.");
       setStatus("error");
     }
   };
@@ -220,9 +182,9 @@ export default function LibraryMaterialPage() {
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
             <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl my-8 overflow-hidden">
               <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
-                <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><CreditCard className="h-5 w-5" /></div>
+                <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">{CHECKOUT_MODE === "test" ? "Тестов режим" : "Покупка"}</div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане по банков път</div>
                   <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{material.title}</div>
                 </div>
                 <button
@@ -234,10 +196,16 @@ export default function LibraryMaterialPage() {
 
               <div className="p-6 space-y-4">
                 {status === "success" ? (
-                  <div className="text-center py-6 space-y-3">
-                    <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
-                    <h3 className="font-serif text-xl font-bold text-brand-green">Покупката е успешна!</h3>
-                    <p className="text-sm text-brand-dark/70">Пренасочваме Ви към профила Ви…</p>
+                  <div className="space-y-4">
+                    <div className="text-center space-y-2">
+                      <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
+                      <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
+                      <p className="text-sm text-brand-dark/70 leading-relaxed">
+                        За да получите достъп до <strong>{material.title}</strong>, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще активира достъпа Ви</strong> и ще Ви уведоми на <span className="font-semibold">{buyEmail.trim().toLowerCase()}</span>.
+                      </p>
+                    </div>
+                    <BankTransferNotice amount={`${livePrice.toFixed(2)} €`} reference={`${buyEmail.trim().toLowerCase()} — ${material.title}`} />
+                    <button onClick={() => { setBuyOpen(false); setStatus("idle"); }} className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
                   </div>
                 ) : (
                   <>
@@ -255,29 +223,17 @@ export default function LibraryMaterialPage() {
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email *</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email за достъп *</label>
                       <input type="email" value={buyEmail} onChange={(e) => setBuyEmail(e.target.value)} placeholder="name@example.com" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Парола за акаунта *</label>
-                      <input type="password" value={buyPassword} onChange={(e) => setBuyPassword(e.target.value)} placeholder="мин. 6 символа" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                    </div>
-                    <div className="border-t border-brand-green/5 pt-3 space-y-2">
-                      <input type="text" value={buyCard} onChange={(e) => setBuyCard(e.target.value)} className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono tracking-wider" disabled={status === "processing"} />
-                      <div className="grid grid-cols-2 gap-3">
-                        <input type="text" value={buyExpiry} onChange={(e) => setBuyExpiry(e.target.value)} className="text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} placeholder="MM / YY" />
-                        <input type="text" value={buyCvc} onChange={(e) => setBuyCvc(e.target.value)} className="text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} placeholder="CVC" />
-                      </div>
+                    <div className="border-t border-brand-green/5 pt-3 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
+                      <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                      <span>Плащането е по банков път. След заявката ще видите данните за превод. Достъпът се активира след постъпване на плащането.</span>
                     </div>
                     {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
                     <button onClick={handleBuy} disabled={status === "processing"} className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                      {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>) : (<>Плати {livePrice.toFixed(2)} €</>)}
+                      {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Изпращане…</>) : (<>Изпрати заявка за достъп</>)}
                     </button>
-                    {CHECKOUT_MODE === "test" && (
-                      <p className="text-[10px] text-center text-brand-dark/40">
-                        Тестов режим — никаква реална сума не се таксува.
-                      </p>
-                    )}
                   </>
                 )}
               </div>
@@ -374,9 +330,9 @@ export default function LibraryMaterialPage() {
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl my-8 overflow-hidden">
             <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
-              <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><CreditCard className="h-5 w-5" /></div>
+              <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">{CHECKOUT_MODE === "test" ? "Тестов режим" : "Покупка"}</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане по банков път</div>
                 <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{material.title}</div>
               </div>
               <button
@@ -388,10 +344,16 @@ export default function LibraryMaterialPage() {
 
             <div className="p-6 space-y-4">
               {status === "success" ? (
-                <div className="text-center py-6 space-y-3">
-                  <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
-                  <h3 className="font-serif text-xl font-bold text-brand-green">Покупката е успешна!</h3>
-                  <p className="text-sm text-brand-dark/70">Пренасочваме Ви към профила Ви…</p>
+                <div className="space-y-4">
+                  <div className="text-center space-y-2">
+                    <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
+                    <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
+                    <p className="text-sm text-brand-dark/70 leading-relaxed">
+                      За да получите достъп до <strong>{material.title}</strong>, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще активира достъпа Ви</strong> и ще Ви уведоми на <span className="font-semibold">{buyEmail.trim().toLowerCase()}</span>.
+                    </p>
+                  </div>
+                  <BankTransferNotice amount={`${livePrice.toFixed(2)} €`} reference={`${buyEmail.trim().toLowerCase()} — ${material.title}`} />
+                  <button onClick={() => { setBuyOpen(false); setStatus("idle"); }} className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
                 </div>
               ) : (
                 <>
@@ -409,29 +371,17 @@ export default function LibraryMaterialPage() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email *</label>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email за достъп *</label>
                     <input type="email" value={buyEmail} onChange={(e) => setBuyEmail(e.target.value)} placeholder="name@example.com" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Парола за акаунта *</label>
-                    <input type="password" value={buyPassword} onChange={(e) => setBuyPassword(e.target.value)} placeholder="мин. 6 символа" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                  </div>
-                  <div className="border-t border-brand-green/5 pt-3 space-y-2">
-                    <input type="text" value={buyCard} onChange={(e) => setBuyCard(e.target.value)} className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono tracking-wider" disabled={status === "processing"} />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input type="text" value={buyExpiry} onChange={(e) => setBuyExpiry(e.target.value)} className="text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} placeholder="MM / YY" />
-                      <input type="text" value={buyCvc} onChange={(e) => setBuyCvc(e.target.value)} className="text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} placeholder="CVC" />
-                    </div>
+                  <div className="border-t border-brand-green/5 pt-3 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
+                    <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                    <span>Плащането е по банков път. След заявката ще видите данните за превод. Достъпът се активира след постъпване на плащането.</span>
                   </div>
                   {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
                   <button onClick={handleBuy} disabled={status === "processing"} className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>) : (<>Плати {livePrice.toFixed(2)} €</>)}
+                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Изпращане…</>) : (<>Изпрати заявка за достъп</>)}
                   </button>
-                  {CHECKOUT_MODE === "test" && (
-                    <p className="text-[10px] text-center text-brand-dark/40">
-                      Тестов режим — никаква реална сума не се таксува.
-                    </p>
-                  )}
                 </>
               )}
             </div>

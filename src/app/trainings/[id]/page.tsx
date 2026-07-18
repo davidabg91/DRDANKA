@@ -8,9 +8,10 @@ import { doc, getDoc, setDoc, collection, query, where, getDocs, limit } from "f
 import { db } from "@/lib/firebase";
 import { Training } from "@/lib/trainingTypes";
 import {
-  Award, ArrowRight, ArrowLeft, CheckCircle, Video, Calendar, X, CreditCard,
-  Loader2, ShieldCheck, ExternalLink, Copy, BookOpen,
+  Award, ArrowRight, ArrowLeft, CheckCircle, Video, Calendar, X, Landmark,
+  Loader2, ShieldCheck, BookOpen,
 } from "lucide-react";
+import BankTransferNotice from "@/components/BankTransferNotice";
 
 /**
  * /trainings/[id] — detail page for a specialized training.
@@ -32,12 +33,8 @@ export default function TrainingDetailPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [company, setCompany] = useState("");
-  const [cardNumber, setCardNumber] = useState("4242 4242 4242 4242");
-  const [cardExpiry, setCardExpiry] = useState("12 / 30");
-  const [cardCvc, setCardCvc] = useState("123");
   const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [error, setError] = useState("");
-  const [copyDone, setCopyDone] = useState(false);
 
   useEffect(() => {
     if (!trainingId) return;
@@ -65,7 +62,7 @@ export default function TrainingDetailPage() {
 
   const openEnroll = () => {
     setName(""); setEmail(""); setPhone(""); setCompany("");
-    setStatus("idle"); setError(""); setCopyDone(false);
+    setStatus("idle"); setError("");
     setEnrollOpen(true);
   };
   const closeEnroll = () => {
@@ -78,11 +75,6 @@ export default function TrainingDetailPage() {
     if (!training) return;
     if (!name.trim() || !validEmail(email) || !phone.trim()) {
       setError("Моля попълнете име, валиден email и телефон.");
-      return;
-    }
-    const cleanCard = cardNumber.replace(/\s+/g, "");
-    if (cleanCard !== "4242424242424242") {
-      setError("Тестов режим — използвайте картата 4242 4242 4242 4242.");
       return;
     }
     setError("");
@@ -99,8 +91,7 @@ export default function TrainingDetailPage() {
         phone: phone.trim(),
         company: company.trim() || "",
         priceEur: training.priceEur,
-        status: "paid",
-        paidAt: new Date().toISOString(),
+        status: "awaiting_payment",
         createdAt: new Date().toISOString(),
       };
       if (training.type === "video" && training.videoUrl) {
@@ -113,15 +104,6 @@ export default function TrainingDetailPage() {
       setError(err?.message || "Грешка при записването. Опитайте отново.");
       setStatus("error");
     }
-  };
-
-  const copyVideoUrl = async () => {
-    if (!training?.videoUrl) return;
-    try {
-      await navigator.clipboard.writeText(training.videoUrl);
-      setCopyDone(true);
-      setTimeout(() => setCopyDone(false), 2000);
-    } catch { /* ignore */ }
   };
 
   if (loading) {
@@ -209,7 +191,7 @@ export default function TrainingDetailPage() {
                   <span className="font-serif text-4xl font-bold text-brand-gold">{training.priceEur.toFixed(2)}<span className="text-base text-brand-dark/50 font-sans ml-1">€</span></span>
                 </div>
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-brand-dark/50 bg-brand-light/60 px-3 py-1.5 rounded-full">
-                  {training.type === "video" ? <><Video className="h-3 w-3 text-brand-gold" /> Незабавен достъп</> : <><Calendar className="h-3 w-3 text-brand-gold" /> По уговорка</>}
+                  {training.type === "video" ? <><Video className="h-3 w-3 text-brand-gold" /> Видео обучение</> : <><Calendar className="h-3 w-3 text-brand-gold" /> По уговорка</>}
                 </span>
               </div>
               <button
@@ -313,46 +295,12 @@ export default function TrainingDetailPage() {
               {status === "success" ? (
                 <div className="text-center py-4 space-y-3">
                   <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
-                  <h3 className="font-serif text-xl font-bold text-brand-green">Записването е успешно!</h3>
+                  <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
                   <p className="text-sm text-brand-dark/70 leading-relaxed">
-                    Благодарим за записването за <strong>{training.title}</strong>.
+                    Благодарим за заявката за <strong>{training.title}</strong>. За да потвърдите записването, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще се свърже с Вас</strong> и ще активира достъпа Ви до обучението.
                   </p>
 
-                  {training.type === "video" && training.videoUrl ? (
-                    <div className="bg-brand-light/50 border border-brand-green/15 rounded-xl p-4 text-left space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Video className="h-5 w-5 text-brand-gold" />
-                        <span className="text-xs font-black uppercase tracking-wider text-brand-green">Линк за видеото</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={training.videoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-1 text-xs text-brand-green underline underline-offset-2 break-all hover:text-brand-gold transition-colors"
-                        >
-                          {training.videoUrl}
-                        </a>
-                        <button onClick={copyVideoUrl} className="shrink-0 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer" title="Копирай линка">
-                          {copyDone ? <CheckCircle className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                        </button>
-                      </div>
-                      <a href={training.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-xs uppercase tracking-widest hover:bg-brand-gold-light transition-colors cursor-pointer">
-                        Отвори обучението
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                      <p className="text-[10px] text-brand-dark/60 leading-relaxed">
-                        <strong>Запазете този линк</strong> — можете да гледате обучението по всяко време.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="bg-brand-light/50 border border-brand-green/10 rounded-xl p-4 text-left text-xs text-brand-dark/70 space-y-2">
-                      <p className="flex items-start gap-2">
-                        <Calendar className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                        <span><strong className="text-brand-green">Следваща стъпка:</strong> Д-р Данка Николова ще се свърже с Вас на посочения email и телефон, за да уточни датите за онлайн обучението.</span>
-                      </p>
-                    </div>
-                  )}
+                  <BankTransferNotice amount={`${training.priceEur.toFixed(2)} €`} reference={`${name.trim()} — ${training.title}`} />
 
                   {training.hasCertificate && (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left text-xs text-amber-900">
@@ -392,17 +340,9 @@ export default function TrainingDetailPage() {
                     </div>
                   </div>
 
-                  <div className="border-t border-brand-green/5 pt-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4 text-brand-gold" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-brand-green">Плащане с карта</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 ml-auto">Тестов режим</span>
-                    </div>
-                    <input type="text" value={cardNumber} onChange={(e) => setCardNumber(e.target.value)} className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono tracking-wider" disabled={status === "processing"} />
-                    <div className="grid grid-cols-2 gap-3">
-                      <input type="text" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} className="text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} placeholder="MM / YY" />
-                      <input type="text" value={cardCvc} onChange={(e) => setCardCvc(e.target.value)} className="text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} placeholder="CVC" />
-                    </div>
+                  <div className="border-t border-brand-green/5 pt-4 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
+                    <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                    <span>Плащането е по банков път. След изпращане на заявката ще видите данните за превод. Достъпът се активира след постъпване на плащането.</span>
                   </div>
 
                   {error && (
@@ -415,9 +355,9 @@ export default function TrainingDetailPage() {
                     className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {status === "processing" ? (
-                      <><Loader2 className="h-4 w-4 animate-spin" /> Обработка…</>
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Изпращане…</>
                     ) : (
-                      <>Запиши се и плати {training.priceEur.toFixed(2)} €</>
+                      <>Изпрати заявка за записване</>
                     )}
                   </button>
 

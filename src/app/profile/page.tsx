@@ -39,6 +39,7 @@ import {
   Activity, 
   FileCheck, 
   Sparkles,
+  Star,
   ChevronRight,
   ShieldAlert,
   ShieldCheck,
@@ -490,9 +491,6 @@ export default function ProfilePage() {
 
   // Client: subscription payment test-checkout modal
   const [subPayOpen, setSubPayOpen] = useState(false);
-  const [subPayCard, setSubPayCard] = useState("4242 4242 4242 4242");
-  const [subPayExpiry, setSubPayExpiry] = useState("12 / 30");
-  const [subPayCvc, setSubPayCvc] = useState("123");
   const [subPayStatus, setSubPayStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [subPayError, setSubPayError] = useState("");
 
@@ -989,53 +987,6 @@ export default function ProfilePage() {
       }
     } catch (err) {
       console.error("Select package error:", err);
-    }
-  };
-
-  /**
-   * Client clicks "Pay subscription" — opens a test-mode payment modal
-   * (analogous to the bookstore course purchase). Real Stripe checkout
-   * would be wired here once env vars are set in production.
-   */
-  const handleSubscriptionTestPay = async () => {
-    if (!currentUserEmail) return;
-    const cleanCard = subPayCard.replace(/\s+/g, "");
-    if (cleanCard !== "4242424242424242") {
-      setSubPayError("Тестов режим — използвайте картата 4242 4242 4242 4242.");
-      return;
-    }
-    setSubPayError("");
-    setSubPayStatus("processing");
-
-    try {
-      // Auto-calculate expiry date: exactly 1 year (365 days) from now
-      const oneYearFromNow = new Date();
-      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-      const expiresAt = oneYearFromNow.toISOString().split("T")[0]; // YYYY-MM-DD
-
-      const updates: Partial<DankaUser> = {
-        subscriptionStatus: "approved",
-        subscriptionPaidAt: new Date().toISOString(),
-        expiresAt,
-      };
-
-      const ok = await updateUser(currentUserEmail, updates);
-
-      if (ok) {
-        setSubPayStatus("success");
-        setTimeout(() => {
-          setSubPayOpen(false);
-          setSubPayStatus("idle");
-          setActiveTab("logs");
-        }, 1500);
-      } else {
-        setSubPayStatus("error");
-        setSubPayError("Грешка при обновяване на абонамента в базата данни.");
-      }
-    } catch (err) {
-      console.error("Subscription payment error:", err);
-      setSubPayStatus("error");
-      setSubPayError("Грешка при обработка на плащането.");
     }
   };
 
@@ -4919,102 +4870,116 @@ export default function ProfilePage() {
                     </p>
                   </div>
 
-                  {/* Packages Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-left">
-                    {/* Търговски обекти */}
-                    <div className="border border-brand-green/10 rounded-3xl p-6 bg-brand-light/25 flex flex-col justify-between hover:border-brand-gold/45 transition-colors relative overflow-hidden">
-                      <div className="space-y-4">
-                        <div className="space-y-1">
-                          <div className="inline-flex items-center gap-2 text-brand-green">
-                            <Users className="h-5 w-5 text-brand-gold" />
-                            <h3 className="font-serif text-lg font-bold">Търговски обекти</h3>
-                          </div>
-                          <p className="text-[10px] text-brand-dark/50">За магазини, складове, заведения, кетъринг и онлайн търговци на храни</p>
-                        </div>
-                        <div className="font-serif text-3xl font-bold text-brand-gold">
-                          79 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месец</span>
-                        </div>
-                        <p className="text-xs text-brand-dark/70 leading-relaxed">
-                          Постоянна професионална подкрепа, за да поддържате документацията и системата си актуални без да разчитате на външни консултанти.
-                        </p>
-                        <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
-                          <li className="flex items-start gap-2">✓ <span><strong className="text-brand-green">Една среща на живо</strong> всяка седмица (онлайн)</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Решаване на реални казуси и отговори на въпросите Ви</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Авторски шаблони, чек-листи и образци на документи</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Достъп до записите от всички срещи</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Затворена <strong className="text-brand-green">Viber група</strong> за въпроси между срещите</span></li>
-                        </ul>
+                  {/* Packages Grid — premium subscription cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6 font-sans text-left items-stretch">
+                    {/* ─── Търговски обекти ─── */}
+                    <div className="group relative flex flex-col rounded-[1.75rem] bg-white ring-1 ring-brand-green/10 p-7 shadow-sm hover:shadow-xl hover:ring-brand-gold/40 hover:-translate-y-1 transition-all duration-300">
+                      <div className="space-y-1">
+                        <h3 className="font-serif text-lg font-bold text-brand-green">Търговски обекти</h3>
+                        <p className="text-[11px] text-brand-dark/50 leading-relaxed">За магазини, складове, заведения, кетъринг и онлайн търговци на храни</p>
                       </div>
+                      <div className="mt-6 flex items-end gap-1.5">
+                        <span className="font-serif text-5xl font-black text-brand-dark tabular-nums leading-none">79</span>
+                        <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
+                        <span className="text-xs text-brand-dark/45 font-medium mb-1.5">/ месец</span>
+                      </div>
+                      <div className="h-px bg-brand-green/8 my-6" />
+                      <ul className="space-y-3 text-xs text-brand-dark/80 flex-grow">
+                        {[
+                          <><strong className="text-brand-green">Една среща на живо</strong> всяка седмица (онлайн)</>,
+                          <>Решаване на реални казуси и отговори на въпросите Ви</>,
+                          <>Авторски шаблони, чек-листи и образци на документи</>,
+                          <>Достъп до записите от всички срещи</>,
+                          <>Затворена <strong className="text-brand-green">Viber група</strong> за въпроси между срещите</>,
+                        ].map((f, i) => (
+                          <li key={i} className="flex items-start gap-2.5 leading-relaxed">
+                            <span className="mt-0.5 shrink-0 grid place-items-center h-4 w-4 rounded-full bg-brand-gold/15 text-brand-gold"><Check className="h-3 w-3" strokeWidth={3} /></span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
                       <button
                         onClick={() => handleSelectPackage("Търговски обекти", 79)}
-                        className="w-full mt-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
+                        className="w-full mt-7 py-3.5 bg-brand-green/[0.06] hover:bg-brand-green text-brand-green hover:text-white ring-1 ring-brand-green/15 hover:ring-brand-green font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 cursor-pointer"
                       >
                         Избери план
                       </button>
                     </div>
 
-                    {/* Производители на храни */}
-                    <div className="border-2 border-brand-gold rounded-3xl p-6 bg-white flex flex-col justify-between hover:border-brand-gold/80 transition-colors relative shadow-lg shadow-brand-gold/5">
-                      <div className="absolute top-0 right-0 bg-brand-gold text-brand-dark text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-bl-xl">
-                        Препоръчан
+                    {/* ─── Производители на храни (featured) ─── */}
+                    <div className="group relative flex flex-col rounded-[1.75rem] p-7 md:-my-2 md:py-9 bg-gradient-to-br from-[#0D2B1C] via-brand-green to-[#0A2318] text-white shadow-2xl shadow-brand-green/25 ring-1 ring-brand-gold/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                      <div className="absolute top-0 right-0 w-56 h-56 bg-brand-gold/15 rounded-full blur-[70px] pointer-events-none" />
+                      <div className="relative flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.15em] bg-brand-gold text-brand-dark px-3 py-1.5 rounded-full shadow-lg shadow-brand-gold/20">
+                          <Star className="h-3 w-3" fill="currentColor" /> Най-популярен
+                        </span>
                       </div>
-                      <div className="space-y-4">
-                        <div className="space-y-1">
-                          <div className="inline-flex items-center gap-2 text-brand-green">
-                            <Building className="h-5 w-5 text-brand-gold" />
-                            <h3 className="font-serif text-lg font-bold">Производители на храни</h3>
-                          </div>
-                          <p className="text-[10px] text-brand-dark/50">За производители, мандри, месо- и рибопреработка, хлебни, сладкарски и готови храни</p>
-                        </div>
-                        <div className="font-serif text-3xl font-bold text-brand-gold">
-                          119 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месец</span>
-                        </div>
-                        <p className="text-xs text-brand-dark/70 leading-relaxed">
-                          Пълна подкрепа за производствени обекти — от НАССР и ДПХП до технологична документация и проследимост.
-                        </p>
-                        <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
-                          <li className="flex items-start gap-2 text-brand-green font-bold">✓ <span>Всичко за „Търговски обекти“</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Практически теми по <strong className="text-brand-green">НАССР, ДПХП и технологична документация</strong></span></li>
-                          <li className="flex items-start gap-2">✓ <span>Проследимост, етикетиране и добри производствени практики</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Подготовка за проверки и вътрешен контрол</span></li>
-                          <li className="flex items-start gap-2">✓ <span>Актуална информация при промени в законодателството</span></li>
-                        </ul>
+                      <div className="relative mt-5 space-y-1">
+                        <h3 className="font-serif text-lg font-bold text-white">Производители на храни</h3>
+                        <p className="text-[11px] text-white/55 leading-relaxed">За производители, мандри, месо- и рибопреработка, хлебни, сладкарски и готови храни</p>
                       </div>
+                      <div className="relative mt-6 flex items-end gap-1.5">
+                        <span className="font-serif text-5xl font-black text-white tabular-nums leading-none">119</span>
+                        <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
+                        <span className="text-xs text-white/50 font-medium mb-1.5">/ месец</span>
+                      </div>
+                      <div className="relative h-px bg-white/10 my-6" />
+                      <ul className="relative space-y-3 text-xs text-white/85 flex-grow">
+                        {[
+                          <><strong className="text-brand-gold">Всичко за „Търговски обекти“</strong></>,
+                          <>Практически теми по <strong className="text-white">НАССР, ДПХП и технологична документация</strong></>,
+                          <>Проследимост, етикетиране и добри производствени практики</>,
+                          <>Подготовка за проверки и вътрешен контрол</>,
+                          <>Актуална информация при промени в законодателството</>,
+                        ].map((f, i) => (
+                          <li key={i} className="flex items-start gap-2.5 leading-relaxed">
+                            <span className="mt-0.5 shrink-0 grid place-items-center h-4 w-4 rounded-full bg-brand-gold text-brand-dark"><Check className="h-3 w-3" strokeWidth={3} /></span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
                       <button
                         onClick={() => handleSelectPackage("Производители на храни", 119)}
-                        className="w-full mt-6 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
+                        className="relative w-full mt-7 py-3.5 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-brand-gold/25 hover:shadow-xl transition-all duration-300 cursor-pointer"
                       >
                         Избери план
                       </button>
                     </div>
 
-                    {/* VIP Package */}
-                    <div className="border border-brand-green/10 rounded-3xl p-6 bg-brand-light/25 flex flex-col justify-between hover:border-brand-gold/45 transition-colors relative overflow-hidden">
-                      <div className="space-y-4">
-                        <div className="space-y-1">
-                          <div className="inline-flex items-center gap-2 text-brand-green">
-                            <Sparkles className="h-5 w-5 text-brand-gold" />
-                            <h3 className="font-serif text-lg font-bold">Спокойствие VIP одит</h3>
-                          </div>
-                          <p className="text-[10px] text-brand-dark/50">Пълна професионална защита с персонално внимание</p>
-                        </div>
-                        <div className="font-serif text-3xl font-bold text-brand-gold">
-                          199 € <span className="text-xs text-brand-dark/50 font-sans font-normal">/ месец</span>
-                        </div>
-                        <p className="text-xs text-brand-dark/70 leading-relaxed">
-                          Включва персонален дистанционен одит от д-р Николова всеки месец и спешна телефонна линия.
-                        </p>
-                        <ul className="text-xs space-y-2 text-brand-dark/80 pt-2 border-t border-brand-green/5">
-                          <li className="flex items-start gap-2 text-brand-green font-bold">✓ <span>Всичко за „Производители на храни“</span></li>
-                          <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Месечен одит</strong> с д-р Данка Николова</li>
-                          <li className="flex items-start gap-2">✓ <span>Изготвяне на технологична документация</span></li>
-                          <li className="flex items-start gap-2">✓ <strong className="text-brand-green">Директна телефонна връзка</strong> при проверки</li>
-                          <li className="flex items-start gap-2">✓ <span>100% защита при казуси с БАБХ</span></li>
-                        </ul>
+                    {/* ─── VIP ─── */}
+                    <div className="group relative flex flex-col rounded-[1.75rem] bg-gradient-to-b from-brand-gold/[0.07] to-white ring-1 ring-brand-gold/25 p-7 shadow-sm hover:shadow-xl hover:ring-brand-gold/50 hover:-translate-y-1 transition-all duration-300">
+                      <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.15em] text-brand-gold-dark border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 rounded-full">
+                          <Sparkles className="h-3 w-3" /> Premium
+                        </span>
                       </div>
+                      <div className="mt-5 space-y-1">
+                        <h3 className="font-serif text-lg font-bold text-brand-green">Спокойствие VIP одит</h3>
+                        <p className="text-[11px] text-brand-dark/50 leading-relaxed">Пълна професионална защита с персонално внимание</p>
+                      </div>
+                      <div className="mt-6 flex items-end gap-1.5">
+                        <span className="font-serif text-5xl font-black text-brand-dark tabular-nums leading-none">199</span>
+                        <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
+                        <span className="text-xs text-brand-dark/45 font-medium mb-1.5">/ месец</span>
+                      </div>
+                      <div className="h-px bg-brand-gold/15 my-6" />
+                      <ul className="space-y-3 text-xs text-brand-dark/80 flex-grow">
+                        {[
+                          <><strong className="text-brand-green">Всичко за „Производители на храни“</strong></>,
+                          <><strong className="text-brand-green">Месечен одит</strong> с д-р Данка Николова</>,
+                          <>Изготвяне на технологична документация</>,
+                          <><strong className="text-brand-green">Директна телефонна връзка</strong> при проверки</>,
+                          <>100% защита при казуси с БАБХ</>,
+                        ].map((f, i) => (
+                          <li key={i} className="flex items-start gap-2.5 leading-relaxed">
+                            <span className="mt-0.5 shrink-0 grid place-items-center h-4 w-4 rounded-full bg-brand-gold/15 text-brand-gold"><Check className="h-3 w-3" strokeWidth={3} /></span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
                       <button
                         onClick={() => handleSelectPackage("VIP одит", 199)}
-                        className="w-full mt-6 py-3 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0"
+                        className="w-full mt-7 py-3.5 bg-brand-green/[0.06] hover:bg-brand-green text-brand-green hover:text-white ring-1 ring-brand-green/15 hover:ring-brand-green font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 cursor-pointer"
                       >
                         Избери план
                       </button>
@@ -5536,11 +5501,11 @@ export default function ProfilePage() {
                   <div className="space-y-3 text-xs sm:text-sm">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">Получател</span>
-                      <span className="font-bold text-brand-dark/90">Данка Василева Николова</span>
+                      <span className="font-bold text-brand-dark/90">Данка Василева Крамолинска</span>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">Банка</span>
-                      <span className="font-semibold text-brand-dark/95">ЦКБ АД</span>
+                      <span className="font-semibold text-brand-dark/95">ЦКБ АД – Клон Плевен</span>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">IBAN</span>
