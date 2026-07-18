@@ -16,7 +16,7 @@ export interface RegisterColumn {
   /** За type: "select" — фиксирани опции */
   options?: string[];
   /** Динамични опции от друг списък в системата */
-  optionsFrom?: "suppliers" | "cleaningAgents" | "employees";
+  optionsFrom?: "suppliers" | "cleaningAgents" | "employees" | "menuProducts";
   placeholder?: string;
   /** За температури — допустима норма (за оцветяване при нарушение) */
   norm?: { min?: number; max?: number };
@@ -780,7 +780,7 @@ export const HOT_POINT_REGISTERS: RegisterDef[] = [
     kind: "rows",
     columns: [
       { key: "date", label: "Дата", type: "date", narrow: true },
-      { key: "product", label: "Вид на продукта, партида", type: "text" },
+      { key: "product", label: "Вид на продукта, партида", type: "text", optionsFrom: "menuProducts" },
       { key: "temp", label: "Температура на мазнината (≤170°C)", type: "temp", norm: { max: 170 }, narrow: true },
       ...CRS_COLS,
     ],

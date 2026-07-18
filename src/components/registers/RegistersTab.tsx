@@ -97,6 +97,7 @@ interface DynamicOptions {
   suppliers: string[];
   cleaningAgents: string[];
   employees: string[];
+  menuProducts?: string[];
 }
 
 type Updater = (updater: (prev: RegisterDocData) => RegisterDocData) => void;
@@ -285,6 +286,28 @@ function CellInput({
   dynamicOptions: DynamicOptions;
 }) {
   if (col.type === "check") return <CheckCellBtn value={value} onChange={onChange} readOnly={readOnly} />;
+  if (col.type === "text" && col.optionsFrom) {
+    const listId = `datalist-${col.key}-${col.optionsFrom}`;
+    const opts = dynamicOptions[col.optionsFrom as keyof DynamicOptions] || [];
+    return (
+      <div className="min-w-[110px] w-full">
+        <input
+          type="text"
+          list={listId}
+          className={inputCls}
+          value={value}
+          placeholder={col.placeholder || ""}
+          disabled={readOnly}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        <datalist id={listId}>
+          {opts.map((o) => (
+            <option key={o} value={o} />
+          ))}
+        </datalist>
+      </div>
+    );
+  }
   if (col.type === "select") {
     const opts = col.options || (col.optionsFrom ? dynamicOptions[col.optionsFrom] : []) || [];
     return (
@@ -2274,6 +2297,7 @@ export default function RegistersTab({
       suppliers: (docs["suppliers"]?.entries || []).map((e) => String(e.firm || "").trim()).filter(Boolean),
       cleaningAgents: (docs["cleaning-agents"]?.entries || []).map((e) => String(e.name || "").trim()).filter(Boolean),
       employees: employees.map((e) => e.name),
+      menuProducts: (docs["allergen-menu"]?.entries || []).map((e) => String(e.product || "").trim()).filter(Boolean),
     }),
     [docs, employees]
   );
