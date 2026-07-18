@@ -117,6 +117,17 @@ const daysInMonth = (month: string) => {
   return new Date(y, m, 0).getDate();
 };
 
+const getMaxFillDay = (monthStr: string): number => {
+  const curMon = currentMonth();
+  if (monthStr < curMon) {
+    return daysInMonth(monthStr);
+  }
+  if (monthStr === curMon) {
+    return new Date().getDate();
+  }
+  return 0; // future month
+};
+
 const ROMAN_WEEKS = ["I", "II", "III", "IV", "V"];
 
 const isRowFilled = (row?: Record<string, any>) =>
@@ -724,9 +735,9 @@ function RowsEditor({
 
   const autoFillDunerMonth = () => {
     if (!confirm(`Сигурни ли сте, че искате да попълните автоматично изпичанията на дюнер за целия месец?`)) return;
-    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const maxDay = getMaxFillDay(refDate.slice(0, 7));
     const newEntries: any[] = [];
-    for (let i = 1; i <= daysCount; i++) {
+    for (let i = 1; i <= maxDay; i++) {
       const dayNum = String(i).padStart(2, "0");
       const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
       const tempVal = 75.5 + Math.random() * 8.0;
@@ -746,9 +757,9 @@ function RowsEditor({
 
   const autoFillPreworkMonth = () => {
     if (!confirm(`Сигурни ли сте, че искате да попълните автоматично чек-листа за хигиена и техническо състояние за целия месец?`)) return;
-    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const maxDay = getMaxFillDay(refDate.slice(0, 7));
     const newEntries: any[] = [];
-    for (let i = 1; i <= daysCount; i++) {
+    for (let i = 1; i <= maxDay; i++) {
       const dayNum = String(i).padStart(2, "0");
       const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
       PREWORK_ZONES.forEach((zone) => {
@@ -768,9 +779,9 @@ function RowsEditor({
 
   const autoFillStaffHygieneMonth = () => {
     if (!confirm(`Сигурни ли сте, че искате да попълните автоматично личната хигиена за всички служители за целия месец?`)) return;
-    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const maxDay = getMaxFillDay(refDate.slice(0, 7));
     const newEntries: any[] = [];
-    for (let i = 1; i <= daysCount; i++) {
+    for (let i = 1; i <= maxDay; i++) {
       const dayNum = String(i).padStart(2, "0");
       const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
       employees.forEach((emp) => {
@@ -789,9 +800,9 @@ function RowsEditor({
 
   const autoFillFryerOilDestroyMonth = () => {
     if (!confirm(`Сигурни ли сте, че искате да попълните автоматично подмяната на пържилна мазнина за целия месец?`)) return;
-    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const maxDay = getMaxFillDay(refDate.slice(0, 7));
     const newEntries: any[] = [];
-    for (let i = 1; i <= daysCount; i++) {
+    for (let i = 1; i <= maxDay; i++) {
       if (i % 3 === 0) {
         const dayNum = String(i).padStart(2, "0");
         const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
@@ -810,9 +821,9 @@ function RowsEditor({
 
   const autoFillBakingMonth = () => {
     if (!confirm(`Сигурни ли сте, че искате да попълните автоматично изпичането на тестени изделия за целия месец?`)) return;
-    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const maxDay = getMaxFillDay(refDate.slice(0, 7));
     const newEntries: any[] = [];
-    for (let i = 1; i <= daysCount; i++) {
+    for (let i = 1; i <= maxDay; i++) {
       const dayNum = String(i).padStart(2, "0");
       const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
       const tempVal = 200 + Math.floor(Math.random() * 21);
@@ -832,9 +843,9 @@ function RowsEditor({
 
   const autoFillCookedMealsMonth = () => {
     if (!confirm(`Сигурни ли сте, че искате да попълните автоматично контрола на готвените ястия за целия месец?`)) return;
-    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const maxDay = getMaxFillDay(refDate.slice(0, 7));
     const newEntries: any[] = [];
-    for (let i = 1; i <= daysCount; i++) {
+    for (let i = 1; i <= maxDay; i++) {
       const dayNum = String(i).padStart(2, "0");
       const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
       const tempCookVal = 200 + Math.floor(Math.random() * 16);
@@ -856,9 +867,9 @@ function RowsEditor({
 
   const autoFillDisinfectantResidueMonth = () => {
     if (!confirm(`Сигурни ли сте, че искате да попълните автоматично остатъчните количества дезинфектанти за целия месец?`)) return;
-    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const maxDay = getMaxFillDay(refDate.slice(0, 7));
     const newEntries: any[] = [];
-    for (let i = 1; i <= daysCount; i++) {
+    for (let i = 1; i <= maxDay; i++) {
       if (i % 3 === 0) {
         const dayNum = String(i).padStart(2, "0");
         const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
@@ -1199,9 +1210,9 @@ function RowsEditor({
                       const checked = e.target.checked;
                       await onSaveEquipment?.({ autoDuner: checked });
                       if (checked && (!entries || entries.length === 0)) {
-                        const daysCount = daysInMonth(refDate.slice(0, 7));
+                        const maxDay = getMaxFillDay(refDate.slice(0, 7));
                         const newEntries: any[] = [];
-                        for (let i = 1; i <= daysCount; i++) {
+                        for (let i = 1; i <= maxDay; i++) {
                           const dayNum = String(i).padStart(2, "0");
                           const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
                           const tempVal = 75.5 + Math.random() * 8.0;
@@ -1242,9 +1253,9 @@ function RowsEditor({
                       const checked = e.target.checked;
                       await onSaveEquipment?.({ autoPrework: checked });
                       if (checked && (!entries || entries.length === 0)) {
-                        const daysCount = daysInMonth(refDate.slice(0, 7));
+                        const maxDay = getMaxFillDay(refDate.slice(0, 7));
                         const newEntries: any[] = [];
-                        for (let i = 1; i <= daysCount; i++) {
+                        for (let i = 1; i <= maxDay; i++) {
                           const dayNum = String(i).padStart(2, "0");
                           const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
                           PREWORK_ZONES.forEach((zone) => {
@@ -1758,7 +1769,13 @@ function GridEditor({
 
     onUpdate((prev) => {
       const updatedRows = { ...(prev.rows || {}) };
+      const maxDay = getMaxFillDay(month);
       rowKeys.forEach((rk) => {
+        if (def.kind === "grid-days" && parseInt(rk, 10) > maxDay) return;
+        if (def.kind === "grid-weeks") {
+          const weekIdx = ROMAN_WEEKS.indexOf(rk);
+          if (weekIdx !== -1 && (weekIdx * 7 + 1) > maxDay) return;
+        }
         const row = { ...(updatedRows[rk] || {}) };
         cols.forEach((c) => {
           if (c.type === "check" && !row[c.key]) row[c.key] = "✓";
@@ -1920,7 +1937,11 @@ function TempEditor({
       const u = prevUnits[unit.name] || { type: unit.type, rows: {} };
       const newRows = { ...u.rows };
 
+      const maxDay = getMaxFillDay(month);
       days.forEach((d) => {
+        const dayNum = parseInt(d, 10);
+        if (dayNum > maxDay) return;
+
         // Generate random time 1 between 08:00 and 09:30
         const t1h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
         const t1h_h = Math.random() > 0.5 ? "09" : "08";
@@ -2958,9 +2979,9 @@ export default function RegistersTab({
     if (loading || readOnly || !autoDuner || !email) return;
     const dunerDoc = docs["duner"];
     if (dunerDoc && (!dunerDoc.entries || dunerDoc.entries.length === 0)) {
-      const daysCount = daysInMonth(month);
+      const maxDay = getMaxFillDay(month);
       const newEntries: any[] = [];
-      for (let i = 1; i <= daysCount; i++) {
+      for (let i = 1; i <= maxDay; i++) {
         const dayNum = String(i).padStart(2, "0");
         const dateStr = `${month}-${dayNum}`;
         const tempVal = 75.5 + Math.random() * 8.0;
@@ -2997,9 +3018,9 @@ export default function RegistersTab({
     if (loading || readOnly || !autoPrework || !email) return;
     const preworkDoc = docs["prework-check"];
     if (preworkDoc && (!preworkDoc.entries || preworkDoc.entries.length === 0)) {
-      const daysCount = daysInMonth(month);
+      const maxDay = getMaxFillDay(month);
       const newEntries: any[] = [];
-      for (let i = 1; i <= daysCount; i++) {
+      for (let i = 1; i <= maxDay; i++) {
         const dayNum = String(i).padStart(2, "0");
         const dateStr = `${month}-${dayNum}`;
         PREWORK_ZONES.forEach((zone) => {
