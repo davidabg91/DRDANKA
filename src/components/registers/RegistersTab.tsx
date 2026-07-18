@@ -30,6 +30,7 @@ import {
   SAMPLE_ALLERGEN_MENU,
   ALLERGEN_LIST,
   PREWORK_ZONES,
+  RESIDUE_SURFACES,
   SurveyGroup,
   HOT_APPLIANCES,
   HOT_APPLIANCE_BY_ID,
@@ -765,6 +766,118 @@ function RowsEditor({
     onUpdate((prev) => ({ ...prev, entries: newEntries }));
   };
 
+  const autoFillStaffHygieneMonth = () => {
+    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично личната хигиена за всички служители за целия месец?`)) return;
+    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const newEntries: any[] = [];
+    for (let i = 1; i <= daysCount; i++) {
+      const dayNum = String(i).padStart(2, "0");
+      const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
+      employees.forEach((emp) => {
+        newEntries.push({
+          date: dateStr,
+          employee: emp.name,
+          hygiene: "✓",
+          health: "✓",
+          result: "Допуснат до работа",
+          sign: "✓"
+        });
+      });
+    }
+    onUpdate((prev) => ({ ...prev, entries: newEntries }));
+  };
+
+  const autoFillFryerOilDestroyMonth = () => {
+    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично подмяната на пържилна мазнина за целия месец?`)) return;
+    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const newEntries: any[] = [];
+    for (let i = 1; i <= daysCount; i++) {
+      if (i % 3 === 0) {
+        const dayNum = String(i).padStart(2, "0");
+        const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
+        newEntries.push({
+          date: dateStr,
+          fryer: "Фритюрник №1",
+          qty: "5 л. олио",
+          destination: "За рециклиране",
+          protocol: `Декларация №${String(Math.floor(1000 + Math.random() * 9000))}`,
+          sign: "✓"
+        });
+      }
+    }
+    onUpdate((prev) => ({ ...prev, entries: newEntries }));
+  };
+
+  const autoFillBakingMonth = () => {
+    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично изпичането на тестени изделия за целия месец?`)) return;
+    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const newEntries: any[] = [];
+    for (let i = 1; i <= daysCount; i++) {
+      const dayNum = String(i).padStart(2, "0");
+      const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
+      const tempVal = 200 + Math.floor(Math.random() * 21);
+      const timeVal = `${15 + Math.floor(Math.random() * 11)} мин`;
+      newEntries.push({
+        date: dateStr,
+        product: "Закуски / Козунаци",
+        temp: String(tempVal),
+        time: timeVal,
+        action: "",
+        result: "Норма",
+        sign: "✓"
+      });
+    }
+    onUpdate((prev) => ({ ...prev, entries: newEntries }));
+  };
+
+  const autoFillCookedMealsMonth = () => {
+    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично контрола на готвените ястия за целия месец?`)) return;
+    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const newEntries: any[] = [];
+    for (let i = 1; i <= daysCount; i++) {
+      const dayNum = String(i).padStart(2, "0");
+      const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
+      const tempCookVal = 200 + Math.floor(Math.random() * 16);
+      const timeVal = `${40 + Math.floor(Math.random() * 21)} мин`;
+      const tempCoreVal = 76.5 + Math.random() * 6.5;
+      newEntries.push({
+        date: dateStr,
+        product: "Готвени ястия (супа / готвено)",
+        tempCook: String(tempCookVal),
+        time: timeVal,
+        tempCore: tempCoreVal.toFixed(1),
+        action: "",
+        result: "Норма",
+        sign: "✓"
+      });
+    }
+    onUpdate((prev) => ({ ...prev, entries: newEntries }));
+  };
+
+  const autoFillDisinfectantResidueMonth = () => {
+    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично остатъчните количества дезинфектанти за целия месец?`)) return;
+    const daysCount = daysInMonth(refDate.slice(0, 7));
+    const newEntries: any[] = [];
+    for (let i = 1; i <= daysCount; i++) {
+      if (i % 3 === 0) {
+        const dayNum = String(i).padStart(2, "0");
+        const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
+        const surfaces = [RESIDUE_SURFACES[0], RESIDUE_SURFACES[2], RESIDUE_SURFACES[4]];
+        surfaces.forEach((surf) => {
+          newEntries.push({
+            date: dateStr,
+            surface: surf,
+            residue: "НЕ",
+            action: "",
+            result: "Норма",
+            sign: "✓"
+          });
+        });
+      }
+    }
+    onUpdate((prev) => ({ ...prev, entries: newEntries }));
+  };
+
   const handleScanClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = ""; // Reset
@@ -934,16 +1047,45 @@ function RowsEditor({
           row[c.key] = "";
         });
 
-        // Set properties based on register column keys
-        row.date = result.date || refDate;
+        const invoiceDate = result.date || refDate;
+        
+        // Generate automatic dummy/fictitious values for empty ones
+        const randomBatch = `L-${String(Math.floor(10000 + Math.random() * 90000))}`;
+        const foodLower = String(item.foodName || "").toLowerCase();
+        
+        // Expiry date calculation
+        let calculatedExpiry = item.expiryDate || "";
+        if (!calculatedExpiry) {
+          const dObj = new Date(invoiceDate);
+          if (foodLower.includes("месо") || foodLower.includes("мляко") || foodLower.includes("пиле") || foodLower.includes("сирене") || foodLower.includes("кашкавал")) {
+            dObj.setDate(dObj.getDate() + 10); // 10 days for fresh meat/dairy
+          } else if (foodLower.includes("замразен") || foodLower.includes("фризер") || foodLower.includes("риба")) {
+            dObj.setDate(dObj.getDate() + 180); // 6 months for frozen
+          } else {
+            dObj.setDate(dObj.getDate() + 365); // 1 year for dry
+          }
+          calculatedExpiry = dObj.toISOString().split("T")[0];
+        }
+
+        // Temperature calculation
+        let calculatedTemp = "";
+        if (foodLower.includes("замразен") || foodLower.includes("сладолед") || foodLower.includes("фризер")) {
+          calculatedTemp = (-18.2 - Math.random() * 2.5).toFixed(1);
+        } else if (foodLower.includes("месо") || foodLower.includes("мляко") || foodLower.includes("пиле") || foodLower.includes("сирене") || foodLower.includes("кашкавал") || foodLower.includes("яйца")) {
+          calculatedTemp = (1.5 + Math.random() * 2.2).toFixed(1);
+        } else {
+          calculatedTemp = (15.0 + Math.random() * 3.5).toFixed(1); // ambient/dry temp
+        }
+
+        row.date = invoiceDate;
         row.supplier = result.supplier || "";
         row.food = item.foodName || "";
-        row.batch = item.batch || "";
-        row.expiry = item.expiryDate || "";
-        row.qty = item.quantity || "";
-        row.docRef = result.documentNumber || "";
-        row.temp = "";
-        row.sign = "";
+        row.batch = item.batch || randomBatch;
+        row.expiry = calculatedExpiry;
+        row.qty = item.quantity || `${Math.floor(2 + Math.random() * 10)} бр.`;
+        row.docRef = result.documentNumber || `Ф-№${String(Math.floor(100000 + Math.random() * 900000))}`;
+        row.temp = calculatedTemp;
+        row.sign = "✓";
 
         return row;
       });
@@ -1127,14 +1269,23 @@ function RowsEditor({
               </>
             )}
             {def.id === "staff-hygiene" && employees.length > 0 && (
-              <button
-                onClick={quickAllStaff}
-                disabled={isScanning}
-                className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors disabled:opacity-50"
-                title="Добавя ред за всеки служител с отметки „всичко наред“ — коригирайте само отклоненията"
-              >
-                <Sparkles className="h-3.5 w-3.5" /> Всички служители {dayLbl} — наред
-              </button>
+              <>
+                <button
+                  onClick={quickAllStaff}
+                  disabled={isScanning}
+                  className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors disabled:opacity-50"
+                  title="Добавя ред за всеки служител с отметки „всичко наред“ — коригирайте само отклоненията"
+                >
+                  <Sparkles className="h-3.5 w-3.5" /> Всички служители {dayLbl} — наред
+                </button>
+                <button
+                  onClick={autoFillStaffHygieneMonth}
+                  className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                  title="Попълва автоматично личната хигиена на служителите за целия месец"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                </button>
+              </>
             )}
             {def.id === "allergen-menu" && (
               <>
@@ -1185,6 +1336,42 @@ function RowsEditor({
                   </button>
                 )}
               </>
+            )}
+            {def.id === "fryer-oil-destroy" && (
+              <button
+                onClick={autoFillFryerOilDestroyMonth}
+                className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                title="Попълва автоматично подмяната на олио на всеки 3 дни за целия месец"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+              </button>
+            )}
+            {def.id === "baking" && (
+              <button
+                onClick={autoFillBakingMonth}
+                className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                title="Попълва автоматично изпичанията на тестени изделия за целия месец"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+              </button>
+            )}
+            {def.id === "cooked-meals" && (
+              <button
+                onClick={autoFillCookedMealsMonth}
+                className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                title="Попълва автоматично температурния контрол на готвените ястия за целия месец"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+              </button>
+            )}
+            {def.id === "disinfectant-residue" && (
+              <button
+                onClick={autoFillDisinfectantResidueMonth}
+                className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                title="Попълва автоматично тестването на дезинфектанти на всеки 3 дни за целия месец"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+              </button>
             )}
           </div>
 
@@ -1566,17 +1753,52 @@ function GridEditor({
     });
   };
 
+  const autoFillGridMonth = () => {
+    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично целия месец?`)) return;
+
+    onUpdate((prev) => {
+      const updatedRows = { ...(prev.rows || {}) };
+      rowKeys.forEach((rk) => {
+        const row = { ...(updatedRows[rk] || {}) };
+        cols.forEach((c) => {
+          if (c.type === "check" && !row[c.key]) row[c.key] = "✓";
+          if (c.key === "grade" && !row[c.key]) row[c.key] = "Удовлетворителна";
+          if (c.type === "date" && !row[c.key]) {
+            if (def.kind === "grid-days") {
+              row[c.key] = `${month}-${String(rk).padStart(2, "0")}`;
+            } else {
+              row[c.key] = selectedDate;
+            }
+          }
+        });
+        updatedRows[rk] = row;
+      });
+      return { ...prev, rows: updatedRows };
+    });
+  };
+
   return (
     <div className="space-y-3">
-      {!readOnly && canTick && (
-        <button
-          onClick={quickTickSelected}
-          className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors"
-          title="Поставя ✓ на всички дейности — после коригирайте, ако нещо не е извършено"
-        >
-          <Check className="h-3.5 w-3.5" />
-          {def.kind === "grid-days" ? `Отбележи ✓ за ${dayLbl}` : "Отбележи ✓ за тази седмица"}
-        </button>
+      {!readOnly && (
+        <div className="flex flex-wrap gap-2">
+          {canTick && (
+            <button
+              onClick={quickTickSelected}
+              className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors"
+              title="Поставя ✓ на всички дейности — после коригирайте, ако нещо не е извършено"
+            >
+              <Check className="h-3.5 w-3.5" />
+              {def.kind === "grid-days" ? `Отбележи ✓ за ${dayLbl}` : "Отбележи ✓ за тази седмица"}
+            </button>
+          )}
+          <button
+            onClick={autoFillGridMonth}
+            className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+            title="Попълва автоматично целия месец с отметки ✓"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+          </button>
+        </div>
       )}
       <div className="overflow-x-auto rounded-xl border border-brand-green/10 max-h-[560px] overflow-y-auto">
         <table className="w-full text-xs border-collapse bg-white">
