@@ -342,7 +342,7 @@ export const STORE_REGISTERS: RegisterDef[] = [
     kind: "rows",
     columns: [
       { key: "date", label: "Дата на приемане", type: "date", narrow: true },
-      { key: "supplier", label: "Доставчик", type: "select", optionsFrom: "suppliers" },
+      { key: "supplier", label: "Доставчик", type: "text", optionsFrom: "suppliers" },
       { key: "food", label: "Вид храна", type: "text" },
       { key: "batch", label: "Партида", type: "text", narrow: true },
       { key: "expiry", label: "Срок на годност", type: "date", narrow: true },
