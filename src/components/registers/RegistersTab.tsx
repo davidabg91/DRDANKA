@@ -82,6 +82,7 @@ import {
   CalendarDays,
   HelpCircle,
   PenLine,
+  Tag,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -451,6 +452,204 @@ const calculateAllergensForIngredients = (ingredientsText: string): string => {
 /*  Редактор: динамични редове                                          */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  Калкулиране на срок на годност и принтиране на етикет за храна    */
+/* ------------------------------------------------------------------ */
+const calculateExpiryDateTime = (
+  prodDate: string,
+  prodTime: string,
+  shelfHours: number
+): { dateStr: string; timeStr: string } => {
+  if (!prodDate) return { dateStr: "", timeStr: "" };
+
+  const [year, month, day] = prodDate.split("-").map(Number);
+  const [hours, minutes] = (prodTime || "00:00").split(":").map(Number);
+
+  const dateObj = new Date(year, month - 1, day, hours, minutes);
+  dateObj.setHours(dateObj.getHours() + shelfHours);
+
+  const targetYear = dateObj.getFullYear();
+  const targetMonth = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const targetDay = String(dateObj.getDate()).padStart(2, "0");
+  const targetHours = String(dateObj.getHours()).padStart(2, "0");
+  const targetMinutes = String(dateObj.getMinutes()).padStart(2, "0");
+
+  return {
+    dateStr: `${targetDay}.${targetMonth}.${targetYear} г.`,
+    timeStr: `${targetHours}:${targetMinutes} ч.`,
+  };
+};
+
+const handlePrintSticker = (
+  item: { product: string; ingredients: string; allergens: string },
+  prodDate: string,
+  prodTime: string,
+  shelfHours: number,
+  temp: string
+) => {
+  const expiry = calculateExpiryDateTime(prodDate, prodTime, shelfHours);
+  const formattedProdDate = prodDate.split("-").reverse().join(".");
+
+  const htmlContent = `
+    <html>
+      <head>
+        <title>Етикет за годност - ${item.product}</title>
+        <style>
+          @media print {
+            body {
+              margin: 0;
+              padding: 0;
+            }
+          }
+          body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 12px;
+            width: 76mm;
+            height: 76mm;
+            box-sizing: border-box;
+            background-color: #fff;
+          }
+          .sticker {
+            border: 2px dashed #12382b;
+            border-radius: 12px;
+            padding: 10px;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #12382b;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+          }
+          .brand {
+            font-size: 10px;
+            font-weight: 900;
+            color: #c49b3c;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+          }
+          .title {
+            font-size: 15px;
+            font-weight: bold;
+            margin: 2px 0 0 0;
+            color: #12382b;
+          }
+          .section {
+            font-size: 9px;
+            margin-bottom: 4px;
+            line-height: 1.3;
+          }
+          .label {
+            font-weight: bold;
+            color: #64748b;
+            text-transform: uppercase;
+            font-size: 8px;
+            display: block;
+            margin-bottom: 1px;
+          }
+          .value {
+            color: #0f172a;
+            font-size: 10px;
+          }
+          .allergens-box {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 4px;
+            padding: 3px;
+            font-weight: bold;
+            color: #12382b;
+            text-align: center;
+            font-size: 10px;
+          }
+          .expiry-box {
+            border: 2px solid #12382b;
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+            background-color: #f0fdf4;
+          }
+          .expiry-title {
+            font-size: 8px;
+            font-weight: 900;
+            color: #12382b;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
+          }
+          .expiry-val {
+            font-size: 13px;
+            font-weight: bold;
+            color: #12382b;
+          }
+          .footer {
+            font-size: 7px;
+            text-align: center;
+            color: #94a3b8;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 4px;
+            margin-top: 2px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="sticker">
+          <div class="header">
+            <div class="brand">БАБХ Спокойствие</div>
+            <div class="title">${item.product}</div>
+          </div>
+          
+          <div class="section">
+            <span class="label">Съставки:</span>
+            <span class="value">${item.ingredients || "-"}</span>
+          </div>
+          
+          <div class="section">
+            <span class="label">Алергени (БАБХ №):</span>
+            <div class="allergens-box">${item.allergens || "няма"}</div>
+          </div>
+
+          <div class="section" style="display: flex; justify-content: space-between;">
+            <div>
+              <span class="label">Приготвено на:</span>
+              <span class="value">${formattedProdDate} г. в ${prodTime} ч.</span>
+            </div>
+            <div style="text-align: right;">
+              <span class="label">Темп. съхранение:</span>
+              <span class="value">${temp}</span>
+            </div>
+          </div>
+          
+          <div class="expiry-box">
+            <div class="expiry-title">Годен до:</div>
+            <div class="expiry-val">${expiry.dateStr} ${expiry.timeStr}</div>
+          </div>
+          
+          <div class="footer">
+            Дигитална система за самоконтрол
+          </div>
+        </div>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function() { window.close(); }, 500);
+          }
+        </script>
+      </body>
+    </html>
+  `;
+
+  const printWindow = window.open("", "_blank");
+  if (printWindow) {
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  }
+};
+
 function RowsEditor({
   def,
   data,
@@ -488,6 +687,13 @@ function RowsEditor({
   // States for menu photo scanner
   const [isMenuScanning, setIsMenuScanning] = useState(false);
   const [menuScanError, setMenuScanError] = useState<string | null>(null);
+
+  // States for printable shelf life label generator
+  const [labelItem, setLabelItem] = useState<{ product: string; ingredients: string; allergens: string } | null>(null);
+  const [labelProdDate, setLabelProdDate] = useState("");
+  const [labelProdTime, setLabelProdTime] = useState("");
+  const [labelShelfHours, setLabelShelfHours] = useState(36);
+  const [labelTemp, setLabelTemp] = useState("0°C до +4°C");
 
   const addRow = () => {
     const blank: Record<string, string> = {};
@@ -934,6 +1140,144 @@ function RowsEditor({
           </div>
         </div>
       )}
+
+      {/* Expiry / Shelf Life Label Printer Modal */}
+      {labelItem && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-brand-dark/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl border border-brand-green/10 shadow-2xl max-w-xl w-full overflow-hidden animate-[fadeInScale_0.2s_ease] text-left flex flex-col md:flex-row">
+            
+            {/* Form settings */}
+            <div className="flex-1 p-6 space-y-4 border-r border-slate-100">
+              <div>
+                <h3 className="font-serif text-lg font-bold text-brand-green">Етикет за годност</h3>
+                <p className="text-[10px] text-brand-dark/50">Задайте дата на приготвяне и часове трайност</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/60 block">Приготвено на</label>
+                  <input
+                    type="date"
+                    className={inputCls}
+                    value={labelProdDate}
+                    onChange={(e) => setLabelProdDate(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/60 block">Час на приготвяне</label>
+                  <input
+                    type="time"
+                    className={inputCls}
+                    value={labelProdTime}
+                    onChange={(e) => setLabelProdTime(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/60 block">Трайност (в часове)</label>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    className={`${inputCls} max-w-[80px] text-center`}
+                    value={labelShelfHours}
+                    onChange={(e) => setLabelShelfHours(parseInt(e.target.value) || 0)}
+                  />
+                  <div className="flex flex-wrap gap-1 flex-1">
+                    {[24, 36, 48, 72].map(h => (
+                      <button
+                        key={h}
+                        onClick={() => setLabelShelfHours(h)}
+                        className={`px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer transition-colors ${
+                          labelShelfHours === h
+                            ? "bg-brand-green text-white border-brand-green"
+                            : "bg-white text-brand-dark/60 border-slate-200 hover:border-brand-gold"
+                        }`}
+                      >
+                        {h}ч.
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/60 block">Темп. на съхранение</label>
+                <input
+                  type="text"
+                  className={inputCls}
+                  placeholder="напр. 0°C до +4°C"
+                  value={labelTemp}
+                  onChange={(e) => setLabelTemp(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setLabelItem(null)}
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-brand-dark/70 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer border-0"
+                >
+                  Отказ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePrintSticker(labelItem, labelProdDate, labelProdTime, labelShelfHours, labelTemp)}
+                  className="flex-1 py-2.5 bg-brand-green hover:bg-brand-green/90 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer border-0 shadow-lg shadow-brand-green/15 flex items-center justify-center gap-1.5"
+                >
+                  <Printer className="h-3.5 w-3.5" /> Принтирай
+                </button>
+              </div>
+            </div>
+
+            {/* Sticker Preview */}
+            <div className="w-full md:w-[240px] bg-slate-50 p-6 flex flex-col items-center justify-center border-t md:border-t-0 md:border-l border-slate-100">
+              <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/40 mb-3 block">Визуализация на стикер</span>
+              
+              <div className="bg-white border-2 border-dashed border-brand-green/30 rounded-xl p-4 w-full aspect-square flex flex-col justify-between shadow-md">
+                <div className="text-center border-b border-brand-green/25 pb-1 mb-2">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-brand-green block">БАБХ Спокойствие</span>
+                  <span className="font-serif text-sm font-bold text-brand-dark leading-tight block truncate" title={labelItem.product}>{labelItem.product}</span>
+                </div>
+                
+                <div className="text-[9px] space-y-1.5 flex-1">
+                  <div>
+                    <span className="text-[7px] uppercase font-bold text-brand-dark/40 block">Съставки:</span>
+                    <span className="text-brand-dark leading-normal block truncate" title={labelItem.ingredients}>{labelItem.ingredients || "-"}</span>
+                  </div>
+                  <div>
+                    <span className="text-[7px] uppercase font-bold text-brand-dark/40 block">Алергени (БАБХ №):</span>
+                    <span className="px-1.5 py-0.5 rounded bg-brand-gold/10 border border-brand-gold/20 text-brand-green font-bold text-[9px] block text-center truncate">
+                      {labelItem.allergens || "няма"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between gap-1 text-[8px]">
+                    <div>
+                      <span className="text-[7px] uppercase font-bold text-brand-dark/40 block">Приготвено на:</span>
+                      <span className="text-brand-dark font-mono">{labelProdDate.split("-").reverse().join(".")}<br/>в {labelProdTime} ч.</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[7px] uppercase font-bold text-brand-dark/40 block">Съхранение:</span>
+                      <span className="text-brand-dark truncate block max-w-[90px]">{labelTemp}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-brand-green rounded-lg p-1.5 bg-emerald-50/50 text-center mt-2.5">
+                  <span className="text-[7px] uppercase font-black text-brand-green block">Годен до:</span>
+                  <span className="text-[10px] font-black text-brand-green font-mono">
+                    {(() => {
+                      const exp = calculateExpiryDateTime(labelProdDate, labelProdTime, labelShelfHours);
+                      return `${exp.dateStr} ${exp.timeStr}`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
       <div className="overflow-x-auto rounded-xl border border-brand-green/10">
         <table className="w-full text-xs border-collapse bg-white">
           <thead>
@@ -944,7 +1288,7 @@ function RowsEditor({
                   {c.label}
                 </th>
               ))}
-              {!readOnly && <th className="p-2 border-b border-brand-green/10 w-8"></th>}
+              {(!readOnly || def.id === "allergen-menu") && <th className="p-2 border-b border-brand-green/10 w-16 text-center">Действия</th>}
             </tr>
           </thead>
           <tbody>
@@ -969,15 +1313,40 @@ function RowsEditor({
                       />
                     </td>
                   ))}
-                  {!readOnly && (
+                  {(!readOnly || def.id === "allergen-menu") && (
                     <td className="p-1.5 text-center">
-                      <button
-                        onClick={() => removeRow(idx)}
-                        className="text-red-300 hover:text-red-500 cursor-pointer p-1"
-                        title="Изтрий реда"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1">
+                        {def.id === "allergen-menu" && (
+                          <button
+                            onClick={() => {
+                              const todayStr = new Date().toISOString().split("T")[0];
+                              const nowStr = nowTime();
+                              setLabelItem({
+                                product: row.product || "",
+                                ingredients: row.ingredients || "",
+                                allergens: row.allergens || "няма",
+                              });
+                              setLabelProdDate(todayStr);
+                              setLabelProdTime(nowStr);
+                              setLabelShelfHours(36);
+                              setLabelTemp("0°C до +4°C");
+                            }}
+                            className="text-brand-green hover:text-brand-gold cursor-pointer p-1"
+                            title="Принтирай етикет за годност на храна"
+                          >
+                            <Tag className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        {!readOnly && (
+                          <button
+                            onClick={() => removeRow(idx)}
+                            className="text-red-300 hover:text-red-500 cursor-pointer p-1"
+                            title="Изтрий реда"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
