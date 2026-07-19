@@ -1401,7 +1401,7 @@ export function recordDateKey(def: RegisterDef): string | null {
 
 export const HOT_APPLIANCES: HotAppliance[] = [
   { id: "grill", label: "Скара", emoji: "🍖", registers: ["grill-temp", "grill-batch"] },
-  { id: "fryer", label: "Фритюрник", emoji: "🍟", registers: ["fryer-oil-temp"] },
+  { id: "fryer", label: "Фритюрник", emoji: "🍟", registers: ["fryer-oil-temp", "fry-depth"] },
   { id: "duner", label: "Дюнер", emoji: "🌯", registers: ["duner"] },
   { id: "oven", label: "Фурна (закуски, питки, козунаци)", emoji: "🥐", registers: ["baking"] },
   { id: "stove", label: "Котлон — готвени ястия", emoji: "🍲", registers: ["cooked-meals", "meals-batch"] },
