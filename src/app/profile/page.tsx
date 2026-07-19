@@ -136,6 +136,8 @@ export interface DankaUser {
   hasHotPoint?: boolean;
   /** Уредите от топлата точка в обекта (ids от HOT_APPLIANCES) — филтрират картите и дневните напомняния. */
   hotAppliances?: string[];
+  /** Почивни дни от седмицата на обекта (0=нед…6=съб, JS Date.getDay()). Тези дни в календара светят зелено без да е нужно нищо да се попълва. */
+  restDays?: number[];
   /** Обиколката на дневниците е показана веднъж — не се повтаря. */
   registersTourSeen?: boolean;
   autoDuner?: boolean;
@@ -3995,6 +3997,7 @@ export default function ProfilePage() {
                               meat={isMeatShopNiche(auditTarget.niche)}
                               hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
                               hotAppliances={auditTarget.hotAppliances ?? []}
+                              restDays={auditTarget.restDays ?? []}
                               signature={auditTarget.signature}
                               signatureMode={auditTarget.signatureMode ?? "manual"}
                               readOnly
@@ -4107,6 +4110,7 @@ export default function ProfilePage() {
                   meat={isMeatShopNiche(currentUser?.niche || firmInfo.niche)}
                   hotPoint={currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(currentUser?.niche || firmInfo.niche))}
                   hotAppliances={currentUser?.hotAppliances ?? []}
+                  restDays={currentUser?.restDays ?? []}
                   signature={currentUser?.signature}
                   signatureMode={currentUser?.signatureMode ?? "manual"}
                   tourSeen={currentUser?.registersTourSeen ?? false}

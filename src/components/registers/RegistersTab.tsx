@@ -135,6 +135,15 @@ const getMaxFillDay = (monthStr: string): number => {
 
 const ROMAN_WEEKS = ["I", "II", "III", "IV", "V"];
 
+/** Дни от седмицата по индекса на JS Date.getDay() (0 = неделя). */
+const WEEKDAY_LABELS = ["Нед", "Пон", "Вт", "Ср", "Чет", "Пет", "Съб"];
+
+/** Ден от седмицата (0=нед…6=съб) за ISO дата "YYYY-MM-DD", без часова зона. */
+function weekdayOfISO(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1).getDay();
+}
+
 const isRowFilled = (row?: Record<string, any>) =>
   !!row && Object.values(row).some((v) => String(v ?? "").trim() !== "");
 
@@ -2884,6 +2893,8 @@ interface RegistersTabProps {
   hotAppliances?: string[];
   /** Обектът е магазин/цех за месо — показва производствените/технологичните месни карти */
   meat?: boolean;
+  /** Почивни дни от седмицата (0=нед…6=съб, JS Date.getDay()) — светят зелено в календара без да е нужно нищо да се попълва. */
+  restDays?: number[];
   /** Електронен подпис (PNG data URL) и режим на подписване. */
   signature?: string;
   signatureMode?: "draw" | "manual";
@@ -2903,6 +2914,7 @@ interface RegistersTabProps {
     customEmployees?: Employee[];
     hasHotPoint?: boolean;
     hotAppliances?: string[];
+    restDays?: number[];
     signature?: string;
     signatureMode?: "draw" | "manual";
     autoDuner?: boolean;
@@ -2935,6 +2947,7 @@ export default function RegistersTab({
   hotPoint = false,
   hotAppliances = [],
   meat = false,
+  restDays = [],
   signature,
   signatureMode = "manual",
   autoDuner = false,
@@ -2961,6 +2974,7 @@ export default function RegistersTab({
   const [showSettings, setShowSettings] = useState(false);
   const [activeTempUnit, setActiveTempUnit] = useState<string>("");
   const [showTour, setShowTour] = useState(false);
+  const [showRestMenu, setShowRestMenu] = useState(false);
 
   const autoFillSettings: Record<string, boolean> = {
     "temps": autoTemps,
@@ -2990,6 +3004,15 @@ export default function RegistersTab({
     if (patchKey) {
       await onSaveEquipment?.({ [patchKey]: checked });
     }
+  };
+
+  // Почивни дни от седмицата: обектът ги отбелязва веднъж и календарът след
+  // това ги показва зелени за всеки месец, без да е нужно нищо да се попълва.
+  const toggleRestDay = async (weekday: number) => {
+    const next = restDays.includes(weekday)
+      ? restDays.filter((d) => d !== weekday)
+      : [...restDays, weekday];
+    await onSaveEquipment?.({ restDays: next });
   };
 
   // Обиколка при първо влизане: пази се в профила + localStorage (за мигновена защита от повторно показване)
@@ -3965,9 +3988,52 @@ export default function RegistersTab({
                 <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
                   Календар — {monthLabelBg(month)}
                 </h3>
+                {!readOnly && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowRestMenu((v) => !v)}
+                      className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wide px-2 py-1 rounded-lg border border-brand-green/15 text-brand-dark/50 hover:border-brand-gold hover:text-brand-green cursor-pointer"
+                      title="Отбележете почивните дни на обекта"
+                    >
+                      <Settings className="h-3 w-3" /> Работна седмица
+                    </button>
+                    {showRestMenu && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setShowRestMenu(false)} />
+                        <div className="absolute left-0 top-full mt-1.5 z-20 bg-white border border-brand-green/15 rounded-xl shadow-xl p-3 w-56 space-y-2">
+                          <p className="text-[9px] font-black uppercase tracking-wide text-brand-dark/50">
+                            Почивни дни на обекта
+                          </p>
+                          <p className="text-[9px] text-brand-dark/40 leading-snug">
+                            Тези дни ще светят зелено в календара — без да е нужно нищо да се попълва.
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {WEEKDAY_LABELS.map((label, idx) => {
+                              const on = restDays.includes(idx);
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => toggleRestDay(idx)}
+                                  className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border cursor-pointer transition-colors ${
+                                    on
+                                      ? "bg-emerald-500 text-white border-emerald-500"
+                                      : "bg-white text-brand-dark/55 border-brand-green/15 hover:border-brand-gold"
+                                  }`}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-3 text-[9px] font-bold text-brand-dark/50">
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-green-400" /> всичко попълнено</span>
+                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-500" /> почивен ден</span>
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-red-400" /> има непопълнено</span>
                 <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-brand-light border border-brand-green/15" /> предстоящ ден</span>
               </div>
@@ -3977,13 +4043,16 @@ export default function RegistersTab({
                 const day = i + 1;
                 const iso = `${month}-${String(day).padStart(2, "0")}`;
                 const isFuture = iso > today;
-                const missing = isFuture ? [] : dayObligations(iso);
+                const isRest = restDays.includes(weekdayOfISO(iso));
+                const missing = isFuture || isRest ? [] : dayObligations(iso);
                 const isSelected = iso === refDate;
                 const tone = isFuture
                   ? "bg-brand-light/70 text-brand-dark/30 border-brand-green/10"
-                  : missing.length === 0
-                    ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
-                    : "bg-red-100 text-red-600 border-red-300 hover:bg-red-200";
+                  : isRest
+                    ? "bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-200"
+                    : missing.length === 0
+                      ? "bg-green-100 text-green-700 border-green-300 hover:bg-green-200"
+                      : "bg-red-100 text-red-600 border-red-300 hover:bg-red-200";
                 return (
                   <button
                     key={iso}
@@ -3991,9 +4060,11 @@ export default function RegistersTab({
                     title={
                       isFuture
                         ? "Предстоящ ден"
-                        : missing.length === 0
-                          ? "Всичко е попълнено ✓"
-                          : `Непопълнено (${missing.length}):\n• ${missing.map((m) => m.text).join("\n• ")}`
+                        : isRest
+                          ? "Почивен ден — не се изисква нищо"
+                          : missing.length === 0
+                            ? "Всичко е попълнено ✓"
+                            : `Непопълнено (${missing.length}):\n• ${missing.map((m) => m.text).join("\n• ")}`
                     }
                     className={`relative w-10 h-10 rounded-xl border text-[11px] font-black transition-colors cursor-pointer ${tone} ${
                       isSelected ? "ring-2 ring-brand-gold ring-offset-1 scale-105" : ""
