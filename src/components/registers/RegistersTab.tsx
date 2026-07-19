@@ -40,6 +40,8 @@ import {
   recordDateKey,
   visibleRegistersFor,
   registersForMeat,
+  MEAT_REGISTERS,
+  MEAT_SHARED_HOT_IDS,
   ADMIN_REMINDERS_ID,
   AdminReminder,
 } from "@/data/storeRegisters";
@@ -2995,6 +2997,30 @@ export default function RegistersTab({
     () => (meat ? registersForMeat(hotPoint) : visibleRegistersFor(hotPoint, hotAppliances)),
     [hotPoint, hotAppliances, meat]
   );
+
+  /** Групиране на картите за списъка: базови + (месо) + (топла точка). */
+  const cardGroups = useMemo(() => {
+    const meatIdSet = new Set<string>([
+      ...MEAT_REGISTERS.map((r) => r.id),
+      ...MEAT_SHARED_HOT_IDS,
+    ]);
+    const groups: { title: string; defs: RegisterDef[] }[] = [
+      { title: "Основни дневници по самоконтрол", defs: visibleRegisters.filter((d) => d.num <= 15) },
+    ];
+    if (meat) {
+      groups.push({
+        title: "Магазин за месо — производствени и технологични карти",
+        defs: visibleRegisters.filter((d) => d.num > 15 && meatIdSet.has(d.id)),
+      });
+    }
+    if (hotPoint) {
+      groups.push({
+        title: "Топла точка — контролни и партидни карти",
+        defs: visibleRegisters.filter((d) => d.num > 15 && !(meat && meatIdSet.has(d.id))),
+      });
+    }
+    return groups.filter((g) => g.defs.length > 0);
+  }, [visibleRegisters, meat, hotPoint]);
   /** Уредите от топлата точка, които панелът показва. */
   const ownedAppliances = useMemo(
     () =>
@@ -4372,14 +4398,9 @@ export default function RegistersTab({
       ) : (
         /* ------------------ Списък с карти ------------------ */
         <div data-tour="cards" className="space-y-6">
-          {[
-            { title: "Основни дневници по самоконтрол", defs: visibleRegisters.filter((d) => d.num <= 15) },
-            ...(hotPoint
-              ? [{ title: "Топла точка — контролни и партидни карти", defs: visibleRegisters.filter((d) => d.num > 15) }]
-              : []),
-          ].map((group) => (
+          {cardGroups.map((group) => (
             <div key={group.title} className="space-y-3">
-              {hotPoint && (
+              {cardGroups.length > 1 && (
                 <div className="flex items-center gap-2.5 px-1">
                   {group.title.startsWith("Топла") ? (
                     <Flame className="h-4 w-4 text-brand-gold" />
