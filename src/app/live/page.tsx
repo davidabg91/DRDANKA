@@ -18,8 +18,6 @@ import PageHero from "@/components/PageHero";
  */
 export default function LiveCoursesPage() {
   const { overrides } = usePriceOverrides();
-  const mainCourses = LIVE_COURSES.filter((c) => !c.secondary);
-  const otherCourses = LIVE_COURSES.filter((c) => c.secondary);
   return (
     <div className="min-h-screen pb-24">
       <PageHero
@@ -37,32 +35,48 @@ export default function LiveCoursesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
-            {mainCourses.map(c => (
+            {LIVE_COURSES.map(c => (
               <Link
                 key={c.slug}
                 href={`/live/${c.slug}`}
                 className="group relative bg-white rounded-3xl border border-brand-green/10 hover:border-brand-gold/50 overflow-hidden shadow-md hover:shadow-2xl hover:shadow-brand-gold/20 hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
               >
-                <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-green/15 to-brand-gold/15 overflow-hidden">
+                <div className="relative aspect-[4/3] overflow-hidden">
                   {c.card.cover ? (
-                    <Image
-                      src={c.card.cover}
-                      alt={c.title}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className={`object-cover group-hover:scale-110 transition-transform duration-700 ${c.slug === 'haccp-dhpp-praktika' ? 'object-top' : 'object-center'}`}
-                    />
+                    <>
+                      <Image
+                        src={c.card.cover}
+                        alt={c.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className={`object-cover group-hover:scale-110 transition-transform duration-700 ${c.slug === 'haccp-dhpp-praktika' ? 'object-top' : 'object-center'}`}
+                      />
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/30 to-transparent" />
+                    </>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="relative">
-                        <div className="absolute inset-0 rounded-2xl bg-brand-gold/30 blur-2xl animate-pulse" />
-                        <Video className="relative h-20 w-20 text-brand-green/40" strokeWidth={1.5} />
+                    /* Editorial header for courses without a cover photo — same visual
+                       weight as a photo card, built from typography instead of an image. */
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] overflow-hidden">
+                      <div
+                        className="absolute inset-0 pointer-events-none opacity-[0.06]"
+                        style={{
+                          backgroundImage:
+                            "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 18px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 18px)",
+                        }}
+                      />
+                      <div className="absolute -top-10 -right-10 w-40 h-40 bg-brand-gold/25 rounded-full blur-3xl pointer-events-none group-hover:bg-brand-gold/35 transition-colors duration-700" />
+                      <div className="relative h-full flex flex-col items-start justify-end p-5 sm:p-6">
+                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.2em] bg-brand-gold text-brand-dark px-3 py-1.5 rounded-full shadow-md mb-3">
+                          <Sparkles className="h-3 w-3" /> {c.card.badge || "Специализиран модул"}
+                        </span>
+                        <span className="font-serif text-4xl sm:text-5xl font-black text-white/15 leading-none select-none group-hover:text-white/25 transition-colors duration-500">
+                          {c.title.slice(0, 2).toUpperCase()}
+                        </span>
                       </div>
                     </div>
                   )}
-                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/30 to-transparent" />
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-white/95 backdrop-blur-sm text-brand-green px-2.5 py-1 rounded-full shadow-sm">
+                    <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm ${c.card.cover ? "bg-white/95 text-brand-green" : "bg-white/10 text-white border border-white/20"}`}>
                       <Video className="h-3 w-3" /> {c.platform === "zoom" ? "Zoom" : "Google Meet"}
                     </span>
                     {c.hasCertificate && (
@@ -112,75 +126,6 @@ export default function LiveCoursesPage() {
                 </div>
               </Link>
             ))}
-          </div>
-        )}
-
-        {/* ДРУГИ — компактни карти без снимки */}
-        {otherCourses.length > 0 && (
-          <div className="mt-14">
-            <div className="flex items-center gap-3 mb-6">
-              <h2 className="font-serif text-xl font-bold text-brand-green uppercase tracking-wide">Други</h2>
-              <div className="flex-1 h-px bg-brand-green/15" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {otherCourses.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={`/live/${c.slug}`}
-                  className="group relative bg-white rounded-3xl border border-brand-green/10 hover:border-brand-gold/50 overflow-hidden shadow-md hover:shadow-xl hover:shadow-brand-gold/15 hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer p-5 sm:p-6 gap-3"
-                >
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-brand-green/10 text-brand-green px-2.5 py-1 rounded-full">
-                      <Video className="h-3 w-3" /> {c.platform === "zoom" ? "Zoom" : "Google Meet"}
-                    </span>
-                    {c.card.badge && (
-                      <span className="inline-flex items-center text-[9px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-2.5 py-1 rounded-full">
-                        {c.card.badge}
-                      </span>
-                    )}
-                    {c.hasCertificate && (
-                      <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider border border-brand-gold/40 text-brand-gold-dark px-2.5 py-1 rounded-full">
-                        <Award className="h-3 w-3" /> Сертификат
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 className="font-serif text-base sm:text-lg font-bold text-brand-green leading-snug group-hover:text-brand-gold transition-colors">
-                    {c.title}
-                  </h3>
-                  <p className="text-xs text-brand-dark/60 leading-relaxed line-clamp-2 flex-1">{c.tagline}</p>
-
-                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-brand-dark/50">
-                    {c.format && (
-                      <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3 text-brand-gold" /> {c.format}</span>
-                    )}
-                    {c.groupSize && (
-                      <span className="inline-flex items-center gap-1"><Users className="h-3 w-3 text-brand-gold" /> {c.groupSize}</span>
-                    )}
-                  </div>
-
-                  <div className="flex items-end justify-between pt-4 mt-auto border-t border-brand-green/5">
-                    <div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/40 block leading-none mb-1">Цена</span>
-                      <div className="flex items-end gap-2">
-                        <span className="font-serif text-2xl font-bold text-brand-gold leading-tight">
-                          {resolvePrice(c.slug, overrides, c.priceEur).toFixed(2)}<span className="text-sm text-brand-dark/50 font-sans ml-0.5">€</span>
-                        </span>
-                        {c.originalPriceEur && (
-                          <span className="text-sm font-sans font-medium text-brand-dark/40 line-through mb-1">
-                            {c.originalPriceEur.toFixed(2)}€
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-green group-hover:bg-brand-gold text-white group-hover:text-brand-dark font-bold text-[10px] uppercase tracking-widest rounded-full shadow-md transition-all duration-300">
-                      Виж
-                      <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
           </div>
         )}
 
