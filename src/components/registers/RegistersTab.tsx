@@ -1770,10 +1770,11 @@ function GridEditor({
       const maxDay = getMaxFillDay(month);
       rowKeys.forEach((rk) => {
         if (def.kind === "grid-days" && parseInt(rk, 10) > maxDay) return;
-        if (def.kind === "grid-weeks") {
-          const weekIdx = ROMAN_WEEKS.indexOf(rk);
-          if (weekIdx !== -1 && (weekIdx * 7 + 1) > maxDay) return;
-        }
+        const weekIdx = def.kind === "grid-weeks" ? ROMAN_WEEKS.indexOf(rk) : -1;
+        // Датата на всяка седмица е първият ѝ ден (I → 1, II → 8, III → 15…),
+        // а не днешната дата за всички редове.
+        const weekStartDay = weekIdx * 7 + 1;
+        if (def.kind === "grid-weeks" && weekIdx !== -1 && weekStartDay > maxDay) return;
         const row = { ...(updatedRows[rk] || {}) };
         cols.forEach((c) => {
           if (c.type === "check" && !row[c.key]) row[c.key] = "✓";
@@ -1781,6 +1782,8 @@ function GridEditor({
           if (c.type === "date" && !row[c.key]) {
             if (def.kind === "grid-days") {
               row[c.key] = `${month}-${String(rk).padStart(2, "0")}`;
+            } else if (def.kind === "grid-weeks" && weekIdx !== -1) {
+              row[c.key] = `${month}-${String(Math.min(weekStartDay, maxDay)).padStart(2, "0")}`;
             } else {
               row[c.key] = selectedDate;
             }
@@ -2909,6 +2912,7 @@ interface RegistersTabProps {
   autoBaking?: boolean;
   autoCookedMeals?: boolean;
   autoResidue?: boolean;
+  autoHygieneWeekly?: boolean;
   /** Записва оборудване/персонал в профила на потребителя */
   onSaveEquipment?: (patch: {
     customFridges?: string[];
@@ -2928,6 +2932,7 @@ interface RegistersTabProps {
     autoBaking?: boolean;
     autoCookedMeals?: boolean;
     autoResidue?: boolean;
+    autoHygieneWeekly?: boolean;
   }) => void | Promise<void>;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
@@ -2961,6 +2966,7 @@ export default function RegistersTab({
   autoBaking = false,
   autoCookedMeals = false,
   autoResidue = false,
+  autoHygieneWeekly = false,
   onSaveEquipment,
   readOnly = false,
   tourSeen = false,
@@ -2987,7 +2993,8 @@ export default function RegistersTab({
     "fryer-oil-destroy": autoFryerOil,
     "baking": autoBaking,
     "cooked-meals": autoCookedMeals,
-    "disinfectant-residue": autoResidue
+    "disinfectant-residue": autoResidue,
+    "hygiene-weekly": autoHygieneWeekly
   };
 
   const toggleAutoFillSetting = async (registerId: string, checked: boolean) => {
@@ -3000,7 +3007,8 @@ export default function RegistersTab({
       "fryer-oil-destroy": "autoFryerOil",
       "baking": "autoBaking",
       "cooked-meals": "autoCookedMeals",
-      "disinfectant-residue": "autoResidue"
+      "disinfectant-residue": "autoResidue",
+      "hygiene-weekly": "autoHygieneWeekly"
     };
     const patchKey = patchKeyMap[registerId];
     if (patchKey) {
