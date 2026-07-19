@@ -2146,6 +2146,7 @@ function TrainingEditor({
   readOnly,
   employees,
   firm,
+  topics = TRAINING_TOPICS,
 }: {
   data: RegisterDocData;
   month: string;
@@ -2153,6 +2154,7 @@ function TrainingEditor({
   readOnly: boolean;
   employees: Employee[];
   firm: PrintFirmInfo;
+  topics?: string[];
 }) {
   const entries = data.entries || [];
   const [draft, setDraft] = useState<any>(null);
@@ -2162,7 +2164,7 @@ function TrainingEditor({
       number: String(entries.length + 1),
       date: todayISO(),
       place: firm.address || "",
-      topic: TRAINING_TOPICS[0],
+      topic: topics[0],
       lecturer: firm.manager || "",
       attendees: employees.map((e) => e.name),
       result: "Много добро",
@@ -2191,10 +2193,10 @@ function TrainingEditor({
     <div className="space-y-4">
       <details className="bg-brand-light/40 border border-brand-green/10 rounded-xl px-4 py-3">
         <summary className="text-[11px] font-black uppercase text-brand-green cursor-pointer">
-          План за обучение — 11 теми (кликнете за преглед)
+          План за обучение — {topics.length} теми (кликнете за преглед)
         </summary>
         <ul className="mt-2 space-y-1 text-[11px] text-brand-dark/70 list-disc pl-5">
-          {TRAINING_TOPICS.map((t) => {
+          {topics.map((t) => {
             const done = entries.some((e) => e.topic === t);
             return (
               <li key={t} className={done ? "text-green-700" : ""}>
@@ -2234,7 +2236,7 @@ function TrainingEditor({
           <div>
             <label className="text-[9px] font-black uppercase text-brand-dark/50 block mb-1">Тема на обучението</label>
             <select className={inputCls} value={draft.topic} onChange={(e) => setDraft({ ...draft, topic: e.target.value })}>
-              {TRAINING_TOPICS.map((t) => (
+              {topics.map((t) => (
                 <option key={t} value={t}>
                   {t}
                 </option>
@@ -4262,6 +4264,7 @@ export default function RegistersTab({
               readOnly={readOnly}
               employees={employees}
               firm={firm}
+              topics={openDef.trainingTopics}
             />
           )}
           {openDef.kind === "survey" && (
