@@ -5,21 +5,27 @@
  * Връща PNG data URL, който после се вгражда автоматично в печатните карти.
  */
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import { Eraser, Check, PenLine } from "lucide-react";
 
-export default function SignaturePad({
-  initial,
-  onSave,
-}: {
+export interface SignaturePadHandle {
+  /** Текущото съдържание на платното без да е нужно да се натиска "Запази подписа". */
+  getDataUrl: () => string | null;
+}
+
+const SignaturePad = forwardRef<SignaturePadHandle, {
   initial?: string;
   onSave: (dataUrl: string | null) => void | Promise<void>;
-}) {
+}>(function SignaturePad({ initial, onSave }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const last = useRef<{ x: number; y: number } | null>(null);
   const [hasInk, setHasInk] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    getDataUrl: () => (hasInk && canvasRef.current ? canvasRef.current.toDataURL("image/png") : null),
+  }), [hasInk]);
 
   // Инициализация на платното + зареждане на съществуващ подпис.
   useEffect(() => {
@@ -136,4 +142,6 @@ export default function SignaturePad({
       </div>
     </div>
   );
-}
+});
+
+export default SignaturePad;

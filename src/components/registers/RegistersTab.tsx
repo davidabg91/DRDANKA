@@ -56,7 +56,7 @@ import {
   RegisterDocData,
 } from "./registerPrint";
 import RegistersTour, { TourStep } from "./RegistersTour";
-import SignaturePad from "./SignaturePad";
+import SignaturePad, { SignaturePadHandle } from "./SignaturePad";
 import {
   Bell,
   Check,
@@ -2585,17 +2585,33 @@ function EquipmentModal({
   const [newEmpName, setNewEmpName] = useState("");
   const [newEmpRole, setNewEmpRole] = useState("");
   const [saving, setSaving] = useState(false);
+  const signaturePadRef = useRef<SignaturePadHandle>(null);
 
   const save = async () => {
     setSaving(true);
     try {
+      // Ако потребителят е написал нещо в полетата "добави", но е натиснал
+      // направо "Запази" без да натисне "+", го включваме автоматично — иначе
+      // въведеното тихо се губи и изглежда все едно записът "не се е запазил".
+      const fridgesToSave = newFridge.trim() ? [...localFridges, newFridge.trim()] : localFridges;
+      const freezersToSave = newFreezer.trim() ? [...localFreezers, newFreezer.trim()] : localFreezers;
+      const employeesToSave = newEmpName.trim()
+        ? [...localEmployees, { name: newEmpName.trim(), role: newEmpRole.trim() }]
+        : localEmployees;
+      // Подписът: ако е рисуван, но не е натиснат вътрешният бутон "Запази
+      // подписа", вземаме текущото съдържание на платното директно оттук.
+      const signatureToSave =
+        localSigMode === "draw" && signaturePadRef.current
+          ? signaturePadRef.current.getDataUrl() ?? (localSignature ?? "")
+          : (localSignature ?? "");
+
       await onSave({
-        customFridges: localFridges,
-        customFreezers: localFreezers,
-        customEmployees: localEmployees,
+        customFridges: fridgesToSave,
+        customFreezers: freezersToSave,
+        customEmployees: employeesToSave,
         hasHotPoint: localHotPoint,
         hotAppliances: localHotPoint ? localAppliances : [],
-        signature: localSignature ?? "",
+        signature: signatureToSave,
         signatureMode: localSigMode,
       });
       onClose();
@@ -2803,7 +2819,7 @@ function EquipmentModal({
           </div>
 
           {localSigMode === "draw" && (
-            <SignaturePad initial={localSignature} onSave={(url) => setLocalSignature(url || undefined)} />
+            <SignaturePad ref={signaturePadRef} initial={localSignature} onSave={(url) => setLocalSignature(url || undefined)} />
           )}
           {localSigMode === "draw" && localSignature && (
             <p className="text-[10px] text-green-700 font-bold flex items-center gap-1">
