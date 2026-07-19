@@ -11,11 +11,15 @@ import type { LiveCourse } from "./types";
 import { haccpOsnovi } from "./haccp-osnovi";
 import { haccpDhppPraktika } from "./haccp-dhpp-praktika";
 import { obuchenieEtiketirane } from "./obuchenie-etiketirane";
+import { obuchenieDphp } from "./obuchenie-dphp";
 
 export const LIVE_COURSES: ReadonlyArray<LiveCourse> = [
-  obuchenieEtiketirane,
+  // Основни курсове (със снимки)
   haccpOsnovi,
   haccpDhppPraktika,
+  // Други — компактни карти без снимки (secondary: true)
+  obuchenieEtiketirane,
+  obuchenieDphp,
 ];
 
 export function findLiveCourse(slug: string): LiveCourse | undefined {

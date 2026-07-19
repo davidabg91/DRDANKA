@@ -18,6 +18,8 @@ import PageHero from "@/components/PageHero";
  */
 export default function LiveCoursesPage() {
   const { overrides } = usePriceOverrides();
+  const mainCourses = LIVE_COURSES.filter((c) => !c.secondary);
+  const otherCourses = LIVE_COURSES.filter((c) => c.secondary);
   return (
     <div className="min-h-screen pb-24">
       <PageHero
@@ -35,7 +37,7 @@ export default function LiveCoursesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
-            {LIVE_COURSES.map(c => (
+            {mainCourses.map(c => (
               <Link
                 key={c.slug}
                 href={`/live/${c.slug}`}
@@ -110,6 +112,75 @@ export default function LiveCoursesPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* ДРУГИ — компактни карти без снимки */}
+        {otherCourses.length > 0 && (
+          <div className="mt-14">
+            <div className="flex items-center gap-3 mb-6">
+              <h2 className="font-serif text-xl font-bold text-brand-green uppercase tracking-wide">Други</h2>
+              <div className="flex-1 h-px bg-brand-green/15" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {otherCourses.map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/live/${c.slug}`}
+                  className="group relative bg-white rounded-3xl border border-brand-green/10 hover:border-brand-gold/50 overflow-hidden shadow-md hover:shadow-xl hover:shadow-brand-gold/15 hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer p-5 sm:p-6 gap-3"
+                >
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-brand-green/10 text-brand-green px-2.5 py-1 rounded-full">
+                      <Video className="h-3 w-3" /> {c.platform === "zoom" ? "Zoom" : "Google Meet"}
+                    </span>
+                    {c.card.badge && (
+                      <span className="inline-flex items-center text-[9px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-2.5 py-1 rounded-full">
+                        {c.card.badge}
+                      </span>
+                    )}
+                    {c.hasCertificate && (
+                      <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider border border-brand-gold/40 text-brand-gold-dark px-2.5 py-1 rounded-full">
+                        <Award className="h-3 w-3" /> Сертификат
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="font-serif text-base sm:text-lg font-bold text-brand-green leading-snug group-hover:text-brand-gold transition-colors">
+                    {c.title}
+                  </h3>
+                  <p className="text-xs text-brand-dark/60 leading-relaxed line-clamp-2 flex-1">{c.tagline}</p>
+
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-brand-dark/50">
+                    {c.format && (
+                      <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3 text-brand-gold" /> {c.format}</span>
+                    )}
+                    {c.groupSize && (
+                      <span className="inline-flex items-center gap-1"><Users className="h-3 w-3 text-brand-gold" /> {c.groupSize}</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-end justify-between pt-4 mt-auto border-t border-brand-green/5">
+                    <div>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/40 block leading-none mb-1">Цена</span>
+                      <div className="flex items-end gap-2">
+                        <span className="font-serif text-2xl font-bold text-brand-gold leading-tight">
+                          {resolvePrice(c.slug, overrides, c.priceEur).toFixed(2)}<span className="text-sm text-brand-dark/50 font-sans ml-0.5">€</span>
+                        </span>
+                        {c.originalPriceEur && (
+                          <span className="text-sm font-sans font-medium text-brand-dark/40 line-through mb-1">
+                            {c.originalPriceEur.toFixed(2)}€
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-green group-hover:bg-brand-gold text-white group-hover:text-brand-dark font-bold text-[10px] uppercase tracking-widest rounded-full shadow-md transition-all duration-300">
+                      Виж
+                      <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

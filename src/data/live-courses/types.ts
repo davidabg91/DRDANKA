@@ -40,4 +40,6 @@ export interface LiveCourse {
   /** Custom React component for the /live/<slug> detail page. */
   page: () => ReactNode;
   metaDescription?: string;
+  /** Показва се в секция „Други" на каталога (компактни карти без снимки). */
+  secondary?: boolean;
 }

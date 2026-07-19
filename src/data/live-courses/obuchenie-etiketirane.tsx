@@ -243,11 +243,11 @@ export const obuchenieEtiketirane: LiveCourse = {
   groupSize: "Малка група, ограничени места",
   nextBatch: "Дати: 14–15 август · ранно записване 199 € до 10 август",
   card: {
-    cover: "/etiketirane-kontrol-cover.webp",
-    badge: "Ново · Пакет 1",
+    badge: "Пакет 1",
     accent: "gold",
   },
   page: EtiketiranePage,
   metaDescription:
     "Двудневно практическо live обучение по етикетиране на храните с д-р Данка Николова. Регламент 1169/2011, реални етикети, авторски сертификат.",
+  secondary: true,
 };
