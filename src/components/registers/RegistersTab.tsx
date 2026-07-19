@@ -137,6 +137,8 @@ const ROMAN_WEEKS = ["I", "II", "III", "IV", "V"];
 
 /** Дни от седмицата по индекса на JS Date.getDay() (0 = неделя). */
 const WEEKDAY_LABELS = ["Нед", "Пон", "Вт", "Ср", "Чет", "Пет", "Съб"];
+/** Ред за показване на менюто (Пон…Нед) — стойностите са индекси в WEEKDAY_LABELS. */
+const WEEKDAY_DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 /** Ден от седмицата (0=нед…6=съб) за ISO дата "YYYY-MM-DD", без часова зона. */
 function weekdayOfISO(iso: string): number {
@@ -4008,7 +4010,8 @@ export default function RegistersTab({
                             Тези дни ще светят зелено в календара — без да е нужно нищо да се попълва.
                           </p>
                           <div className="flex flex-wrap gap-1.5">
-                            {WEEKDAY_LABELS.map((label, idx) => {
+                            {WEEKDAY_DISPLAY_ORDER.map((idx) => {
+                              const label = WEEKDAY_LABELS[idx];
                               const on = restDays.includes(idx);
                               return (
                                 <button
