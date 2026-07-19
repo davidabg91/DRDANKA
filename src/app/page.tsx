@@ -318,10 +318,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Industries We Serve */}
-      <section className="py-20 md:py-28 bg-gradient-to-r from-[#FAF6EE] via-[#F3EAD9] to-[#E9D9BF] border-b border-brand-gold/25">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 4. Industries We Serve — dark green (alternating) */}
+      <section className="py-20 md:py-28 bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] border-b border-brand-gold/20 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[30rem] h-[30rem] bg-brand-gold/10 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <SectionHeading
+            lightText
             badgeText="КОМПЕТЕНТНОСТ"
             title={<>Сектори, в които предлагаме <span className="text-brand-gold">експертни решения</span></>}
             subtitle="Работим с широк спектър от обекти от хранително-вкусовата промишленост в цялата страна."
@@ -333,15 +335,15 @@ export default function Home() {
               return (
                 <div
                   key={i}
-                  className="group bg-white/50 backdrop-blur-md hover:bg-white border border-white/60 hover:border-brand-gold/40 rounded-2xl p-7 transition-all duration-500 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(197,168,128,0.15)]"
+                  className="group bg-white/[0.06] backdrop-blur-md hover:bg-white/[0.1] border border-white/10 hover:border-brand-gold/40 rounded-2xl p-7 transition-all duration-500"
                 >
-                  <div className="bg-white group-hover:bg-brand-gold/10 p-3.5 rounded-xl border border-white/80 group-hover:border-brand-gold/20 inline-block mb-5 shadow-sm transition-all duration-500">
-                    <Icon className="h-6 w-6 text-brand-green group-hover:text-brand-gold-dark transition-colors duration-300" />
+                  <div className="bg-brand-gold/15 group-hover:bg-brand-gold/25 p-3.5 rounded-xl border border-brand-gold/20 inline-block mb-5 transition-all duration-500">
+                    <Icon className="h-6 w-6 text-brand-gold transition-colors duration-300" />
                   </div>
-                  <h3 className="font-serif text-lg font-bold text-brand-green mb-2">
+                  <h3 className="font-serif text-lg font-bold text-white mb-2">
                     {ind.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-brand-dark/70 leading-relaxed">
+                  <p className="text-xs sm:text-sm text-white/65 leading-relaxed">
                     {ind.desc}
                   </p>
                 </div>
@@ -381,10 +383,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. FAQ Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-r from-[#FAF6EE] via-[#F3EAD9] to-[#E9D9BF]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 6. FAQ Section — dark green (alternating) */}
+      <section className="py-20 md:py-28 bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] border-b border-brand-gold/20 relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-brand-green/25 rounded-full blur-[120px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <SectionHeading
+            lightText
             badgeText="ВЪПРОСИ & ОТГОВОРИ"
             title={<>Често задавани <span className="text-brand-gold">въпроси от бизнеса</span></>}
             subtitle="Научете бързи отговори за Вашите законови задължения и нормативни изисквания."
