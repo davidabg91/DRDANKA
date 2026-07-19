@@ -10,8 +10,10 @@
 import type { LiveCourse } from "./types";
 import { haccpOsnovi } from "./haccp-osnovi";
 import { haccpDhppPraktika } from "./haccp-dhpp-praktika";
+import { obuchenieEtiketirane } from "./obuchenie-etiketirane";
 
 export const LIVE_COURSES: ReadonlyArray<LiveCourse> = [
+  obuchenieEtiketirane,
   haccpOsnovi,
   haccpDhppPraktika,
 ];
