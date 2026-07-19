@@ -1469,10 +1469,17 @@ export function registersFor(hotPoint: boolean): RegisterDef[] {
 /** Карти от топлата точка, които важат и за магазин за месо. */
 export const MEAT_SHARED_HOT_IDS = ["disinfectant-residue", "supplier-eval", "allergen-menu"];
 
-/** Дали нишата/обектът е магазин (цех) за месо и месни продукти. */
+/** Дали нишата/обектът е свързан с месо (магазин, цех, кланица, разфасовка, дивеч). */
 export function isMeatShopNiche(niche: string): boolean {
   const n = (niche || "").toLowerCase();
-  return n.includes("месо") || n.includes("месар") || n.includes("месни");
+  return (
+    n.includes("месо") ||
+    n.includes("месар") ||
+    n.includes("месни") ||
+    n.includes("клан") ||        // кланици, кланични пунктове
+    n.includes("разфасов") ||    // разфасовъчни предприятия
+    n.includes("дивеч")          // обработка на дивеч
+  );
 }
 
 /**
@@ -1480,12 +1487,17 @@ export function isMeatShopNiche(niche: string): boolean {
  * месни карти + споделените карти (оценка на доставчици, меню с алергени,
  * остатъчни дезинфектанти).
  */
-export function registersForMeat(): RegisterDef[] {
-  const shared = HOT_POINT_REGISTERS.filter((r) => MEAT_SHARED_HOT_IDS.includes(r.id));
+export function registersForMeat(hotPoint = false): RegisterDef[] {
   // Регистърът „Обучения" получава месо-специфичните теми (само за месо).
   const base = STORE_REGISTERS.map((r) =>
     r.id === "training" ? { ...r, trainingTopics: MEAT_TRAINING_TOPICS } : r
   );
+  if (hotPoint) {
+    // Магазин за месо + топла точка → добавят се и картите за топла точка
+    // (споделените вече са част от HOT_POINT_REGISTERS).
+    return [...base, ...MEAT_REGISTERS, ...HOT_POINT_REGISTERS];
+  }
+  const shared = HOT_POINT_REGISTERS.filter((r) => MEAT_SHARED_HOT_IDS.includes(r.id));
   return [...base, ...MEAT_REGISTERS, ...shared];
 }
 

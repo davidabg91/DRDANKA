@@ -3993,7 +3993,7 @@ export default function ProfilePage() {
                               freezers={auditTarget.customFreezers ?? []}
                               employees={auditTarget.customEmployees ?? []}
                               meat={isMeatShopNiche(auditTarget.niche)}
-                              hotPoint={isMeatShopNiche(auditTarget.niche) ? false : (auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche)))}
+                              hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
                               hotAppliances={auditTarget.hotAppliances ?? []}
                               signature={auditTarget.signature}
                               signatureMode={auditTarget.signatureMode ?? "manual"}
@@ -4104,8 +4104,8 @@ export default function ProfilePage() {
                   fridges={currentUser?.customFridges ?? ["Хладилна витрина №1"]}
                   freezers={currentUser?.customFreezers ?? ["Фризер №1"]}
                   employees={currentUser?.customEmployees ?? []}
-                  meat={isMeatShopNiche(firmInfo.niche)}
-                  hotPoint={isMeatShopNiche(firmInfo.niche) ? false : (currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(firmInfo.niche)))}
+                  meat={isMeatShopNiche(currentUser?.niche || firmInfo.niche)}
+                  hotPoint={currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(currentUser?.niche || firmInfo.niche))}
                   hotAppliances={currentUser?.hotAppliances ?? []}
                   signature={currentUser?.signature}
                   signatureMode={currentUser?.signatureMode ?? "manual"}

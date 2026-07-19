@@ -2987,12 +2987,12 @@ export default function RegistersTab({
 
   /** Всички регистри за зареждане на данни (пълният комплект при топла точка / месо). */
   const activeRegisters = useMemo(
-    () => (meat ? registersForMeat() : registersFor(hotPoint)),
+    () => (meat ? registersForMeat(hotPoint) : registersFor(hotPoint)),
     [hotPoint, meat]
   );
   /** Видимите карти — филтрирани по притежаваните уреди. */
   const visibleRegisters = useMemo(
-    () => (meat ? registersForMeat() : visibleRegistersFor(hotPoint, hotAppliances)),
+    () => (meat ? registersForMeat(hotPoint) : visibleRegistersFor(hotPoint, hotAppliances)),
     [hotPoint, hotAppliances, meat]
   );
   /** Уредите от топлата точка, които панелът показва. */
