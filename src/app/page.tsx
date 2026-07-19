@@ -398,11 +398,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Contact / Lead Form Section */}
-      <section className="py-20 md:py-28 bg-brand-green relative overflow-hidden">
+      {/* 7. Contact / Lead Form Section — cream (alternating) */}
+      <section className="py-20 md:py-28 bg-gradient-to-r from-[#FAF6EE] via-[#F3EAD9] to-[#E9D9BF] relative overflow-hidden">
         {/* Gradients */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-brand-gold/10 via-transparent to-transparent opacity-60 pointer-events-none"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* CTA copy */}
@@ -410,12 +410,11 @@ export default function Home() {
               <SectionHeading
                 align="left"
                 className="!mb-0"
-                lightText={true}
                 badgeText="СВЪРЖЕТЕ СЕ С НАС"
                 title={<>Готови ли сте за <span className="text-brand-gold">следващата инспекция</span>?</>}
                 subtitle="Попълнете формата със своите данни и изисквания. Ще се свържем с Вас, за да обсъдим казуса Ви и да предложим оптимално и законно решение за Вашия хранителен обект."
               />
-              <div className="space-y-4 pt-4 hidden lg:block text-sm text-white/70">
+              <div className="space-y-4 pt-4 hidden lg:block text-sm text-brand-dark/70">
                 <div className="flex items-center">
                   <CheckCircle className="h-4.5 w-4.5 text-brand-gold mr-3 shrink-0" />
                   <span>Индивидуален анализ на нуждите на обекта</span>
@@ -433,7 +432,7 @@ export default function Home() {
 
             {/* Contact Form Wrapper */}
             <div className="lg:col-span-7">
-              <Suspense fallback={<div className="text-center py-12 text-white/50">Зареждане на формата...</div>}>
+              <Suspense fallback={<div className="text-center py-12 text-brand-dark/50">Зареждане на формата...</div>}>
                 <ContactForm />
               </Suspense>
             </div>
