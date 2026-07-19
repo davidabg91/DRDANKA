@@ -470,6 +470,19 @@ const calculateAllergensForIngredients = (ingredientsText: string): string => {
 /*  Редактор: динамични редове                                          */
 /* ------------------------------------------------------------------ */
 
+/** Добавя N години към ISO дата (YYYY-MM-DD). 29 февруари в невисокосна
+ *  година се прихваща към 28 февруари, вместо да прескочи на 1 март. */
+function addYearsToISODate(iso: string, years: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return "";
+  const date = new Date(y + years, m - 1, d);
+  if (date.getMonth() !== m - 1) date.setDate(0);
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Калкулиране на срок на годност и принтиране на етикет за храна    */
 /* ------------------------------------------------------------------ */
@@ -1125,7 +1138,13 @@ function RowsEditor({
   const updateCell = (idx: number, key: string, v: string) =>
     onUpdate((prev) => {
       const list = [...(prev.entries || [])];
-      list[idx] = { ...list[idx], [key]: v };
+      const row = { ...list[idx], [key]: v };
+      // ЛЗК: валидността на здравната книжка е автоматично 1 година
+      // от датата на последна заверка.
+      if (def.id === "health-books" && key === "lastStamp") {
+        row.validUntil = v ? addYearsToISODate(v, 1) : "";
+      }
+      list[idx] = row;
       return { ...prev, entries: list };
     });
 
