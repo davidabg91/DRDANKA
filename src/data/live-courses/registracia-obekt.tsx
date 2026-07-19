@@ -254,9 +254,15 @@ export const registraciaObekt: LiveCourse = {
   format: "1 ден — практически модули",
   groupSize: "Малка група, ограничени места",
   nextBatch: "Дата: обявява се при сформиране на група · ранно записване 99 €",
+  highlights: [
+    "6 модула — от избора на обект до проверката от ОДБХ",
+    "Как да избегнете скъпоструващи ремонти и грешен избор на обект",
+    "Бонус: 2 чеклиста + авторски шаблони за регистрация",
+  ],
   card: {
     badge: "Пакет 3",
     accent: "gold",
+    icon: Building2,
   },
   page: RegistraciaObektPage,
   metaDescription:

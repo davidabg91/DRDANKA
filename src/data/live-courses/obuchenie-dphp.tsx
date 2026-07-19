@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Calendar, Users, Award, CheckCircle, XCircle, HelpCircle, MessageSquare,
-  BookOpen, Gift, ShieldCheck, AlertTriangle, FileCheck, Landmark,
+  BookOpen, Gift, ShieldCheck, AlertTriangle, FileCheck, Landmark, ClipboardList,
 } from "lucide-react";
 import type { LiveCourse } from "./types";
 
@@ -273,12 +273,17 @@ export const obuchenieDphp: LiveCourse = {
   format: "2 дни — теория + практика",
   groupSize: "Малка група, ограничени места",
   nextBatch: "Дати: обявяват се при сформиране на група · ранно записване 199 €",
+  highlights: [
+    "От формална документация до реално работеща система",
+    "Ден 2 — разработване по Ваш практически казус",
+    "Бонус: авторски модел + матрица „Какво? Как? Кога? Кой?“",
+  ],
   card: {
     badge: "Пакет 2",
     accent: "gold",
+    icon: ClipboardList,
   },
   page: DphpPage,
   metaDescription:
     "Двудневно практическо live обучение по разработване, внедряване и поддържане на ДПХП с д-р Данка Николова. Реални казуси, работещи шаблони, авторски сертификат.",
-  secondary: true,
 };

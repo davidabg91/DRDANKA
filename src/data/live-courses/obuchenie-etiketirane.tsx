@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   Calendar, Users, Award, CheckCircle, XCircle, MessageSquare, Video, BookOpen,
-  Gift, ShieldCheck, AlertTriangle, FileCheck, Landmark,
+  Gift, ShieldCheck, AlertTriangle, FileCheck, Landmark, Tag,
 } from "lucide-react";
 import type { LiveCourse } from "./types";
 
@@ -242,12 +242,17 @@ export const obuchenieEtiketirane: LiveCourse = {
   format: "2 дни — теория + практика (14–15 август)",
   groupSize: "Малка група, ограничени места",
   nextBatch: "Дати: 14–15 август · ранно записване 199 € до 10 август",
+  highlights: [
+    "Регламент (ЕС) № 1169/2011 и (ЕО) № 1924/2006",
+    "Ден 2 изцяло практически — реални продукти и етикети",
+    "Бонус: чек-лист + електронно ръководство „15 златни правила“",
+  ],
   card: {
     badge: "Пакет 1",
     accent: "gold",
+    icon: Tag,
   },
   page: EtiketiranePage,
   metaDescription:
     "Двудневно практическо live обучение по етикетиране на храните с д-р Данка Николова. Регламент 1169/2011, реални етикети, авторски сертификат.",
-  secondary: true,
 };

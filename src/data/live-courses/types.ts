@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
 
 /**
  * A live course — held over Zoom / Google Meet when a group forms.
@@ -30,6 +30,8 @@ export interface LiveCourse {
     cover?: string;
     badge?: string;
     accent?: "gold" | "green";
+    /** Икона за карти без корица — рендира се в информационния панел вместо снимка. */
+    icon?: ComponentType<SVGProps<SVGSVGElement>>;
   };
   /** Estimated session count + duration (e.g. "3 сесии × 90 мин."). */
   format?: string;
@@ -37,9 +39,9 @@ export interface LiveCourse {
   groupSize?: string;
   /** Optional next-batch info shown on detail page. */
   nextBatch?: string;
+  /** 2–4 кратки акцента, показани директно на картата в каталога (за курсове без корица). */
+  highlights?: string[];
   /** Custom React component for the /live/<slug> detail page. */
   page: () => ReactNode;
   metaDescription?: string;
-  /** Показва се в секция „Други" на каталога (компактни карти без снимки). */
-  secondary?: boolean;
 }
