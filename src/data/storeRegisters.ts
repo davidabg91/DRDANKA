@@ -770,6 +770,48 @@ const CRS_COLS: RegisterColumn[] = [
   { key: "sign", label: "Подпис на отговорника", type: "text", narrow: true },
 ];
 
+/* Видове печива за партидните карти (фурни и павилиони за закуски). */
+export const BAKERY_SNACKS = [
+  "Балатонка",
+  "Пърленка",
+  "Баница",
+  "Тутманик",
+  "Кайлъшка",
+  "Милинка",
+  "Кроасан",
+  "Друга закуска",
+];
+export const BAKERY_BREAD = [
+  "Бял хляб",
+  "Типов хляб",
+  "Питки",
+  "Грахам хляб",
+  "Пълнозърнест хляб",
+  "Друг хляб",
+];
+export const BAKERY_KOZUNAK = [
+  "Козунак",
+  "Кифла",
+  "Геврек",
+  "Кифличка",
+  "Поничка",
+  "Друго козуначно изделие",
+];
+
+/** Общи колони за партидна карта на печиво (проследимост партида/срок). */
+const BAKERY_BATCH_COLS = (products: string[]): RegisterColumn[] => [
+  { key: "date", label: "Дата", type: "date", narrow: true },
+  { key: "product", label: "Вид изделие", type: "select", options: products },
+  { key: "rawMaterial", label: "Суровини", type: "text" },
+  { key: "rawBatch", label: "Партида L (суровина)", type: "text", narrow: true },
+  { key: "rawQty", label: "Количество", type: "text", narrow: true },
+  { key: "addMaterials", label: "Доп. материали", type: "text" },
+  { key: "producedQty", label: "Произведено количество", type: "text", narrow: true },
+  { key: "producedBatch", label: "№ на партидата", type: "text", narrow: true },
+  { key: "expiry", label: "Срок на годност", type: "text", narrow: true },
+  { key: "signature", label: "Подпис", type: "text", narrow: true },
+];
+
 export const HOT_POINT_REGISTERS: RegisterDef[] = [
   {
     id: "fryer-oil-temp",
@@ -1174,6 +1216,42 @@ export const HOT_POINT_REGISTERS: RegisterDef[] = [
     ],
     infoPanels: [{ title: "14-те основни алергена", items: ALLERGEN_LIST }],
   },
+  {
+    id: "snacks-batch",
+    num: 45,
+    title: "Партидна карта — закуски",
+    shortTitle: "Партиди — закуски",
+    fillWhen:
+      "Попълва се при всяко производство на закуски (баница, тутманик, пърленка, балатонка и др.). Вписват се вложените суровини с партида и количество, както и произведеното количество с нов партиден номер и срок на годност.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: BAKERY_BATCH_COLS(BAKERY_SNACKS),
+  },
+  {
+    id: "bread-batch",
+    num: 46,
+    title: "Партидна карта — хляб и питки",
+    shortTitle: "Партиди — хляб",
+    fillWhen:
+      "Попълва се при всяко производство на хляб и питки. Вписват се вложените суровини с партида и количество, както и произведеното количество с нов партиден номер и срок на годност.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: BAKERY_BATCH_COLS(BAKERY_BREAD),
+  },
+  {
+    id: "kozunak-batch",
+    num: 47,
+    title: "Партидна карта — козунаци и закуски от козуначно тесто",
+    shortTitle: "Партиди — козунаци",
+    fillWhen:
+      "Попълва се при всяко производство на козунаци и изделия от козуначно тесто (кифли, гевреци, понички и др.). Вписват се вложените суровини с партида и количество, както и произведеното количество с нов партиден номер и срок на годност.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: BAKERY_BATCH_COLS(BAKERY_KOZUNAK),
+  },
 ];
 
 /* ================================================================== */
@@ -1403,7 +1481,7 @@ export const HOT_APPLIANCES: HotAppliance[] = [
   { id: "grill", label: "Скара", emoji: "🍖", registers: ["grill-temp", "grill-batch"] },
   { id: "fryer", label: "Фритюрник", emoji: "🍟", registers: ["fryer-oil-temp", "fry-depth"] },
   { id: "duner", label: "Дюнер", emoji: "🌯", registers: ["duner"] },
-  { id: "oven", label: "Фурна (закуски, питки, козунаци)", emoji: "🥐", registers: ["baking"] },
+  { id: "oven", label: "Фурна (закуски, питки, козунаци)", emoji: "🥐", registers: ["baking", "snacks-batch", "bread-batch", "kozunak-batch"] },
   { id: "stove", label: "Котлон — готвени ястия", emoji: "🍲", registers: ["cooked-meals", "meals-batch"] },
   { id: "alaminut", label: "Аламинути / предястия", emoji: "🍳", registers: ["alaminut", "starters-batch"] },
   { id: "hot-display", label: "Топла витрина / бен мари", emoji: "♨️", registers: ["hot-display"] },
