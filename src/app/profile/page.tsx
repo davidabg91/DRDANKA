@@ -16,7 +16,7 @@ import { LIVE_COURSES } from "@/data/live-courses";
 import { usePriceOverrides, setPriceOverride, resolvePrice } from "@/lib/priceOverrides";
 import RegistersTab from "@/components/registers/RegistersTab";
 import AdminReminderComposer from "@/components/registers/AdminReminderComposer";
-import { defaultHotPointForSector } from "@/data/storeRegisters";
+import { defaultHotPointForSector, isMeatShopNiche } from "@/data/storeRegisters";
 
 import { 
   User, 
@@ -3992,7 +3992,8 @@ export default function ProfilePage() {
                               fridges={auditTarget.customFridges ?? []}
                               freezers={auditTarget.customFreezers ?? []}
                               employees={auditTarget.customEmployees ?? []}
-                              hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
+                              meat={isMeatShopNiche(auditTarget.niche)}
+                              hotPoint={isMeatShopNiche(auditTarget.niche) ? false : (auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche)))}
                               hotAppliances={auditTarget.hotAppliances ?? []}
                               signature={auditTarget.signature}
                               signatureMode={auditTarget.signatureMode ?? "manual"}
@@ -4103,7 +4104,8 @@ export default function ProfilePage() {
                   fridges={currentUser?.customFridges ?? ["Хладилна витрина №1"]}
                   freezers={currentUser?.customFreezers ?? ["Фризер №1"]}
                   employees={currentUser?.customEmployees ?? []}
-                  hotPoint={currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(firmInfo.niche))}
+                  meat={isMeatShopNiche(firmInfo.niche)}
+                  hotPoint={isMeatShopNiche(firmInfo.niche) ? false : (currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(firmInfo.niche)))}
                   hotAppliances={currentUser?.hotAppliances ?? []}
                   signature={currentUser?.signature}
                   signatureMode={currentUser?.signatureMode ?? "manual"}

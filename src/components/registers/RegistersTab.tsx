@@ -39,6 +39,7 @@ import {
   REGISTER_APPLIANCE,
   recordDateKey,
   visibleRegistersFor,
+  registersForMeat,
   ADMIN_REMINDERS_ID,
   AdminReminder,
 } from "@/data/storeRegisters";
@@ -2840,6 +2841,8 @@ interface RegistersTabProps {
   hotPoint?: boolean;
   /** Уредите от топлата точка, налични в обекта (ids от HOT_APPLIANCES) */
   hotAppliances?: string[];
+  /** Обектът е магазин/цех за месо — показва производствените/технологичните месни карти */
+  meat?: boolean;
   /** Електронен подпис (PNG data URL) и режим на подписване. */
   signature?: string;
   signatureMode?: "draw" | "manual";
@@ -2890,6 +2893,7 @@ export default function RegistersTab({
   employees,
   hotPoint = false,
   hotAppliances = [],
+  meat = false,
   signature,
   signatureMode = "manual",
   autoDuner = false,
@@ -2979,12 +2983,15 @@ export default function RegistersTab({
     return () => clearTimeout(t);
   }, [openId]);
 
-  /** Всички регистри за зареждане на данни (пълният комплект при топла точка). */
-  const activeRegisters = useMemo(() => registersFor(hotPoint), [hotPoint]);
+  /** Всички регистри за зареждане на данни (пълният комплект при топла точка / месо). */
+  const activeRegisters = useMemo(
+    () => (meat ? registersForMeat() : registersFor(hotPoint)),
+    [hotPoint, meat]
+  );
   /** Видимите карти — филтрирани по притежаваните уреди. */
   const visibleRegisters = useMemo(
-    () => visibleRegistersFor(hotPoint, hotAppliances),
-    [hotPoint, hotAppliances]
+    () => (meat ? registersForMeat() : visibleRegistersFor(hotPoint, hotAppliances)),
+    [hotPoint, hotAppliances, meat]
   );
   /** Уредите от топлата точка, които панелът показва. */
   const ownedAppliances = useMemo(

@@ -1175,6 +1175,182 @@ export const HOT_POINT_REGISTERS: RegisterDef[] = [
 ];
 
 /* ================================================================== */
+/*  МАГАЗИН ЗА МЕСО — производствени/технологични регистри             */
+/*  (документ „МАГАЗИН ЗА МЕСО.docx")                                  */
+/* ================================================================== */
+
+/** Месни заготовки, за които се води производствен чек-лист. */
+export const MEAT_PRODUCTS = [
+  "Карначе",
+  "Наденици",
+  "Суджук",
+  "Кайма",
+  "Кюфтета",
+  "Кебапчета",
+  "Сръбска наденица",
+  "Суджук за сушене",
+];
+
+/** Суровини за разфасовка от червено месо. */
+export const RED_MEAT_RAW = [
+  "Свинско месо",
+  "Овче месо",
+  "Агнешко месо",
+  "Месо ЕРД (едър рогат добитък)",
+];
+
+/** Видове разфасовки от бяло (птиче) месо. */
+export const WHITE_MEAT_CUTS = [
+  "Половинки",
+  "Четвъртинки",
+  "Неразделени четвъртинки с бутчета",
+  "Гърди (бяло месо) / филе с кост",
+  "Бутче",
+  "Бутче с част от гърба",
+  "Бедро",
+  "Подбедрица",
+  "Крило",
+  "Неразделени крила",
+  "Филе от гърдите (бяло месо)",
+  "Филе от гърдите с „ядеца“",
+  "Обезкостен пилешки бут",
+  "Пилешки шишчета",
+  "Пилешка обрезка",
+];
+
+/** Видове разфасовки от червено месо (свинско, телешко/говеждо, овче, агнешко). */
+export const RED_MEAT_CUTS = [
+  "Плешка без кост 3D",
+  "Шол",
+  "Овче месо на порции",
+  "Предна четвъртина",
+  "Врат — с кост",
+  "Телешко за готвене",
+  "Овчи ребра",
+  "Задна четвъртина",
+  "Бон филе",
+  "Телешка обрезка",
+  "Овча обрезка",
+  "Котлет",
+  "Свински гърди",
+  "Свински гърди за скара",
+  "Бут без кост",
+  "Свински джолан заден",
+  "Месо за готвене",
+  "Пържола без кост от бут",
+  "Свинска обрезка",
+];
+
+/** Производствени и технологични регистри, специфични за магазин за месо. */
+export const MEAT_REGISTERS: RegisterDef[] = [
+  {
+    id: "meat-production",
+    num: 40,
+    title: "Производствен чек-лист — месни заготовки",
+    shortTitle: "Месни заготовки",
+    fillWhen:
+      "Попълва се при всяко производство на месна заготовка (карначе, наденици, суджук, кайма, кюфтета, кебапчета и др.). Вписват се вложените суровини с партида и количество, както и произведеното количество с нов партиден номер и срок на годност.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "product", label: "Продукт", type: "select", options: MEAT_PRODUCTS },
+      { key: "rawMaterial", label: "Суровини", type: "text" },
+      { key: "rawBatch", label: "Партида L (суровина)", type: "text", narrow: true },
+      { key: "rawQty", label: "Количество", type: "text", narrow: true },
+      { key: "addMaterials", label: "Доп. материали", type: "text" },
+      { key: "producedQty", label: "Произведено количество", type: "text", narrow: true },
+      { key: "producedBatch", label: "№ на партидата", type: "text", narrow: true },
+      { key: "expiry", label: "Срок на годност", type: "text", narrow: true },
+      { key: "signature", label: "Подпис", type: "text", narrow: true },
+    ],
+  },
+  {
+    id: "defrost",
+    num: 41,
+    title: "Чек-лист — дефростация (размразяване) на замразени суровини",
+    shortTitle: "Дефростация",
+    fillWhen:
+      "Попълва се при всяко размразяване на замразена суровина. Времето за дефростация е до 8 часа. Измерва се температурата в дълбочина на размразената суровина преди влагане в производство.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на дефростация", type: "date", narrow: true },
+      { key: "material", label: "Вид, количество, партида на суровината", type: "text" },
+      { key: "time", label: "Време за дефростация (норма: до 8 ч)", type: "text", narrow: true },
+      { key: "temp", label: "Температура в дълбочина (°C)", type: "number", narrow: true },
+      { key: "signature", label: "Подпис на отговорника", type: "text", narrow: true },
+    ],
+  },
+  {
+    id: "cutting-white",
+    num: 42,
+    title: "Чек-лист — технологична обработка и разфасовка от бяло месо",
+    shortTitle: "Разфасовка бяло месо",
+    fillWhen:
+      "Попълва се при разфасовка на бяло (птиче) месо. Вписват се вложените суровини (цели пилета / едра разфасовка) с търговски документ, партида и количество, както и видът и количеството на произведените разфасовки.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на производство", type: "date", narrow: true },
+      { key: "source", label: "Суровина", type: "select", options: ["Цели пилета", "Едра разфасовка"] },
+      { key: "tradeDoc", label: "Търговски документ №", type: "text", narrow: true },
+      { key: "batch", label: "Партида L", type: "text", narrow: true },
+      { key: "inQty", label: "Количество суровина, кг", type: "text", narrow: true },
+      { key: "cut", label: "Вид на разфасовката", type: "select", options: WHITE_MEAT_CUTS },
+      { key: "outQty", label: "Количество разфасовка, кг", type: "text", narrow: true },
+      { key: "signature", label: "Подпис на отговорника", type: "text", narrow: true },
+    ],
+    infoPanels: [{ title: "Видове разфасовки от бяло месо", items: WHITE_MEAT_CUTS }],
+  },
+  {
+    id: "cutting-red",
+    num: 43,
+    title: "Чек-лист — технологична обработка и разфасовка от червено месо",
+    shortTitle: "Разфасовка червено месо",
+    fillWhen:
+      "Попълва се при разфасовка на червено месо (свинско, телешко/говеждо, овче, агнешко). Вписват се вложените суровини с търговски документ, партида и количество, както и видът и количеството на произведените разфасовки.",
+    frequency: "event",
+    period: "month",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на производство", type: "date", narrow: true },
+      { key: "source", label: "Суровина", type: "select", options: RED_MEAT_RAW },
+      { key: "tradeDoc", label: "Търговски документ №", type: "text", narrow: true },
+      { key: "batch", label: "Партида L", type: "text", narrow: true },
+      { key: "inQty", label: "Количество суровина, кг", type: "text", narrow: true },
+      { key: "cut", label: "Вид на разфасовката", type: "select", options: RED_MEAT_CUTS },
+      { key: "outQty", label: "Количество разфасовка, кг", type: "text", narrow: true },
+      { key: "signature", label: "Подпис на отговорника", type: "text", narrow: true },
+    ],
+    infoPanels: [{ title: "Видове разфасовки от червено месо", items: RED_MEAT_CUTS }],
+  },
+  {
+    id: "sterilizer",
+    num: 44,
+    title: "Чек-лист — температура в стерилизатор за ножове и инвентар",
+    shortTitle: "Стерилизатор (≥82°C)",
+    fillWhen:
+      "Температурата се измерва в началото на работния процес и при необходимост по време на работа. Норма: ≥ 82°C. При температура под 82°C ножовете не се считат за дезинфекцирани — незабавно се предприемат корективни действия (проверка на терморегулатора).",
+    frequency: "daily",
+    period: "month",
+    kind: "rows",
+    remind: true,
+    columns: [
+      { key: "date", label: "Дата", type: "date", narrow: true },
+      { key: "time", label: "Час на отчитане", type: "time", narrow: true },
+      { key: "temp", label: "Температура (°C)", type: "temp", norm: { min: 82 }, narrow: true },
+      { key: "corrective", label: "Корективни мерки", type: "text" },
+      { key: "result", label: "Резултат", type: "text", narrow: true },
+      { key: "signature", label: "Подпис на отговор.", type: "text", narrow: true },
+    ],
+  },
+];
+
+/* ================================================================== */
 /*  УРЕДИ ОТ ТОПЛАТА ТОЧКА                                             */
 /*  Връзка уред → контролни карти, които трябва да се попълнят,        */
 /*  когато уредът е използван през деня.                               */
@@ -1260,12 +1436,35 @@ export function visibleRegistersFor(hotPoint: boolean, ownedAppliances: string[]
 }
 
 export const REGISTER_BY_ID: Record<string, RegisterDef> = Object.fromEntries(
-  [...STORE_REGISTERS, ...HOT_POINT_REGISTERS].map((r) => [r.id, r])
+  [...STORE_REGISTERS, ...HOT_POINT_REGISTERS, ...MEAT_REGISTERS].map((r) => [r.id, r])
 );
 
 /** Пълният списък регистри според това дали обектът има топла точка. */
 export function registersFor(hotPoint: boolean): RegisterDef[] {
   return hotPoint ? [...STORE_REGISTERS, ...HOT_POINT_REGISTERS] : STORE_REGISTERS;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Магазин за месо                                                    */
+/* ------------------------------------------------------------------ */
+
+/** Карти от топлата точка, които важат и за магазин за месо. */
+export const MEAT_SHARED_HOT_IDS = ["disinfectant-residue", "supplier-eval", "allergen-menu"];
+
+/** Дали нишата/обектът е магазин (цех) за месо и месни продукти. */
+export function isMeatShopNiche(niche: string): boolean {
+  const n = (niche || "").toLowerCase();
+  return n.includes("месо") || n.includes("месар") || n.includes("месни");
+}
+
+/**
+ * Регистрите за магазин за месо: базовите + производствените/технологичните
+ * месни карти + споделените карти (оценка на доставчици, меню с алергени,
+ * остатъчни дезинфектанти).
+ */
+export function registersForMeat(): RegisterDef[] {
+  const shared = HOT_POINT_REGISTERS.filter((r) => MEAT_SHARED_HOT_IDS.includes(r.id));
+  return [...STORE_REGISTERS, ...MEAT_REGISTERS, ...shared];
 }
 
 /* ------------------------------------------------------------------ */
