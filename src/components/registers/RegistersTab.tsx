@@ -42,6 +42,8 @@ import {
   registersForMeat,
   MEAT_REGISTERS,
   MEAT_SHARED_HOT_IDS,
+  MEAT_ACTIVITIES,
+  MEAT_ACTIVITY_IDS,
   ADMIN_REMINDERS_ID,
   AdminReminder,
 } from "@/data/storeRegisters";
@@ -3030,10 +3032,14 @@ export default function RegistersTab({
     [hotAppliances]
   );
 
-  /** Всички ежедневни тригери: дейности (винаги) + уреди (при топла точка). */
+  /** Всички ежедневни тригери: дейности (винаги) + месо + уреди (при топла точка). */
   const dailyTriggers = useMemo(
-    () => [...DAILY_ACTIVITIES, ...(hotPoint ? ownedAppliances : [])],
-    [hotPoint, ownedAppliances]
+    () => [
+      ...DAILY_ACTIVITIES,
+      ...(meat ? MEAT_ACTIVITIES : []),
+      ...(hotPoint ? ownedAppliances : []),
+    ],
+    [hotPoint, ownedAppliances, meat]
   );
 
   const units = useMemo(
@@ -4025,7 +4031,10 @@ export default function RegistersTab({
           );
         };
         const applianceChips = hotPoint ? dailyTriggers.filter((t) => HOT_APPLIANCE_BY_ID[t.id]) : [];
-        const activityChips = dailyTriggers.filter((t) => !HOT_APPLIANCE_BY_ID[t.id]);
+        const meatChips = dailyTriggers.filter((t) => MEAT_ACTIVITY_IDS.has(t.id));
+        const activityChips = dailyTriggers.filter(
+          (t) => !HOT_APPLIANCE_BY_ID[t.id] && !MEAT_ACTIVITY_IDS.has(t.id)
+        );
         return (
           <div
             data-tour="usage"
@@ -4054,6 +4063,16 @@ export default function RegistersTab({
               <span className="text-[9px] font-black uppercase tracking-widest text-brand-dark/40">Дейности</span>
               <div className="flex flex-wrap gap-2">{activityChips.map(chip)}</div>
             </div>
+
+            {/* Производство / обработка на месо */}
+            {meat && meatChips.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[9px] font-black uppercase tracking-widest text-brand-green/70 flex items-center gap-1">
+                  🥩 Производство и обработка на месо
+                </span>
+                <div className="flex flex-wrap gap-2">{meatChips.map(chip)}</div>
+              </div>
+            )}
 
             {/* Уреди от топлата точка */}
             {hotPoint && applianceChips.length > 0 && (

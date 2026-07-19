@@ -1418,8 +1418,25 @@ export const HOT_APPLIANCE_BY_ID: Record<string, HotAppliance> = Object.fromEntr
   HOT_APPLIANCES.map((a) => [a.id, a])
 );
 
-/** Всички ежедневни „тригери" (дейности + уреди), които водят до карти. */
-export const ALL_DAILY_TRIGGERS: HotAppliance[] = [...DAILY_ACTIVITIES, ...HOT_APPLIANCES];
+/**
+ * Ежедневни дейности за магазин/цех за месо. При отбелязване през деня
+ * системата изисква попълване на съответните месни карти.
+ */
+export const MEAT_ACTIVITIES: HotAppliance[] = [
+  { id: "meat-prod", label: "Производство на месни заготовки", emoji: "🥩", registers: ["meat-production"] },
+  { id: "meat-defrost", label: "Дефростация на суровини", emoji: "❄️", registers: ["defrost"] },
+  { id: "meat-cutting", label: "Разфасовка на месо", emoji: "🔪", registers: ["cutting-white", "cutting-red"] },
+  { id: "meat-sterilizer", label: "Дезинфекция на ножове (стерилизатор)", emoji: "🌡️", registers: ["sterilizer"] },
+];
+
+export const MEAT_ACTIVITY_IDS = new Set(MEAT_ACTIVITIES.map((a) => a.id));
+
+/** Всички ежедневни „тригери" (дейности + месо + уреди), които водят до карти. */
+export const ALL_DAILY_TRIGGERS: HotAppliance[] = [
+  ...DAILY_ACTIVITIES,
+  ...MEAT_ACTIVITIES,
+  ...HOT_APPLIANCES,
+];
 
 export const TRIGGER_BY_ID: Record<string, HotAppliance> = Object.fromEntries(
   ALL_DAILY_TRIGGERS.map((t) => [t.id, t])
