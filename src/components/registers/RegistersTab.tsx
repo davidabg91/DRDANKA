@@ -106,6 +106,25 @@ interface DynamicOptions {
   cleaningAgents: string[];
   employees: string[];
   menuProducts?: string[];
+  /** Записите от „Дневник за входящ контрол" (2) — за автоматично попълване на
+   *  срок на годност/партида в „Ястия на скара" (26). */
+  incoming?: { food: string; batch: string; expiry: string; date: string }[];
+}
+
+/** Дали дадено изделие за скара съответства на храна от входящия контрол.
+ *  Сравнява коренни части (първите 5 букви) на думите с дължина ≥ 4.
+ *  „скара"/„пържола" са начин на приготвяне, не продукт — не се броят за съвпадение. */
+const GRILL_MATCH_STOPWORDS = ["скара", "пържо"];
+function grillMatchesIncomingFood(item: string, food: string): boolean {
+  const norm = (s: string) => s.toLowerCase().replace(/[^а-яa-z]+/gi, " ").trim();
+  const f = norm(food);
+  if (!f) return false;
+  return norm(item)
+    .split(" ")
+    .filter((w) => w.length >= 4)
+    .map((w) => w.slice(0, Math.min(5, w.length)))
+    .filter((stem) => !GRILL_MATCH_STOPWORDS.includes(stem))
+    .some((stem) => f.includes(stem));
 }
 
 type Updater = (updater: (prev: RegisterDocData) => RegisterDocData) => void;
@@ -318,7 +337,7 @@ function CellInput({
   if (col.type === "check") return <CheckCellBtn value={value} onChange={onChange} readOnly={readOnly} />;
   if (col.type === "text" && col.optionsFrom) {
     const listId = `datalist-${col.key}-${col.optionsFrom}`;
-    const opts = dynamicOptions[col.optionsFrom as keyof DynamicOptions] || [];
+    const opts = dynamicOptions[col.optionsFrom] || [];
     return (
       <div className="min-w-[110px] w-full">
         <input
@@ -1164,6 +1183,19 @@ function RowsEditor({
       // от датата на последна заверка.
       if (def.id === "health-books" && key === "lastStamp") {
         row.validUntil = v ? addYearsToISODate(v, 1) : "";
+      }
+      // Ястия на скара (26): при избор на изделие се попълват автоматично
+      // срок на годност и партида от най-скорошната съответна доставка във
+      // „Дневник за входящ контрол" (2).
+      if (def.id === "grill-batch" && key === "item" && v) {
+        const matches = (dynamicOptions.incoming || []).filter((e) =>
+          grillMatchesIncomingFood(v, e.food)
+        );
+        if (matches.length > 0) {
+          const best = matches.reduce((a, b) => (b.date > a.date ? b : a));
+          if (best.expiry) row.expiry = best.expiry;
+          if (best.batch) row.batch = best.batch;
+        }
       }
       list[idx] = row;
       return { ...prev, entries: list };
@@ -3612,6 +3644,14 @@ export default function RegistersTab({
       cleaningAgents: (docs["cleaning-agents"]?.entries || []).map((e) => String(e.name || "").trim()).filter(Boolean),
       employees: employees.map((e) => e.name),
       menuProducts: (docs["allergen-menu"]?.entries || []).map((e) => String(e.product || "").trim()).filter(Boolean),
+      incoming: (docs["incoming"]?.entries || [])
+        .map((e) => ({
+          food: String(e.food || "").trim(),
+          batch: String(e.batch || "").trim(),
+          expiry: String(e.expiry || "").trim(),
+          date: String(e.date || "").trim(),
+        }))
+        .filter((e) => e.food),
     }),
     [docs, employees]
   );
