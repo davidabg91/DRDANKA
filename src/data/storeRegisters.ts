@@ -701,6 +701,28 @@ export const PREWORK_ZONES = [
   "Инвентар",
 ];
 
+/**
+ * Кратки ключове/етикети за зоните от PREWORK_ZONES — превръщат чек-листа
+ * „преди работа" от 19 реда на зона в 19 колони на един ред за деня
+ * (иначе месецът излиза ~19×31 реда и документът е нечетимо дълъг при печат).
+ */
+const PREWORK_ZONE_KEYS = [
+  "floor", "walls", "ceiling", "doors", "lighting", "hanger", "sink", "counter",
+  "heatEquip", "coffeeBeer", "freezer", "fridges", "benMari", "coldDisplay",
+  "softDrinkDisplay", "pastryDisplay", "shelves", "salesCounter", "inventory",
+];
+const PREWORK_ZONE_SHORT_LABELS = [
+  "Под", "Стени", "Таван", "Врати", "Осветление", "Закачалка", "Мивка", "Плот",
+  "Топл. уреди", "Кафе/бира машина", "Фризер", "Хладилници", "Бен мари", "Студ. витрина",
+  "Витрина безалк.", "Витрина сладк.", "Стелажи", "Плот продажби", "Инвентар",
+];
+export const PREWORK_ZONE_COLS: RegisterColumn[] = PREWORK_ZONE_KEYS.map((key, i) => ({
+  key,
+  label: PREWORK_ZONE_SHORT_LABELS[i],
+  type: "check" as CellType,
+  narrow: true,
+}));
+
 export const RESIDUE_SURFACES = [
   "Работен плот",
   "Бен мари",
@@ -1139,18 +1161,17 @@ export const HOT_POINT_REGISTERS: RegisterDef[] = [
     title: "Чек-лист — хигиена и техническо състояние на обекта (преди работа)",
     shortTitle: "Преди работа",
     fillWhen:
-      "Попълва се ежедневно преди започване на работа — проверяват се техническото състояние и хигиената на помещенията и оборудването.",
+      "Попълва се ежедневно преди започване на работа — по един ред на ден с колона за всяка зона/оборудване. Проверяват се техническото състояние и хигиената.",
     frequency: "daily",
     period: "month",
     kind: "rows",
     remind: true,
     columns: [
       { key: "date", label: "Дата", type: "date", narrow: true },
-      { key: "zone", label: "Помещение / зона / оборудване", type: "select", options: PREWORK_ZONES },
-      { key: "technical", label: "Техническо състояние", type: "check", narrow: true },
-      { key: "hygiene", label: "Хигиена", type: "check", narrow: true },
+      ...PREWORK_ZONE_COLS,
       ...CRS_COLS,
     ],
+    infoPanels: [{ title: "Обхванати зони и оборудване", items: PREWORK_ZONES }],
     legend: [
       "✓ — изправно / чисто",
       "✗ — неизправно / замърсено (вписва се корективно действие)",

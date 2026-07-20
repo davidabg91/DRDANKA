@@ -29,7 +29,7 @@ import {
   CLEANING_SCOPE,
   SAMPLE_ALLERGEN_MENU,
   ALLERGEN_LIST,
-  PREWORK_ZONES,
+  PREWORK_ZONE_COLS,
   RESIDUE_SURFACES,
   SurveyGroup,
   HOT_APPLIANCES,
@@ -795,17 +795,9 @@ function RowsEditor({
     for (let i = 1; i <= maxDay; i++) {
       const dayNum = String(i).padStart(2, "0");
       const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
-      PREWORK_ZONES.forEach((zone) => {
-        newEntries.push({
-          date: dateStr,
-          zone: zone,
-          technical: "✓",
-          hygiene: "✓",
-          action: "",
-          result: "Норма",
-          sign: "✓"
-        });
-      });
+      const entry: any = { date: dateStr, actions: "", result: "Норма", sign: "✓" };
+      PREWORK_ZONE_COLS.forEach((c) => { entry[c.key] = "✓"; });
+      newEntries.push(entry);
     }
     onUpdate((prev) => ({ ...prev, entries: newEntries }));
   };
@@ -920,6 +912,24 @@ function RowsEditor({
       }
     }
     onUpdate((prev) => ({ ...prev, entries: newEntries }));
+  };
+
+  const autoFillHygieneMonthlyMonth = () => {
+    // Веднъж месечно — един запис, не за всеки ден.
+    onUpdate((prev) => ({
+      ...prev,
+      entries: [{
+        date: `${refDate.slice(0, 7)}-01`,
+        ceilings: "✓",
+        lights: "✓",
+        vents: "✓",
+        hardToReach: "✓",
+        behindEquip: "✓",
+        issues: "",
+        actions: "",
+        sign: "✓"
+      }]
+    }));
   };
 
   const handleScanClick = () => {
@@ -1355,7 +1365,16 @@ function RowsEditor({
                 <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
-            {["duner", "prework-check", "staff-hygiene", "fryer-oil-destroy", "baking", "cooked-meals", "disinfectant-residue"].includes(def.id) && (
+            {def.id === "hygiene-monthly" && (
+              <button
+                onClick={autoFillHygieneMonthlyMonth}
+                className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
+                title="Попълва автоматично месечния контрол на хигиената"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+              </button>
+            )}
+            {["duner", "prework-check", "staff-hygiene", "fryer-oil-destroy", "baking", "cooked-meals", "disinfectant-residue", "hygiene-monthly"].includes(def.id) && (
               <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
                 <input
                   type="checkbox"
@@ -1371,6 +1390,7 @@ function RowsEditor({
                       if (def.id === "baking") autoFillBakingMonth();
                       if (def.id === "cooked-meals") autoFillCookedMealsMonth();
                       if (def.id === "disinfectant-residue") autoFillDisinfectantResidueMonth();
+                      if (def.id === "hygiene-monthly") autoFillHygieneMonthlyMonth();
                     }
                   }}
                   className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
@@ -2913,6 +2933,7 @@ interface RegistersTabProps {
   autoCookedMeals?: boolean;
   autoResidue?: boolean;
   autoHygieneWeekly?: boolean;
+  autoHygieneMonthly?: boolean;
   /** Записва оборудване/персонал в профила на потребителя */
   onSaveEquipment?: (patch: {
     customFridges?: string[];
@@ -2933,6 +2954,7 @@ interface RegistersTabProps {
     autoCookedMeals?: boolean;
     autoResidue?: boolean;
     autoHygieneWeekly?: boolean;
+    autoHygieneMonthly?: boolean;
   }) => void | Promise<void>;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
@@ -2967,6 +2989,7 @@ export default function RegistersTab({
   autoCookedMeals = false,
   autoResidue = false,
   autoHygieneWeekly = false,
+  autoHygieneMonthly = false,
   onSaveEquipment,
   readOnly = false,
   tourSeen = false,
@@ -2994,7 +3017,8 @@ export default function RegistersTab({
     "baking": autoBaking,
     "cooked-meals": autoCookedMeals,
     "disinfectant-residue": autoResidue,
-    "hygiene-weekly": autoHygieneWeekly
+    "hygiene-weekly": autoHygieneWeekly,
+    "hygiene-monthly": autoHygieneMonthly
   };
 
   const toggleAutoFillSetting = async (registerId: string, checked: boolean) => {
@@ -3008,7 +3032,8 @@ export default function RegistersTab({
       "baking": "autoBaking",
       "cooked-meals": "autoCookedMeals",
       "disinfectant-residue": "autoResidue",
-      "hygiene-weekly": "autoHygieneWeekly"
+      "hygiene-weekly": "autoHygieneWeekly",
+      "hygiene-monthly": "autoHygieneMonthly"
     };
     const patchKey = patchKeyMap[registerId];
     if (patchKey) {
@@ -3185,6 +3210,37 @@ export default function RegistersTab({
       }
     };
 
+    /** Като autoPopulateGrid, но за grid-weeks (редове "I".."V", по една дата на седмица). */
+    const autoPopulateGridWeeks = async (registerId: string) => {
+      const docData = docs[registerId];
+      if (docData && (!docData.rows || Object.keys(docData.rows).length === 0)) {
+        const updatedRows: Record<string, any> = {};
+        const def = REGISTER_BY_ID[registerId];
+        const cols = def?.columns || [];
+
+        ROMAN_WEEKS.forEach((rk, weekIdx) => {
+          const weekStartDay = weekIdx * 7 + 1;
+          if (weekStartDay > maxDay) return;
+          const row: Record<string, string> = {};
+          cols.forEach((c) => {
+            if (c.type === "check") row[c.key] = "✓";
+            if (c.key === "grade") row[c.key] = "Удовлетворителна";
+            if (c.type === "date") row[c.key] = `${month}-${String(Math.min(weekStartDay, maxDay)).padStart(2, "0")}`;
+          });
+          updatedRows[rk] = row;
+        });
+
+        const updatedDoc = { ...docData, rows: updatedRows, updatedAt: new Date().toISOString() };
+        updatedDocs[registerId] = updatedDoc;
+        stateChanged = true;
+
+        const docKey = registerDocKey(email, registerId, periodFor(def, month));
+        await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
+          console.error(`Auto fill weekly grid background error for ${registerId}:`, err);
+        });
+      }
+    };
+
     const autoPopulateTemps = async () => {
       const tempDoc = docs["temps"];
       if (tempDoc) {
@@ -3278,17 +3334,9 @@ export default function RegistersTab({
           for (let i = 1; i <= maxDay; i++) {
             const dayNum = String(i).padStart(2, "0");
             const dateStr = `${month}-${dayNum}`;
-            PREWORK_ZONES.forEach((zone) => {
-              entries.push({
-                date: dateStr,
-                zone: zone,
-                technical: "✓",
-                hygiene: "✓",
-                action: "",
-                result: "Норма",
-                sign: "✓"
-              });
-            });
+            const entry: any = { date: dateStr, actions: "", result: "Норма", sign: "✓" };
+            PREWORK_ZONE_COLS.forEach((c) => { entry[c.key] = "✓"; });
+            entries.push(entry);
           }
           return entries;
         });
@@ -3319,6 +3367,26 @@ export default function RegistersTab({
       // 5. Почистване (cleaning-logs)
       if (autoCleaning) {
         await autoPopulateGrid("cleaning-logs");
+      }
+
+      // 5б. Седмичен контрол на оборудването (hygiene-weekly)
+      if (autoHygieneWeekly) {
+        await autoPopulateGridWeeks("hygiene-weekly");
+      }
+
+      // 5в. Месечен контрол на хигиената (hygiene-monthly) — един запис на месец
+      if (autoHygieneMonthly) {
+        await autoPopulateDoc("hygiene-monthly", () => [{
+          date: `${month}-01`,
+          ceilings: "✓",
+          lights: "✓",
+          vents: "✓",
+          hardToReach: "✓",
+          behindEquip: "✓",
+          issues: "",
+          actions: "",
+          sign: "✓"
+        }]);
       }
 
       // 6. Пържилна мазнина (fryer-oil-destroy)
@@ -3420,7 +3488,7 @@ export default function RegistersTab({
         setDocs((prev) => ({ ...prev, ...updatedDocs }));
       }
     })();
-  }, [loading, readOnly, email, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees]);
+  }, [loading, readOnly, email, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoHygieneWeekly, autoHygieneMonthly, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees]);
 
   const isRefToday = refDate === todayISO();
   const refDay = String(parseInt(refDate.slice(8, 10), 10));

@@ -349,7 +349,11 @@ export function buildPrintDocument(title: string, sections: string[]): string {
 <title>${esc(title)}</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: "Times New Roman", Georgia, serif; color: #000; font-size: 11px; margin: 24px; }
+  /* margin: 0 на @page премахва инжектираните от браузъра header/footer (URL, заглавие, дата,
+     номер на страница) — без него Chrome запазва място за тях и ги печата дори с изключени
+     "Headers and footers" в диалога за печат. Визуалното поле се прави с padding в body. */
+  @page { size: A4; margin: 0; }
+  body { font-family: "Times New Roman", Georgia, serif; color: #000; font-size: 11px; margin: 0; padding: 14mm 12mm; }
   .register { page-break-after: always; }
   .register:last-child { page-break-after: auto; }
   .page-break { page-break-before: always; }
@@ -373,7 +377,6 @@ export function buildPrintDocument(title: string, sections: string[]): string {
   .sig-tbl { width: 100%; margin-top: 26px; border-collapse: collapse; }
   .sig-tbl td { padding: 4px; }
   .small { font-size: 9px; color: #333; }
-  @media print { body { margin: 8mm; } }
 </style>
 </head>
 <body>${sections.join("\n")}</body>

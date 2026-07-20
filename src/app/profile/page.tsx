@@ -150,6 +150,7 @@ export interface DankaUser {
   autoCookedMeals?: boolean;
   autoResidue?: boolean;
   autoHygieneWeekly?: boolean;
+  autoHygieneMonthly?: boolean;
   /** Нарисуван електронен подпис (PNG data URL) за автоматично попълване в картите/документите. */
   signature?: string;
   /** Как да се подписва обектът: "draw" — с електронния подпис; "manual" — на ръка след печат. */
@@ -4125,6 +4126,7 @@ export default function ProfilePage() {
                   autoCookedMeals={currentUser?.autoCookedMeals ?? false}
                   autoResidue={currentUser?.autoResidue ?? false}
                   autoHygieneWeekly={currentUser?.autoHygieneWeekly ?? false}
+                  autoHygieneMonthly={currentUser?.autoHygieneMonthly ?? false}
                   onTourDone={async () => { await updateUser(currentUserEmail, { registersTourSeen: true }); }}
                   onSaveEquipment={async (patch) => { await updateUser(currentUserEmail, patch); }}
                 />
