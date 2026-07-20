@@ -13,6 +13,7 @@ import { haccpDhppPraktika } from "./haccp-dhpp-praktika";
 import { obuchenieEtiketirane } from "./obuchenie-etiketirane";
 import { obuchenieDphp } from "./obuchenie-dphp";
 import { registraciaObekt } from "./registracia-obekt";
+import { naredba26 } from "./naredba-26";
 
 export const LIVE_COURSES: ReadonlyArray<LiveCourse> = [
   // Курсове със снимки
@@ -22,6 +23,7 @@ export const LIVE_COURSES: ReadonlyArray<LiveCourse> = [
   obuchenieEtiketirane,
   obuchenieDphp,
   registraciaObekt,
+  naredba26,
 ];
 
 export function findLiveCourse(slug: string): LiveCourse | undefined {
