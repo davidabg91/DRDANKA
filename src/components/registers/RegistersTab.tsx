@@ -3012,7 +3012,7 @@ export default function RegistersTab({
     "prework-check": autoPrework,
     "duner": autoDuner,
     "staff-hygiene": autoStaffHygiene,
-    "cleaning-logs": autoCleaning,
+    "hygiene-daily": autoCleaning,
     "fryer-oil-destroy": autoFryerOil,
     "baking": autoBaking,
     "cooked-meals": autoCookedMeals,
@@ -3027,7 +3027,7 @@ export default function RegistersTab({
       "prework-check": "autoPrework",
       "duner": "autoDuner",
       "staff-hygiene": "autoStaffHygiene",
-      "cleaning-logs": "autoCleaning",
+      "hygiene-daily": "autoCleaning",
       "fryer-oil-destroy": "autoFryerOil",
       "baking": "autoBaking",
       "cooked-meals": "autoCookedMeals",
@@ -3364,9 +3364,9 @@ export default function RegistersTab({
         });
       }
 
-      // 5. Почистване (cleaning-logs)
+      // 5. Хигиена — ежедневен контрол (hygiene-daily)
       if (autoCleaning) {
-        await autoPopulateGrid("cleaning-logs");
+        await autoPopulateGrid("hygiene-daily");
       }
 
       // 5б. Седмичен контрол на оборудването (hygiene-weekly)
