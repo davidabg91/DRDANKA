@@ -1152,6 +1152,13 @@ function RowsEditor({
 
         row.date = invoiceDate;
         row.supplier = result.supplier || "";
+        // Скрито поле (не е колона): ИИ прочита адреса/телефона на доставчика от
+        // документа, за да се попълни автоматично „Списък на доставчиците" (1).
+        const aiContact = [result.supplierAddress, result.supplierPhone]
+          .map((s: any) => String(s || "").trim())
+          .filter(Boolean)
+          .join(", ");
+        if (aiContact) row.supplierContact = aiContact;
         row.food = item.foodName || "";
         row.batch = item.batch || randomBatch;
         row.expiry = calculatedExpiry;
@@ -3559,35 +3566,72 @@ export default function RegistersTab({
         const data = { ...(docsRef.current[registerId] || {}), updatedAt: new Date().toISOString() };
         await setDoc(doc(db, "logs", key), data);
 
-        // Auto-save new suppliers from incoming control log
+        // „Списък на доставчиците" (1) се поддържа автоматично от „Дневник за
+        // входящ контрол" (2): името на фирмата, адресът/телефонът (прочетени от
+        // ИИ от документа) и видът на доставките се пренасят тук. Вече попълнени
+        // от обекта стойности НЕ се презаписват — допълват се само празните.
         if (registerId === "incoming") {
-          const incomingSuppliers = (data.entries || []).map((e: any) => String(e.supplier || "").trim()).filter(Boolean);
-          const currentSuppliersDoc = docsRef.current["suppliers"] || {};
-          const currentSuppliersList = currentSuppliersDoc.entries || [];
-          const existingFirms = new Set(currentSuppliersList.map((e: any) => String(e.firm || "").trim().toLowerCase()));
+          const incomingEntries = (data.entries || []) as any[];
 
-          const newFirmsToAdd = incomingSuppliers.filter((s: string) => !existingFirms.has(s.toLowerCase()));
-          const uniqueNewFirms = Array.from(new Set(newFirmsToAdd));
+          /** доставчик (в долен регистър) → { firm, contact, goods } от входящия контрол */
+          const fromIncoming = new Map<string, { firm: string; contact: string; goods: Set<string> }>();
+          incomingEntries.forEach((e) => {
+            const firm = String(e.supplier || "").trim();
+            if (!firm) return;
+            const key = firm.toLowerCase();
+            const acc = fromIncoming.get(key) || { firm, contact: "", goods: new Set<string>() };
+            const contact = String(e.supplierContact || "").trim();
+            if (contact && !acc.contact) acc.contact = contact;
+            const food = String(e.food || "").trim();
+            if (food) acc.goods.add(food);
+            fromIncoming.set(key, acc);
+          });
 
-          if (uniqueNewFirms.length > 0) {
-            const newRows = uniqueNewFirms.map((firmName) => ({
-              firm: firmName,
-              contact: "",
-              goods: "",
-            }));
-            
-            const updatedEntries = [...currentSuppliersList, ...newRows];
-            const updatedDoc = { ...currentSuppliersDoc, entries: updatedEntries, updatedAt: new Date().toISOString() };
-            
-            // Update local state
-            setDocs((prev) => ({
-              ...prev,
-              "suppliers": updatedDoc
-            }));
-            
-            // Persist suppliers immediately to Firestore
-            const suppliersKey = registerDocKey(email, "suppliers", "all");
-            await setDoc(doc(db, "logs", suppliersKey), updatedDoc);
+          if (fromIncoming.size > 0) {
+            const currentSuppliersDoc = docsRef.current["suppliers"] || {};
+            const currentSuppliersList = (currentSuppliersDoc.entries || []) as any[];
+            let changed = false;
+
+            // 1) Допълваме празните полета на вече съществуващи доставчици.
+            const mergedList = currentSuppliersList.map((row) => {
+              const key = String(row.firm || "").trim().toLowerCase();
+              const src = key ? fromIncoming.get(key) : undefined;
+              if (!src) return row;
+              const next = { ...row };
+              if (!String(row.contact || "").trim() && src.contact) {
+                next.contact = src.contact;
+                changed = true;
+              }
+              if (!String(row.goods || "").trim() && src.goods.size > 0) {
+                next.goods = Array.from(src.goods).join(", ");
+                changed = true;
+              }
+              return next;
+            });
+
+            // 2) Добавяме новите доставчици с наличните данни.
+            const existingFirms = new Set(
+              currentSuppliersList.map((e) => String(e.firm || "").trim().toLowerCase())
+            );
+            const newRows = Array.from(fromIncoming.entries())
+              .filter(([key]) => !existingFirms.has(key))
+              .map(([, src]) => ({
+                firm: src.firm,
+                contact: src.contact,
+                goods: Array.from(src.goods).join(", "),
+              }));
+            if (newRows.length > 0) changed = true;
+
+            if (changed) {
+              const updatedDoc = {
+                ...currentSuppliersDoc,
+                entries: [...mergedList, ...newRows],
+                updatedAt: new Date().toISOString(),
+              };
+              setDocs((prev) => ({ ...prev, suppliers: updatedDoc }));
+              const suppliersKey = registerDocKey(email, "suppliers", "all");
+              await setDoc(doc(db, "logs", suppliersKey), updatedDoc);
+            }
           }
         }
 
