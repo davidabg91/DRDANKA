@@ -1152,13 +1152,16 @@ function RowsEditor({
 
         row.date = invoiceDate;
         row.supplier = result.supplier || "";
-        // Скрито поле (не е колона): ИИ прочита адреса/телефона на доставчика от
-        // документа, за да се попълни автоматично „Списък на доставчиците" (1).
+        // Скрити полета (не са колони): ИИ прочита адреса/телефона на доставчика
+        // и определя вида на доставките по продуктите в документа, за да се
+        // попълни автоматично „Списък на доставчиците" (1).
         const aiContact = [result.supplierAddress, result.supplierPhone]
           .map((s: any) => String(s || "").trim())
           .filter(Boolean)
           .join(", ");
         if (aiContact) row.supplierContact = aiContact;
+        const aiGoods = String(result.supplierGoods || "").trim();
+        if (aiGoods) row.supplierGoods = aiGoods;
         row.food = item.foodName || "";
         row.batch = item.batch || randomBatch;
         row.expiry = calculatedExpiry;
@@ -3573,39 +3576,80 @@ export default function RegistersTab({
         if (registerId === "incoming") {
           const incomingEntries = (data.entries || []) as any[];
 
-          /** доставчик (в долен регистър) → { firm, contact, goods } от входящия контрол */
-          const fromIncoming = new Map<string, { firm: string; contact: string; goods: Set<string> }>();
+          /** доставчик (в долен регистър) → { firm, contact, goods } от входящия контрол.
+           *  `goods` е групата храни, определена от ИИ по продуктите в документа;
+           *  ако липсва (ръчно въведен ред), пада към имената на самите храни. */
+          const fromIncoming = new Map<
+            string,
+            { firm: string; contact: string; aiGoods: Set<string>; foods: Set<string> }
+          >();
           incomingEntries.forEach((e) => {
             const firm = String(e.supplier || "").trim();
             if (!firm) return;
             const key = firm.toLowerCase();
-            const acc = fromIncoming.get(key) || { firm, contact: "", goods: new Set<string>() };
+            const acc =
+              fromIncoming.get(key) ||
+              { firm, contact: "", aiGoods: new Set<string>(), foods: new Set<string>() };
             const contact = String(e.supplierContact || "").trim();
             if (contact && !acc.contact) acc.contact = contact;
+            // ИИ връща групите като текст, разделен със запетая — разбиваме ги,
+            // за да не се дублират при няколко доставки от същия доставчик.
+            String(e.supplierGoods || "")
+              .split(",")
+              .map((g: string) => g.trim())
+              .filter(Boolean)
+              .forEach((g: string) => acc.aiGoods.add(g));
             const food = String(e.food || "").trim();
-            if (food) acc.goods.add(food);
+            if (food) acc.foods.add(food);
             fromIncoming.set(key, acc);
           });
+
+          /** Текстът за колона „Вид на доставките". */
+          const goodsTextFor = (src: { aiGoods: Set<string>; foods: Set<string> }) =>
+            src.aiGoods.size > 0
+              ? Array.from(src.aiGoods).join(", ")
+              : Array.from(src.foods).join(", ");
 
           if (fromIncoming.size > 0) {
             const currentSuppliersDoc = docsRef.current["suppliers"] || {};
             const currentSuppliersList = (currentSuppliersDoc.entries || []) as any[];
             let changed = false;
 
-            // 1) Допълваме празните полета на вече съществуващи доставчици.
+            // 1) Допълваме вече съществуващите доставчици:
+            //    - контактът се попълва само ако е празен (една стойност);
+            //    - видът на доставките се допълва с новите групи, без да се
+            //      губи вписаното досега и без дублиране.
             const mergedList = currentSuppliersList.map((row) => {
               const key = String(row.firm || "").trim().toLowerCase();
               const src = key ? fromIncoming.get(key) : undefined;
               if (!src) return row;
               const next = { ...row };
+
               if (!String(row.contact || "").trim() && src.contact) {
                 next.contact = src.contact;
                 changed = true;
               }
-              if (!String(row.goods || "").trim() && src.goods.size > 0) {
-                next.goods = Array.from(src.goods).join(", ");
+
+              const existingGoods = String(row.goods || "")
+                .split(",")
+                .map((g) => g.trim())
+                .filter(Boolean);
+              const seen = new Set(existingGoods.map((g) => g.toLowerCase()));
+              const merged = [...existingGoods];
+              goodsTextFor(src)
+                .split(",")
+                .map((g) => g.trim())
+                .filter(Boolean)
+                .forEach((g) => {
+                  if (seen.has(g.toLowerCase())) return;
+                  seen.add(g.toLowerCase());
+                  merged.push(g);
+                });
+              if (merged.length > existingGoods.length) {
+                next.goods = merged.join(", ");
                 changed = true;
               }
+
               return next;
             });
 
@@ -3618,7 +3662,7 @@ export default function RegistersTab({
               .map(([, src]) => ({
                 firm: src.firm,
                 contact: src.contact,
-                goods: Array.from(src.goods).join(", "),
+                goods: goodsTextFor(src),
               }));
             if (newRows.length > 0) changed = true;
 
