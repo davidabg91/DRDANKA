@@ -1427,7 +1427,7 @@ function RowsEditor({
                   }}
                   className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
                 />
-                Попълвай автоматично всеки месец
+                Автоматично попълване
               </label>
             )}
           </div>
@@ -1881,7 +1881,7 @@ function GridEditor({
               }}
               className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
             />
-            Попълвай автоматично всеки месец
+            Автоматично попълване
           </label>
         </div>
       )}
@@ -2130,7 +2130,7 @@ function TempEditor({
                 }}
                 className="h-3.5 w-3.5 accent-brand-green rounded border-slate-300 cursor-pointer"
               />
-              Попълвай автоматично всеки месец
+              Автоматично попълване
             </label>
           </div>
         )}
@@ -3198,135 +3198,165 @@ export default function RegistersTab({
     let stateChanged = false;
     const updatedDocs: Record<string, RegisterDocData> = {};
 
-    const autoPopulateDoc = async (registerId: string, generateEntries: () => any) => {
+    /**
+     * Добавя липсващите записи до текущата дата, без да пипа вече попълненото.
+     * `generateForDay` връща записите за конкретен ден — празен масив, ако за
+     * този ден картата не се попълва (напр. през 3 дни или веднъж месечно).
+     */
+    const autoPopulateDoc = async (
+      registerId: string,
+      generateForDay: (dateStr: string, day: number) => any[]
+    ) => {
       const docData = docs[registerId];
-      if (docData && (!docData.entries || docData.entries.length === 0)) {
-        const newEntries = generateEntries();
-        const updatedDoc = { ...docData, entries: newEntries, updatedAt: new Date().toISOString() };
-        updatedDocs[registerId] = updatedDoc;
-        stateChanged = true;
-        
-        const docKey = registerDocKey(email, registerId, month);
-        await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
-          console.error(`Auto fill background error for ${registerId}:`, err);
-        });
+      if (!docData) return;
+      const def = REGISTER_BY_ID[registerId];
+      const dateKey = (def && recordDateKey(def)) || "date";
+      const existing = docData.entries || [];
+      const filledDates = new Set(existing.map((e) => String(e[dateKey] || "")));
+
+      const added: any[] = [];
+      for (let d = 1; d <= maxDay; d++) {
+        const dateStr = `${month}-${String(d).padStart(2, "0")}`;
+        if (filledDates.has(dateStr)) continue;
+        added.push(...generateForDay(dateStr, d));
       }
+      if (added.length === 0) return;
+
+      const updatedDoc = {
+        ...docData,
+        entries: [...existing, ...added],
+        updatedAt: new Date().toISOString(),
+      };
+      updatedDocs[registerId] = updatedDoc;
+      stateChanged = true;
+
+      const docKey = registerDocKey(email, registerId, def ? periodFor(def, month) : month);
+      await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
+        console.error(`Auto fill background error for ${registerId}:`, err);
+      });
     };
 
+    /** Допълва липсващите дневни редове (grid-days), без да презаписва попълнените. */
     const autoPopulateGrid = async (registerId: string) => {
       const docData = docs[registerId];
-      if (docData && (!docData.rows || Object.keys(docData.rows).length === 0)) {
-        const updatedRows: Record<string, any> = {};
-        const def = REGISTER_BY_ID[registerId];
-        const cols = def?.columns || [];
-        
-        for (let d = 1; d <= maxDay; d++) {
-          const rk = String(d);
-          const row: Record<string, string> = {};
-          cols.forEach((c) => {
-            if (c.type === "check") row[c.key] = "✓";
-            if (c.key === "grade") row[c.key] = "Удовлетворителна";
-            if (c.type === "date") row[c.key] = `${month}-${String(d).padStart(2, "0")}`;
-          });
-          updatedRows[rk] = row;
-        }
+      if (!docData) return;
+      const def = REGISTER_BY_ID[registerId];
+      const cols = def?.columns || [];
+      const prevRows = docData.rows || {};
+      const updatedRows: Record<string, any> = { ...prevRows };
+      let changed = false;
 
-        const updatedDoc = { ...docData, rows: updatedRows, updatedAt: new Date().toISOString() };
-        updatedDocs[registerId] = updatedDoc;
-        stateChanged = true;
-
-        const docKey = registerDocKey(email, registerId, periodFor(def, month));
-        await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
-          console.error(`Auto fill grid background error for ${registerId}:`, err);
+      for (let d = 1; d <= maxDay; d++) {
+        const rk = String(d);
+        if (isRowFilled(prevRows[rk])) continue;
+        const row: Record<string, string> = {};
+        cols.forEach((c) => {
+          if (c.type === "check") row[c.key] = "✓";
+          if (c.key === "grade") row[c.key] = "Удовлетворителна";
+          if (c.type === "date") row[c.key] = `${month}-${String(d).padStart(2, "0")}`;
         });
+        updatedRows[rk] = row;
+        changed = true;
       }
+      if (!changed) return;
+
+      const updatedDoc = { ...docData, rows: updatedRows, updatedAt: new Date().toISOString() };
+      updatedDocs[registerId] = updatedDoc;
+      stateChanged = true;
+
+      const docKey = registerDocKey(email, registerId, def ? periodFor(def, month) : month);
+      await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
+        console.error(`Auto fill grid background error for ${registerId}:`, err);
+      });
     };
 
     /** Като autoPopulateGrid, но за grid-weeks (редове "I".."V", по една дата на седмица). */
     const autoPopulateGridWeeks = async (registerId: string) => {
       const docData = docs[registerId];
-      if (docData && (!docData.rows || Object.keys(docData.rows).length === 0)) {
-        const updatedRows: Record<string, any> = {};
-        const def = REGISTER_BY_ID[registerId];
-        const cols = def?.columns || [];
+      if (!docData) return;
+      const def = REGISTER_BY_ID[registerId];
+      const cols = def?.columns || [];
+      const prevRows = docData.rows || {};
+      const updatedRows: Record<string, any> = { ...prevRows };
+      let changed = false;
 
-        ROMAN_WEEKS.forEach((rk, weekIdx) => {
-          const weekStartDay = weekIdx * 7 + 1;
-          if (weekStartDay > maxDay) return;
-          const row: Record<string, string> = {};
-          cols.forEach((c) => {
-            if (c.type === "check") row[c.key] = "✓";
-            if (c.key === "grade") row[c.key] = "Удовлетворителна";
-            if (c.type === "date") row[c.key] = `${month}-${String(Math.min(weekStartDay, maxDay)).padStart(2, "0")}`;
-          });
-          updatedRows[rk] = row;
+      ROMAN_WEEKS.forEach((rk, weekIdx) => {
+        const weekStartDay = weekIdx * 7 + 1;
+        if (weekStartDay > maxDay) return;
+        if (isRowFilled(prevRows[rk])) return;
+        const row: Record<string, string> = {};
+        cols.forEach((c) => {
+          if (c.type === "check") row[c.key] = "✓";
+          if (c.key === "grade") row[c.key] = "Удовлетворителна";
+          if (c.type === "date") row[c.key] = `${month}-${String(Math.min(weekStartDay, maxDay)).padStart(2, "0")}`;
         });
+        updatedRows[rk] = row;
+        changed = true;
+      });
+      if (!changed) return;
 
-        const updatedDoc = { ...docData, rows: updatedRows, updatedAt: new Date().toISOString() };
-        updatedDocs[registerId] = updatedDoc;
-        stateChanged = true;
+      const updatedDoc = { ...docData, rows: updatedRows, updatedAt: new Date().toISOString() };
+      updatedDocs[registerId] = updatedDoc;
+      stateChanged = true;
 
-        const docKey = registerDocKey(email, registerId, periodFor(def, month));
-        await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
-          console.error(`Auto fill weekly grid background error for ${registerId}:`, err);
-        });
-      }
+      const docKey = registerDocKey(email, registerId, def ? periodFor(def, month) : month);
+      await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
+        console.error(`Auto fill weekly grid background error for ${registerId}:`, err);
+      });
     };
 
     const autoPopulateTemps = async () => {
       const tempDoc = docs["temps"];
-      if (tempDoc) {
-        let tempChanged = false;
-        const prevUnits = tempDoc.units || {};
-        const updatedUnits = { ...prevUnits };
+      if (!tempDoc) return;
+      let tempChanged = false;
+      const prevUnits = tempDoc.units || {};
+      const updatedUnits = { ...prevUnits };
 
-        units.forEach((unit) => {
-          const u = prevUnits[unit.name] || { type: unit.type, rows: {} };
-          if (!u.rows || Object.keys(u.rows).length === 0) {
-            tempChanged = true;
-            const newRows: Record<string, any> = {};
-            for (let d = 1; d <= maxDay; d++) {
-              const dayStr = String(d);
-              const t1h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
-              const t1h_h = Math.random() > 0.5 ? "09" : "08";
-              const t1h = `${t1h_h}:${t1h_h === "09" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t1h_m}`;
-              const t2h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
-              const t2h_h = Math.random() > 0.5 ? "18" : "17";
-              const t2h = `${t2h_h}:${t2h_h === "18" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t2h_m}`;
+      units.forEach((unit) => {
+        const u = prevUnits[unit.name] || { type: unit.type, rows: {} };
+        const prevRows = u.rows || {};
+        const newRows: Record<string, any> = { ...prevRows };
+        let unitChanged = false;
 
-              let t1 = "";
-              let t2 = "";
-              if (unit.type === "freezer") {
-                t1 = (-18.5 - Math.random() * 2.8).toFixed(1);
-                t2 = (-18.5 - Math.random() * 2.8).toFixed(1);
-              } else {
-                t1 = (1.2 + Math.random() * 2.5).toFixed(1);
-                t2 = (1.2 + Math.random() * 2.5).toFixed(1);
-              }
+        for (let d = 1; d <= maxDay; d++) {
+          const dayStr = String(d);
+          if (isRowFilled(prevRows[dayStr])) continue;
 
-              newRows[dayStr] = {
-                t1h,
-                t1,
-                t2h,
-                t2,
-                action: "",
-                result: "Норма",
-                sign: "✓"
-              };
-            }
-            updatedUnits[unit.name] = { ...u, rows: newRows };
+          const t1h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
+          const t1h_h = Math.random() > 0.5 ? "09" : "08";
+          const t1h = `${t1h_h}:${t1h_h === "09" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t1h_m}`;
+          const t2h_m = String(Math.floor(Math.random() * 60)).padStart(2, "0");
+          const t2h_h = Math.random() > 0.5 ? "18" : "17";
+          const t2h = `${t2h_h}:${t2h_h === "18" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t2h_m}`;
+
+          let t1 = "";
+          let t2 = "";
+          if (unit.type === "freezer") {
+            t1 = (-18.5 - Math.random() * 2.8).toFixed(1);
+            t2 = (-18.5 - Math.random() * 2.8).toFixed(1);
+          } else {
+            t1 = (1.2 + Math.random() * 2.5).toFixed(1);
+            t2 = (1.2 + Math.random() * 2.5).toFixed(1);
           }
-        });
 
-        if (tempChanged) {
-          const updatedDoc = { ...tempDoc, units: updatedUnits, updatedAt: new Date().toISOString() };
-          updatedDocs["temps"] = updatedDoc;
-          stateChanged = true;
-          const docKey = registerDocKey(email, "temps", periodFor(REGISTER_BY_ID["temps"], month));
-          await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
-            console.error("Auto fill temps background error:", err);
-          });
+          newRows[dayStr] = { t1h, t1, t2h, t2, action: "", result: "Норма", sign: "✓" };
+          unitChanged = true;
         }
+
+        if (unitChanged) {
+          updatedUnits[unit.name] = { ...u, rows: newRows };
+          tempChanged = true;
+        }
+      });
+
+      if (tempChanged) {
+        const updatedDoc = { ...tempDoc, units: updatedUnits, updatedAt: new Date().toISOString() };
+        updatedDocs["temps"] = updatedDoc;
+        stateChanged = true;
+        const docKey = registerDocKey(email, "temps", periodFor(REGISTER_BY_ID["temps"], month));
+        await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
+          console.error("Auto fill temps background error:", err);
+        });
       }
     };
 
@@ -3336,64 +3366,44 @@ export default function RegistersTab({
         await autoPopulateTemps();
       }
 
-      // 2. Дюнер (duner)
+      // 2. Дюнер (duner) — ежедневно
       if (autoDuner) {
-        await autoPopulateDoc("duner", () => {
-          const entries: any[] = [];
-          for (let i = 1; i <= maxDay; i++) {
-            const dayNum = String(i).padStart(2, "0");
-            const dateStr = `${month}-${dayNum}`;
-            const tempVal = 75.5 + Math.random() * 8.0;
-            const timeVal = Math.random() > 0.5 ? (Math.random() > 0.5 ? "3 часа" : "4 часа") : "2.5 часа";
-            entries.push({
-              date: dateStr,
-              product: "Пилешки дюнер",
-              temp: tempVal.toFixed(1),
-              time: timeVal,
-              action: "",
-              result: "Норма",
-              sign: "✓"
-            });
-          }
-          return entries;
+        await autoPopulateDoc("duner", (dateStr) => {
+          const tempVal = 75.5 + Math.random() * 8.0;
+          const timeVal = Math.random() > 0.5 ? (Math.random() > 0.5 ? "3 часа" : "4 часа") : "2.5 часа";
+          return [{
+            date: dateStr,
+            product: "Пилешки дюнер",
+            temp: tempVal.toFixed(1),
+            time: timeVal,
+            action: "",
+            result: "Норма",
+            sign: "✓"
+          }];
         });
       }
 
-      // 3. Преди работа (prework-check)
+      // 3. Преди работа (prework-check) — ежедневно
       if (autoPrework) {
-        await autoPopulateDoc("prework-check", () => {
-          const entries: any[] = [];
-          for (let i = 1; i <= maxDay; i++) {
-            const dayNum = String(i).padStart(2, "0");
-            const dateStr = `${month}-${dayNum}`;
-            const entry: any = { date: dateStr, actions: "", result: "Норма", sign: "✓" };
-            PREWORK_ZONE_COLS.forEach((c) => { entry[c.key] = "✓"; });
-            entries.push(entry);
-          }
-          return entries;
+        await autoPopulateDoc("prework-check", (dateStr) => {
+          const entry: any = { date: dateStr, actions: "", result: "Норма", sign: "✓" };
+          PREWORK_ZONE_COLS.forEach((c) => { entry[c.key] = "✓"; });
+          return [entry];
         });
       }
 
-      // 4. Хигиена персонал (staff-hygiene)
+      // 4. Хигиена персонал (staff-hygiene) — ежедневно, по един запис на служител
       if (autoStaffHygiene) {
-        await autoPopulateDoc("staff-hygiene", () => {
-          const entries: any[] = [];
-          for (let i = 1; i <= maxDay; i++) {
-            const dayNum = String(i).padStart(2, "0");
-            const dateStr = `${month}-${dayNum}`;
-            employees.forEach((emp) => {
-              entries.push({
-                date: dateStr,
-                employee: emp.name,
-                hygiene: "✓",
-                health: "✓",
-                result: "Допуснат до работа",
-                sign: "✓"
-              });
-            });
-          }
-          return entries;
-        });
+        await autoPopulateDoc("staff-hygiene", (dateStr) =>
+          employees.map((emp) => ({
+            date: dateStr,
+            employee: emp.name,
+            hygiene: "✓",
+            health: "✓",
+            result: "Допуснат до работа",
+            sign: "✓"
+          }))
+        );
       }
 
       // 5. Хигиена — ежедневен контрол (hygiene-daily)
@@ -3406,113 +3416,86 @@ export default function RegistersTab({
         await autoPopulateGridWeeks("hygiene-weekly");
       }
 
-      // 5в. Месечен контрол на хигиената (hygiene-monthly) — един запис на месец
+      // 5в. Месечен контрол на хигиената (hygiene-monthly) — веднъж месечно
       if (autoHygieneMonthly) {
-        await autoPopulateDoc("hygiene-monthly", () => [{
-          date: `${month}-01`,
-          ceilings: "✓",
-          lights: "✓",
-          vents: "✓",
-          hardToReach: "✓",
-          behindEquip: "✓",
-          issues: "",
-          actions: "",
-          sign: "✓"
-        }]);
+        await autoPopulateDoc("hygiene-monthly", (dateStr, day) =>
+          day !== 1 ? [] : [{
+            date: dateStr,
+            ceilings: "✓",
+            lights: "✓",
+            vents: "✓",
+            hardToReach: "✓",
+            behindEquip: "✓",
+            issues: "",
+            actions: "",
+            sign: "✓"
+          }]
+        );
       }
 
-      // 6. Пържилна мазнина (fryer-oil-destroy)
+      // 6. Пържилна мазнина (fryer-oil-destroy) — през 3 дни
       if (autoFryerOil) {
-        await autoPopulateDoc("fryer-oil-destroy", () => {
-          const entries: any[] = [];
-          for (let i = 1; i <= maxDay; i++) {
-            if (i % 3 === 0) {
-              const dayNum = String(i).padStart(2, "0");
-              const dateStr = `${month}-${dayNum}`;
-              entries.push({
-                date: dateStr,
-                fryer: "Фритюрник №1",
-                qty: "5 л. олио",
-                destination: "За рециклиране",
-                protocol: `Декларация №${String(Math.floor(1000 + Math.random() * 9000))}`,
-                sign: "✓"
-              });
-            }
-          }
-          return entries;
-        });
+        await autoPopulateDoc("fryer-oil-destroy", (dateStr, day) =>
+          day % 3 !== 0 ? [] : [{
+            date: dateStr,
+            fryer: "Фритюрник №1",
+            qty: "5 л. олио",
+            destination: "За рециклиране",
+            protocol: `Декларация №${String(Math.floor(1000 + Math.random() * 9000))}`,
+            sign: "✓"
+          }]
+        );
       }
 
-      // 7. Тестени изделия (baking)
+      // 7. Тестени изделия (baking) — ежедневно
       if (autoBaking) {
-        await autoPopulateDoc("baking", () => {
-          const entries: any[] = [];
-          for (let i = 1; i <= maxDay; i++) {
-            const dayNum = String(i).padStart(2, "0");
-            const dateStr = `${month}-${dayNum}`;
-            const tempVal = 200 + Math.floor(Math.random() * 21);
-            const timeVal = `${15 + Math.floor(Math.random() * 11)} мин`;
-            entries.push({
-              date: dateStr,
-              product: "Закуски / Козунаци",
-              temp: String(tempVal),
-              time: timeVal,
-              action: "",
-              result: "Норма",
-              sign: "✓"
-            });
-          }
-          return entries;
+        await autoPopulateDoc("baking", (dateStr) => {
+          const tempVal = 200 + Math.floor(Math.random() * 21);
+          const timeVal = `${15 + Math.floor(Math.random() * 11)} мин`;
+          return [{
+            date: dateStr,
+            product: "Закуски / Козунаци",
+            temp: String(tempVal),
+            time: timeVal,
+            action: "",
+            result: "Норма",
+            sign: "✓"
+          }];
         });
       }
 
-      // 8. Готвени ястия (cooked-meals)
+      // 8. Готвени ястия (cooked-meals) — ежедневно
       if (autoCookedMeals) {
-        await autoPopulateDoc("cooked-meals", () => {
-          const entries: any[] = [];
-          for (let i = 1; i <= maxDay; i++) {
-            const dayNum = String(i).padStart(2, "0");
-            const dateStr = `${month}-${dayNum}`;
-            const tempCookVal = 200 + Math.floor(Math.random() * 16);
-            const timeVal = `${40 + Math.floor(Math.random() * 21)} мин`;
-            const tempCoreVal = 76.5 + Math.random() * 6.5;
-            entries.push({
-              date: dateStr,
-              product: "Готвени ястия (супа / готвено)",
-              tempCook: String(tempCookVal),
-              time: timeVal,
-              tempCore: tempCoreVal.toFixed(1),
-              action: "",
-              result: "Норма",
-              sign: "✓"
-            });
-          }
-          return entries;
+        await autoPopulateDoc("cooked-meals", (dateStr) => {
+          const tempCookVal = 200 + Math.floor(Math.random() * 16);
+          const timeVal = `${40 + Math.floor(Math.random() * 21)} мин`;
+          const tempCoreVal = 76.5 + Math.random() * 6.5;
+          return [{
+            date: dateStr,
+            product: "Готвени ястия (супа / готвено)",
+            tempCook: String(tempCookVal),
+            time: timeVal,
+            tempCore: tempCoreVal.toFixed(1),
+            action: "",
+            result: "Норма",
+            sign: "✓"
+          }];
         });
       }
 
-      // 9. Остатъчни дезинфектанти (disinfectant-residue)
+      // 9. Остатъчни дезинфектанти (disinfectant-residue) — през 3 дни
       if (autoResidue) {
-        await autoPopulateDoc("disinfectant-residue", () => {
-          const entries: any[] = [];
-          for (let i = 1; i <= maxDay; i++) {
-            if (i % 3 === 0) {
-              const dayNum = String(i).padStart(2, "0");
-              const dateStr = `${month}-${dayNum}`;
-              const surfaces = [RESIDUE_SURFACES[0], RESIDUE_SURFACES[2], RESIDUE_SURFACES[4]];
-              surfaces.forEach((surf) => {
-                entries.push({
-                  date: dateStr,
-                  surface: surf,
-                  residue: "НЕ",
-                  action: "",
-                  result: "Норма",
-                  sign: "✓"
-                });
-              });
-            }
-          }
-          return entries;
+        await autoPopulateDoc("disinfectant-residue", (dateStr, day) => {
+          if (day % 3 !== 0) return [];
+          const surfaces = [RESIDUE_SURFACES[0], RESIDUE_SURFACES[2], RESIDUE_SURFACES[4]];
+          return surfaces.map((surf) => ({
+            date: dateStr,
+            surface: surf,
+            residue: "НЕ",
+            action: "",
+            result: "Норма",
+            sign: "✓"
+          }));
         });
       }
 
