@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
 import { organizationSchema, personSchema, websiteSchema } from "@/lib/schema";
+import { Analytics } from "@vercel/analytics/next";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-logo",
@@ -110,6 +111,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-grow overflow-x-clip">{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
