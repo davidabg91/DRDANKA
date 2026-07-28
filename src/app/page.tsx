@@ -22,6 +22,7 @@ import FAQAccordion from "@/components/FAQAccordion";
 import ContactForm from "@/components/ContactForm";
 import { Suspense } from "react";
 import RemotionVideoWidget from "@/remotion/RemotionVideoWidget";
+import HeroTrainingCarousel from "@/components/HeroTrainingCarousel";
 import SectionHeading from "@/components/SectionHeading";
 export default function Home() {
   // Stats shown in the animated ticker band under the hero.
@@ -207,8 +208,11 @@ export default function Home() {
 
             </div>
 
-            {/* Hero Highlight Card - Remotion Video */}
-            <RemotionVideoWidget />
+            {/* Hero right column: compact subscription card + rotating training deck */}
+            <div className="lg:col-span-5 lg:mt-12 xl:mt-14 z-20 space-y-5">
+              <RemotionVideoWidget />
+              <HeroTrainingCarousel />
+            </div>
           </div>
         </div>
       </section>

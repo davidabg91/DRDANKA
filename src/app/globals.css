@@ -243,3 +243,15 @@ main > article.bg-brand-light {
   }
 }
 
+
+/* Hero training carousel — smooth entrance when the active card changes. */
+@keyframes heroCardFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-hero-card {
+  animation: heroCardFade 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-card { animation: none; }
+}
