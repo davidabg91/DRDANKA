@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Политика за поверителност",
+  description:
+    "Как обработваме и защитаваме личните Ви данни при използване на услугите на д-р Данка Николова и HACCP Спокойствие.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function Privacy() {
   return (

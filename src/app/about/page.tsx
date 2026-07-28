@@ -1,4 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "За мен — 27 години опит в безопасността на храните",
+  description:
+    "Д-р Данка Николова — доктор по контрол на храните и ветеринарно-санитарна експертиза, лицензиран водещ одитор по ISO 22000, IFS Food и ISO 9001. Над 27 години опит в хранителния контрол в България.",
+  alternates: { canonical: "/about" },
+};
 import Image from "next/image";
 import { ShieldCheck, Award, GraduationCap, CheckCircle, FileText, Heart, Quote, Star, BadgeCheck } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";

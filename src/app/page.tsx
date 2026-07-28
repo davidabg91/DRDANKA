@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShieldAlert,
   Award,
@@ -296,21 +297,43 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right side: Portrait & Quote */}
+            {/* Right side: Dr. Danka leaning on the mission panel */}
             <div className="lg:col-span-5 relative">
-              <div className="absolute -inset-4 bg-brand-gold/5 blur-2xl rounded-[3rem] -z-10"></div>
-              <div className="relative bg-white/70 backdrop-blur-xl border border-white/80 rounded-3xl p-8 sm:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgba(197,168,128,0.1)] transition-all duration-500">
-                <div className="absolute -top-6 -left-6 bg-brand-gold p-4 rounded-xl border border-brand-gold-dark/20 text-brand-dark">
-                  <ShieldAlert className="h-8 w-8" />
-                </div>
-                <blockquote className="font-serif text-brand-green text-lg italic leading-relaxed pt-4 mb-6">
+              {/* Ambient gold glow behind the whole composition */}
+              <div
+                className="absolute -inset-6 bg-brand-gold/10 blur-3xl rounded-[3rem] -z-10"
+                aria-hidden
+              />
+
+              {/* Portrait — her hands rest exactly on the panel's top rim, as if
+                  she is leaning on it and reading the words below. */}
+              <div className="relative flex justify-center">
+                <Image
+                  src="/danka-hero.png"
+                  alt="Д-р Данка Николова — консултант по безопасност на храните"
+                  width={794}
+                  height={1043}
+                  priority
+                  sizes="(max-width: 1024px) 320px, 380px"
+                  className="pointer-events-none select-none w-[82%] max-w-[380px] h-auto object-contain relative z-20 -mb-6 drop-shadow-[0_28px_40px_rgba(10,31,24,0.35)]"
+                />
+              </div>
+
+              {/* Mission panel */}
+              <div className="relative z-10 bg-white/70 backdrop-blur-xl border border-white/80 rounded-3xl px-8 pt-11 pb-8 sm:px-10 shadow-[0_20px_50px_rgba(10,31,24,0.10)] transition-all duration-500 hover:shadow-[0_24px_55px_rgba(197,168,128,0.18)]">
+                <blockquote className="font-serif text-brand-green text-lg italic leading-relaxed mb-6">
                   "Моята мисия е да дам спокойствие и сигурност на българските ресторантьори и производители. Хранителният бизнес трябва да се концентрира върху качеството и клиентите си, а ние се грижим нормативните изисквания да бъдат спазени безпроблемно."
                 </blockquote>
-                <div className="border-t border-brand-green/5 pt-4">
-                  <h4 className="font-serif text-base font-bold text-brand-green">Д-р Данка Николова</h4>
-                  <p className="text-[10px] text-brand-gold uppercase tracking-wider font-semibold">
-                    Основател & Главен консултант
-                  </p>
+                <div className="flex items-center justify-between gap-4 border-t border-brand-green/10 pt-4">
+                  <div>
+                    <h4 className="font-serif text-base font-bold text-brand-green">Д-р Данка Николова</h4>
+                    <p className="text-[10px] text-brand-gold uppercase tracking-wider font-semibold">
+                      Основател & Главен консултант
+                    </p>
+                  </div>
+                  <div className="shrink-0 bg-brand-gold/15 p-2.5 rounded-xl border border-brand-gold/25 text-brand-gold-dark">
+                    <ShieldAlert className="h-6 w-6" />
+                  </div>
                 </div>
               </div>
             </div>

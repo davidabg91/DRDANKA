@@ -1,12 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, Clock, ArrowRight, FileText } from "lucide-react";
+import type { Metadata } from "next";
 import { BLOG_POSTS } from "@/data/blogPosts";
 import PageHero from "@/components/PageHero";
 
-export const metadata = {
-  title: "Блог за безопасност на храните | Д-р Данка Николова",
+export const metadata: Metadata = {
+  title: "Блог за безопасност на храните",
   description: "Практическа информация, експертни анализи на законите на БАБХ, НАССР системи и съвети за Вашия сигурен и безпроблемен бизнес с храни.",
+  alternates: { canonical: "/blog" },
 };
 
 export default function Blog() {

@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import ContactForm from "@/components/ContactForm";
 import { Mail, Clock, MapPin, ShieldCheck, HelpCircle } from "lucide-react";
 import { Suspense } from "react";
 import PageHero from "@/components/PageHero";
+
+export const metadata: Metadata = {
+  title: "Контакти — консултация по безопасност на храните",
+  description:
+    "Свържете се с д-р Данка Николова за консултация по HACCP, ДПХП, етикетиране и БАБХ регистрация. Офис в гр. Плевен, онлайн консултации за цяла България.",
+  alternates: { canonical: "/contact" },
+};
 
 export default function Contact() {
   const contactDetails = [

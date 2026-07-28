@@ -3,6 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Calendar, Clock, ArrowLeft, ShieldCheck, BookOpen } from "lucide-react";
 import { BLOG_POSTS } from "@/data/blogPosts";
+import JsonLd from "@/components/JsonLd";
+import { articleSchema, breadcrumbSchema } from "@/lib/schema";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -20,16 +22,29 @@ export async function generateMetadata({ params }: PageProps) {
   
   if (!post) {
     return {
-      title: "Статията не е намерена | Д-р Данка Николова",
+      title: "Статията не е намерена",
       description: "Търсената блог статия не е намерена.",
     };
   }
 
   return {
-    title: `${post.title} | Д-р Данка Николова`,
+    title: post.title,
     description: post.summary,
     alternates: {
       canonical: `/blog/${post.id}`,
+    },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.summary,
+      url: `/blog/${post.id}`,
+      images: [{ url: post.image }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.summary,
+      images: [post.image],
     },
   };
 }
@@ -44,6 +59,21 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <article className="bg-brand-light min-h-screen pb-24">
+      <JsonLd
+        data={[
+          articleSchema({
+            title: post.title,
+            description: post.summary,
+            path: `/blog/${post.id}`,
+            image: post.image,
+          }),
+          breadcrumbSchema([
+            { name: "Начало", path: "/" },
+            { name: "Блог", path: "/blog" },
+            { name: post.title, path: `/blog/${post.id}` },
+          ]),
+        ]}
+      />
       {/* Breadcrumb section */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
         <Link 

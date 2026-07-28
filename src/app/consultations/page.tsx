@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import BookingCalendar from "@/components/BookingCalendar";
 import { Laptop, Clock, ShieldCheck, HelpCircle } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import ConsultationStepsWidget from "@/remotion/ConsultationStepsWidget";
 import PageHero from "@/components/PageHero";
+
+export const metadata: Metadata = {
+  title: "Онлайн консултации — запишете час",
+  description:
+    "Запишете онлайн консултация по безопасност на храните през Google Meet или телефон. Професионални насоки по HACCP, ДПХП, етикетиране и БАБХ проверки — без пътуване.",
+  alternates: { canonical: "/consultations" },
+};
 
 export default function Consultations() {
   const benefits = [

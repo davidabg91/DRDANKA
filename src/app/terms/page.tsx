@@ -1,5 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { FileText } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Общи условия",
+  description:
+    "Общи условия за ползване на услугите, обученията и материалите, предлагани от д-р Данка Николова и HACCP Спокойствие.",
+  alternates: { canonical: "/terms" },
+};
 
 export default function Terms() {
   return (

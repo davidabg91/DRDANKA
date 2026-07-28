@@ -3,6 +3,8 @@ import { Inter, Playfair_Display, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import JsonLd from "@/components/JsonLd";
+import { organizationSchema, personSchema, websiteSchema } from "@/lib/schema";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-logo",
@@ -30,8 +32,41 @@ const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: "Д-р Данка Николова | Консултант по безопасност на храните",
+  title: {
+    default: "Д-р Данка Николова | Консултант по безопасност на храните",
+    template: "%s | Д-р Данка Николова",
+  },
   description: "Професионални консултации, внедряване и одит на системи за безопасност на храните (HACCP, ISO 22000, IFS, GMP) от д-р Данка Николова. 27 години опит в хранителния контрол.",
+  keywords: [
+    "HACCP",
+    "НАССР",
+    "безопасност на храните",
+    "ISO 22000",
+    "IFS Food",
+    "ДПХП",
+    "БАБХ регистрация",
+    "система за самоконтрол",
+    "етикетиране на храни",
+    "консултант храни България",
+    "Данка Николова",
+  ],
+  authors: [{ name: "Д-р Данка Николова" }],
+  creator: "Д-р Данка Николова",
+  publisher: "HACCP Спокойствие",
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   openGraph: {
     title: "Д-р Данка Николова | Консултант по безопасност на храните",
     description: "Професионални консултации, внедряване и одит на системи за безопасност на храните (HACCP, ISO 22000, IFS, GMP) от д-р Данка Николова. 27 години опит в хранителния контрол.",
@@ -75,6 +110,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
       </head>
       <body className="min-h-full flex flex-col bg-transparent text-brand-dark">
+        <JsonLd data={[organizationSchema(), personSchema(), websiteSchema()]} />
         <Header />
         <main className="flex-grow overflow-x-clip">{children}</main>
         <Footer />
