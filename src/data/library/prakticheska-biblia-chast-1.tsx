@@ -61,16 +61,50 @@ function PrakticheskaBibliaChast1Page() {
             Получавате и БОНУС
           </h2>
         </div>
-        <div className="bg-brand-gold/10 border border-brand-gold/30 rounded-2xl p-6 flex items-start gap-4 shadow-sm">
-          <span className="p-2.5 bg-white text-brand-gold rounded-xl shrink-0 shadow-sm"><FileText className="h-6 w-6" /></span>
-          <div className="space-y-1">
-            <h4 className="font-bold text-brand-green text-sm">
-              „Най-честите грешки при воденето на записи по ДПХП и НАССР и как да ги избегнете“
-            </h4>
-            <p className="text-xs text-brand-dark/70 leading-relaxed">
-              Практическо ръководство, базирано на реални несъответствия от контрола — за да не повтаряте
-              грешките, които най-често водят до предписания и глоби.
+        <div className="bg-brand-gold/10 border border-brand-gold/30 rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
+          <div className="flex items-start gap-4">
+            <span className="p-2.5 bg-white text-brand-gold rounded-xl shrink-0 shadow-sm"><FileText className="h-6 w-6" /></span>
+            <div className="space-y-1.5">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-brand-gold">
+                <Sparkles className="h-3.5 w-3.5" />
+                Специален бонус · Практическо ръководство от 45 страници
+              </span>
+              <h4 className="font-serif text-lg font-bold text-brand-green leading-snug">
+                „Най-честите грешки при воденето на записи по ДПХП и НАССР и как да ги избегнете“
+              </h4>
+            </div>
+          </div>
+
+          <p className="text-sm font-semibold text-brand-dark/80 leading-relaxed">
+            Имате попълнени дневници и регистри, но сигурни ли сте, че те доказват реално извършения контрол?
+          </p>
+          <p className="text-sm text-brand-dark/70 leading-relaxed">
+            В това практическо ръководство от 45 страници ще откриете най-често допусканите грешки при воденето на
+            записи, как се разпознават при официален контрол и как да ги предотвратите.
+          </p>
+          <p className="text-sm text-brand-dark/70 leading-relaxed">
+            Ще научите как да водите ясни, достоверни и проследими записи, как правилно да документирате
+            отклоненията и предприетите корективни действия и как да избегнете празни, предварително попълнени или
+            формално водени дневници.
+          </p>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-brand-gold/25">
+            <p className="text-xs text-brand-dark/70 leading-relaxed max-w-sm">
+              Получавате ръководството като <strong className="text-brand-green">БОНУС</strong> към Част I на
+              „Практическа библия за хранителния бизнес“.
             </p>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="text-right">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-brand-dark/40">Стойност</span>
+                <span className="font-serif text-lg text-brand-dark/40 line-through decoration-red-500/60 decoration-2 leading-none">
+                  27 €
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-brand-dark/40">За Вас</span>
+                <span className="font-serif text-2xl font-bold text-brand-gold leading-none">БЕЗПЛАТНО</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
