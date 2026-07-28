@@ -22,7 +22,7 @@ export default function BankTransferNotice({
 }) {
   const dark = variant === "dark";
   const rows: Array<{ label: string; value: string; mono?: boolean; accent?: boolean }> = [
-    { label: "Получател", value: "Данка Василева Крамолинска" },
+    { label: "Получател", value: "Данка Василева Николова" },
     { label: "Банка", value: "ЦКБ АД – Клон Плевен" },
     { label: "IBAN", value: "BG98 CECB 9790 1008 5533 00", mono: true, accent: true },
     { label: "BIC", value: "CECBBGSF", mono: true },

@@ -5117,7 +5117,7 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 font-mono text-xs sm:text-sm text-left">
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">Получател</span>
-                        <span className="font-bold text-white">Данка Василева Крамолинска</span>
+                        <span className="font-bold text-white">Данка Василева Николова</span>
                       </div>
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">Банка</span>
@@ -5511,7 +5511,7 @@ export default function ProfilePage() {
                   <div className="space-y-3 text-xs sm:text-sm">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">Получател</span>
-                      <span className="font-bold text-brand-dark/90">Данка Василева Крамолинска</span>
+                      <span className="font-bold text-brand-dark/90">Данка Василева Николова</span>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">Банка</span>

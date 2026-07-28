@@ -508,7 +508,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                 <div className="mt-4 space-y-2.5 relative">
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                     <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">Получател</span>
-                    <span className="font-semibold text-sm">Данка Василева Крамолинска</span>
+                    <span className="font-semibold text-sm">Данка Василева Николова</span>
                   </div>
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                     <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">Банка</span>
