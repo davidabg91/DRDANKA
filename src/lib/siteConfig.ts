@@ -35,7 +35,7 @@ export const BUSINESS = {
   addressCountry: "BG",
   postalCode: "5800",
   /** Default social share image (absolute path resolved via metadataBase). */
-  ogImage: "/share-logo.jpg",
+  ogImage: "/og-image.jpg",
 } as const;
 
 /** Areas served — used in LocalBusiness / ProfessionalService schema. */

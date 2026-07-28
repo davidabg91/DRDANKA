@@ -70,11 +70,11 @@ export const metadata: Metadata = {
     siteName: "Д-р Данка Николова | HACCP Спокойствие",
     images: [
       {
-        url: "https://www.haccpspokoystvie.bg/opengraph-image?v=5",
+        url: "https://www.haccpspokoystvie.bg/og-image.jpg?v=6",
         width: 1200,
         height: 630,
-        type: "image/png",
-        alt: "Академия Сигурен Хранителен Бизнес - Д-р Данка Николова",
+        type: "image/jpeg",
+        alt: "HACCP Спокойствие — дигитално решение за хранителна безопасност | Д-р Данка Николова",
       },
     ],
     locale: "bg_BG",
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Академия 'Сигурен Хранителен Бизнес' | Д-р Данка Николова",
     description: "Професионални консултации, внедряване и одит на системи за безопасност на храните от д-р Данка Николова.",
-    images: ["https://www.haccpspokoystvie.bg/opengraph-image?v=5"],
+    images: ["https://www.haccpspokoystvie.bg/og-image.jpg?v=6"],
   },
 };
 
