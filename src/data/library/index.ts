@@ -14,8 +14,10 @@ import { videoEtiketirane } from "./video-etiketirane";
 import { mesoIMesniProdukti } from "./meso-i-mesni-produkti";
 import { etiketiraneKontrolZashtita } from "./etiketirane-kontrol-zashtita";
 import { haccpPrakticheskaSistema } from "./haccp-prakticheska-sistema";
+import { prakticheskaBibliaChast1 } from "./prakticheska-biblia-chast-1";
 
 export const LIBRARY_MATERIALS: ReadonlyArray<LibraryMaterial> = [
+  prakticheskaBibliaChast1,
   haccpPrakticheskaSistema,
   etiketiraneNaHrani,
   videoEtiketirane,

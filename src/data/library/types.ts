@@ -27,6 +27,18 @@ export interface LibraryMaterial {
   category?: "training" | "document";
   /** External URL the buyer receives after payment (Google Drive PDF, Vimeo, etc.). */
   contentUrl: string;
+  /**
+   * Optional direct download link (e.g. Google Drive) delivered to the buyer
+   * AFTER payment, shown only inside the protected profile. Use this for PDF
+   * products that are hosted externally instead of Firebase Storage. Never
+   * rendered on the public sales page.
+   */
+  downloadUrl?: string;
+  /** Optional post-purchase bonus file, delivered alongside downloadUrl. */
+  bonus?: {
+    title: string;
+    url: string;
+  };
   /** Catalog card visuals. */
   card: {
     /** Path to cover image in /public, or an absolute URL. */

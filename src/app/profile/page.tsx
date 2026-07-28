@@ -39,6 +39,7 @@ import {
   Activity, 
   FileCheck, 
   Sparkles,
+  Award,
   Star,
   ChevronRight,
   ShieldAlert,
@@ -4391,7 +4392,30 @@ export default function ProfilePage() {
                                 {m.type === "video" ? "🎬 Видео обучение" : "📄 PDF Наръчник"}
                               </span>
                             </div>
-                            {m.type === "pdf" ? (
+                            {m.type === "pdf" && m.downloadUrl ? (
+                              <div className="mt-6 space-y-2">
+                                <a
+                                  href={m.downloadUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
+                                >
+                                  <BookOpen className="h-4 w-4" />
+                                  Изтегли материала
+                                </a>
+                                {m.bonus && (
+                                  <a
+                                    href={m.bonus.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center gap-2 bg-brand-gold/15 hover:bg-brand-gold/25 border border-brand-gold/30 text-brand-green font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center"
+                                  >
+                                    <Award className="h-4 w-4 text-brand-gold" />
+                                    Изтегли бонуса
+                                  </a>
+                                )}
+                              </div>
+                            ) : m.type === "pdf" ? (
                               <Link
                                 href={`/library/${m.slug}/viewer`}
                                 className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
