@@ -129,6 +129,305 @@ export const BLOG_POSTS: BlogPost[] = [
     )
   },
   {
+    id: "kak-da-registiram-obekt-babh",
+    title: "Как да регистрирам обект за търговия с храни в БАБХ – ръководство стъпка по стъпка (2026)",
+    summary: "Отваряте заведение, магазин, сладкарница или онлайн търговия с храни? Ето точните стъпки, документи и срокове за регистрация на обект в БАБХ, за да стартирате законно и без глоби.",
+    date: "28 юли 2026 г.",
+    readTime: "8 мин. четене",
+    image: "/blog_registration.webp",
+    tags: ["БАБХ регистрация", "Ръководство", "Стартиране на бизнес", "Документи"],
+    content: (
+      <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
+        <p>
+          Всеки бизнес, който произвежда, преработва, съхранява или предлага храни в България, е задължен по закон да бъде <strong>регистриран в Българската агенция по безопасност на храните (БАБХ)</strong>, преди да започне дейност. Това важи за ресторанти, кафенета, сладкарници, магазини, пекарни, каравани, кетъринг, дори за онлайн търговия с храни от дома.
+        </p>
+        <p>
+          Добрата новина: в повечето случаи става дума за <strong>регистрация по уведомителен режим</strong>, а не за тежко лицензиране. Лошата новина: една пропусната стъпка или липсващ документ може да отложи старта Ви с месеци или да доведе до глоба. В това ръководство ще намерите точния път — стъпка по стъпка.
+        </p>
+
+        <div className="bg-brand-gold/10 border-l-4 border-brand-gold p-4 rounded-r-lg my-8 flex items-start gap-3">
+          <span className="text-xl">⚠️</span>
+          <p className="text-sm font-semibold text-brand-green leading-relaxed">
+            Работа без регистрация в БАБХ се санкционира със значителни глоби и принудително затваряне на обекта. Регистрацията трябва да е налична ПРЕДИ първия работен ден.
+          </p>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Стъпка 1: Определете точния тип на обекта си</h3>
+        <p>
+          Първо трябва да сте наясно какъв обект регистрирате, защото това определя изискванията към него. Най-честите категории са:
+        </p>
+        <ul className="list-disc pl-5 space-y-2 mt-4 text-brand-dark/80">
+          <li><strong>Обект за обществено хранене:</strong> ресторант, кафене, бар, сладкарница, бистро, каравана / food truck.</li>
+          <li><strong>Обект за търговия на дребно:</strong> магазин за хранителни стоки, месарница, плод-зеленчук.</li>
+          <li><strong>Обект за производство:</strong> пекарна, сладкарски цех, млекопреработка, месопреработка.</li>
+          <li><strong>Обект за съхранение или дистрибуция:</strong> склад, логистичен център.</li>
+          <li><strong>Търговия от разстояние (онлайн):</strong> продажба на храни през сайт или социални мрежи, включително „домашно“ производство.</li>
+        </ul>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Стъпка 2: Осигурете подходящо помещение</h3>
+        <p>
+          Преди да подадете документи, обектът трябва физически да отговаря на хигиенните изисквания. Инспекторите проверяват най-често за:
+        </p>
+        <ul className="list-disc pl-5 space-y-2 mt-4 text-brand-dark/80">
+          <li>Разделени зони за „чисти“ и „мръсни“ процеси (за да няма кръстосано замърсяване).</li>
+          <li>Подходяща настилка, стени и повърхности, които се почистват лесно.</li>
+          <li>Течаща топла и студена вода, мивки за ръце, отделни от тези за миене на съдове.</li>
+          <li>Хладилно оборудване с възможност за контрол на температурата.</li>
+          <li>Складово пространство и условия за разделно съхранение на суровините.</li>
+        </ul>
+
+        <div className="bg-brand-light border-l-4 border-brand-gold p-6 rounded-r-xl my-8">
+          <span className="text-xs font-bold text-brand-gold uppercase tracking-wider block mb-1">💡 Съвет от експерта</span>
+          <p className="font-serif text-sm sm:text-base italic text-brand-green leading-relaxed">
+            "Най-скъпата грешка е да наемете или ремонтирате помещение, преди да сте проверили дали планировката му позволява регистрация за желаната дейност. Консултирайте се ПРЕДИ да подпишете договора за наем."
+          </p>
+          <span className="text-xs font-semibold block text-brand-gold mt-2">— д-р Данка Николова</span>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Стъпка 3: Подгответе документите</h3>
+        <p>
+          Комплектът документи варира според типа обект, но обичайно включва:
+        </p>
+        <ol className="list-decimal pl-5 space-y-3 mt-4 text-brand-dark/80">
+          <li><strong>Заявление за регистрация</strong> по образец на БАБХ (подава се в съответната Областна дирекция по безопасност на храните – ОДБХ).</li>
+          <li><strong>Документ за въведена система за управление на безопасността на храните</strong> (НАССР план / система за самоконтрол).</li>
+          <li><strong>Данни за групите храни и дейностите</strong>, които ще се извършват в обекта.</li>
+          <li><strong>Здравни книжки</strong> на персонала.</li>
+          <li>Според дейността – документи за произход на водата, договори за извозване на отпадъци, дезинсекция и дератизация.</li>
+        </ol>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-5 rounded-xl my-8">
+          <p className="text-sm text-brand-dark/85 leading-relaxed">
+            📌 <strong>Ключов момент:</strong> Именно НАССР системата и дневниците по самоконтрол са частта, която обърква повечето собственици. Разгледайте подробно{" "}
+            <Link href="/blog/sistema-za-samokontrol-dnevnici" className="text-brand-green font-bold underline hover:text-brand-gold">
+              какви дневници изисква БАБХ и как да ги водите
+            </Link>.
+          </p>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Стъпка 4: Подайте заявлението в ОДБХ</h3>
+        <p>
+          Заявлението се подава в Областната дирекция по безопасност на храните по местонахождение на обекта. Може да стане на място, по пощата или по електронен път. След подаване:
+        </p>
+        <ul className="list-disc pl-5 space-y-2 mt-4 text-brand-dark/80">
+          <li>Назначава се комисия, която извършва проверка на обекта на място.</li>
+          <li>При съответствие обектът се вписва в регистъра и получавате <strong>удостоверение за регистрация</strong>.</li>
+          <li>При констатирани несъответствия получавате указания и срок за отстраняването им.</li>
+        </ul>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Стъпка 5: Поддържайте изрядност след регистрацията</h3>
+        <p>
+          Регистрацията не е еднократно събитие. От първия работен ден нататък обектът подлежи на <strong>периодични проверки</strong>, при които се изисква актуална и правилно водена документация — попълнени дневници, здравни книжки, протоколи от обучения на персонала.
+        </p>
+
+        <div className="overflow-x-auto mt-6">
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-brand-green/20">
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tl-lg">Честа грешка</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tr-lg">Как да я избегнете</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm divide-y divide-brand-green/10">
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Стартиране на дейност преди регистрация</td>
+                <td className="py-3 px-4 text-brand-dark/80">Планирайте подаването поне 1 месец преди желания старт.</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Липсваща или формална НАССР система</td>
+                <td className="py-3 px-4 text-brand-dark/80">Внедрете реална система, съобразена с конкретния Ви обект.</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Помещение, което не отговаря на изискванията</td>
+                <td className="py-3 px-4 text-brand-dark/80">Проверете планировката преди наем/ремонт.</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Непопълнени дневници при проверка</td>
+                <td className="py-3 px-4 text-brand-dark/80">Водете документацията ежедневно, а не „преди инспекцията“.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-brand-dark/60 mt-4">
+          Виж още: <Link href="/blog/greshki-registraciya-babh" className="text-brand-green font-semibold underline hover:text-brand-gold">най-честите грешки при регистрация в БАБХ</Link>.
+        </p>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center sm:text-left">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <GraduationCap className="h-3.5 w-3.5" /> Съдействие при регистрация
+            </span>
+            <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+              Искате регистрация без стрес и забавяния?
+            </h4>
+            <p className="text-xs text-brand-dark/80 max-w-md">
+              Д-р Николова и екипът ѝ подготвят цялата документация и Ви преведат през процеса от помещението до удостоверението за регистрация.
+            </p>
+          </div>
+          <Link
+            href="/consultations"
+            className="inline-flex items-center justify-center bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 hover:text-white group"
+          >
+            Заяви консултация
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Заключение</h3>
+        <p>
+          Регистрацията на обект за храни в БАБХ е напълно постижима, стига да подходите систематично: правилно помещение, реална система за самоконтрол и пълен комплект документи. Подготовката отнема повече време от самата процедура — затова започнете рано и не оставяйте НАССР частта за последно.
+        </p>
+      </div>
+    )
+  },
+  {
+    id: "sistema-za-samokontrol-dnevnici",
+    title: "Система за самоконтрол: какви дневници изисква БАБХ и как да ги водите правилно",
+    summary: "Кои са задължителните дневници по самоконтрол за обект с храни, колко често се попълват и какво проверяват инспекторите на БАБХ. Практическо ръководство за собственици на заведения и магазини.",
+    date: "30 юли 2026 г.",
+    readTime: "7 мин. четене",
+    image: "/haccp-prakticheska-sistema.webp",
+    tags: ["Система за самоконтрол", "Дневници", "НАССР", "БАБХ проверка"],
+    content: (
+      <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
+        <p>
+          „Система за самоконтрол“ звучи сложно, но по същество означава едно: <strong>Вие сами доказвате, че храните във Вашия обект са безопасни</strong> — чрез редовни записи, а не само на думи. Тази система е задължителна за всеки регистриран обект и е първото нещо, което инспекторът на БАБХ иска да види при проверка.
+        </p>
+        <p>
+          В този материал ще разберете кои са основните дневници, колко често се попълват и как да избегнете най-честите санкции, свързани с документацията.
+        </p>
+
+        <div className="bg-brand-gold/10 border-l-4 border-brand-gold p-4 rounded-r-lg my-8 flex items-start gap-3">
+          <span className="text-xl">📋</span>
+          <p className="text-sm font-semibold text-brand-green leading-relaxed">
+            Празните или „попълнени наведнъж“ дневници са сред най-честите причини за предписания и глоби. Инспекторите разпознават моментално документация, писана в последния момент.
+          </p>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Какво представлява системата за самоконтрол?</h3>
+        <p>
+          Системата за самоконтрол се изгражда на принципите на <strong>НАССР (HACCP)</strong> — анализ на опасностите и контрол на критичните точки. На практика тя включва писмени процедури и набор от дневници, в които ежедневно се записват ключови показатели: температури, почистване, приемане на стоки и др.
+        </p>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Основните дневници, които БАБХ очаква</h3>
+        <p>
+          Точният набор зависи от типа обект, но за повечето заведения и магазини задължителни са:
+        </p>
+
+        <div className="overflow-x-auto mt-4">
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-brand-green/20">
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tl-lg">Дневник</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light">Какво записвате</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tr-lg">Честота</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm divide-y divide-brand-green/10">
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Температурен дневник (хладилници/фризери)</td>
+                <td className="py-3 px-4 text-brand-dark/80">Температура на всяко хладилно съоръжение</td>
+                <td className="py-3 px-4 text-brand-dark/80">Ежедневно</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Дневник за приемане на стоки</td>
+                <td className="py-3 px-4 text-brand-dark/80">Доставчик, партида, срок на годност, температура при доставка</td>
+                <td className="py-3 px-4 text-brand-dark/80">При всяка доставка</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Дневник за почистване и дезинфекция</td>
+                <td className="py-3 px-4 text-brand-dark/80">Зона, метод, отговорник</td>
+                <td className="py-3 px-4 text-brand-dark/80">По график</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Дневник за термична обработка</td>
+                <td className="py-3 px-4 text-brand-dark/80">Температура в сърцевината на продукта</td>
+                <td className="py-3 px-4 text-brand-dark/80">При готвене/претопляне</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Дневник за нехранителни отпадъци / олио</td>
+                <td className="py-3 px-4 text-brand-dark/80">Количество, извозване</td>
+                <td className="py-3 px-4 text-brand-dark/80">Периодично</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div className="bg-brand-light border-l-4 border-brand-gold p-6 rounded-r-xl my-8">
+          <span className="text-xs font-bold text-brand-gold uppercase tracking-wider block mb-1">💡 Съвет от експерта</span>
+          <p className="font-serif text-sm sm:text-base italic text-brand-green leading-relaxed">
+            "Инспекторът не очаква перфектни температури всеки ден — очаква да види, че когато нещо се отклони, Вие сте го забелязали и сте предприели действие. Записаната коригираща мярка тежи повече от идеалната таблица."
+          </p>
+          <span className="text-xs font-semibold block text-brand-gold mt-2">— д-р Данка Николова</span>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Хартия или дигитални дневници?</h3>
+        <p>
+          Класическите хартиени дневници са напълно законни, но имат недостатъци: губят се, забравят се и лесно се „наваксват“ преди проверка — което инспекторите разпознават. Все повече обекти преминават към <strong>дигитални дневници</strong>, които напомнят за попълване, пазят историята и се представят на инспектора с няколко клика.
+        </p>
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-5 rounded-xl my-6">
+          <p className="text-sm text-brand-dark/85 leading-relaxed">
+            📌 Ако тепърва регистрирате обект, вижте и{" "}
+            <Link href="/blog/kak-da-registiram-obekt-babh" className="text-brand-green font-bold underline hover:text-brand-gold">
+              пълното ръководство за регистрация в БАБХ
+            </Link>{" "}— системата за самоконтрол е задължителна част от документите още при подаването.
+          </p>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Най-чести грешки при водене на дневниците</h3>
+        <ul className="list-disc pl-5 space-y-3 mt-4 text-brand-dark/80">
+          <li><strong>Попълване „на едро“:</strong> еднакъв почерк и мастило за цял месец издава, че записите не са правени ежедневно.</li>
+          <li><strong>Само „нормални“ стойности:</strong> липсата на каквото и да е отклонение цяла година изглежда неправдоподобно.</li>
+          <li><strong>Липса на коригиращи действия:</strong> записана висока температура без последващо действие е по-лошо от липсващ запис.</li>
+          <li><strong>Дневници, които не отговарят на реалния обект:</strong> шаблон, свален от интернет, който изисква контроли, каквито при Вас няма.</li>
+        </ul>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 space-y-6">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <BookOpen className="h-3.5 w-3.5" /> Готови решения за самоконтрол
+            </span>
+            <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+              Не знаете откъде да започнете с дневниците?
+            </h4>
+            <p className="text-xs text-brand-dark/80">
+              Изберете най-подходящото за Вас — готови наръчници и обучения, за да се справите сами, или пълно съдействие от експерт.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div className="bg-white/80 p-5 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-gold uppercase">Наръчници &amp; обучения</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Практически материали за самоконтрол</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Готови образци на дневници и обяснения как да ги водите правилно.</p>
+              </div>
+              <Link href="/manuals" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-4 cursor-pointer">
+                Вижте наръчниците <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+
+            <div className="bg-white/80 p-5 rounded-xl border border-brand-green/5 flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-brand-green uppercase">Индивидуална консултация</span>
+                <h5 className="font-bold text-brand-green text-sm mt-1">Система, съобразена с Вашия обект</h5>
+                <p className="text-xs text-brand-dark/70 mt-1">Д-р Николова изгражда реална система за самоконтрол за конкретната Ви дейност.</p>
+              </div>
+              <Link href="/consultations" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-4 cursor-pointer">
+                Заяви консултация <ArrowRight className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Заключение</h3>
+        <p>
+          Системата за самоконтрол не е бюрокрация заради бюрокрацията — тя е Вашата защита при проверка и, по-важно, гаранция за безопасността на клиентите Ви. Водете дневниците честно и ежедневно, реагирайте на отклоненията и ги записвайте. Така всяка инспекция от БАБХ ще минава спокойно.
+        </p>
+      </div>
+    )
+  },
+  {
     id: "greshki-registraciya-babh",
     title: "Колко ще Ви струва една грешка при регистрацията на нов обект за храни?",
     summary: "Много бизнеси губят време и пари още преди да започнат. Разберете кои са критичните пропуски при БАБХ проверка и как да ги избегнете.",
