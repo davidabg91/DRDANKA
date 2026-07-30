@@ -205,6 +205,29 @@ export const BLOG_POSTS: BlogPost[] = [
           </p>
         </div>
 
+        <div className="bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-6 sm:p-8 border border-brand-gold/20 shadow-xl my-8">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold px-2.5 py-1 rounded">
+            ⚡ Направете го автоматично
+          </span>
+          <h4 className="font-serif text-lg sm:text-xl font-bold mt-3 mb-2">Системата за самоконтрол я имате готова — не я правете от нулата</h4>
+          <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+            Задължителните дневници и документи за регистрацията са готови в платформата на д-р Николова, съобразени с Вашия тип обект. Попълвате, разпечатвате и подавате в ОДБХ — без да плащате за изготвяне от нулата.
+          </p>
+          <ul className="space-y-2 mt-4 text-xs sm:text-sm">
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🔔</span> Системата Ви подсеща кога да попълните всеки дневник — не пропускате срок.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">⚙️</span> Повтарящите се записи се попълват автоматично всеки месец.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🖨️</span> Официалните документи се разпечатват готови за пред БАБХ с един клик.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">📱</span> Всичко на едно място — от телефон или компютър, за Вашия тип обект.</li>
+          </ul>
+          <Link
+            href="/profile"
+            className="inline-flex items-center justify-center bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer mt-5 group"
+          >
+            Изпробвайте безплатно 14 дни
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
         <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Стъпка 4: Подайте заявлението в ОДБХ</h3>
         <p>
           Заявлението се подава в Областната дирекция по безопасност на храните по местонахождение на обекта. Може да стане на място, по пощата или по електронен път. След подаване:
@@ -365,6 +388,29 @@ export const BLOG_POSTS: BlogPost[] = [
         <p>
           Класическите хартиени дневници са напълно законни, но имат недостатъци: губят се, забравят се и лесно се „наваксват“ преди проверка — което инспекторите разпознават. Все повече обекти преминават към <strong>дигитални дневници</strong>, които напомнят за попълване, пазят историята и се представят на инспектора с няколко клика.
         </p>
+        <div className="bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-6 sm:p-8 border border-brand-gold/20 shadow-xl my-8">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold px-2.5 py-1 rounded">
+            ⚡ Направете го автоматично
+          </span>
+          <h4 className="font-serif text-lg sm:text-xl font-bold mt-3 mb-2">Забравете хартиените дневници — водете самоконтрола дигитално</h4>
+          <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+            Точно тези дневници ги имате готови в платформата на д-р Николова, съобразени с Вашия обект (магазин, топла точка, месо). Вместо да пишете на ръка и да наваксвате преди проверка, системата работи с Вас всеки ден.
+          </p>
+          <ul className="space-y-2 mt-4 text-xs sm:text-sm">
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🔔</span> Подсеща Ви за температури, хигиена, изтичащи здравни книжки и годишно обучение.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">⚙️</span> Повтарящите се записи се попълват автоматично всеки месец.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🖨️</span> Разпечатвате всеки дневник като официален документ за пред БАБХ с един клик.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">📱</span> Попълвате от телефона си, на място в обекта — не наваксвате в края на месеца.</li>
+          </ul>
+          <Link
+            href="/profile"
+            className="inline-flex items-center justify-center bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer mt-5 group"
+          >
+            Изпробвайте безплатно 14 дни
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
         <div className="bg-brand-gold/10 border border-brand-gold/30 p-5 rounded-xl my-6">
           <p className="text-sm text-brand-dark/85 leading-relaxed">
             📌 Ако тепърва регистрирате обект, вижте и{" "}
@@ -473,6 +519,29 @@ export const BLOG_POSTS: BlogPost[] = [
         <p>
           Спрете да действате „на сляпо“ и „на късмет“. Най-сигурният начин е да направите предварителен одит на обекта преди официалното посещение на БАБХ. Чрез професионален анализ на пространството и документите ще разберете къде са слабите места и ще ги коригирате навреме, спестявайки нерви, време и пари.
         </p>
+
+        <div className="bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-6 sm:p-8 border border-brand-gold/20 shadow-xl my-8">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold px-2.5 py-1 rounded">
+            ⚡ Направете го автоматично
+          </span>
+          <h4 className="font-serif text-lg sm:text-xl font-bold mt-3 mb-2">Изрядна документация — без ръчна работа и пропуснати срокове</h4>
+          <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+            Най-честите причини за глоба са липсващи или непопълнени дневници. В платформата на д-р Николова те се попълват автоматично, а системата Ви подсеща навреме — така при внезапна проверка сте винаги готови.
+          </p>
+          <ul className="space-y-2 mt-4 text-xs sm:text-sm">
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🔔</span> Системата Ви подсеща кога да попълните всеки дневник — не пропускате срок.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">⚙️</span> Повтарящите се записи се попълват автоматично всеки месец.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🖨️</span> Официалните документи се разпечатват готови за пред БАБХ с един клик.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">📱</span> Всичко на едно място — от телефон или компютър, за Вашия тип обект.</li>
+          </ul>
+          <Link
+            href="/profile"
+            className="inline-flex items-center justify-center bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer mt-5 group"
+          >
+            Изпробвайте безплатно 14 дни
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
 
         <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 space-y-4">
           <div className="flex items-center gap-2">
@@ -634,6 +703,29 @@ export const BLOG_POSTS: BlogPost[] = [
           <li><strong>Ясно обозначаване на алергени:</strong> Суровините, съдържащи алергени (ядки, глутен, яйца, соя, сусам), трябва да се съхраняват физически отделно от останалите, за да се избегне кръстосано замърсяване.</li>
         </ol>
 
+        <div className="bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-6 sm:p-8 border border-brand-gold/20 shadow-xl my-8">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold px-2.5 py-1 rounded">
+            ⚡ Направете го автоматично
+          </span>
+          <h4 className="font-serif text-lg sm:text-xl font-bold mt-3 mb-2">Входящият контрол на суровините — автоматизиран</h4>
+          <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+            Дневникът за приемане на стоки, температурите при доставка и проследимостта на партидите ги водите директно в платформата на д-р Николова — с напомняния да не пропуснете запис и готов печат за пред БАБХ.
+          </p>
+          <ul className="space-y-2 mt-4 text-xs sm:text-sm">
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🔔</span> Подсеща Ви за входящия контрол и температурите — не пропускате доставка.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">⚙️</span> Повтарящите се записи се попълват автоматично всеки месец.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🖨️</span> Пълна проследимост на партидите, готова за печат при проверка.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">📱</span> Записвате директно при доставката — от телефона, на място.</li>
+          </ul>
+          <Link
+            href="/profile"
+            className="inline-flex items-center justify-center bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer mt-5 group"
+          >
+            Изпробвайте безплатно 14 дни
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
         <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 space-y-4">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
@@ -792,6 +884,29 @@ export const BLOG_POSTS: BlogPost[] = [
           <li><strong>Реален вътрешен одит:</strong> Правете периодични проверки на дневниците и хигиената сами (или с външен одитор). Така ще откриете и отстраните грешките навреме, преди БАБХ да ги е видяла.</li>
         </ol>
 
+        <div className="bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-6 sm:p-8 border border-brand-gold/20 shadow-xl my-8">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold px-2.5 py-1 rounded">
+            ⚡ Направете го автоматично
+          </span>
+          <h4 className="font-serif text-lg sm:text-xl font-bold mt-3 mb-2">Спрете да попълвате „на око“ — системата го прави вместо Вас</h4>
+          <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+            Дигиталните дневници в платформата на д-р Николова Ви подсещат кога да запишете температура, хигиена или входящ контрол, попълват повтарящото се автоматично и генерират официалните документи за печат. Няма как да изглеждат „писани с една химикалка преди проверката“.
+          </p>
+          <ul className="space-y-2 mt-4 text-xs sm:text-sm">
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🔔</span> Системата Ви подсеща кога да попълните всеки дневник — не пропускате срок.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">⚙️</span> Повтарящите се записи се попълват автоматично всеки месец.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🖨️</span> Официалните документи се разпечатват готови за пред БАБХ с един клик.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">📱</span> Реални записи с реални дати — вместо ретроспективно попълване преди проверка.</li>
+          </ul>
+          <Link
+            href="/profile"
+            className="inline-flex items-center justify-center bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer mt-5 group"
+          >
+            Изпробвайте безплатно 14 дни
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+
         <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="space-y-2 text-center sm:text-left">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
@@ -919,6 +1034,29 @@ export const BLOG_POSTS: BlogPost[] = [
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-6 sm:p-8 border border-brand-gold/20 shadow-xl my-8">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold px-2.5 py-1 rounded">
+            ⚡ Направете го автоматично
+          </span>
+          <h4 className="font-serif text-lg sm:text-xl font-bold mt-3 mb-2">Менюто с алергени — винаги актуално и готово за печат</h4>
+          <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+            В платформата на д-р Николова водите регистър с алергените на всяко ястие. Промените ли рецепта, легендата се обновява и я разпечатвате актуална за гишето — без ръчно преправяне и без риск от пропуск при проверка.
+          </p>
+          <ul className="space-y-2 mt-4 text-xs sm:text-sm">
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🔔</span> Подсеща Ви да обновите менюто при всяка промяна в рецептите.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">⚙️</span> Алергенната легенда се генерира автоматично от състава на ястията.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">🖨️</span> Разпечатвате актуалната легенда за гишето с един клик.</li>
+            <li className="flex items-start gap-2"><span className="text-brand-gold mt-0.5 shrink-0">📱</span> Управлявате всичко от телефона — дори в тясната каравана.</li>
+          </ul>
+          <Link
+            href="/profile"
+            className="inline-flex items-center justify-center bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer mt-5 group"
+          >
+            Изпробвайте безплатно 14 дни
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
 
         <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Заключение</h3>
