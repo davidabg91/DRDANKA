@@ -11,8 +11,10 @@
  * page can be flagged as spam by Google.
  */
 
-/** Canonical production origin. No trailing slash. */
-export const SITE_URL = "https://haccpspokoystvie.bg";
+/** Canonical production origin. No trailing slash. Must match the canonical
+ *  host used in app/layout.tsx (www) so sitemap, robots and JSON-LD list the
+ *  canonical URLs directly instead of ones that 308-redirect to www. */
+export const SITE_URL = "https://www.haccpspokoystvie.bg";
 
 /** Brand / site name used in openGraph.siteName and Organization schema. */
 export const SITE_NAME = "HACCP Спокойствие — Д-р Данка Николова";
