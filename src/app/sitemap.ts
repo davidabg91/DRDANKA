@@ -4,6 +4,13 @@ import { BLOG_POSTS } from "@/data/blogPosts";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { LIVE_COURSES } from "@/data/live-courses";
 
+// All routes come from in-code data (BLOG_POSTS, LIBRARY_MATERIALS,
+// LIVE_COURSES), so the sitemap only ever changes on deploy. Cache it at the
+// edge for a day instead of re-running the route on every request — this keeps
+// Googlebot off a cold serverless invocation (the source of intermittent
+// "timed out fetching" reports). Must be a statically analyzable literal.
+export const revalidate = 86400;
+
 type ChangeFreq = MetadataRoute.Sitemap[number]["changeFrequency"];
 
 function entry(
