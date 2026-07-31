@@ -317,7 +317,7 @@ export default function Home() {
                   alt="Д-р Данка Николова — консултант по безопасност на храните"
                   width={794}
                   height={1043}
-                  priority
+                  loading="lazy"
                   sizes="(max-width: 1024px) 320px, 380px"
                   className="pointer-events-none select-none w-[82%] max-w-[380px] h-auto object-contain relative z-20 -mb-6 drop-shadow-[0_28px_40px_rgba(10,31,24,0.35)]"
                 />

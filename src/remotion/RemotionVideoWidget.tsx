@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { Player, PlayerRef } from "@remotion/player";
-import { RegistersShowcaseVideo, REGISTERS_SHOWCASE_DURATION } from "./RegistersShowcaseVideo";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 
+// The Remotion player + composition are ~150KB of JS that is not needed for
+// first paint. Load them in a client-only chunk (ssr: false) after the hero
+// renders. The fixed-height container below reserves the space, so there is no
+// layout shift while the chunk loads.
+const RemotionPlayerInner = dynamic(() => import("./RemotionPlayerInner"), {
+  ssr: false,
+});
+
 export default function RemotionVideoWidget() {
-  const [isMounted, setIsMounted] = React.useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <div className="relative group">
       {/* Ambient glow */}
@@ -21,21 +20,7 @@ export default function RemotionVideoWidget() {
       <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/8 bg-gradient-to-br from-[#0a1f17] via-[#0d2b1c] to-[#081410] flex flex-col">
         {/* Remotion Player inside the card - Transparent UI Animation */}
         <div className="w-full relative h-[300px] sm:h-[360px]">
-          {isMounted && (
-            <Player
-              acknowledgeRemotionLicense={true}
-              component={RegistersShowcaseVideo}
-              durationInFrames={REGISTERS_SHOWCASE_DURATION}
-              compositionWidth={1000}
-              compositionHeight={800}
-              fps={30}
-              style={{ width: "100%", height: "100%", backgroundColor: "transparent" }}
-              controls={false}
-              autoPlay={true}
-              loop={true}
-              initiallyMuted={true}
-            />
-          )}
+          <RemotionPlayerInner />
         </div>
 
         {/* Card Content & Buttons */}
