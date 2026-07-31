@@ -12,7 +12,7 @@
  */
 import { useEffect, useState } from "react";
 import { db } from "./firebase";
-import { collection, doc, onSnapshot, query, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, getDocs, query, setDoc, deleteDoc } from "firebase/firestore";
 
 export interface PriceOverride {
   priceEur: number;
@@ -20,17 +20,26 @@ export interface PriceOverride {
 }
 
 /**
- * Live map of slug → priceEur. Returns the override price for any slug
- * the admin has changed; everything else stays on the code default.
+ * Map of slug → priceEur. Returns the override price for any slug the admin
+ * has changed; everything else stays on the code default.
+ *
+ * This is a ONE-TIME fetch (getDocs), not a realtime listener. Prices change
+ * rarely and public catalog pages don't need live sync — a persistent
+ * onSnapshot WebChannel here opened a streaming Firestore connection on every
+ * public page, which Google's crawler abandons (ERR_TIMED_OUT in the console)
+ * and which costs extra reads. Admin price edits now surface on next page load
+ * instead of instantly for other viewers — an acceptable trade for a catalog.
  */
 export function usePriceOverrides() {
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(
-      query(collection(db, "priceOverrides")),
-      (snap) => {
+    let cancelled = false;
+
+    getDocs(query(collection(db, "priceOverrides")))
+      .then((snap) => {
+        if (cancelled) return;
         const map: Record<string, number> = {};
         snap.forEach((d) => {
           const data = d.data() as PriceOverride;
@@ -38,14 +47,17 @@ export function usePriceOverrides() {
         });
         setOverrides(map);
         setLoading(false);
-      },
-      (error) => {
+      })
+      .catch((error) => {
         // Non-admin clients can read overrides (public), so this should rarely fail.
+        if (cancelled) return;
         console.error("Error fetching price overrides:", error);
         setLoading(false);
-      }
-    );
-    return unsub;
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return { overrides, loading };
