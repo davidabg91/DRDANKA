@@ -1,0 +1,50 @@
+# Д-р Данка Николова — HACCP Спокойствие
+
+> Консултации, внедряване и одит на системи за безопасност на храните (HACCP, ISO 22000, IFS, ДПХП/GMP) в България, плюс дигитална платформа за водене на дневниците по самоконтрол. Автор: д-р Данка Николова — консултант по безопасност на храните с над 27 години опит в официалния контрол.
+
+Сайтът обслужва собственици на заведения, магазини, производствени цехове и подвижни обекти (каравани/фууд тръкове) в България, които трябва да отговарят на изискванията на Българската агенция по безопасност на храните (БАБХ). Съдържанието е на български език.
+
+## Услуги и консултации
+
+- [Услуги](https://www.haccpspokoystvie.bg/services): Внедряване и одит на системи за безопасност на храните, изготвяне на документация и подготовка за проверки от БАБХ.
+- [Консултации](https://www.haccpspokoystvie.bg/consultations): Индивидуални онлайн консултации с д-р Николова по конкретни казуси на обекта.
+- [За мен](https://www.haccpspokoystvie.bg/about): Биография и професионален опит на д-р Данка Николова.
+- [Контакти](https://www.haccpspokoystvie.bg/contact): Форма за връзка и данни за контакт.
+
+## Платформа за самоконтрол
+
+- [Платформа (профил)](https://www.haccpspokoystvie.bg/profile): Дигитална система за водене на задължителните дневници по самоконтрол — автоматично попълване, напомняния за температури/хигиена/здравни книжки/обучения и печат на официални документи за пред БАБХ. Предлага 14-дневен безплатен тест.
+
+## Обучения и материали
+
+- [Библиотека с наръчници и материали](https://www.haccpspokoystvie.bg/library): Каталог с наръчници, видео обучения и практически материали.
+- [Курсове на живо](https://www.haccpspokoystvie.bg/live): Онлайн Zoom обучения с д-р Николова.
+- [Обучения](https://www.haccpspokoystvie.bg/training): Преглед на всички форми на обучение за персонал и собственици.
+- [Наръчници](https://www.haccpspokoystvie.bg/manuals): Готови образци и наръчници за самоконтрол.
+- [Практическа HACCP система](https://www.haccpspokoystvie.bg/library/haccp-prakticheska-sistema)
+- [Етикетиране на храни](https://www.haccpspokoystvie.bg/library/etiketirane-na-hrani)
+- [Месо и месни продукти](https://www.haccpspokoystvie.bg/library/meso-i-mesni-produkti)
+- [Видео курс по етикетиране](https://www.haccpspokoystvie.bg/library/video-etiketirane)
+
+## Курсове на живо
+
+- [НАССР основи](https://www.haccpspokoystvie.bg/live/haccp-osnovi)
+- [HACCP и ДПХП на практика](https://www.haccpspokoystvie.bg/live/haccp-dhpp-praktika)
+- [Наредба № 26](https://www.haccpspokoystvie.bg/live/naredba-26)
+- [Обучение по ДПХП](https://www.haccpspokoystvie.bg/live/obuchenie-dphp)
+- [Регистрация на обект](https://www.haccpspokoystvie.bg/live/registracia-obekt)
+
+## Полезни статии (блог)
+
+- [Блог за безопасност на храните](https://www.haccpspokoystvie.bg/blog): Всички статии.
+- [Как да регистрирам обект за храни в БАБХ — стъпка по стъпка](https://www.haccpspokoystvie.bg/blog/kak-da-registiram-obekt-babh)
+- [Система за самоконтрол: какви дневници изисква БАБХ](https://www.haccpspokoystvie.bg/blog/sistema-za-samokontrol-dnevnici)
+- [Контрол на суровините при производство на храни](https://www.haccpspokoystvie.bg/blog/kontrol-surovini-babh)
+- [Документация по безопасност: защо попълването „на око“ не работи](https://www.haccpspokoystvie.bg/blog/haccp-dokumenti-babh)
+- [Меню с алергени за подвижен обект (каравана)](https://www.haccpspokoystvie.bg/blog/alergeni-meniu-karavana)
+- [Е-номерата в храните — митове и изисквания](https://www.haccpspokoystvie.bg/blog/e-nomera-dobavki-hrani)
+
+## Правна информация
+
+- [Политика за поверителност](https://www.haccpspokoystvie.bg/privacy)
+- [Общи условия](https://www.haccpspokoystvie.bg/terms)
