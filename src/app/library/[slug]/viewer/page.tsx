@@ -101,17 +101,65 @@ export default function LibraryViewerPage() {
     };
   }, [slug, material, typeOverrides]);
 
-  // Block save / print shortcuts and right-click — not real defense but stops casual users.
+  const [isScreenBlurred, setIsScreenBlurred] = useState(false);
+
+  // Blur / blackout on window blur or visibility change (mitigates snipping tools)
+  useEffect(() => {
+    const handleBlur = () => setIsScreenBlurred(true);
+    const handleFocus = () => setIsScreenBlurred(false);
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        setIsScreenBlurred(true);
+      } else {
+        setIsScreenBlurred(false);
+      }
+    };
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  // Block save / print shortcuts, PrintScreen, and right-click
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && ["s", "p"].includes(e.key.toLowerCase())) e.preventDefault();
+      const key = e.key.toLowerCase();
+      if (
+        key === "printscreen" ||
+        e.code === "PrintScreen" ||
+        ((e.ctrlKey || e.metaKey) && ["s", "p", "u", "i"].includes(key)) ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && ["s", "3", "4", "c", "i"].includes(key))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsScreenBlurred(true);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText("").catch(() => {});
+        }
+        setTimeout(() => setIsScreenBlurred(false), 2500);
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "PrintScreen" || e.code === "PrintScreen") {
+        setIsScreenBlurred(true);
+        setTimeout(() => setIsScreenBlurred(false), 2500);
+      }
     };
     const onCtx = (e: MouseEvent) => e.preventDefault();
-    window.addEventListener("keydown", onKey);
+
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("keyup", onKeyUp, true);
     const node = containerRef.current;
     node?.addEventListener("contextmenu", onCtx);
     return () => {
-      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("keyup", onKeyUp, true);
       node?.removeEventListener("contextmenu", onCtx);
     };
   }, [mediaKind]);
@@ -152,6 +200,13 @@ export default function LibraryViewerPage() {
 
   return (
     <div className="min-h-screen bg-brand-dark text-white">
+      {/* Hide print dialog */}
+      <style jsx global>{`
+        @media print {
+          body { display: none !important; }
+        }
+      `}</style>
+
       {/* Toolbar */}
       <div className="sticky top-0 z-30 bg-brand-green/95 backdrop-blur border-b border-brand-gold/20 px-4 py-3 flex items-center justify-between gap-3 print:hidden">
         <Link href="/profile" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/80 hover:text-brand-gold transition-colors cursor-pointer">
@@ -176,14 +231,26 @@ export default function LibraryViewerPage() {
 
       {/* Content + watermark overlay */}
       <div ref={containerRef} className="relative max-w-5xl mx-auto py-8 px-4 select-none">
-        <div className="relative bg-white rounded shadow-2xl mx-auto overflow-hidden" style={{ width: "fit-content", WebkitTouchCallout: "none" }}>
-          {/* Protection overlay for the PDF (video keeps its own controls) */}
+        <div className="relative bg-white rounded shadow-2xl mx-auto overflow-hidden min-h-[500px]" style={{ width: "fit-content", WebkitTouchCallout: "none" }}>
+          
+          {/* Blackout overlay when window loses focus (Snipping tool active) */}
+          {isScreenBlurred && (
+            <div className="absolute inset-0 z-50 bg-brand-dark flex flex-col items-center justify-center p-8 text-center text-white space-y-3">
+              <Lock className="h-10 w-10 text-brand-gold" />
+              <h3 className="font-serif text-base font-bold text-brand-gold">Защита на съдържанието</h3>
+              <p className="text-xs text-white/70 max-w-xs">
+                Материалът е скрит при загуба на фокус. Върнете се в браузъра, за да продължите четенето.
+              </p>
+            </div>
+          )}
+
+          {/* Protection overlay for the PDF */}
           {mediaKind === "pdf" && (
             <div className="absolute inset-0 z-10 bg-transparent select-none" style={{ WebkitTouchCallout: "none" }} />
           )}
 
           {mediaKind === "pdf" && pdfFile && (
-            <div className="pointer-events-none select-none">
+            <div className={`pointer-events-none select-none transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}>
               <Document
                 file={pdfFile}
                 onLoadSuccess={({ numPages }) => setPageCount(numPages)}
@@ -201,14 +268,18 @@ export default function LibraryViewerPage() {
               controlsList="nodownload noplaybackrate"
               disablePictureInPicture
               onContextMenu={(e) => e.preventDefault()}
-              className="block max-w-full max-h-[80vh] bg-black"
+              className={`block max-w-full max-h-[80vh] bg-black transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}
             />
           )}
 
-          {/* Watermark overlay */}
-          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center select-none">
-            <div className="text-white/10 font-serif text-2xl sm:text-4xl rotate-[-30deg] whitespace-nowrap font-bold tracking-wide mix-blend-difference">
-              {email} · {new Date().toLocaleDateString("bg-BG")}
+          {/* Watermark grid overlay */}
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden select-none" aria-hidden="true">
+            <div className="absolute inset-[-50%] grid grid-cols-2 sm:grid-cols-3 gap-10 sm:gap-16 rotate-[-25deg] opacity-25 text-black font-mono text-[11px] font-black uppercase tracking-wider">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <div key={i} className="whitespace-nowrap bg-yellow-200/40 text-black px-3 py-1.5 rounded border border-black/15 shadow-sm">
+                  ЛИЧНО КОПИЕ: {email}
+                </div>
+              ))}
             </div>
           </div>
         </div>

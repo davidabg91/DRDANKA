@@ -89,19 +89,66 @@ export default function CourseViewerPage() {
     return unsub;
   }, [courseId]);
 
-  // Disable common save shortcuts. NOT a real defense but stops casual users.
+  const [isScreenBlurred, setIsScreenBlurred] = useState(false);
+
+  // Blur / blackout on window blur or visibility change (mitigates snipping tools)
+  useEffect(() => {
+    const handleBlur = () => setIsScreenBlurred(true);
+    const handleFocus = () => setIsScreenBlurred(false);
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        setIsScreenBlurred(true);
+      } else {
+        setIsScreenBlurred(false);
+      }
+    };
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  // Block save / print shortcuts, PrintScreen, and right-click
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && ["s", "p"].includes(e.key.toLowerCase())) {
+      const key = e.key.toLowerCase();
+      if (
+        key === "printscreen" ||
+        e.code === "PrintScreen" ||
+        ((e.ctrlKey || e.metaKey) && ["s", "p", "u", "i"].includes(key)) ||
+        ((e.ctrlKey || e.metaKey) && e.shiftKey && ["s", "3", "4", "c", "i"].includes(key))
+      ) {
         e.preventDefault();
+        e.stopPropagation();
+        setIsScreenBlurred(true);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText("").catch(() => {});
+        }
+        setTimeout(() => setIsScreenBlurred(false), 2500);
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "PrintScreen" || e.code === "PrintScreen") {
+        setIsScreenBlurred(true);
+        setTimeout(() => setIsScreenBlurred(false), 2500);
       }
     };
     const onCtx = (e: MouseEvent) => e.preventDefault();
-    window.addEventListener("keydown", onKey);
-    containerRef.current?.addEventListener("contextmenu", onCtx);
+
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("keyup", onKeyUp, true);
+    const node = containerRef.current;
+    node?.addEventListener("contextmenu", onCtx);
     return () => {
-      window.removeEventListener("keydown", onKey);
-      containerRef.current?.removeEventListener("contextmenu", onCtx);
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("keyup", onKeyUp, true);
+      node?.removeEventListener("contextmenu", onCtx);
     };
   }, []);
 
@@ -145,6 +192,13 @@ export default function CourseViewerPage() {
 
   return (
     <div className="bg-brand-dark min-h-screen text-white" ref={containerRef}>
+      {/* Hide print dialog */}
+      <style jsx global>{`
+        @media print {
+          body { display: none !important; }
+        }
+      `}</style>
+
       {/* Toolbar (custom — no download/print) */}
       <div className="sticky top-0 z-30 bg-brand-green/95 backdrop-blur-md border-b border-brand-gold/20 px-4 py-3 flex items-center justify-between gap-3 print:hidden">
         <Link href="/profile" className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/70 hover:text-brand-gold transition-colors cursor-pointer">
@@ -193,11 +247,23 @@ export default function CourseViewerPage() {
 
       {/* Page area + repeating watermark */}
       <div className="relative flex justify-center py-6 select-none">
-        <div className="relative overflow-hidden" style={{ WebkitTouchCallout: "none" }}>
+        <div className="relative overflow-hidden min-h-[500px]" style={{ WebkitTouchCallout: "none" }}>
+          
+          {/* Blackout overlay when window loses focus (Snipping tool active) */}
+          {isScreenBlurred && (
+            <div className="absolute inset-0 z-50 bg-brand-dark flex flex-col items-center justify-center p-8 text-center text-white space-y-3">
+              <Lock className="h-10 w-10 text-brand-gold" />
+              <h3 className="font-serif text-base font-bold text-brand-gold">Защита на съдържанието</h3>
+              <p className="text-xs text-white/70 max-w-xs">
+                Курсът е скрит при загуба на фокус. Върнете се в браузъра, за да продължите четенето.
+              </p>
+            </div>
+          )}
+
           {/* Protection overlay that intercepts right-click/long-press */}
           <div className="absolute inset-0 z-10 bg-transparent select-none" style={{ WebkitTouchCallout: "none" }} />
 
-          <div className="pointer-events-none select-none">
+          <div className={`pointer-events-none select-none transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}>
             <Document
               file={pdfFile}
               onLoadSuccess={onLoadSuccess}
@@ -215,17 +281,16 @@ export default function CourseViewerPage() {
             </Document>
           </div>
 
-          {/* Watermark overlay — pointer-events:none so it doesn't intercept anything,
-              tiles the page with the viewer's email + date. */}
+          {/* Dense Watermark Grid Overlay */}
           <div
-            className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center overflow-hidden"
+            className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center overflow-hidden select-none"
             aria-hidden="true"
           >
-            <div className="absolute inset-0 grid grid-cols-2 grid-rows-6 gap-4 rotate-[-30deg] opacity-15">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <span key={i} className="text-brand-dark text-[11px] font-bold whitespace-nowrap">
-                  {email} · {new Date().toLocaleDateString("bg-BG")}
-                </span>
+            <div className="absolute inset-[-50%] grid grid-cols-2 sm:grid-cols-3 gap-10 sm:gap-16 rotate-[-25deg] opacity-25 text-black font-mono text-[11px] font-black uppercase tracking-wider">
+              {Array.from({ length: 24 }).map((_, i) => (
+                <div key={i} className="whitespace-nowrap bg-yellow-200/40 text-black px-3 py-1.5 rounded border border-black/15 shadow-sm">
+                  ЛИЧНО КОПИЕ: {email}
+                </div>
               ))}
             </div>
           </div>
