@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, ShieldCheck, UserCircle2 } from "lucide-react";
+import { Menu, X, UserCircle2, Zap } from "lucide-react";
 import { useAuth, useDankaUsers } from "@/lib/firebaseHooks";
 
 export default function Header() {
@@ -25,7 +25,7 @@ export default function Header() {
        "Моят профил")
     : null;
   const portalLabelShort =
-    portalLabel && portalLabel.length > 22 ? portalLabel.slice(0, 21) + "…" : portalLabel;
+    portalLabel && portalLabel.length > 20 ? portalLabel.slice(0, 19) + "…" : portalLabel;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,6 +54,7 @@ export default function Header() {
   const navLinks = [
     { name: "Начало", href: "/" },
     { name: "Услуги", href: "/services" },
+    { name: "ВИП Система", href: "/vip-system", badge: "ВИП" },
     { name: "Консултации", href: "/consultations" },
     { name: "Обучения", href: "/training" },
     { name: "За мен", href: "/about" },
@@ -65,88 +66,85 @@ export default function Header() {
     <>
       <header
         className={`sticky top-0 z-50 transition-all duration-300 print:hidden ${
-          isOpen || isScrolled ? "py-3 shadow-xl" : "py-5"
+          isScrolled ? "py-2.5 shadow-2xl" : "py-4"
         }`}
       >
-        {/* Background Layers for smooth transition */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-          {/* Scrolled glassmorphism backdrop (Base layer) */}
-          <div className="absolute inset-0 bg-[#0A1F18]/90 backdrop-blur-xl border-b border-brand-gold/20" />
-          
-          {/* Base gradient (Fades out when scrolled, unless menu is open) */}
+        {/* Seamless Glassmorphism Background Layer */}
+        <div className="absolute inset-0 pointer-events-none -z-10 transition-all duration-500">
+          <div className="absolute inset-0 bg-[#0A1F18]/80 backdrop-blur-2xl" />
           <div 
-            className={`absolute inset-0 bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] border-b transition-all duration-300 ${
-              isOpen || !isScrolled ? "opacity-100 border-brand-gold/10" : "opacity-0 border-brand-gold/20"
+            className={`absolute inset-0 bg-gradient-to-r from-[#061410]/90 via-[#0A1F18]/95 to-[#081712]/90 border-b border-brand-gold/15 transition-opacity duration-300 ${
+              isScrolled ? "opacity-100" : "opacity-90"
             }`}
           />
-          {/* Subtle mesh pattern for texture */}
-          <div 
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
-            }}
-          />
+          {/* Subtle bottom glowing accent border line */}
+          <div className="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-gold/30 to-transparent" />
         </div>
         
-        <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 relative">
+        <div className="w-full max-w-[1536px] px-4 sm:px-6 lg:px-8 xl:px-12 relative mx-auto">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3 group shrink-0">
               <img
                 src="/logo-icon.png"
                 alt="Д-р Данка Николова Лого"
-                className="h-14 w-14 object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
+                className="h-12 w-12 sm:h-13 sm:w-13 object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
               />
               <div>
-                <span className="font-logo text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-wide block leading-none">
+                <span className="font-logo text-base sm:text-lg lg:text-xl font-bold text-white tracking-wide block leading-none group-hover:text-brand-gold transition-colors">
                   Д-р Данка Николова
                 </span>
-                <span className="text-[10px] xl:text-xs text-brand-gold font-light tracking-widest uppercase hidden xl:block mt-1">
+                <span className="text-[9px] xl:text-[10px] text-brand-gold font-light tracking-widest uppercase hidden xl:block mt-1">
                   Академия сигурен хранителен бизнес
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden xl:flex items-center justify-center flex-grow gap-x-1 2xl:gap-x-2 px-2 2xl:px-8">
+            <nav className="hidden xl:flex items-center justify-center flex-grow gap-x-1 px-4">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`relative xl:text-[11px] 2xl:text-[12px] font-semibold tracking-wider transition-all duration-200 uppercase whitespace-nowrap px-2.5 2xl:px-3.5 py-1.5 rounded-full cursor-pointer ${
+                    className={`relative text-[11px] 2xl:text-[12px] font-bold tracking-wider transition-all duration-200 uppercase whitespace-nowrap px-3 py-1.5 rounded-full cursor-pointer flex items-center gap-1.5 ${
                       isActive
-                        ? "text-brand-dark bg-brand-gold shadow-sm"
-                        : "text-white/75 hover:text-white hover:bg-white/10"
+                        ? "text-brand-dark bg-brand-gold shadow-[0_0_15px_rgba(212,175,55,0.4)]"
+                        : "text-white/80 hover:text-white hover:bg-white/10"
                     }`}
                   >
-                    {link.name}
+                    <span>{link.name}</span>
+                    {link.badge && !isActive && (
+                      <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full bg-brand-gold/20 text-brand-gold border border-brand-gold/40">
+                        {link.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
             </nav>
 
-            {/* Desktop Call to Action */}
+            {/* Desktop Call to Action Buttons */}
             <div className="hidden xl:flex items-center shrink-0 space-x-2.5">
               {/* Primary CTA — gold pill with shimmer */}
               <Link
                 href="/consultations"
-                className="relative inline-flex items-center justify-center overflow-hidden xl:px-3.5 2xl:px-5 py-1.5 2xl:py-2 text-[11px] 2xl:text-[12px] font-bold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-full shadow-md hover:shadow-lg hover:shadow-brand-gold/30 transition-all duration-300 whitespace-nowrap cursor-pointer group"
+                className="relative inline-flex items-center justify-center overflow-hidden px-4 py-2 text-[11px] 2xl:text-[12px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-full shadow-md hover:shadow-lg hover:shadow-brand-gold/30 transition-all duration-300 whitespace-nowrap cursor-pointer group"
               >
-                {/* shimmer sweep */}
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
                 Заяви консултация
               </Link>
-              {/* Secondary CTA — glass pill */}
+
+              {/* Secondary CTA — portal access */}
               <Link
                 href="/profile"
                 title={portalLabel || undefined}
-                className="inline-flex items-center justify-center gap-1.5 xl:px-3.5 2xl:px-5 py-1.5 2xl:py-2 text-[11px] 2xl:text-[12px] font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer max-w-[220px]"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] 2xl:text-[12px] font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/10 backdrop-blur-md hover:bg-brand-gold/20 hover:border-brand-gold transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer max-w-[210px]"
               >
                 {portalLabelShort ? (
                   <>
-                    <UserCircle2 className="h-4 w-4 shrink-0" />
+                    <UserCircle2 className="h-4 w-4 shrink-0 text-brand-gold" />
                     <span className="truncate">{portalLabelShort}</span>
                   </>
                 ) : (
@@ -159,7 +157,7 @@ export default function Header() {
             <div className="xl:hidden flex items-center">
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="text-white hover:text-brand-gold focus:outline-none p-1.5 rounded-lg hover:bg-brand-gold/10 transition-colors"
+                className="text-white hover:text-brand-gold focus:outline-none p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-brand-gold/10 transition-colors"
                 aria-label="Toggle navigation menu"
               >
                 {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -171,14 +169,14 @@ export default function Header() {
 
       {/* Mobile Drawer Navigation */}
       <div
-        className={`xl:hidden fixed inset-0 top-0 z-40 bg-brand-green transition-all duration-300 transform ${
+        className={`xl:hidden fixed inset-0 top-0 z-40 bg-[#06120E]/98 backdrop-blur-2xl transition-all duration-300 transform ${
           isOpen
             ? "opacity-100 translate-y-0"
             : "opacity-0 -translate-y-10 pointer-events-none invisible"
         }`}
       >
-        <div className="px-4 pb-8 pt-24 space-y-4 flex flex-col h-full justify-between">
-          <nav className="flex flex-col space-y-4 border-t border-brand-gold/15 pt-4">
+        <div className="px-6 pb-8 pt-24 space-y-4 flex flex-col h-full justify-between max-w-md mx-auto">
+          <nav className="flex flex-col space-y-3 border-t border-brand-gold/15 pt-6">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -186,25 +184,30 @@ export default function Header() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className={`text-lg font-medium tracking-wide py-2 uppercase border-b border-white/5 ${
-                    isActive ? "text-brand-gold font-semibold" : "text-white/80"
+                  className={`text-base font-bold tracking-wider py-2.5 uppercase border-b border-white/5 flex items-center justify-between ${
+                    isActive ? "text-brand-gold font-black" : "text-white/80 hover:text-white"
                   }`}
                 >
-                  {link.name}
+                  <span>{link.name}</span>
+                  {link.badge && (
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-brand-gold text-brand-dark">
+                      {link.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="space-y-3 pb-20">
+          <div className="space-y-3 pb-16">
             <Link
               href="/profile"
               onClick={() => setIsOpen(false)}
-              className="w-full text-center flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/5 backdrop-blur-sm hover:bg-brand-gold/15 hover:border-brand-gold/80 transition-all duration-300 shadow-sm cursor-pointer"
+              className="w-full text-center flex items-center justify-center gap-2 px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-brand-gold rounded-xl border border-brand-gold/40 bg-brand-gold/10 backdrop-blur-sm hover:bg-brand-gold/20 transition-all shadow-sm cursor-pointer"
             >
               {portalLabelShort ? (
                 <>
-                  <UserCircle2 className="h-4 w-4 shrink-0" />
+                  <UserCircle2 className="h-4 w-4 shrink-0 text-brand-gold" />
                   <span className="truncate">{portalLabelShort}</span>
                 </>
               ) : (
@@ -214,9 +217,8 @@ export default function Header() {
             <Link
               href="/consultations"
               onClick={() => setIsOpen(false)}
-              className="relative w-full text-center block overflow-hidden px-6 py-3 text-sm font-bold uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-full shadow-md hover:shadow-lg hover:shadow-brand-gold/30 transition-all duration-300 cursor-pointer group"
+              className="relative w-full text-center block overflow-hidden px-6 py-3.5 text-xs font-black uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-xl shadow-lg transition-all cursor-pointer"
             >
-              <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
               Заяви консултация
             </Link>
           </div>
