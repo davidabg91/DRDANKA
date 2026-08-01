@@ -53,7 +53,8 @@ service cloud.firestore {
         authEmail() == email.lower() &&
         unchanged("role") &&
         unchanged("status") &&
-        (unchanged("subscriptionFeeEur") || request.resource.data.subscriptionFeeEur in [50, 80, 120]) &&
+        (unchanged("subscriptionFeeEur") || (request.resource.data.subscriptionFeeEur is number && request.resource.data.subscriptionFeeEur >= 0)) &&
+        (unchanged("subscriptionStatus") || request.resource.data.subscriptionStatus in ["none", "pending", "awaiting_payment", "trial"]) &&
         unchanged("purchasedCourseIds")
       );
 
