@@ -288,108 +288,133 @@ export default function PackagePurchaseModal({
                 <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{priceEur.toFixed(2)} €</span>
               </div>
 
-              {isLoggedIn && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-900 leading-relaxed flex items-center justify-between">
-                  <span>Влезли сте в профила си като: <strong>{email}</strong></span>
-                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
-                </div>
-              )}
-
-              {/* Tabs */}
-              <div className="grid grid-cols-2 gap-1 bg-brand-light/60 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setTab("buy")}
-                  className={`py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 ${tab === "buy" ? "bg-white text-brand-green shadow" : "text-brand-dark/50 hover:text-brand-green"}`}
-                >
-                  Само покупка
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTab("trial")}
-                  className={`py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 ${tab === "trial" ? "bg-white text-brand-green shadow" : "text-brand-dark/50 hover:text-brand-green"}`}
-                >
-                  + 14 дни безплатно
-                </button>
-              </div>
-
-              {tab === "trial" && (
-                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-900 leading-relaxed flex items-start gap-2">
-                  <Building2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600" />
-                  <span>Въведете фирмата си и получавате <strong>14 дни безплатен достъп</strong> до системата за дневници по самоконтрол — успоредно с покупката на пакета.</span>
-                </div>
-              )}
-
-              {/* Account fields */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-brand-green/70">
-                  <User className="h-3.5 w-3.5" /> Данни за {isLoggedIn ? "контакт" : "акаунт"}
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Име и фамилия *</label>
-                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Иван Петров" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email *</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={isLoggedIn || status === "processing"} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Телефон *</label>
-                    <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0888123456" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} />
-                  </div>
-                </div>
-
-                {!isLoggedIn && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Парола *</label>
-                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Мин. 6 символа" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+              {isLoggedIn ? (
+                /* Streamlined order summary for LOGGED-IN users — NO registration fields */
+                <div className="space-y-4">
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-emerald-900">
+                      <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <span>Влезли сте с профил: <strong className="font-mono">{email}</strong></span>
                     </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Потвърди парола *</label>
-                      <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Повтори паролата" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                    <p className="text-[11px] text-emerald-800/80 leading-relaxed">
+                      Пакетът <strong>„{packageTitle}“</strong> ще бъде добавен директно към Вашия акаунт след потвърждение на плащането.
+                    </p>
+                  </div>
+
+                  <div className="space-y-3 bg-brand-light/40 p-4 rounded-2xl border border-brand-green/5">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-brand-green/70 flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5" /> Данни за контакт
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Име и фамилия *</label>
+                        <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Вашите имена" className="w-full text-xs px-3 py-2 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Телефон *</label>
+                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0888123456" className="w-full text-xs px-3 py-2 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} />
+                      </div>
                     </div>
                   </div>
-                )}
-
-                {tab === "buy" && (
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Фирма (по желание)</label>
-                    <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Ресторант Витоша ЕООД" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                  </div>
-                )}
-              </div>
-
-              {/* Trial business fields */}
-              {tab === "trial" && (
-                <div className="space-y-3 border-t border-brand-green/5 pt-4">
-                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-emerald-700">
-                    <Building2 className="h-3.5 w-3.5" /> Данни за фирмата (14 дни тест)
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Име на фирма *</label>
-                      <input type="text" value={firmName} onChange={(e) => setFirmName(e.target.value)} placeholder="Ресторант Витоша ЕООД" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">ЕИК</label>
-                      <input type="text" value={eik} onChange={(e) => setEik(e.target.value)} placeholder="123456789" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Адрес на обекта</label>
-                    <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="гр. София, ул. …" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Тип обект / дейност</label>
-                    <input type="text" value={niche} onChange={(e) => setNiche(e.target.value)} placeholder="напр. ресторант, магазин за месо, сладкарница" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Кратко описание</label>
-                    <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} placeholder="С какво се занимава обектът" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-none" disabled={status === "processing"} />
-                  </div>
                 </div>
+              ) : (
+                /* Full registration form for LOGGED-OUT users */
+                <>
+                  {/* Tabs */}
+                  <div className="grid grid-cols-2 gap-1 bg-brand-light/60 p-1 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setTab("buy")}
+                      className={`py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 ${tab === "buy" ? "bg-white text-brand-green shadow" : "text-brand-dark/50 hover:text-brand-green"}`}
+                    >
+                      Само покупка
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTab("trial")}
+                      className={`py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 ${tab === "trial" ? "bg-white text-brand-green shadow" : "text-brand-dark/50 hover:text-brand-green"}`}
+                    >
+                      + 14 дни безплатно
+                    </button>
+                  </div>
+
+                  {tab === "trial" && (
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-900 leading-relaxed flex items-start gap-2">
+                      <Building2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600" />
+                      <span>Въведете фирмата си и получавате <strong>14 дни безплатен достъп</strong> до системата за дневници по самоконтрол — успоредно с покупката на пакета.</span>
+                    </div>
+                  )}
+
+                  {/* Account fields */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-brand-green/70">
+                      <User className="h-3.5 w-3.5" /> Данни за акаунт
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Име и фамилия *</label>
+                      <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Иван Петров" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email *</label>
+                        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Телефон *</label>
+                        <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0888123456" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Парола *</label>
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Мин. 6 символа" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Потвърди парола *</label>
+                        <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Повтори паролата" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                      </div>
+                    </div>
+
+                    {tab === "buy" && (
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Фирма (по желание)</label>
+                        <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Ресторант Витоша ЕООД" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Trial business fields */}
+                  {tab === "trial" && (
+                    <div className="space-y-3 border-t border-brand-green/5 pt-4">
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                        <Building2 className="h-3.5 w-3.5" /> Данни за фирмата (14 дни тест)
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Име на фирма *</label>
+                          <input type="text" value={firmName} onChange={(e) => setFirmName(e.target.value)} placeholder="Ресторант Витоша ЕООД" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">ЕИК</label>
+                          <input type="text" value={eik} onChange={(e) => setEik(e.target.value)} placeholder="123456789" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Адрес на обекта</label>
+                        <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="гр. София, ул. …" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Тип обект / дейност</label>
+                        <input type="text" value={niche} onChange={(e) => setNiche(e.target.value)} placeholder="напр. ресторант, магазин за месо, сладкарница" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Кратко описание</label>
+                        <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={2} placeholder="С какво се занимава обектът" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-none" disabled={status === "processing"} />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="border-t border-brand-green/5 pt-4 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
