@@ -94,7 +94,7 @@ export default function Header() {
                 <span className="font-logo text-sm sm:text-base lg:text-base xl:text-lg 2xl:text-xl font-bold text-white tracking-wide block leading-none group-hover:text-brand-gold transition-colors whitespace-nowrap">
                   Д-р Данка Николова
                 </span>
-                <span className="text-[9px] xl:text-[10px] text-brand-gold font-light tracking-wider uppercase hidden 2xl:block mt-0.5 truncate whitespace-nowrap">
+                <span className="text-[9px] xl:text-[10px] text-brand-gold font-light tracking-wider uppercase hidden xl:block mt-0.5 truncate whitespace-nowrap">
                   Академия сигурен хранителен бизнес
                 </span>
               </div>
