@@ -126,17 +126,8 @@ export default function Header() {
             </nav>
 
             {/* Desktop Call to Action Buttons — always visible, never shrink */}
-            <div className="hidden lg:flex items-center flex-none space-x-1.5 lg:space-x-2">
-              {/* Primary CTA — gold pill with shimmer */}
-              <Link
-                href="/consultations"
-                className="relative inline-flex items-center justify-center overflow-hidden px-2.5 lg:px-3.5 xl:px-4 py-1.5 text-[10px] lg:text-[11px] xl:text-[12px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold hover:bg-brand-gold-light rounded-full shadow-md hover:shadow-lg hover:shadow-brand-gold/30 transition-all duration-300 whitespace-nowrap cursor-pointer group"
-              >
-                <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
-                Заяви консултация
-              </Link>
-
-              {/* Secondary CTA — portal access */}
+            <div className="hidden lg:flex items-center flex-none">
+              {/* Portal/Login CTA */}
               <Link
                 href="/profile"
                 title={portalLabel || undefined}
