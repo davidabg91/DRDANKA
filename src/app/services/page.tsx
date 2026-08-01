@@ -286,7 +286,7 @@ export default function Services() {
               <div className="relative z-10 pt-5 border-t border-brand-green/15 flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Link
-                    href="/vip-system"
+                    href="/babh-sistema"
                     className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-white/80 border border-brand-green/30 text-brand-green hover:bg-brand-green hover:text-white transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                   >
                     <Search className="h-3.5 w-3.5" /> Виж повече

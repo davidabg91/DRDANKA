@@ -32,6 +32,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // on purpose — they 308-redirect to /library and /live respectively.)
   const staticRoutes: MetadataRoute.Sitemap = [
     entry("", 1.0, "weekly"),
+    entry("/babh-sistema", 0.95, "weekly"),
     entry("/services", 0.9, "monthly"),
     entry("/consultations", 0.9, "monthly"),
     entry("/library", 0.9, "weekly"),
