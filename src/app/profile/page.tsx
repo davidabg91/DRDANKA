@@ -2961,19 +2961,6 @@ export default function ProfilePage() {
                           </button>
                         )}
 
-                        {/* Premium tab: НАССР Документи */}
-                        {isSubscribed ? (
-                          <button onClick={() => setActiveTab("haccp")} className={activeStyle(activeTab === "haccp")}>
-                            <FileText className={`h-4 w-4 ${activeTab === "haccp" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                            НАССР Документи
-                          </button>
-                        ) : (
-                          <button onClick={lockedClick} className={lockedStyle} title="Изисква абонамент">
-                            <FileText className="h-4 w-4" />
-                            <span className="flex-1">НАССР Документи</span>
-                            <LockBadge />
-                          </button>
-                        )}
 
                         {/* Premium tab: Документи & Тестове */}
                         {isSubscribed ? (
@@ -4654,122 +4641,7 @@ export default function ProfilePage() {
                 />
               )}
 
-              {/* TAB 2: AUTO-GENERATED HACCP & DHP DOCUMENTS */}
-              {activeTab === "haccp" && (
-                <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6">
-                  <div className="flex items-center gap-3 border-b border-brand-green/5 pb-4">
-                    <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
-                      <FileCheck className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h2 className="font-serif text-xl font-bold text-brand-green">Автоматичен Генератор на БАБХ Документи</h2>
-                      <p className="text-xs text-brand-dark/50">Генерирайте Вашата регламентирана папка с попълнени корпоративни данни</p>
-                    </div>
-                  </div>
 
-                  <div className="bg-brand-gold/10 border border-brand-gold/25 p-4 rounded-xl text-xs leading-relaxed space-y-2">
-                    <span className="font-bold block text-brand-green uppercase tracking-wider">Как работи?</span>
-                    <p>
-                      Системата взема данните за Вашата фирма (Име, ЕИК, Адрес и Управител), които сте въвели в настройките, и ги вгражда динамично в готови официални декларации и процедури. Изберете документ от списъка по-долу, прегледайте го и го отпечатайте на А4.
-                    </p>
-                  </div>
-
-                  {/* List of Documents */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <div className="border border-brand-green/5 rounded-xl p-4 hover:border-brand-gold/45 transition-colors flex flex-col justify-between">
-                      <div className="space-y-2">
-                        <span className="text-[9px] font-bold uppercase bg-brand-green/10 text-brand-green px-2 py-0.5 rounded-full">Задължително по Закон</span>
-                        <h4 className="font-serif text-sm font-bold text-brand-green">Система за самоконтрол (ДХП)</h4>
-                        <p className="text-[10px] text-brand-dark/60 leading-normal">
-                          Процедури за лична хигиена, входящ контрол на суровините, почистване, дезинфекция и управление на отпадъци.
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => setActiveDocKey("dhp")}
-                        className="mt-4 bg-brand-green/5 hover:bg-brand-green text-brand-green hover:text-white font-bold text-[10px] uppercase py-2 rounded transition-colors w-full cursor-pointer text-center"
-                      >
-                        Прегледай и генерирай
-                      </button>
-                    </div>
-
-                    <div className="border border-brand-green/5 rounded-xl p-4 hover:border-brand-gold/45 transition-colors flex flex-col justify-between">
-                      <div className="space-y-2">
-                        <span className="text-[9px] font-bold uppercase bg-brand-green/10 text-brand-green px-2 py-0.5 rounded-full">Задължително по Закон</span>
-                        <h4 className="font-serif text-sm font-bold text-brand-green">Програма за мониторинг на вредители (ДДД)</h4>
-                        <p className="text-[10px] text-brand-dark/60 leading-normal">
-                          Инструкции за борба с гризачи и насекоми, сключени договори и мониторингови карти за безопасност.
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => setActiveDocKey("pest")}
-                        className="mt-4 bg-brand-green/5 hover:bg-brand-green text-brand-green hover:text-white font-bold text-[10px] uppercase py-2 rounded transition-colors w-full cursor-pointer text-center"
-                      >
-                        Прегледай и генерирай
-                      </button>
-                    </div>
-
-                    <div className="border border-brand-green/5 rounded-xl p-4 hover:border-brand-gold/45 transition-colors flex flex-col justify-between">
-                      <div className="space-y-2">
-                        <span className="text-[9px] font-bold uppercase bg-brand-green/10 text-brand-green px-2 py-0.5 rounded-full">ЕС 1169/2011</span>
-                        <h4 className="font-serif text-sm font-bold text-brand-green">Процедура за управление на алергени</h4>
-                        <p className="text-[10px] text-brand-dark/60 leading-normal">
-                          Методология за маркиране на алергени в съставките, предпазване от кръстосано замърсяване и легенда за меню.
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => setActiveDocKey("allergens")}
-                        className="mt-4 bg-brand-green/5 hover:bg-brand-green text-brand-green hover:text-white font-bold text-[10px] uppercase py-2 rounded transition-colors w-full cursor-pointer text-center"
-                      >
-                        Прегледай и генерирай
-                      </button>
-                    </div>
-
-                    <div className="border border-brand-green/5 rounded-xl p-4 hover:border-brand-gold/45 transition-colors flex flex-col justify-between">
-                      <div className="space-y-2">
-                        <span className="text-[9px] font-bold uppercase bg-brand-gold/20 text-brand-gold px-2 py-0.5 rounded-full">ККТ Контрол</span>
-                        <h4 className="font-serif text-sm font-bold text-brand-green">Система НАССР (План и граници)</h4>
-                        <p className="text-[10px] text-brand-dark/60 leading-normal">
-                          Анализ на опасностите при печене, охлаждане, съхранение и определяне на Критични Контролни Точки.
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => setActiveDocKey("haccp")}
-                        className="mt-4 bg-brand-green/5 hover:bg-brand-green text-brand-green hover:text-white font-bold text-[10px] uppercase py-2 rounded transition-colors w-full cursor-pointer text-center"
-                      >
-                        Прегледай и генерирай
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* DOCUMENT PREVIEW MODAL SCREEN */}
-                  {activeDocKey && (
-                    <div className="border-2 border-brand-gold/30 rounded-xl p-6 bg-brand-light/30 relative space-y-4">
-                      <div className="flex items-center justify-between border-b border-brand-green/5 pb-2">
-                        <h4 className="font-serif text-sm font-bold text-brand-green">Генериран Документ: {(DOCUMENT_TEMPLATES as any)[activeDocKey].title}</h4>
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => handlePrintText((DOCUMENT_TEMPLATES as any)[activeDocKey].title, (DOCUMENT_TEMPLATES as any)[activeDocKey].content(firmInfo))}
-                            className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-[10px] uppercase px-3 py-1.5 rounded transition-colors flex items-center gap-1 cursor-pointer"
-                          >
-                            <Printer className="h-3 w-3" /> Принтирай А4
-                          </button>
-                          <button 
-                            onClick={() => setActiveDocKey(null)}
-                            className="text-xs text-brand-dark/50 hover:text-brand-dark font-bold hover:underline"
-                          >
-                            Затвори
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Clean pre-formatted paper preview */}
-                      <pre className="font-mono text-xs whitespace-pre-wrap leading-relaxed p-4 border border-brand-green/10 bg-white rounded shadow-sm text-brand-dark max-h-96 overflow-y-auto">
-                        {(DOCUMENT_TEMPLATES as any)[activeDocKey].content(firmInfo)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              )}
 
               
               {/* CLIENT TAB 3: ASSIGNED (ДОКУМЕНТИ & ТЕСТОВЕ) */}
