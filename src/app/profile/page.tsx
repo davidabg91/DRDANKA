@@ -1016,10 +1016,24 @@ export default function ProfilePage() {
       const ok = await updateUser(currentUserEmail, updates);
       if (ok) {
         setPkgSuccessModal({ name, fee });
-        setTimeout(() => {
-          const el = document.getElementById("bank-details-card");
-          if (el) el.scrollIntoView({ behavior: "smooth" });
-        }, 400);
+        const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+        const isFirmIncomplete = !me?.firmName || me.firmName.trim() === "" || !me?.address || me.address.trim() === "";
+        if (isFirmIncomplete) {
+          setApplyFirmName(me?.firmName || "");
+          setApplyEik(me?.eik || "");
+          setApplyContact(me?.contact || me?.manager || "");
+          setApplyPhone(me?.phone || "");
+          setApplyAddress(me?.address || "");
+          setApplyDesc(me?.desc || "");
+          setTimeout(() => {
+            setSubApplyOpen(true);
+          }, 800);
+        } else {
+          setTimeout(() => {
+            const el = document.getElementById("bank-details-card");
+            if (el) el.scrollIntoView({ behavior: "smooth" });
+          }, 400);
+        }
       }
     } catch (err) {
       console.error("Select package error:", err);
@@ -1754,6 +1768,10 @@ export default function ProfilePage() {
       alert("Моля попълнете всички полета с * за обекта.");
       return;
     }
+    const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+    const currentSub = me?.subscriptionStatus ?? "none";
+    const nextSubStatus = (currentSub === "none" || currentSub === "expired") ? "pending" : currentSub;
+
     const ok = await updateUser(currentUserEmail, {
       firmName: applyFirmName.trim(),
       eik: applyEik.trim() || "Няма въведен",
@@ -1764,7 +1782,7 @@ export default function ProfilePage() {
       desc: applyDesc.trim(),
       address: applyAddress.trim(),
       manager: applyContact.trim(),
-      subscriptionStatus: "pending",
+      subscriptionStatus: nextSubStatus,
     });
     if (ok) {
       setSubApplyOpen(false);
@@ -2674,6 +2692,41 @@ export default function ProfilePage() {
       )}                        {/* 3. LOGGED-IN DASHBOARD */}
       {isLoggedIn && (
         <div className="max-w-7xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
+
+          {/* Missing Firm Data banner — shown when user has a subscription or trial but missing firm/object details */}
+          {userRole === "user" && (() => {
+            const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+            const hasSub = me && me.subscriptionStatus && me.subscriptionStatus !== "none";
+            const isIncomplete = !me?.firmName || me.firmName.trim() === "" || !me?.address || me.address.trim() === "";
+            if (!hasSub || !isIncomplete) return null;
+            return (
+              <div className="mb-6 rounded-2xl border bg-amber-50 border-amber-300 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3 shadow-sm">
+                <AlertTriangle className="h-6 w-6 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1 text-sm">
+                  <p className="font-bold text-amber-900 mb-0.5">
+                    Моля, въведете данните на фирмата и обекта
+                  </p>
+                  <p className="text-xs text-amber-800 leading-relaxed">
+                    Заявихте/закупихте абонамент, но все още нямате въведени данни за обекта (име на фирма, ЕИК, адрес). Данните са необходими за изготвяне на Вашите дневници и документация.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setApplyFirmName(me?.firmName || "");
+                    setApplyEik(me?.eik || "");
+                    setApplyContact(me?.contact || me?.manager || "");
+                    setApplyPhone(me?.phone || "");
+                    setApplyAddress(me?.address || "");
+                    setApplyDesc(me?.desc || "");
+                    setSubApplyOpen(true);
+                  }}
+                  className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap shadow-md border-0 shrink-0"
+                >
+                  Попълни данни за фирмата
+                </button>
+              </div>
+            );
+          })()}
 
           {/* Subscription PAYMENT banner — clients in awaiting_payment state.
               Shown on every tab so the buyer always sees the call to pay. */}
