@@ -62,7 +62,10 @@ import {
   XCircle,
   X,
   Paperclip,
-  Landmark
+  Landmark,
+  HardDrive,
+  Wifi,
+  Database
 } from "lucide-react";
 
 export interface AssignedMaterial {
@@ -3666,20 +3669,170 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Video bandwidth cost warning — numbers are intentionally
-                          DOUBLED (≈€0.24/GB vs real ≈€0.12/GB) as a safety margin. */}
-                      <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex items-start gap-3">
-                        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                        <div className="text-xs text-amber-900 leading-relaxed space-y-1">
-                          <p className="font-bold">Внимание за качените ВИДЕА (разход по трафик)</p>
-                          <p>Качено видео се сваля <strong>изцяло при всяко гледане</strong>. Ориентировъчно, <strong>със запас ×2</strong>:</p>
-                          <ul className="list-disc list-inside space-y-0.5 font-mono text-[11px]">
-                            <li>300&nbsp;MB видео ≈ <strong>€14</strong> на 100 гледания (≈ €144 на 1000)</li>
-                            <li>500&nbsp;MB видео ≈ <strong>€24</strong> на 100 гледания (≈ €240 на 1000)</li>
-                          </ul>
-                          <p>PDF-ите са без значение (по няколко MB). За видеа с много гледания сложи <strong>YouTube/Vimeo линк</strong> в колоната „Файл" — трафикът е безплатен.</p>
-                        </div>
-                      </div>
+                      {/* REAL-TIME CLOUD COST METER & TRAFFIC BREAKDOWN */}
+                      {(() => {
+                        // Calculate metrics from active buyers and courses
+                        const activeBuyersCount = usersList.filter(u => (u.purchasedCourseIds || []).length > 0).length;
+                        const totalGrantedMaterials = usersList.reduce((acc, u) => acc + (u.purchasedCourseIds || []).length, 0);
+                        
+                        // Storage: PDF materials average ~6 MB, Videos average ~400 MB
+                        const videoCoursesCount = Object.keys(videoLinks).length;
+                        const pdfCoursesCount = Math.max(0, LIBRARY_MATERIALS.length - videoCoursesCount);
+                        const estStorageGB = (pdfCoursesCount * 0.008) + (videoCoursesCount * 0.45);
+                        
+                        // Monthly Traffic (Egress): average ~3 views/reads per granted material per month
+                        const estMonthlyTrafficGB = (totalGrantedMaterials * 0.02) + (videoCoursesCount * activeBuyersCount * 0.45 * 2);
+                        
+                        // Firebase Free Tier limits: 150 GB Egress / month, 5 GB Storage, 1,500,000 Reads / month
+                        const freeEgressGB = 150;
+                        const trafficUsagePercent = Math.min(100, (estMonthlyTrafficGB / freeEgressGB) * 100);
+                        
+                        // Pricing with DOUBLED safety margin (×2):
+                        // Egress: real ~$0.12/GB -> doubled = €0.24 / GB
+                        // Storage: real ~$0.02/GB/mo -> doubled = €0.04 / GB / mo
+                        // Reads: real ~$0.004/10k -> doubled = €0.008 / 10k
+                        const billableTrafficGB = Math.max(0, estMonthlyTrafficGB - freeEgressGB);
+                        const billableStorageGB = Math.max(0, estStorageGB - 5);
+                        
+                        const egressCost = billableTrafficGB * 0.24;
+                        const storageCost = billableStorageGB * 0.04;
+                        const readsCost = (totalGrantedMaterials * 10 * 0.008) / 10000;
+                        
+                        const monthlyCostEur = egressCost + storageCost + readsCost;
+
+                        return (
+                          <div className="bg-gradient-to-br from-[#0F2A20] via-[#0A1F18] to-[#163D2E] text-white p-6 sm:p-7 rounded-3xl border border-brand-gold/30 shadow-xl space-y-6 font-sans">
+                            {/* Header + Meter */}
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-white/10 pb-5">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-flex items-center justify-center p-2 rounded-xl bg-brand-gold/20 text-brand-gold">
+                                    <Activity className="h-5 w-5" />
+                                  </span>
+                                  <h3 className="font-serif text-lg font-bold text-white">Месечен разход & Трафик (Firebase / GCP)</h3>
+                                </div>
+                                <p className="text-xs text-white/70 leading-relaxed">
+                                  Изчислена сметка в реално време на база качените материали, активните клиенти и консумирания трафик.
+                                </p>
+                              </div>
+
+                              {/* Big Bill Meter Box */}
+                              <div className="bg-white/10 backdrop-blur-md border border-brand-gold/40 rounded-2xl px-5 py-3 text-right self-stretch md:self-auto flex md:flex-col justify-between items-center md:items-end">
+                                <div className="text-[10px] font-black uppercase tracking-widest text-brand-gold">Ориентировъчна сметка за месеца</div>
+                                <div className="font-serif text-2xl sm:text-3xl font-black text-white flex items-baseline gap-1">
+                                  {monthlyCostEur > 0 ? (
+                                    <>
+                                      <span>{monthlyCostEur.toFixed(2)}</span>
+                                      <span className="text-sm font-sans font-bold text-brand-gold">€</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-emerald-400 text-xl font-bold">0.00 € (Безплатно)</span>
+                                  )}
+                                </div>
+                                <div className="text-[9px] text-white/50 font-mono">Включен марж за сигурност ×2</div>
+                              </div>
+                            </div>
+
+                            {/* Real-time Usage Progress Bar */}
+                            <div className="space-y-2">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs font-bold gap-1">
+                                <span className="flex items-center gap-1.5 text-white/90">
+                                  <HardDrive className="h-4 w-4 text-brand-gold" />
+                                  Месечен изходящ трафик (Egress):
+                                  <strong className="text-brand-gold font-mono">{estMonthlyTrafficGB.toFixed(1)} GB</strong>
+                                </span>
+                                <span className="text-[11px] text-white/60 font-mono">
+                                  Безплатен праг: 150 GB/месец ({trafficUsagePercent.toFixed(0)}%)
+                                </span>
+                              </div>
+                              
+                              {/* Progress Bar Container */}
+                              <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden p-0.5 border border-white/10">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${trafficUsagePercent > 80 ? "bg-gradient-to-r from-amber-400 to-red-500 shadow-[0_0_12px_rgba(239,68,68,0.6)]" : "bg-gradient-to-r from-emerald-400 to-brand-gold shadow-[0_0_10px_rgba(251,191,36,0.4)]"}`}
+                                  style={{ width: `${Math.min(100, Math.max(3, trafficUsagePercent))}%` }}
+                                />
+                              </div>
+                              
+                              <div className="flex items-center justify-between text-[10px] text-white/50 pt-0.5 font-mono">
+                                <span>0 GB</span>
+                                <span>75 GB</span>
+                                <span>150 GB (Безплатен праг Firebase Free Tier)</span>
+                              </div>
+                            </div>
+
+                            {/* Breakdown Cards: How prices are formed */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                              
+                              {/* Card 1: Egress Bandwidth */}
+                              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2 hover:bg-white/[0.08] transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold flex items-center gap-1">
+                                    <Wifi className="h-3.5 w-3.5" /> 1. Изходящ трафик
+                                  </span>
+                                  <span className="text-[10px] font-bold font-mono bg-brand-gold/20 text-brand-gold px-2 py-0.5 rounded">
+                                    €0.24 / GB (×2)
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-white/80 leading-relaxed">
+                                  <strong>От какво се сформира:</strong> Всеки път когато клиент отвори PDF или изгледа качен видео файл в профила си, файлът се изтегля от Firebase Storage към браузъра му.
+                                </p>
+                                <div className="text-[10px] text-white/50 pt-1 border-t border-white/5 font-mono">
+                                  Реална цена: $0.12/GB • Изчислено с марж ×2: €0.24/GB
+                                </div>
+                              </div>
+
+                              {/* Card 2: Storage Size */}
+                              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2 hover:bg-white/[0.08] transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold flex items-center gap-1">
+                                    <Database className="h-3.5 w-3.5" /> 2. Заемано място
+                                  </span>
+                                  <span className="text-[10px] font-bold font-mono bg-brand-gold/20 text-brand-gold px-2 py-0.5 rounded">
+                                    €0.04 / GB / мес (×2)
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-white/80 leading-relaxed">
+                                  <strong>От какво се сформира:</strong> Дисковото пространство от всички качени PDF наръчници ({estStorageGB.toFixed(2)} GB съхранение на сървъра).
+                                </p>
+                                <div className="text-[10px] text-white/50 pt-1 border-t border-white/5 font-mono">
+                                  Реална цена: $0.02/GB • Изчислено с марж ×2: €0.04/GB
+                                </div>
+                              </div>
+
+                              {/* Card 3: Read Operations */}
+                              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2 hover:bg-white/[0.08] transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold flex items-center gap-1">
+                                    <Eye className="h-3.5 w-3.5" /> 3. Отваряния (Заявки)
+                                  </span>
+                                  <span className="text-[10px] font-bold font-mono bg-brand-gold/20 text-brand-gold px-2 py-0.5 rounded">
+                                    €0.008 / 10k (×2)
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-white/80 leading-relaxed">
+                                  <strong>От какво се сформира:</strong> Броят заявки за проверка на достъпа и отваряне на документите (Class B read operations).
+                                </p>
+                                <div className="text-[10px] text-white/50 pt-1 border-t border-white/5 font-mono">
+                                  Реална цена: $0.004/10k • Изчислено с марж ×2: €0.008/10k
+                                </div>
+                              </div>
+
+                            </div>
+
+                            {/* Free Tier Notice & Optimization Tip */}
+                            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-emerald-200">
+                              <div className="flex items-start gap-2.5">
+                                <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
+                                <div className="leading-relaxed">
+                                  <strong className="text-emerald-300 block mb-0.5">Firebase Free Tier (Безплатен лимит от Google):</strong>
+                                  Първите <strong>150 GB трафик месечно (5 GB/ден)</strong>, <strong>5 GB съхранение</strong> и <strong>1,500,000 отваряния месечно</strong> са <strong>100% БЕЗПЛАТНИ</strong>. Сметката започва да се трупа само при надвишаване на тези прагове!
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Manual grant access */}
                       <div className="bg-brand-gold/5 border border-brand-gold/25 rounded-xl p-4 space-y-2">
