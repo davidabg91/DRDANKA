@@ -2755,35 +2755,6 @@ export default function ProfilePage() {
             );
           })()}
 
-          {/* Package PAYMENT banner — buyer has awaiting-payment purchases.
-              Always-active "Данни за плащане" button + 24h activation note. */}
-          {userRole === "user" && (() => {
-            const pending = myEnrollments.filter(e => e.status === "awaiting_payment");
-            if (pending.length === 0) return null;
-            return (
-              <div className="mb-6 space-y-3">
-                {pending.map(enr => (
-                  <div key={enr.id} className="rounded-2xl border bg-gradient-to-r from-brand-gold/20 to-brand-gold/10 border-brand-gold/40 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    <Clock className="h-6 w-6 text-brand-gold shrink-0" />
-                    <div className="flex-1 text-sm">
-                      <p className="font-bold text-brand-green mb-0.5">
-                        „{enr.trainingTitle}" — чака плащане
-                      </p>
-                      <p className="text-xs text-brand-dark/70">
-                        Направете банков превод на стойност <strong className="text-brand-green">{enr.priceEur.toFixed(2)} €</strong>. До <strong>24 часа</strong> след постъпване на плащането пакетът се активира и се появява за четене в „Моите обучения".
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setPayEnrollment(enr)}
-                      className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap shadow-md shadow-brand-gold/20 border-0"
-                    >
-                      Данни за плащане
-                    </button>
-                  </div>
-                ))}
-              </div>
-            );
-          })()}
 
           {/* Bank-transfer details modal for a pending package */}
           {payEnrollment && (
@@ -4745,7 +4716,10 @@ export default function ProfilePage() {
 {/* TAB 3: MY PURCHASED COURSES */}
               {activeTab === "courses" && (() => {
                 const myIds = currentUser?.purchasedCourseIds || [];
-                const myMaterials = LIBRARY_MATERIALS.filter(m => myIds.includes(m.slug));
+                const unlockedMaterials = LIBRARY_MATERIALS.filter(m => myIds.includes(m.slug));
+                const pendingEnrollments = myEnrollments.filter(e => e.status === "awaiting_payment" || e.status === "pending");
+                const hasAny = unlockedMaterials.length > 0 || pendingEnrollments.length > 0;
+
                 return (
                   <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6">
                     <div className="flex items-center justify-between gap-3 border-b border-brand-green/5 pb-4">
@@ -4755,7 +4729,7 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <h2 className="font-serif text-xl font-bold text-brand-green">Моите обучения</h2>
-                          <p className="text-xs text-brand-dark/50">Закупените от Вас материали — отворете в нов раздел</p>
+                          <p className="text-xs text-brand-dark/50">Отключените и чакащите плащане материали във Вашия профил</p>
                         </div>
                       </div>
                       <Link href="/library" className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer whitespace-nowrap">
@@ -4764,55 +4738,96 @@ export default function ProfilePage() {
                       </Link>
                     </div>
 
-                    {myMaterials.length === 0 ? (
+                    {!hasAny ? (
                       <div className="text-center py-10 border border-dashed border-brand-green/10 rounded-xl space-y-3">
                         <BookOpen className="h-10 w-10 text-brand-gold/40 mx-auto" />
-                        <p className="text-sm text-brand-dark/60">Все още нямате закупени обучения.</p>
+                        <p className="text-sm text-brand-dark/60">Все още нямате закупени или заявени обучения.</p>
                         <Link href="/library" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer">
                           Към книжарницата →
                         </Link>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                        {myMaterials.map(m => {
-                          // Everything is read INSIDE the profile through the protected
-                          // viewer (blob from Firebase Storage, no download / copy).
-                          // No external links, no download buttons — per access policy.
+                        {/* UNLOCKED MATERIALS (GREEN) */}
+                        {unlockedMaterials.map(m => {
                           const isVideo = effectiveMaterialType(m.slug) === "video";
                           const hasLink = isVideo && !!videoLinks[m.slug];
                           return (
-                          <div key={m.slug} className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
-                            <div className="space-y-3">
-                              <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                                <CheckCircle className="h-3 w-3" /> Отключен
-                              </span>
-                              <h4 className="font-serif text-base font-bold text-brand-green">{m.title}</h4>
-                              <p className="text-xs text-brand-dark/60 leading-normal">{m.tagline}</p>
-                              <span className="text-[10px] text-brand-dark/40 font-mono block">
-                                {isVideo ? "🎬 Видео обучение" : "📄 PDF Наръчник"}
-                              </span>
+                            <div key={m.slug} className="border border-brand-green/15 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-gold/40 hover:shadow-md transition-all duration-300 bg-white">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2.5 py-1 rounded-full">
+                                    <CheckCircle className="h-3 w-3 text-green-600" /> Отключен
+                                  </span>
+                                  <span className="text-[10px] text-brand-dark/40 font-mono">
+                                    {isVideo ? "🎬 Видео" : "📄 PDF"}
+                                  </span>
+                                </div>
+                                <h4 className="font-serif text-base font-bold text-brand-green">{m.title}</h4>
+                                <p className="text-xs text-brand-dark/60 leading-normal">{m.tagline}</p>
+                              </div>
+                              <div>
+                                {hasLink ? (
+                                  <button
+                                    onClick={() => setWatchLinkSlug(m.slug)}
+                                    className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow border-0"
+                                  >
+                                    <Video className="h-4 w-4" />
+                                    Гледай в профила
+                                  </button>
+                                ) : (
+                                  <Link
+                                    href={`/library/${m.slug}/viewer`}
+                                    className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
+                                  >
+                                    {isVideo ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                                    {isVideo ? "Гледай в профила" : "Чети в профила"}
+                                  </Link>
+                                )}
+                                <p className="mt-2 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
+                                  <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Достъпен за четене
+                                </p>
+                              </div>
                             </div>
-                            {hasLink ? (
+                          );
+                        })}
+
+                        {/* PENDING / LOCKED MATERIALS (RED) */}
+                        {pendingEnrollments.map(enr => {
+                          const mat = LIBRARY_MATERIALS.find(m => m.slug === enr.trainingId || m.title === enr.trainingTitle);
+                          return (
+                            <div key={enr.id} className="border-2 border-red-200 bg-red-50/40 rounded-2xl p-5 flex flex-col justify-between hover:border-red-300 transition-all duration-300 shadow-sm relative overflow-hidden">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase bg-red-100 text-red-700 px-2.5 py-1 rounded-full border border-red-200">
+                                    <Lock className="h-3 w-3 text-red-600" /> Заключен
+                                  </span>
+                                  <span className="text-xs font-bold text-brand-green font-mono bg-white px-2 py-0.5 rounded-md border border-brand-green/10">
+                                    {enr.priceEur.toFixed(2)} €
+                                  </span>
+                                </div>
+
+                                <h4 className="font-serif text-base font-bold text-red-950">{enr.trainingTitle}</h4>
+                                <p className="text-xs text-red-900/70 leading-normal">
+                                  {mat?.tagline || "Заявката е приета. След извършване на банков превод пакетът се отключва автоматично в профила Ви."}
+                                </p>
+
+                                <div className="bg-white/80 rounded-xl p-2.5 border border-red-100 text-[11px] text-red-900/80 leading-tight space-y-1">
+                                  <div className="font-bold flex items-center gap-1 text-red-700">
+                                    <Clock className="h-3.5 w-3.5" /> Чака плащане
+                                  </div>
+                                  <div>До 24 часа след превода обучението ще се отключи.</div>
+                                </div>
+                              </div>
+
                               <button
-                                onClick={() => setWatchLinkSlug(m.slug)}
-                                className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md border-0"
+                                onClick={() => setPayEnrollment(enr)}
+                                className="mt-6 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold text-xs uppercase py-3 rounded-xl transition-all w-full cursor-pointer text-center shadow-md shadow-red-500/20 border-0"
                               >
-                                <Video className="h-4 w-4" />
-                                Гледай в профила
+                                <Landmark className="h-4 w-4 text-brand-gold" />
+                                Направи плащане
                               </button>
-                            ) : (
-                              <Link
-                                href={`/library/${m.slug}/viewer`}
-                                className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
-                              >
-                                {isVideo ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
-                                {isVideo ? "Гледай в профила" : "Чети в профила"}
-                              </Link>
-                            )}
-                            <p className="mt-2 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
-                              <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Само за гледане в профила
-                            </p>
-                          </div>
+                            </div>
                           );
                         })}
                       </div>
