@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Player } from "@remotion/player";
-import { SubscriptionVideo } from "@/remotion/SubscriptionVideo";
 import {
   ShieldCheck,
   Zap,
@@ -29,7 +27,6 @@ import {
 } from "lucide-react";
 
 export default function BabhSistemaClient() {
-  const [isMounted, setIsMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<"registers" | "labels" | "chat" | "academy" | "updates">("registers");
 
   // Interactive Label State Demo
@@ -40,10 +37,6 @@ export default function BabhSistemaClient() {
   // Interactive Temp Log Demo
   const [tempVal, setTempVal] = useState(3.8);
   const [tempSaved, setTempSaved] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // ALL 10 MANDATORY BABH REGISTERS (ДНЕВНИЦИ ПО САМОКОНТРОЛ / HACCP)
   const BABH_REGISTERS = [
@@ -278,40 +271,6 @@ export default function BabhSistemaClient() {
         </div>
       </section>
 
-      {/* ═══════════════ REMOTION VIDEO DEMO ═══════════════ */}
-      <section className="py-10 bg-[#06120E] border-b border-white/10">
-        <div className="w-full max-w-[1536px] px-4 sm:px-6 lg:px-8 space-y-6 text-center">
-          <div className="space-y-2 max-w-2xl mx-auto">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-brand-gold/20 text-brand-gold border border-brand-gold/40 px-3 py-1 rounded-md inline-block">
-              REMOTION АНИМАЦИЯ
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white">
-              Вижте как работят модулите на живо
-            </h2>
-          </div>
-
-          <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl border border-brand-gold/30 aspect-video bg-black relative">
-            {isMounted && (
-              <Player
-                acknowledgeRemotionLicense={true}
-                component={SubscriptionVideo}
-                durationInFrames={300}
-                compositionWidth={1280}
-                compositionHeight={720}
-                fps={30}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                }}
-                controls={true}
-                autoPlay={true}
-                loop={true}
-                initiallyMuted={true}
-              />
-            )}
-          </div>
-        </div>
-      </section>
 
       {/* ═══════════════ INTERACTIVE SYSTEM MODULE SWITCHER (COMPACT) ═══════════════ */}
       <section className="py-12 border-b border-white/10">
