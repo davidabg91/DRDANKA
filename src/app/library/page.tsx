@@ -74,7 +74,7 @@ export default function LibraryPage() {
                           ? 'bg-red-600 text-white animate-pulse shadow-red-600/30' 
                           : 'bg-brand-gold text-brand-dark'
                       }`}>
-                        <Sparkles className="h-3 w-3" /> {m.card.badge}
+                        {m.card.badge}
                       </span>
                     </div>
                   )}
@@ -134,7 +134,6 @@ export default function LibraryPage() {
             </div>
             <div className="lg:col-span-6 space-y-3 text-center lg:text-left">
               <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-                <Sparkles className="h-3 w-3" />
                 Още от д-р Николова
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">

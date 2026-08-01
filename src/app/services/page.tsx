@@ -157,7 +157,6 @@ export default function Services() {
         <section className="space-y-4">
           <div className="flex items-center justify-between border-b border-brand-green/10 pb-3">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-brand-gold" />
               <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green">Основни Премиум Услуги</h2>
             </div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-brand-dark/50 hidden sm:inline-block">

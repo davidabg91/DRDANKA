@@ -89,7 +89,7 @@ export default function LibraryMaterialPage() {
                   </span>
                   {material.card.badge && (
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-3 py-1.5 rounded-full shadow-lg shadow-brand-gold/20">
-                      <Sparkles className="h-3.5 w-3.5" /> {material.card.badge}
+                      {material.card.badge}
                     </span>
                   )}
                 </div>
@@ -188,7 +188,7 @@ export default function LibraryMaterialPage() {
               </span>
               {material.card.badge && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-2.5 py-1.5 rounded-full shadow-sm">
-                  <Sparkles className="h-3 w-3" /> {material.card.badge}
+                  {material.card.badge}
                 </span>
               )}
             </div>

@@ -17,7 +17,6 @@ import {
   Star,
   ChevronRight,
   ArrowRight,
-  Sparkles,
   Clock,
   Printer,
   Check,

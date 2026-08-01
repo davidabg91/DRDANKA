@@ -59,7 +59,6 @@ export default function TrainingPage() {
                 </div>
               </div>
               <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold bg-brand-gold/10 border border-brand-gold/30 px-3 py-1.5 rounded-full">
-                <Sparkles className="h-3 w-3" />
                 Започни веднага
               </span>
             </div>
