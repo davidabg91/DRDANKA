@@ -248,6 +248,7 @@ export const obuchenieEtiketirane: LiveCourse = {
     "Бонус: чек-лист + електронно ръководство „15 златни правила“",
   ],
   card: {
+    cover: "/cover-obuchenie-etiketirane.jpg",
     badge: "Пакет 1",
     accent: "gold",
     icon: Tag,

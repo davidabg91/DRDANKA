@@ -279,6 +279,7 @@ export const obuchenieDphp: LiveCourse = {
     "Бонус: авторски модел + матрица „Какво? Как? Кога? Кой?“",
   ],
   card: {
+    cover: "/cover-obuchenie-dphp.jpg",
     badge: "Пакет 2",
     accent: "gold",
     icon: ClipboardList,

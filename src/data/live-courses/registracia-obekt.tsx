@@ -260,6 +260,7 @@ export const registraciaObekt: LiveCourse = {
     "Бонус: 2 чеклиста + авторски шаблони за регистрация",
   ],
   card: {
+    cover: "/cover-registracia-obekt.jpg",
     badge: "Пакет 3",
     accent: "gold",
     icon: Building2,

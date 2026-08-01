@@ -293,6 +293,7 @@ export const naredba26: LiveCourse = {
     "Бонус: 3 чеклиста + образци на заявления и декларации",
   ],
   card: {
+    cover: "/cover-naredba-26.jpg",
     badge: "Пакет 4",
     accent: "gold",
     icon: Sprout,

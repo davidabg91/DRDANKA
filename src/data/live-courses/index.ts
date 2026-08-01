@@ -16,10 +16,8 @@ import { registraciaObekt } from "./registracia-obekt";
 import { naredba26 } from "./naredba-26";
 
 export const LIVE_COURSES: ReadonlyArray<LiveCourse> = [
-  // Курсове със снимки
   haccpOsnovi,
   haccpDhppPraktika,
-  // Курсове без снимки (editorial header вместо корица)
   obuchenieEtiketirane,
   obuchenieDphp,
   registraciaObekt,
