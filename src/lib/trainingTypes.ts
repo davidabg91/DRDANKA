@@ -44,7 +44,13 @@ export interface Enrollment {
   id: string;
   trainingId: string;
   trainingTitle: string;
-  trainingType?: TrainingType;
+  /** Legacy delivery hint. 'library' marks a request that came from the digital
+   *  bookstore rather than the /trainings catalog. Prefer packageKind below. */
+  trainingType?: TrainingType | "library";
+  /** Which catalog the purchased package belongs to. */
+  packageKind?: "library" | "training";
+  /** Content format the buyer will read/watch once unlocked. */
+  contentType?: "pdf" | "video";
   /** For video trainings — denormalized URL captured at enrollment time so the
    *  buyer keeps access even if admin later removes the URL from the training. */
   videoUrl?: string;
@@ -53,9 +59,18 @@ export interface Enrollment {
   phone: string;
   company?: string;
   priceEur: number;
-  /** 'paid' immediately after a successful (test or Stripe) payment. */
-  status: "pending" | "paid" | "contacted" | "completed" | "refunded";
+  /**
+   * Purchase lifecycle:
+   *   - 'awaiting_payment' — buyer registered & requested access; funds not yet in.
+   *   - 'access_granted'   — admin confirmed the bank transfer and unlocked the
+   *                          package (added trainingId to purchasedCourseIds).
+   *   Legacy values ('pending'/'paid'/'contacted'/'completed'/'refunded') are
+   *   kept for older docs and the zoom "mark contacted" flow.
+   */
+  status: "awaiting_payment" | "access_granted" | "pending" | "paid" | "contacted" | "completed" | "refunded";
   paidAt?: string;
+  /** Timestamp when admin confirmed payment and unlocked the package. */
+  accessGrantedAt?: string;
   createdAt: string;
   /** Admin can flag that they've already contacted the buyer (for zoom courses). */
   contactedAt?: string;

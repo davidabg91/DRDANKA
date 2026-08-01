@@ -91,11 +91,16 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    // /enrollments/{id} — public training enrollments (anonymous signups
-    // from /training). Anyone can submit; admin reviews and contacts them.
+    // /enrollments/{id} — package purchase requests (bookstore + trainings).
+    //   - create: public signup form (buyer may be mid-registration).
+    //   - read:   admin (review queue) OR the buyer reading their own requests
+    //             in the profile. List queries MUST be constrained with
+    //             where("email","==",<own email>) so every matched doc passes.
+    //   - update/delete: admin only (status changes, unlock).
     match /enrollments/{id} {
-      allow create: if true;          // public signup form
-      allow read, update, delete: if isAdmin();
+      allow create: if true;
+      allow read: if isAdmin() || (isSignedIn() && resource.data.email == authEmail());
+      allow update, delete: if isAdmin();
     }
 
     // /trainings/{id} — specialized online courses catalog.
@@ -110,6 +115,20 @@ service cloud.firestore {
     // code-curated catalog items. Public read so /library and /live can
     // show the latest price without a server roundtrip. Admin-only write.
     match /priceOverrides/{slug} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // /typeOverrides/{slug} — admin-controlled delivery-type (pdf/video)
+    // overrides for code-curated library materials. Public read, admin write.
+    match /typeOverrides/{slug} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // /videoLinks/{slug} — admin-set external video URL (YouTube/Vimeo) used
+    // instead of an uploaded mp4. Public read, admin write.
+    match /videoLinks/{slug} {
       allow read: if true;
       allow write: if isAdmin();
     }

@@ -11,11 +11,12 @@ import {
 import { 
   collection, 
   doc, 
-  onSnapshot, 
-  setDoc, 
-  updateDoc, 
+  onSnapshot,
+  setDoc,
+  updateDoc,
   getDoc,
   query,
+  where,
   getDocs
 } from 'firebase/firestore';
 import { DankaUser } from '../app/profile/page';
@@ -194,6 +195,42 @@ export function useEnrollments() {
     );
     return unsub;
   }, []);
+
+  return { enrollments, loading };
+}
+
+/**
+ * Buyer-scoped view of /enrollments for the profile page. Queries only the
+ * signed-in user's own requests (rules allow read when resource.data.email
+ * matches the caller). Empty until an email is provided.
+ */
+export function useMyEnrollments(email: string | undefined) {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const clean = (email || "").trim().toLowerCase();
+    // No signed-in email yet — skip subscribing. The profile hides the buyer
+    // UI while logged out, so any previously loaded rows are never shown.
+    if (!clean) return;
+    const unsub = onSnapshot(
+      query(collection(db, "enrollments"), where("email", "==", clean)),
+      (snap) => {
+        const list: Enrollment[] = [];
+        snap.forEach((d) => list.push(d.data() as Enrollment));
+        list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+        setEnrollments(list);
+        setLoading(false);
+      },
+      (error) => {
+        if (error?.code !== "permission-denied") {
+          console.error("Error fetching my enrollments:", error);
+        }
+        setLoading(false);
+      }
+    );
+    return unsub;
+  }, [email]);
 
   return { enrollments, loading };
 }

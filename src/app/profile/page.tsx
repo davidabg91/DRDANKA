@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
-import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments } from "@/lib/firebaseHooks";
+import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments, useMyEnrollments } from "@/lib/firebaseHooks";
 import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -14,8 +14,11 @@ import { slugify, uniqueSlug } from "@/lib/slugify";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { LIVE_COURSES } from "@/data/live-courses";
 import { usePriceOverrides, setPriceOverride, resolvePrice } from "@/lib/priceOverrides";
+import { useTypeOverrides, setTypeOverride, resolveType, MaterialType } from "@/lib/typeOverrides";
+import { useVideoLinks, setVideoLink, toEmbedUrl } from "@/lib/videoLinks";
 import RegistersTab from "@/components/registers/RegistersTab";
 import AdminReminderComposer from "@/components/registers/AdminReminderComposer";
+import BankTransferNotice from "@/components/BankTransferNotice";
 import { defaultHotPointForSector, isMeatShopNiche } from "@/data/storeRegisters";
 
 import { 
@@ -58,7 +61,8 @@ import {
   Eye,
   XCircle,
   X,
-  Paperclip
+  Paperclip,
+  Landmark
 } from "lucide-react";
 
 export interface AssignedMaterial {
@@ -282,6 +286,8 @@ export default function ProfilePage() {
   }));
   const { enrollments: allEnrollments } = useEnrollments();
   const { overrides: priceOverrides } = usePriceOverrides();
+  const { overrides: typeOverrides } = useTypeOverrides();
+  const { links: videoLinks } = useVideoLinks();
   /** Local edit buffer per slug while admin types a new price (string for the input). */
   const [priceDraft, setPriceDraft] = useState<Record<string, string>>({});
   const ADMIN_EMAIL = "d.nikolova.haccp@gmail.com";
@@ -390,9 +396,24 @@ export default function ProfilePage() {
 
   // Multi-user & Admin state variables
   const [currentUserEmail, setCurrentUserEmail] = useState("");
+  // The signed-in buyer's own purchase requests (awaiting payment / unlocked).
+  const { enrollments: myEnrollments } = useMyEnrollments(currentUserEmail);
+  // Which awaiting-payment package's bank-transfer details are open in a modal.
+  const [payEnrollment, setPayEnrollment] = useState<Enrollment | null>(null);
+  // Draft external video URL per material slug while admin edits it inline.
+  const [videoLinkDraft, setVideoLinkDraft] = useState<Record<string, string>>({});
+  // Which purchased video (external link) the buyer is watching in a modal.
+  const [watchLinkSlug, setWatchLinkSlug] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
   const [usersList, setUsersList] = useState<DankaUser[]>([]);
   const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "users" | "materials" | "courses" | "trainings" | "messages" | "logs">("candidates");
+
+  // Admin notification counts — surfaced as badges on the sidebar tabs so the
+  // admin sees where action is pending without opening each tab.
+  const pendingCandidatesCount = usersList.filter(u =>
+    u.role === "user" && (u.status === "pending" || u.subscriptionStatus === "pending")
+  ).length;
+  const pendingEnrollmentsCount = allEnrollments.filter(e => e.status === "awaiting_payment").length;
 
   // Specialized trainings admin state
   const [trainingDraftTitle, setTrainingDraftTitle] = useState("");
@@ -1332,6 +1353,55 @@ export default function ProfilePage() {
     }
   };
 
+  /**
+   * Admin re-marks a library material's delivery type (pdf ⇄ video). Persisted
+   * as a typeOverride so it actually affects the code-curated catalog, the
+   * protected viewer and the buyer's "Моите обучения" tab. `effectiveMaterialType`
+   * resolves override ?? the code-defined type.
+   */
+  const effectiveMaterialType = (slug: string): MaterialType => {
+    const base = (LIBRARY_MATERIALS.find(m => m.slug === slug)?.type ?? "pdf") as MaterialType;
+    return resolveType(slug, typeOverrides, base);
+  };
+
+  const handleChangeCourseType = async (slug: string, newType: MaterialType) => {
+    if (effectiveMaterialType(slug) === newType) return;
+    try {
+      await setTypeOverride(slug, newType);
+    } catch (err: any) {
+      alert("Грешка при промяна на типа: " + (err?.message || err));
+    }
+  };
+
+  const handleResetCourseType = async (slug: string) => {
+    try {
+      await setTypeOverride(slug, null);
+    } catch (err: any) {
+      alert("Грешка: " + (err?.message || err));
+    }
+  };
+
+  /** Admin saves an external (YouTube/Vimeo) video link for a material, so it
+   *  streams from there instead of costing Storage bandwidth. Empty clears it. */
+  const handleSaveVideoLink = async (slug: string) => {
+    const url = (videoLinkDraft[slug] ?? "").trim();
+    try {
+      await setVideoLink(slug, url || null);
+      setVideoLinkDraft(p => { const next = { ...p }; delete next[slug]; return next; });
+    } catch (err: any) {
+      alert("Грешка при запис на линка: " + (err?.message || err));
+    }
+  };
+
+  const handleClearVideoLink = async (slug: string) => {
+    try {
+      await setVideoLink(slug, null);
+      setVideoLinkDraft(p => { const next = { ...p }; delete next[slug]; return next; });
+    } catch (err: any) {
+      alert("Грешка: " + (err?.message || err));
+    }
+  };
+
   const handleDeleteCourse = async (c: Course) => {
     if (!confirm(`Изтриване на курс „${c.title}"? Действието е необратимо. Купувачите ще загубят достъп.`)) return;
     try {
@@ -1474,6 +1544,39 @@ export default function ProfilePage() {
   };
 
   /**
+   * Admin confirms the bank transfer and UNLOCKS the package: adds the
+   * enrollment's trainingId (slug / training id) to the buyer's
+   * purchasedCourseIds — the single gate read by the storage rules, the
+   * protected viewer and the "Моите обучения" tab. Then flags the enrollment
+   * as access_granted. Requires the buyer to already have a /users/{email} doc
+   * (created during registration in PackagePurchaseModal).
+   */
+  const handleGrantEnrollmentAccess = async (enr: Enrollment) => {
+    const email = enr.email.trim().toLowerCase();
+    const target = usersList.find(u => u.email.toLowerCase() === email);
+    if (!target) {
+      alert(`Няма потребителски профил за ${email}. Клиентът трябва първо да завърши регистрацията си.`);
+      return;
+    }
+    if (!confirm(`Потвърждаваш ли, че плащането за „${enr.trainingTitle}" от ${email} е получено? Пакетът ще се отключи веднага.`)) return;
+    try {
+      const existing = target.purchasedCourseIds || [];
+      if (!existing.includes(enr.trainingId)) {
+        const ok = await updateUser(email, { purchasedCourseIds: [...existing, enr.trainingId] });
+        if (!ok) return;
+      }
+      await setDoc(
+        doc(db, "enrollments", enr.id),
+        { ...enr, status: "access_granted", accessGrantedAt: new Date().toISOString() },
+        { merge: true },
+      );
+      alert(`Пакетът беше отключен за ${email}.`);
+    } catch (err: any) {
+      alert("Грешка при отключване: " + (err?.message || err));
+    }
+  };
+
+  /**
    * Admin uploads a PDF for a library material (code-based catalog).
    * File is stored at /library/{slug}/file.pdf in Firebase Storage.
    * Storage Rules grant read access to admin or any buyer who has the slug
@@ -1530,6 +1633,37 @@ export default function ProfilePage() {
         setLibraryUploadProgress(p => ({ ...p, [slug]: null }));
         setLibraryPdfExists(p => ({ ...p, [slug]: true }));
         alert(`PDF-ът за „${slug}" е качен успешно!`);
+      }
+    );
+  };
+
+  /**
+   * Admin uploads a video for a library material — stored at
+   * /library/{slug}/file.mp4. Same protected gate as the PDF (purchasedCourseIds).
+   */
+  const handleUploadLibraryVideo = (slug: string, file: File) => {
+    if (!file.type.startsWith("video/")) {
+      alert("Файлът трябва да бъде видео (mp4).");
+      return;
+    }
+    const path = `library/${slug}/file.mp4`;
+    setLibraryUploadProgress(p => ({ ...p, [slug]: 0 }));
+    const task = uploadBytesResumable(storageRef(storage, path), file);
+    task.on(
+      "state_changed",
+      (snap) => {
+        const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+        setLibraryUploadProgress(p => ({ ...p, [slug]: pct }));
+      },
+      (err) => {
+        console.error("library video upload error:", err);
+        setLibraryUploadProgress(p => ({ ...p, [slug]: null }));
+        alert(`Грешка при качване: ${err?.code || ""} ${err?.message || err}`);
+      },
+      () => {
+        setLibraryUploadProgress(p => ({ ...p, [slug]: null }));
+        setLibraryPdfExists(p => ({ ...p, [slug]: true }));
+        alert(`Видеото за „${slug}" е качено успешно!`);
       }
     );
   };
@@ -2539,6 +2673,87 @@ export default function ProfilePage() {
             );
           })()}
 
+          {/* Package PAYMENT banner — buyer has awaiting-payment purchases.
+              Always-active "Данни за плащане" button + 24h activation note. */}
+          {userRole === "user" && (() => {
+            const pending = myEnrollments.filter(e => e.status === "awaiting_payment");
+            if (pending.length === 0) return null;
+            return (
+              <div className="mb-6 space-y-3">
+                {pending.map(enr => (
+                  <div key={enr.id} className="rounded-2xl border bg-gradient-to-r from-brand-gold/20 to-brand-gold/10 border-brand-gold/40 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <Clock className="h-6 w-6 text-brand-gold shrink-0" />
+                    <div className="flex-1 text-sm">
+                      <p className="font-bold text-brand-green mb-0.5">
+                        „{enr.trainingTitle}" — чака плащане
+                      </p>
+                      <p className="text-xs text-brand-dark/70">
+                        Направете банков превод на стойност <strong className="text-brand-green">{enr.priceEur.toFixed(2)} €</strong>. До <strong>24 часа</strong> след постъпване на плащането пакетът се активира и се появява за четене в „Моите обучения".
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setPayEnrollment(enr)}
+                      className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap shadow-md shadow-brand-gold/20 border-0"
+                    >
+                      Данни за плащане
+                    </button>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+          {/* Bank-transfer details modal for a pending package */}
+          {payEnrollment && (
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={() => setPayEnrollment(null)}>
+              <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl my-8 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
+                  <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане по банков път</div>
+                    <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{payEnrollment.trainingTitle}</div>
+                  </div>
+                  <button onClick={() => setPayEnrollment(null)} aria-label="Затвори" className="absolute top-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"><X className="h-5 w-5" /></button>
+                </div>
+                <div className="p-6 space-y-4">
+                  <BankTransferNotice amount={`${payEnrollment.priceEur.toFixed(2)} €`} reference={`${payEnrollment.email} — ${payEnrollment.trainingTitle}`} />
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
+                    <strong>Активиране:</strong> До <strong>24 часа</strong> след постъпване на плащането пакетът се отключва в „Моите обучения".
+                  </div>
+                  <button onClick={() => setPayEnrollment(null)} className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* In-profile video player for external-link videos (YouTube/Vimeo).
+              Only reachable from a purchased material's card, so it's gated. */}
+          {watchLinkSlug && videoLinks[watchLinkSlug] && (() => {
+            const mat = LIBRARY_MATERIALS.find(m => m.slug === watchLinkSlug);
+            return (
+              <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setWatchLinkSlug(null)}>
+                <div className="bg-brand-dark rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between gap-3 px-4 py-3 bg-brand-green text-white">
+                    <div className="font-serif text-sm font-bold truncate">{mat?.title ?? "Видео обучение"}</div>
+                    <button onClick={() => setWatchLinkSlug(null)} aria-label="Затвори" className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"><X className="h-4 w-4" /></button>
+                  </div>
+                  <div className="relative w-full" style={{ aspectRatio: "16 / 9" }}>
+                    <iframe
+                      src={toEmbedUrl(videoLinks[watchLinkSlug])}
+                      title={mat?.title ?? "video"}
+                      className="absolute inset-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                  <p className="text-[10px] text-center text-white/50 py-2 flex items-center justify-center gap-1">
+                    <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Само за гледане в профила
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Subscription expiry warning banner — clients only */}
           {userRole === "user" && (() => {
             const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
@@ -2594,12 +2809,17 @@ export default function ProfilePage() {
                 <nav className="flex flex-col gap-1.5 font-sans">
                   {userRole === "admin" ? (
                     <>
-                      <button 
+                      <button
                         onClick={() => setActiveAdminTab("candidates")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "candidates" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "candidates" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
                       >
                         <Clock className={`h-4 w-4 ${activeAdminTab === "candidates" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Кандидати
+                        {pendingCandidatesCount > 0 && (
+                          <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm animate-pulse">
+                            {pendingCandidatesCount}
+                          </span>
+                        )}
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("users")}
@@ -2628,9 +2848,9 @@ export default function ProfilePage() {
                       >
                         <Video className={`h-4 w-4 ${activeAdminTab === "trainings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
                         Обучения & Записани
-                        {allEnrollments.filter(e => e.status === "paid").length > 0 && (
+                        {pendingEnrollmentsCount > 0 && (
                           <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm animate-pulse">
-                            {allEnrollments.filter(e => e.status === "paid").length}
+                            {pendingEnrollmentsCount}
                           </span>
                         )}
                       </button>
@@ -3393,6 +3613,21 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
+                      {/* Video bandwidth cost warning — numbers are intentionally
+                          DOUBLED (≈€0.24/GB vs real ≈€0.12/GB) as a safety margin. */}
+                      <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex items-start gap-3">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="text-xs text-amber-900 leading-relaxed space-y-1">
+                          <p className="font-bold">Внимание за качените ВИДЕА (разход по трафик)</p>
+                          <p>Качено видео се сваля <strong>изцяло при всяко гледане</strong>. Ориентировъчно, <strong>със запас ×2</strong>:</p>
+                          <ul className="list-disc list-inside space-y-0.5 font-mono text-[11px]">
+                            <li>300&nbsp;MB видео ≈ <strong>€14</strong> на 100 гледания (≈ €144 на 1000)</li>
+                            <li>500&nbsp;MB видео ≈ <strong>€24</strong> на 100 гледания (≈ €240 на 1000)</li>
+                          </ul>
+                          <p>PDF-ите са без значение (по няколко MB). За видеа с много гледания сложи <strong>YouTube/Vimeo линк</strong> в колоната „Файл" — трафикът е безплатен.</p>
+                        </div>
+                      </div>
+
                       {/* Manual grant access */}
                       <div className="bg-brand-gold/5 border border-brand-gold/25 rounded-xl p-4 space-y-2">
                         <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
@@ -3427,7 +3662,7 @@ export default function ProfilePage() {
                                   <th className="border border-brand-green/10 p-3 text-center">Цена</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Купувачи</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Статус</th>
-                                  <th className="border border-brand-green/10 p-3 text-center">PDF файл</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Файл</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -3442,14 +3677,28 @@ export default function ProfilePage() {
                                         <div className="text-[10px] text-brand-dark/50">{c.description}</div>
                                       </td>
                                       <td className="border border-brand-green/10 p-3 text-center text-[10px]">
-                                        {(c.type ?? "pdf") === "link" ? (
-                                          <a href={c.externalUrl} target="_blank" rel="noopener noreferrer" className="text-brand-gold hover:underline inline-flex items-center gap-1 font-bold">
-                                            <ExternalLink className="h-3 w-3" />
-                                            Линк
-                                          </a>
-                                        ) : (
-                                          <span className="font-mono">{c.fileSizeMb ?? 0} MB</span>
-                                        )}
+                                        {(() => {
+                                          const effType = effectiveMaterialType(c.id);
+                                          const overridden = typeOverrides[c.id] !== undefined;
+                                          return (
+                                            <div className="flex flex-col items-center gap-1.5">
+                                              {/* Admin marks the delivery type: PDF file or video */}
+                                              <select
+                                                value={effType}
+                                                onChange={(e) => handleChangeCourseType(c.id, e.target.value as MaterialType)}
+                                                className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded border border-brand-green/20 bg-white text-brand-green focus:outline-none focus:border-brand-gold cursor-pointer"
+                                              >
+                                                <option value="pdf">PDF файл</option>
+                                                <option value="video">Видео</option>
+                                              </select>
+                                              {overridden && (
+                                                <button onClick={() => handleResetCourseType(c.id)} className="text-[8px] font-bold uppercase text-brand-dark/40 hover:text-red-600 cursor-pointer">
+                                                  върни default
+                                                </button>
+                                              )}
+                                            </div>
+                                          );
+                                        })()}
                                       </td>
                                       <td className="border border-brand-green/10 p-3 text-center">
                                         {(() => {
@@ -3504,48 +3753,94 @@ export default function ProfilePage() {
                                         </span>
                                       </td>
                                       <td className="border border-brand-green/10 p-3 text-center">
-                                        {c.type === "link" ? (
-                                          <span className="text-[10px] text-brand-dark/45 font-medium italic">
-                                            Не се изисква (Видео)
-                                          </span>
-                                        ) : (() => {
+                                        {(() => {
+                                          const isVideo = effectiveMaterialType(c.id) === "video";
                                           const progress = libraryUploadProgress[c.slug || c.id];
-                                          if (progress !== null && progress !== undefined) {
-                                            return (
-                                              <div className="space-y-1">
-                                                <div className="w-full bg-brand-green/10 rounded-full h-1.5 overflow-hidden">
-                                                  <div className="h-full bg-brand-gold transition-all" style={{ width: `${progress}%` }} />
+                                          const existingLink = videoLinks[c.id];
+                                          const draft = videoLinkDraft[c.id];
+                                          const uploadControl = (() => {
+                                            if (progress !== null && progress !== undefined) {
+                                              return (
+                                                <div className="space-y-1">
+                                                  <div className="w-full bg-brand-green/10 rounded-full h-1.5 overflow-hidden">
+                                                    <div className="h-full bg-brand-gold transition-all" style={{ width: `${progress}%` }} />
+                                                  </div>
+                                                  <span className="text-[9px] text-brand-dark/60">{progress}%</span>
                                                 </div>
-                                                <span className="text-[9px] text-brand-dark/60">{progress}%</span>
+                                              );
+                                            }
+                                            const exists = libraryPdfExists[c.slug || c.id];
+                                            return (
+                                              <div className="flex flex-col items-center gap-1.5 justify-center">
+                                                {exists ? (
+                                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                                                    <Check className="h-3 w-3" /> Качен
+                                                  </span>
+                                                ) : !isVideo || !existingLink ? (
+                                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                                    <AlertTriangle className="h-3 w-3" /> Липсва
+                                                  </span>
+                                                ) : null}
+                                                <label className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer">
+                                                  <Upload className="h-3 w-3" />
+                                                  {exists ? "Прекачи" : isVideo ? "Качи видео" : "Качи PDF"}
+                                                  <input
+                                                    type="file"
+                                                    accept={isVideo ? "video/*" : "application/pdf"}
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                      const f = e.target.files?.[0];
+                                                      if (f) {
+                                                        if (isVideo) handleUploadLibraryVideo(c.slug || c.id, f);
+                                                        else handleUploadLibraryPdf(c.slug || c.id, f);
+                                                      }
+                                                      e.target.value = ""; // reset so the same file can be re-uploaded
+                                                    }}
+                                                  />
+                                                </label>
                                               </div>
                                             );
-                                          }
-                                          const exists = libraryPdfExists[c.slug || c.id];
+                                          })();
+
+                                          if (!isVideo) return uploadControl;
+
+                                          // Video: prefer an external link (free bandwidth); upload stays as fallback.
                                           return (
-                                            <div className="flex flex-col items-center gap-1.5 justify-center">
-                                              {exists ? (
-                                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
-                                                  <Check className="h-3 w-3" /> Качен
-                                                </span>
-                                              ) : (
-                                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                                                  <AlertTriangle className="h-3 w-3" /> Липсва
-                                                </span>
+                                            <div className="flex flex-col items-center gap-2">
+                                              <div className="w-full space-y-1">
+                                                <div className="flex items-center gap-1">
+                                                  <input
+                                                    type="url"
+                                                    placeholder="YouTube/Vimeo линк"
+                                                    value={draft ?? existingLink ?? ""}
+                                                    onChange={(e) => setVideoLinkDraft(p => ({ ...p, [c.id]: e.target.value }))}
+                                                    className="w-full text-[10px] px-2 py-1 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                                                  />
+                                                  {draft !== undefined && (
+                                                    <button onClick={() => handleSaveVideoLink(c.id)} className="text-[9px] font-bold uppercase px-1.5 py-1 rounded bg-brand-gold text-brand-dark hover:bg-brand-gold-light cursor-pointer shrink-0">
+                                                      Запиши
+                                                    </button>
+                                                  )}
+                                                </div>
+                                                {existingLink && draft === undefined ? (
+                                                  <div className="flex items-center justify-center gap-2">
+                                                    <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase text-green-700">
+                                                      <Check className="h-3 w-3" /> Линк (без разход)
+                                                    </span>
+                                                    <button onClick={() => handleClearVideoLink(c.id)} className="text-[8px] font-bold uppercase text-brand-dark/40 hover:text-red-600 cursor-pointer">
+                                                      разкачи
+                                                    </button>
+                                                  </div>
+                                                ) : (
+                                                  <p className="text-[8px] text-brand-dark/40 leading-tight">Препоръчано за видео — трафикът е безплатен.</p>
+                                                )}
+                                              </div>
+                                              {!existingLink && (
+                                                <div className="w-full border-t border-brand-green/5 pt-1.5">
+                                                  <p className="text-[8px] text-brand-dark/40 mb-1">или качи файл (плаща се трафик):</p>
+                                                  {uploadControl}
+                                                </div>
                                               )}
-                                              <label className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer">
-                                                <Upload className="h-3 w-3" />
-                                                {exists ? "Прекачи" : "Качи PDF"}
-                                                <input
-                                                  type="file"
-                                                  accept="application/pdf"
-                                                  className="hidden"
-                                                  onChange={(e) => {
-                                                    const f = e.target.files?.[0];
-                                                    if (f) handleUploadLibraryPdf(c.slug || c.id, f);
-                                                    e.target.value = ""; // reset so the same file can be re-uploaded
-                                                  }}
-                                                />
-                                              </label>
                                             </div>
                                           );
                                         })()}
@@ -3607,9 +3902,14 @@ export default function ProfilePage() {
                         </button>
                         <button
                           onClick={() => setTrainingsViewMode("enrollments")}
-                          className={`px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border-b-2 ${trainingsViewMode === "enrollments" ? "border-brand-gold text-brand-green" : "border-transparent text-brand-dark/50 hover:text-brand-green"}`}
+                          className={`relative px-4 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer border-b-2 ${trainingsViewMode === "enrollments" ? "border-brand-gold text-brand-green" : "border-transparent text-brand-dark/50 hover:text-brand-green"}`}
                         >
                           Записани ({allEnrollments.length})
+                          {pendingEnrollmentsCount > 0 && (
+                            <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none align-middle">
+                              {pendingEnrollmentsCount} нови
+                            </span>
+                          )}
                         </button>
                       </div>
 
@@ -3781,16 +4081,31 @@ export default function ProfilePage() {
                                         <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{enr.priceEur.toFixed(2)} €</td>
                                         <td className="border border-brand-green/10 p-3 text-center">
                                           <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${
+                                            enr.status === "awaiting_payment" ? "bg-amber-100 text-amber-800" :
+                                            enr.status === "access_granted" ? "bg-green-100 text-green-800" :
                                             enr.status === "paid" ? "bg-amber-100 text-amber-800" :
                                             enr.status === "contacted" ? "bg-blue-100 text-blue-800" :
                                             enr.status === "completed" ? "bg-green-100 text-green-800" :
                                             "bg-gray-100 text-gray-800"
                                           }`}>
-                                            {enr.status === "paid" ? "Платено" : enr.status === "contacted" ? "Свързан" : enr.status === "completed" ? "Завършил" : enr.status}
+                                            {enr.status === "awaiting_payment" ? "Чака плащане"
+                                              : enr.status === "access_granted" ? "Отключен"
+                                              : enr.status === "paid" ? "Платено"
+                                              : enr.status === "contacted" ? "Свързан"
+                                              : enr.status === "completed" ? "Завършил"
+                                              : enr.status}
                                           </span>
                                         </td>
                                         <td className="border border-brand-green/10 p-3 text-center">
-                                          {enr.status === "paid" ? (
+                                          {enr.status === "awaiting_payment" ? (
+                                            <button onClick={() => handleGrantEnrollmentAccess(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer inline-flex items-center gap-1">
+                                              <Check className="h-3 w-3" /> Получено плащане
+                                            </button>
+                                          ) : enr.status === "access_granted" ? (
+                                            <span className="text-[9px] font-bold uppercase text-green-700 inline-flex items-center gap-1">
+                                              <CheckCircle className="h-3 w-3" /> Отключен
+                                            </span>
+                                          ) : enr.status === "paid" ? (
                                             <button onClick={() => handleMarkEnrollmentContacted(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
                                               Маркирай свързан
                                             </button>
@@ -4378,67 +4693,43 @@ export default function ProfilePage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                         {myMaterials.map(m => {
-                          // For PDF type, we serve from Firebase Storage at library/<slug>/file.pdf
-                          // through the protected viewer. For video type, fallback to contentUrl.
+                          // Everything is read INSIDE the profile through the protected
+                          // viewer (blob from Firebase Storage, no download / copy).
+                          // No external links, no download buttons — per access policy.
+                          const isVideo = effectiveMaterialType(m.slug) === "video";
+                          const hasLink = isVideo && !!videoLinks[m.slug];
                           return (
                           <div key={m.slug} className="border border-brand-green/5 rounded-xl p-5 flex flex-col justify-between hover:border-brand-gold/30 transition-all duration-300">
                             <div className="space-y-3">
                               <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                                <CheckCircle className="h-3 w-3" /> Закупен
+                                <CheckCircle className="h-3 w-3" /> Отключен
                               </span>
                               <h4 className="font-serif text-base font-bold text-brand-green">{m.title}</h4>
                               <p className="text-xs text-brand-dark/60 leading-normal">{m.tagline}</p>
                               <span className="text-[10px] text-brand-dark/40 font-mono block">
-                                {m.type === "video" ? "🎬 Видео обучение" : "📄 PDF Наръчник"}
+                                {isVideo ? "🎬 Видео обучение" : "📄 PDF Наръчник"}
                               </span>
                             </div>
-                            {m.type === "pdf" && m.downloadUrl ? (
-                              <div className="mt-6 space-y-2">
-                                <a
-                                  href={m.downloadUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
-                                >
-                                  <BookOpen className="h-4 w-4" />
-                                  Изтегли материала
-                                </a>
-                                {m.bonus && (
-                                  <a
-                                    href={m.bonus.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center gap-2 bg-brand-gold/15 hover:bg-brand-gold/25 border border-brand-gold/30 text-brand-green font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center"
-                                  >
-                                    <Award className="h-4 w-4 text-brand-gold" />
-                                    Изтегли бонуса
-                                  </a>
-                                )}
-                              </div>
-                            ) : m.type === "pdf" ? (
+                            {hasLink ? (
+                              <button
+                                onClick={() => setWatchLinkSlug(m.slug)}
+                                className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md border-0"
+                              >
+                                <Video className="h-4 w-4" />
+                                Гледай в профила
+                              </button>
+                            ) : (
                               <Link
                                 href={`/library/${m.slug}/viewer`}
                                 className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
                               >
-                                <BookOpen className="h-4 w-4" />
-                                Отвори обучението
+                                {isVideo ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                                {isVideo ? "Гледай в профила" : "Чети в профила"}
                               </Link>
-                            ) : !m.contentUrl.includes("REPLACE_ME") ? (
-                              <a
-                                href={m.contentUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-lg transition-colors w-full cursor-pointer text-center shadow-md"
-                              >
-                                <BookOpen className="h-4 w-4" />
-                                Отвори видеото
-                              </a>
-                            ) : (
-                              <div className="mt-6 inline-flex items-center justify-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 font-bold text-xs uppercase py-3 rounded-lg w-full text-center" title="contentUrl още не е настроен в src/data/library/">
-                                <Clock className="h-4 w-4" />
-                                Материалът се подготвя
-                              </div>
                             )}
+                            <p className="mt-2 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
+                              <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Само за гледане в профила
+                            </p>
                           </div>
                           );
                         })}

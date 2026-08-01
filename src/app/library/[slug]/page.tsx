@@ -6,26 +6,23 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { findLibraryMaterial } from "@/data/library";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
-import { db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
 import {
-  ArrowLeft, ArrowRight, BookOpen, Video, X, Landmark, Loader2,
-  ShieldCheck, CheckCircle, Sparkles,
+  ArrowLeft, ArrowRight, BookOpen, Video, ShieldCheck, Sparkles,
 } from "lucide-react";
-import BankTransferNotice from "@/components/BankTransferNotice";
+import PackagePurchaseModal from "@/components/PackagePurchaseModal";
 
 export default function LibraryMaterialPage() {
   const params = useParams<{ slug: string }>();
   const slug = params?.slug;
   const material = slug ? findLibraryMaterial(slug) : undefined;
   const { overrides } = usePriceOverrides();
+  const { overrides: typeOverrides } = useTypeOverrides();
   const livePrice = material ? resolvePrice(material.slug, overrides, material.priceEur) : 0;
+  const effType = material ? resolveType(material.slug, typeOverrides, material.type === "video" ? "video" : "pdf") : "pdf";
 
   // Hooks must be called unconditionally — declare them before any early return.
   const [buyOpen, setBuyOpen] = useState(false);
-  const [buyEmail, setBuyEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
-  const [error, setError] = useState("");
 
   if (!material) {
     return (
@@ -39,40 +36,18 @@ export default function LibraryMaterialPage() {
     );
   }
 
-  const handleBuy = async () => {
-    if (!material) return;
-    const email = buyEmail.trim().toLowerCase();
-    if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
-      setError("Моля въведете валиден email адрес.");
-      return;
-    }
-    setError("");
-    setStatus("processing");
-    try {
-      // Record a bank-transfer access request. д-р Данка Николова confirms the
-      // payment and grants access (adds the slug to purchasedCourseIds) from the
-      // admin panel — no instant access before the funds arrive.
-      const id = `enroll_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      await setDoc(doc(db, "enrollments", id), {
-        id,
-        trainingId: material.slug,
-        trainingTitle: material.title,
-        trainingType: "library",
-        fullName: "",
-        email,
-        phone: "",
-        company: "",
-        priceEur: livePrice,
-        status: "awaiting_payment",
-        createdAt: new Date().toISOString(),
-      });
-      setStatus("success");
-    } catch (err: any) {
-      console.error("Library purchase request error:", err);
-      setError(err?.message || "Грешка при изпращане на заявката.");
-      setStatus("error");
-    }
-  };
+  // Shared registration + bank-transfer purchase modal (both page layouts).
+  const purchaseModal = (
+    <PackagePurchaseModal
+      open={buyOpen}
+      onClose={() => setBuyOpen(false)}
+      packageId={material.slug}
+      packageTitle={material.title}
+      packageKind="library"
+      contentType={effType}
+      priceEur={livePrice}
+    />
+  );
 
   const Page = material.page;
 
@@ -159,7 +134,7 @@ export default function LibraryMaterialPage() {
 
                   {/* Buy Button */}
                   <button
-                    onClick={() => { setBuyOpen(true); setStatus("idle"); setError(""); }}
+                    onClick={() => setBuyOpen(true)}
                     className="group/btn relative overflow-hidden w-full px-6 py-4 sm:py-5 bg-brand-gold hover:bg-white text-brand-dark font-black text-sm uppercase tracking-widest rounded-2xl shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-500 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-brand-dark/10 to-transparent skew-x-12 pointer-events-none" />
@@ -177,69 +152,7 @@ export default function LibraryMaterialPage() {
           <Page />
         </div>
 
-        {/* ─── BUY MODAL ─── */}
-        {buyOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl my-8 overflow-hidden">
-              <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
-                <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане по банков път</div>
-                  <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{material.title}</div>
-                </div>
-                <button
-                  onClick={() => { if (status !== "processing") { setBuyOpen(false); setStatus("idle"); } }}
-                  aria-label="Затвори"
-                  className="absolute top-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"
-                ><X className="h-5 w-5" /></button>
-              </div>
-
-              <div className="p-6 space-y-4">
-                {status === "success" ? (
-                  <div className="space-y-4">
-                    <div className="text-center space-y-2">
-                      <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
-                      <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
-                      <p className="text-sm text-brand-dark/70 leading-relaxed">
-                        За да получите достъп до <strong>{material.title}</strong>, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще активира достъпа Ви</strong> и ще Ви уведоми на <span className="font-semibold">{buyEmail.trim().toLowerCase()}</span>.
-                      </p>
-                    </div>
-                    <BankTransferNotice amount={`${livePrice.toFixed(2)} €`} reference={`${buyEmail.trim().toLowerCase()} — ${material.title}`} />
-                    <button onClick={() => { setBuyOpen(false); setStatus("idle"); }} className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-start justify-between">
-                      <span className="text-sm font-bold text-brand-green mt-2">Цена</span>
-                      <div className="flex flex-col items-end">
-                        {material.originalPriceEur && (
-                          <span className="font-serif text-base text-brand-dark/40 line-through decoration-red-500/60 decoration-2 leading-none mb-1">
-                            {material.originalPriceEur.toFixed(2)} €
-                          </span>
-                        )}
-                        <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold whitespace-nowrap leading-none">
-                          {livePrice.toFixed(2)} €
-                        </span>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email за достъп *</label>
-                      <input type="email" value={buyEmail} onChange={(e) => setBuyEmail(e.target.value)} placeholder="name@example.com" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                    </div>
-                    <div className="border-t border-brand-green/5 pt-3 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
-                      <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                      <span>Плащането е по банков път. След заявката ще видите данните за превод. Достъпът се активира след постъпване на плащането.</span>
-                    </div>
-                    {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
-                    <button onClick={handleBuy} disabled={status === "processing"} className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                      {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Изпращане…</>) : (<>Изпрати заявка за достъп</>)}
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {purchaseModal}
       </div>
     );
   }
@@ -306,7 +219,7 @@ export default function LibraryMaterialPage() {
                 </span>
               </div>
               <button
-                onClick={() => { setBuyOpen(true); setStatus("idle"); setError(""); }}
+                onClick={() => setBuyOpen(true)}
                 className="group relative overflow-hidden w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 hover:shadow-xl hover:shadow-brand-gold/35 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
@@ -325,69 +238,7 @@ export default function LibraryMaterialPage() {
         <Page />
       </div>
 
-      {/* ─── BUY MODAL ─── */}
-      {buyOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl my-8 overflow-hidden">
-            <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
-              <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане по банков път</div>
-                <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{material.title}</div>
-              </div>
-              <button
-                onClick={() => { if (status !== "processing") { setBuyOpen(false); setStatus("idle"); } }}
-                aria-label="Затвори"
-                className="absolute top-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"
-              ><X className="h-5 w-5" /></button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {status === "success" ? (
-                <div className="space-y-4">
-                  <div className="text-center space-y-2">
-                    <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
-                    <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
-                    <p className="text-sm text-brand-dark/70 leading-relaxed">
-                      За да получите достъп до <strong>{material.title}</strong>, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще активира достъпа Ви</strong> и ще Ви уведоми на <span className="font-semibold">{buyEmail.trim().toLowerCase()}</span>.
-                    </p>
-                  </div>
-                  <BankTransferNotice amount={`${livePrice.toFixed(2)} €`} reference={`${buyEmail.trim().toLowerCase()} — ${material.title}`} />
-                  <button onClick={() => { setBuyOpen(false); setStatus("idle"); }} className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
-                </div>
-              ) : (
-                <>
-                  <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-start justify-between">
-                    <span className="text-sm font-bold text-brand-green mt-2">Цена</span>
-                    <div className="flex flex-col items-end">
-                      {material.originalPriceEur && (
-                        <span className="font-serif text-base text-brand-dark/40 line-through decoration-red-500/60 decoration-2 leading-none mb-1">
-                          {material.originalPriceEur.toFixed(2)} €
-                        </span>
-                      )}
-                      <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold whitespace-nowrap leading-none">
-                        {livePrice.toFixed(2)} €
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email за достъп *</label>
-                    <input type="email" value={buyEmail} onChange={(e) => setBuyEmail(e.target.value)} placeholder="name@example.com" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                  </div>
-                  <div className="border-t border-brand-green/5 pt-3 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
-                    <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                    <span>Плащането е по банков път. След заявката ще видите данните за превод. Достъпът се активира след постъпване на плащането.</span>
-                  </div>
-                  {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
-                  <button onClick={handleBuy} disabled={status === "processing"} className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                    {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Изпращане…</>) : (<>Изпрати заявка за достъп</>)}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {purchaseModal}
     </div>
   );
 }
