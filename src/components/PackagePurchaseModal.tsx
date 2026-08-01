@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   X, Landmark, Loader2, CheckCircle, ShieldCheck, User, Building2,
@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
-  createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged,
 } from "firebase/auth";
-import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import BankTransferNotice from "@/components/BankTransferNotice";
 
 /**
@@ -19,15 +19,12 @@ import BankTransferNotice from "@/components/BankTransferNotice";
  *
  * Flow:
  *   1. Buyer registers a real account (email + password) — createUserWithEmailAndPassword,
- *      or signs in if the email already has an account (repeat buyer).
+ *      or if already logged in, uses their existing authenticated session seamlessly.
  *   2. Optional "14 дни безплатно" tab: also fills the business profile and starts
  *      the 14-day дневници trial (subscriptionStatus:'trial').
  *   3. Records an `enrollments` doc with status 'awaiting_payment'. Access is NOT
  *      granted yet — д-р Николова confirms the bank transfer from the admin panel
  *      and adds the package id to the buyer's purchasedCourseIds.
- *
- * The user doc is only overwritten for brand-new accounts; repeat buyers keep
- * their existing profile (purchasedCourseIds untouched).
  */
 
 const validEmail = (s: string) => /^[^@]+@[^@]+\.[^@]+$/.test(s);
@@ -51,6 +48,7 @@ export default function PackagePurchaseModal({
   priceEur: number;
 }) {
   const [tab, setTab] = useState<"buy" | "trial">("buy");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Account + contact fields
   const [fullName, setFullName] = useState("");
@@ -69,6 +67,40 @@ export default function PackagePurchaseModal({
 
   const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      if (u && u.email) {
+        setIsLoggedIn(true);
+        const clean = u.email.toLowerCase();
+        setEmail(clean);
+        try {
+          const snap = await getDoc(doc(db, "users", clean));
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data.contact) setFullName(data.contact);
+            else if (data.manager) setFullName(data.manager);
+            else if (u.displayName) setFullName(u.displayName);
+
+            if (data.phone) setPhone(data.phone);
+            if (data.firmName) { setCompany(data.firmName); setFirmName(data.firmName); }
+            if (data.eik) setEik(data.eik);
+            if (data.niche) setNiche(data.niche);
+            if (data.desc) setDesc(data.desc);
+            if (data.address) setAddress(data.address);
+          } else if (u.displayName) {
+            setFullName(u.displayName);
+          }
+        } catch (err) {
+          console.error("Error prefilling logged in user profile:", err);
+        }
+      } else {
+        setIsLoggedIn(false);
+      }
+    });
+    return () => unsub();
+  }, [open]);
 
   if (!open) return null;
 
@@ -92,13 +124,15 @@ export default function PackagePurchaseModal({
       setError("Моля попълнете име, валиден email и телефон.");
       return;
     }
-    if (password.length < 6) {
-      setError("Паролата трябва да е поне 6 символа.");
-      return;
-    }
-    if (password !== confirm) {
-      setError("Паролите не съвпадат.");
-      return;
+    if (!isLoggedIn) {
+      if (password.length < 6) {
+        setError("Паролата трябва да е поне 6 символа.");
+        return;
+      }
+      if (password !== confirm) {
+        setError("Паролите не съвпадат.");
+        return;
+      }
     }
     if (withTrial && !firmName.trim()) {
       setError("За безплатния тест въведете име на фирмата.");
@@ -108,30 +142,29 @@ export default function PackagePurchaseModal({
     setStatus("processing");
 
     try {
-      // 1. Ensure an authenticated account exists for this email.
-      let isNewAccount = true;
-      try {
-        await createUserWithEmailAndPassword(auth, cleanEmail, password);
-      } catch (err: any) {
-        if (err?.code === "auth/email-already-in-use") {
-          // Repeat buyer — sign in with the same password to continue.
-          try {
-            await signInWithEmailAndPassword(auth, cleanEmail, password);
-            isNewAccount = false;
-          } catch {
-            setError("Този email вече има акаунт, но паролата е грешна. Въведете съществуващата си парола.");
-            setStatus("idle");
-            return;
+      let isNewAccount = false;
+      if (!isLoggedIn) {
+        isNewAccount = true;
+        try {
+          await createUserWithEmailAndPassword(auth, cleanEmail, password);
+        } catch (err: any) {
+          if (err?.code === "auth/email-already-in-use") {
+            try {
+              await signInWithEmailAndPassword(auth, cleanEmail, password);
+              isNewAccount = false;
+            } catch {
+              setError("Този email вече има акаунт, но паролата е грешна. Въведете съществуващата си парола.");
+              setStatus("idle");
+              return;
+            }
+          } else {
+            throw err;
           }
-        } else {
-          throw err;
         }
       }
 
       const userRef = doc(db, "users", cleanEmail);
 
-      // 2. Create the profile doc for brand-new accounts only (never clobber a
-      //    repeat buyer's existing purchasedCourseIds / subscription).
       if (isNewAccount) {
         await setDoc(userRef, {
           email: cleanEmail,
@@ -152,22 +185,24 @@ export default function PackagePurchaseModal({
           messages: [],
           purchasedCourseIds: [],
         });
-      } else if (withTrial) {
-        // Existing account opting into the trial: only fill business fields +
-        // start the trial. Never touch role/status/purchasedCourseIds (rules
-        // forbid it for non-admin and would reject the write).
-        await updateDoc(userRef, {
-          firmName: firmName.trim(),
-          eik: eik.trim() || "Няма въведен",
-          niche: niche.trim(),
-          desc: desc.trim(),
-          address: address.trim() || "Не е въведен",
-          subscriptionStatus: "trial",
-          trialStartedAt: new Date().toISOString(),
-        }).catch(() => { /* keep going — the purchase request still matters */ });
+      } else {
+        const updates: any = {
+          contact: fullName.trim(),
+          phone: phone.trim(),
+        };
+        if (withTrial) {
+          updates.firmName = firmName.trim();
+          updates.eik = eik.trim() || "Няма въведен";
+          updates.niche = niche.trim();
+          updates.desc = desc.trim();
+          updates.address = address.trim() || "Не е въведен";
+          updates.subscriptionStatus = "trial";
+          updates.trialStartedAt = new Date().toISOString();
+        }
+        await updateDoc(userRef, updates).catch(() => { /* keep going */ });
       }
 
-      // 3. Record the purchase request (awaiting payment).
+      // Record the purchase request (awaiting payment).
       const id = `enroll_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       await setDoc(doc(db, "enrollments", id), {
         id,
@@ -202,7 +237,9 @@ export default function PackagePurchaseModal({
         <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
           <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Регистрация и заявка</div>
+            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
+              {isLoggedIn ? "Заявка за покупка" : "Регистрация и заявка"}
+            </div>
             <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{packageTitle}</div>
           </div>
           <button
@@ -219,7 +256,7 @@ export default function PackagePurchaseModal({
                 <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
                 <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
                 <p className="text-sm text-brand-dark/70 leading-relaxed">
-                  Създадохме Ви профил. За да получите достъп до <strong>{packageTitle}</strong>, направете банков превод по сметката по-долу.
+                  За да получите достъп до <strong>{packageTitle}</strong>, направете банков превод по сметката по-долу. Заявката вече е добавена в профила Ви.
                 </p>
               </div>
 
@@ -232,7 +269,7 @@ export default function PackagePurchaseModal({
 
               {withTrial && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-left text-xs text-emerald-900 leading-relaxed">
-                  <strong>14 дни безплатно:</strong> Достъпът до системата за дневници е активиран веднага — влезте в профила си.
+                  <strong>14 дни безплатно:</strong> Достъпът до системата за дневници е активиран веднага — вижте профила си.
                 </div>
               )}
 
@@ -250,6 +287,13 @@ export default function PackagePurchaseModal({
                 <span className="text-sm font-bold text-brand-green">Цена за пакета</span>
                 <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{priceEur.toFixed(2)} €</span>
               </div>
+
+              {isLoggedIn && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-900 leading-relaxed flex items-center justify-between">
+                  <span>Влезли сте в профила си като: <strong>{email}</strong></span>
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                </div>
+              )}
 
               {/* Tabs */}
               <div className="grid grid-cols-2 gap-1 bg-brand-light/60 p-1 rounded-xl">
@@ -279,7 +323,7 @@ export default function PackagePurchaseModal({
               {/* Account fields */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-brand-green/70">
-                  <User className="h-3.5 w-3.5" /> Данни за акаунт
+                  <User className="h-3.5 w-3.5" /> Данни за {isLoggedIn ? "контакт" : "акаунт"}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Име и фамилия *</label>
@@ -288,23 +332,26 @@ export default function PackagePurchaseModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Email *</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={isLoggedIn || status === "processing"} />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Телефон *</label>
                     <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0888123456" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white font-mono" disabled={status === "processing"} />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Парола *</label>
-                    <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Мин. 6 символа" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+
+                {!isLoggedIn && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Парола *</label>
+                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Мин. 6 символа" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Потвърди парола *</label>
+                      <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Повтори паролата" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                    </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Потвърди парола *</label>
-                    <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Повтори паролата" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
-                  </div>
-                </div>
+                )}
 
                 {tab === "buy" && (
                   <div className="space-y-1.5">
@@ -361,6 +408,8 @@ export default function PackagePurchaseModal({
               >
                 {status === "processing" ? (
                   <><Loader2 className="h-4 w-4 animate-spin" /> Изпращане…</>
+                ) : isLoggedIn ? (
+                  <>Изпрати заявка за плащане</>
                 ) : (
                   <>Създай профил и изпрати заявка</>
                 )}
@@ -368,7 +417,9 @@ export default function PackagePurchaseModal({
 
               <p className="text-[10px] text-center text-brand-dark/50 leading-relaxed">
                 <ShieldCheck className="h-3 w-3 inline text-brand-gold mr-1" />
-                Създаваме Ви защитен профил. Пакетът се чете само в профила — без сваляне.
+                {isLoggedIn
+                  ? "Заявката за плащане ще се появи веднага в профила Ви."
+                  : "Създаваме Ви защитен профил. Пакетът се чете само в профила — без сваляне."}
               </p>
             </>
           )}
