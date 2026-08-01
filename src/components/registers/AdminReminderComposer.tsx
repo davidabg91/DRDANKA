@@ -16,7 +16,9 @@ import {
 } from "@/data/storeRegisters";
 import { Send, Trash2, Loader2, CheckCircle, Clock, Plus } from "lucide-react";
 
-const todayISO = () => new Date().toISOString().split("T")[0];
+import { getLocalDateISO } from "@/lib/dateUtils";
+
+const todayISO = () => getLocalDateISO(new Date());
 
 export default function AdminReminderComposer({
   email,

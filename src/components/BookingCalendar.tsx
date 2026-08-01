@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, ArrowLeft, Landmark } from "lucide-react";
+import { getLocalDateISO } from "@/lib/dateUtils";
 
 interface Package {
   id: string;
@@ -133,7 +134,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
         const dayName = date.toLocaleDateString(locale, { weekday: "short" });
         const dayNum = date.getDate().toString();
         const monthName = date.toLocaleDateString(locale, { month: "short" });
-        const fullDate = date.toISOString().split("T")[0];
+        const fullDate = getLocalDateISO(date);
         
         days.push({ dayName, dayNum, monthName, fullDate });
       }

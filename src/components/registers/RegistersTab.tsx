@@ -127,9 +127,11 @@ function grillMatchesIncomingFood(item: string, food: string): boolean {
     .some((stem) => f.includes(stem));
 }
 
+import { getLocalDateISO } from "@/lib/dateUtils";
+
 type Updater = (updater: (prev: RegisterDocData) => RegisterDocData) => void;
 
-const todayISO = () => new Date().toISOString().split("T")[0];
+const todayISO = () => getLocalDateISO(new Date());
 const currentMonth = () => todayISO().slice(0, 7);
 const nowTime = () => {
   const d = new Date();
@@ -1137,7 +1139,7 @@ function RowsEditor({
           } else {
             dObj.setDate(dObj.getDate() + 365); // 1 year for dry
           }
-          calculatedExpiry = dObj.toISOString().split("T")[0];
+          calculatedExpiry = getLocalDateISO(dObj);
         }
 
         // Temperature calculation
@@ -1720,7 +1722,7 @@ function RowsEditor({
                         {def.id === "allergen-menu" && (
                           <button
                             onClick={() => {
-                              const todayStr = new Date().toISOString().split("T")[0];
+                              const todayStr = getLocalDateISO(new Date());
                               const nowStr = nowTime();
                               setLabelItem({
                                 product: row.product || "",
@@ -3844,7 +3846,7 @@ export default function RegistersTab({
     const hb = docs["health-books"]?.entries || [];
     const soon = new Date();
     soon.setDate(soon.getDate() + 30);
-    const soonISO = soon.toISOString().split("T")[0];
+    const soonISO = getLocalDateISO(soon);
     hb.forEach((e) => {
       const v = String(e.validUntil || "");
       if (!v) return;
