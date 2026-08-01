@@ -408,12 +408,22 @@ export default function ProfilePage() {
   const [usersList, setUsersList] = useState<DankaUser[]>([]);
   const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "users" | "materials" | "courses" | "trainings" | "messages" | "logs">("candidates");
 
+  const [lastSeenEnrollmentsAt, setLastSeenEnrollmentsAt] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = localStorage.getItem("danka_seen_enrollments_at");
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
   // Admin notification counts — surfaced as badges on the sidebar tabs so the
   // admin sees where action is pending without opening each tab.
   const pendingCandidatesCount = usersList.filter(u =>
     u.role === "user" && (u.status === "pending" || u.subscriptionStatus === "pending")
   ).length;
-  const pendingEnrollmentsCount = allEnrollments.filter(e => e.status === "awaiting_payment").length;
+  const pendingEnrollmentsCount = allEnrollments.filter(e => {
+    if (e.status !== "awaiting_payment") return false;
+    if (!e.createdAt) return true;
+    return new Date(e.createdAt).getTime() > lastSeenEnrollmentsAt;
+  }).length;
 
   // Specialized trainings admin state
   const [trainingDraftTitle, setTrainingDraftTitle] = useState("");
@@ -1188,6 +1198,15 @@ export default function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userRole, currentUserEmail, usersList, activeTab]);
 
+  // Update lastSeenEnrollmentsAt when admin opens the Записани sub-tab, clearing the red notification badge.
+  useEffect(() => {
+    if (userRole === "admin" && activeAdminTab === "trainings" && trainingsViewMode === "enrollments") {
+      const now = Date.now();
+      setLastSeenEnrollmentsAt(now);
+      localStorage.setItem("danka_seen_enrollments_at", now.toString());
+    }
+  }, [userRole, activeAdminTab, trainingsViewMode]);
+
   // Auto-mark 'paid' enrollments as 'contacted' when admin opens the
   // Записани sub-tab. Clears the red badge — admin can still see them
   // in the list (status pill turns blue 'Свързан').
@@ -1573,6 +1592,16 @@ export default function ProfilePage() {
       alert(`Пакетът беше отключен за ${email}.`);
     } catch (err: any) {
       alert("Грешка при отключване: " + (err?.message || err));
+    }
+  };
+
+  const handleDeleteEnrollment = async (enr: Enrollment) => {
+    if (!confirm(`Сигурни ли сте, че искате да изтриете записа на „${enr.fullName}“ за „${enr.trainingTitle}“?`)) return;
+    try {
+      await deleteDoc(doc(db, "enrollments", enr.id));
+    } catch (err: any) {
+      console.error("Error deleting enrollment:", err);
+      alert("Грешка при изтриване на записа: " + (err?.message || err));
     }
   };
 
