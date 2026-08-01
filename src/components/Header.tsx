@@ -84,24 +84,24 @@ export default function Header() {
         <div className="w-full max-w-[1536px] px-3 sm:px-5 lg:px-6 xl:px-10 relative mx-auto">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-2.5 group shrink-0">
+            <Link href="/" className="flex items-center space-x-2.5 group shrink-0 min-w-0">
               <img
                 src="/logo-icon.png"
                 alt="Д-р Данка Николова Лого"
-                className="h-10 w-10 sm:h-12 sm:w-12 object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
+                className="h-10 w-10 sm:h-12 sm:w-12 flex-none object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
               />
-              <div>
-                <span className="font-logo text-sm sm:text-base lg:text-base xl:text-lg 2xl:text-xl font-bold text-white tracking-wide block leading-none group-hover:text-brand-gold transition-colors">
+              <div className="min-w-0 overflow-hidden">
+                <span className="font-logo text-sm sm:text-base lg:text-base xl:text-lg 2xl:text-xl font-bold text-white tracking-wide block leading-none group-hover:text-brand-gold transition-colors whitespace-nowrap">
                   Д-р Данка Николова
                 </span>
-                <span className="text-[9px] xl:text-[10px] text-brand-gold font-light tracking-widest uppercase hidden 2xl:block mt-0.5">
+                <span className="text-[9px] xl:text-[10px] text-brand-gold font-light tracking-wider uppercase hidden 2xl:block mt-0.5 truncate whitespace-nowrap">
                   Академия сигурен хранителен бизнес
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation — Responsive down to lg (1024px) with auto scaling font sizes */}
-            <nav className="hidden lg:flex items-center justify-center flex-grow gap-x-0.5 lg:gap-x-1 xl:gap-x-2 px-1 lg:px-2 xl:px-4">
+            <nav className="hidden lg:flex items-center justify-center flex-1 min-w-0 overflow-hidden gap-x-0.5 lg:gap-x-1 xl:gap-x-2 px-1 lg:px-2 xl:px-4">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
@@ -125,8 +125,8 @@ export default function Header() {
               })}
             </nav>
 
-            {/* Desktop Call to Action Buttons — Responsive down to lg (1024px) */}
-            <div className="hidden lg:flex items-center shrink-0 space-x-1.5 lg:space-x-2">
+            {/* Desktop Call to Action Buttons — always visible, never shrink */}
+            <div className="hidden lg:flex items-center flex-none space-x-1.5 lg:space-x-2">
               {/* Primary CTA — gold pill with shimmer */}
               <Link
                 href="/consultations"
