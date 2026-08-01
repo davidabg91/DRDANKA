@@ -285,9 +285,14 @@ export default function Services() {
 
               {/* Bottom CTA */}
               <div className="relative z-10 pt-5 border-t border-brand-green/15 flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
-                <span className="text-[10px] text-brand-dark/60 font-medium">
-                  * Безсрочен достъп с възможност за отказване по всяко време
-                </span>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Link
+                    href="/vip-system"
+                    className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-white/80 border border-brand-green/30 text-brand-green hover:bg-brand-green hover:text-white transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                  >
+                    <Search className="h-3.5 w-3.5" /> Виж повече
+                  </Link>
+                </div>
                 <Link
                   href="/profile"
                   className="w-full sm:w-auto px-6 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl bg-brand-green hover:bg-brand-green/90 text-white shadow-md hover:-translate-y-0.5 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
