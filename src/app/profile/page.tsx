@@ -3729,7 +3729,7 @@ export default function ProfilePage() {
                                     <span className="text-emerald-400 text-xl font-bold">0.00 € (Безплатно)</span>
                                   )}
                                 </div>
-                                <div className="text-[9px] text-white/50 font-mono">Включен марж за сигурност ×2</div>
+                                <div className="text-[9px] text-white/50 font-mono">Прогнозен месечен разход</div>
                               </div>
                             </div>
 
@@ -3771,14 +3771,14 @@ export default function ProfilePage() {
                                     <Wifi className="h-3.5 w-3.5" /> 1. Изходящ трафик
                                   </span>
                                   <span className="text-[10px] font-bold font-mono bg-brand-gold/20 text-brand-gold px-2 py-0.5 rounded">
-                                    €0.24 / GB (×2)
+                                    €0.24 / GB
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-white/80 leading-relaxed">
                                   <strong>От какво се сформира:</strong> Всеки път когато клиент отвори PDF или изгледа качен видео файл в профила си, файлът се изтегля от Firebase Storage към браузъра му.
                                 </p>
                                 <div className="text-[10px] text-white/50 pt-1 border-t border-white/5 font-mono">
-                                  Реална цена: $0.12/GB • Изчислено с марж ×2: €0.24/GB
+                                  Тарифа: €0.24 / GB трафик
                                 </div>
                               </div>
 
@@ -3789,14 +3789,14 @@ export default function ProfilePage() {
                                     <Database className="h-3.5 w-3.5" /> 2. Заемано място
                                   </span>
                                   <span className="text-[10px] font-bold font-mono bg-brand-gold/20 text-brand-gold px-2 py-0.5 rounded">
-                                    €0.04 / GB / мес (×2)
+                                    €0.04 / GB / мес
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-white/80 leading-relaxed">
                                   <strong>От какво се сформира:</strong> Дисковото пространство от всички качени PDF наръчници ({estStorageGB.toFixed(2)} GB съхранение на сървъра).
                                 </p>
                                 <div className="text-[10px] text-white/50 pt-1 border-t border-white/5 font-mono">
-                                  Реална цена: $0.02/GB • Изчислено с марж ×2: €0.04/GB
+                                  Тарифа: €0.04 / GB заемано място
                                 </div>
                               </div>
 
@@ -3807,14 +3807,14 @@ export default function ProfilePage() {
                                     <Eye className="h-3.5 w-3.5" /> 3. Отваряния (Заявки)
                                   </span>
                                   <span className="text-[10px] font-bold font-mono bg-brand-gold/20 text-brand-gold px-2 py-0.5 rounded">
-                                    €0.008 / 10k (×2)
+                                    €0.008 / 10k
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-white/80 leading-relaxed">
                                   <strong>От какво се сформира:</strong> Броят заявки за проверка на достъпа и отваряне на документите (Class B read operations).
                                 </p>
                                 <div className="text-[10px] text-white/50 pt-1 border-t border-white/5 font-mono">
-                                  Реална цена: $0.004/10k • Изчислено с марж ×2: €0.008/10k
+                                  Тарифа: €0.008 / 10,000 отваряния
                                 </div>
                               </div>
 

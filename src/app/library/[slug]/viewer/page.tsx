@@ -277,7 +277,7 @@ export default function LibraryViewerPage() {
             <div className="absolute inset-[-50%] grid grid-cols-2 sm:grid-cols-3 gap-10 sm:gap-16 rotate-[-25deg] opacity-25 text-black font-mono text-[11px] font-black uppercase tracking-wider">
               {Array.from({ length: 24 }).map((_, i) => (
                 <div key={i} className="whitespace-nowrap bg-yellow-200/40 text-black px-3 py-1.5 rounded border border-black/15 shadow-sm">
-                  ЛИЧНО КОПИЕ: {email}
+                  ЛИЧНО КОПИЕ: {email} • www.haccpspokoystvie.bg
                 </div>
               ))}
             </div>
