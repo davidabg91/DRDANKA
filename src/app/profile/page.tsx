@@ -4732,7 +4732,7 @@ export default function ProfilePage() {
                           <p className="text-xs text-brand-dark/50">Отключените и чакащите плащане материали във Вашия профил</p>
                         </div>
                       </div>
-                      <Link href="/library" className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer whitespace-nowrap">
+                      <Link href="/training" className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer whitespace-nowrap">
                         <PlusCircle className="h-3.5 w-3.5" />
                         Купи още
                       </Link>
@@ -4742,8 +4742,8 @@ export default function ProfilePage() {
                       <div className="text-center py-10 border border-dashed border-brand-green/10 rounded-xl space-y-3">
                         <BookOpen className="h-10 w-10 text-brand-gold/40 mx-auto" />
                         <p className="text-sm text-brand-dark/60">Все още нямате закупени или заявени обучения.</p>
-                        <Link href="/library" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer">
-                          Към книжарницата →
+                        <Link href="/training" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer">
+                          Към обученията →
                         </Link>
                       </div>
                     ) : (
