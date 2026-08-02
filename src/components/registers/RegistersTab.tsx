@@ -2682,21 +2682,38 @@ function EquipmentModal({
   const [newEmpName, setNewEmpName] = useState("");
   const [newEmpRole, setNewEmpRole] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const signaturePadRef = useRef<SignaturePadHandle>(null);
+
+  // Detect unsaved changes
+  const hasChanges =
+    JSON.stringify(localFridges) !== JSON.stringify(fridges) ||
+    JSON.stringify(localFreezers) !== JSON.stringify(freezers) ||
+    JSON.stringify(localEmployees) !== JSON.stringify(employees) ||
+    localHotPoint !== hotPoint ||
+    JSON.stringify(localAppliances) !== JSON.stringify(hotAppliances) ||
+    localSignature !== signature ||
+    localSigMode !== signatureMode ||
+    newFridge.trim() !== "" ||
+    newFreezer.trim() !== "" ||
+    newEmpName.trim() !== "";
+
+  const handleClose = () => {
+    if (hasChanges) {
+      setShowExitConfirm(true);
+    } else {
+      onClose();
+    }
+  };
 
   const save = async () => {
     setSaving(true);
     try {
-      // Ако потребителят е написал нещо в полетата "добави", но е натиснал
-      // направо "Запази" без да натисне "+", го включваме автоматично — иначе
-      // въведеното тихо се губи и изглежда все едно записът "не се е запазил".
       const fridgesToSave = newFridge.trim() ? [...localFridges, newFridge.trim()] : localFridges;
       const freezersToSave = newFreezer.trim() ? [...localFreezers, newFreezer.trim()] : localFreezers;
       const employeesToSave = newEmpName.trim()
         ? [...localEmployees, { name: newEmpName.trim(), role: newEmpRole.trim() }]
         : localEmployees;
-      // Подписът: ако е рисуван, но не е натиснат вътрешният бутон "Запази
-      // подписа", вземаме текущото съдържание на платното директно оттук.
       const signatureToSave =
         localSigMode === "draw" && signaturePadRef.current
           ? signaturePadRef.current.getDataUrl() ?? (localSignature ?? "")
@@ -2718,233 +2735,368 @@ function EquipmentModal({
   };
 
   const listRow = (label: string, onRemove: () => void) => (
-    <div className="flex items-center justify-between bg-brand-light/40 rounded-lg px-3 py-2">
-      <span className="text-xs text-brand-dark/80">{label}</span>
-      <button onClick={onRemove} className="text-red-300 hover:text-red-500 cursor-pointer p-0.5">
-        <X className="h-3.5 w-3.5" />
+    <div className="flex items-center justify-between bg-white/5 hover:bg-white/10 rounded-xl px-4 py-2.5 transition-colors group">
+      <span className="text-sm text-white/80">{label}</span>
+      <button
+        onClick={onRemove}
+        className="text-red-400/60 hover:text-red-400 cursor-pointer p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <X className="h-4 w-4" />
       </button>
     </div>
   );
 
-  return (
-    <div className="fixed inset-0 z-50 bg-brand-dark/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 space-y-5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <h3 className="font-serif text-lg font-bold text-brand-green">Оборудване и персонал</h3>
-          <button onClick={onClose} className="text-brand-dark/40 hover:text-brand-dark cursor-pointer p-1">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <p className="text-[11px] text-brand-dark/50 leading-relaxed">
-          Тези списъци се използват автоматично във всички дневници — температурни чек-листове, контролна карта за
-          персонала, здравни книжки, обучения и работно облекло.
-        </p>
+  const sectionTitle = (icon: React.ReactNode, title: string) => (
+    <div className="flex items-center gap-2 mb-3">
+      <div className="p-1.5 rounded-lg bg-brand-gold/10 border border-brand-gold/20 text-brand-gold">
+        {icon}
+      </div>
+      <h4 className="text-xs font-black uppercase tracking-widest text-brand-gold/90">{title}</h4>
+    </div>
+  );
 
-        {/* Топла точка */}
-        <button
-          type="button"
-          onClick={() => setLocalHotPoint(!localHotPoint)}
-          className={`w-full flex items-center gap-3.5 rounded-2xl border px-4 py-3.5 text-left transition-colors cursor-pointer ${
-            localHotPoint ? "bg-brand-gold/10 border-brand-gold/40" : "bg-brand-light/40 border-brand-green/10 hover:border-brand-gold/30"
-          }`}
+  const inputStyle = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-brand-gold/50 focus:bg-white/10 transition-all";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+      style={{ background: "rgba(4, 14, 10, 0.75)", backdropFilter: "blur(8px)" }}
+      onClick={handleClose}
+    >
+      {/* Exit confirmation overlay */}
+      {showExitConfirm && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center"
+          style={{ background: "rgba(4, 14, 10, 0.6)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => e.stopPropagation()}
         >
-          <span
-            className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 font-black text-sm ${
-              localHotPoint ? "bg-brand-gold border-brand-gold text-brand-dark" : "border-brand-green/25 text-transparent"
+          <div className="bg-[#0d2018] border border-brand-gold/30 rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 text-center space-y-4">
+            <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto">
+              <AlertTriangle className="h-6 w-6 text-amber-400" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-base">Незапазени промени</h3>
+              <p className="text-sm text-white/50 mt-1 leading-relaxed">
+                Направили сте промени, които не са запазени. Сигурни ли сте, че искате да излезете?
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowExitConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-white/70 text-sm font-bold cursor-pointer hover:bg-white/5 transition-colors"
+              >
+                Остани
+              </button>
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500/20 border border-red-400/30 text-red-300 text-sm font-bold cursor-pointer hover:bg-red-500/30 transition-colors"
+              >
+                Излез без запазване
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div
+        className="relative w-full max-w-5xl max-h-[94vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #0a1f14 0%, #081a10 50%, #061410 100%)",
+          border: "1px solid rgba(212,175,55,0.15)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 shrink-0"
+          style={{ background: "rgba(255,255,255,0.02)" }}>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-brand-gold/10 border border-brand-gold/20">
+              <Settings className="h-5 w-5 text-brand-gold" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-bold text-white">Оборудване и персонал</h3>
+              <p className="text-[11px] text-white/40 mt-0.5">
+                Списъците се използват автоматично във всички дневници
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            {hasChanges && (
+              <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/20 px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                Незапазени промени
+              </span>
+            )}
+            <button
+              onClick={handleClose}
+              className="p-2 rounded-xl text-white/30 hover:text-white hover:bg-white/8 cursor-pointer transition-all"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+
+          {/* Топла точка */}
+          <button
+            type="button"
+            onClick={() => setLocalHotPoint(!localHotPoint)}
+            className={`w-full flex items-start gap-4 rounded-2xl border px-5 py-4 text-left transition-all cursor-pointer ${
+              localHotPoint
+                ? "bg-brand-gold/8 border-brand-gold/35 shadow-[0_0_20px_rgba(212,175,55,0.08)]"
+                : "bg-white/3 border-white/8 hover:border-brand-gold/25 hover:bg-white/5"
             }`}
           >
-            ✓
-          </span>
-          <Flame className={`h-5 w-5 shrink-0 ${localHotPoint ? "text-brand-gold" : "text-brand-dark/30"}`} />
-          <span className="flex-1">
-            <span className="block text-xs font-black uppercase tracking-wide text-brand-green">Обектът има топла точка</span>
-            <span className="block text-[10px] text-brand-dark/50 leading-snug mt-0.5">
-              Скара, фритюрник, дюнер, печене, готвене, топла витрина… Включва допълнителните контролни и партидни карти
-              (термична обработка, мазнина, супи, алергени и др.).
-            </span>
-          </span>
-        </button>
-
-        {/* Избор на конкретните уреди от топлата точка */}
-        {localHotPoint && (
-          <div className="space-y-2 border border-brand-gold/25 bg-brand-gold/5 rounded-2xl p-4">
-            <h4 className="text-[10px] font-black uppercase text-brand-green flex items-center gap-1.5">
-              <Flame className="h-3.5 w-3.5 text-brand-gold" /> Кои уреди има в обекта?
-            </h4>
-            <p className="text-[10px] text-brand-dark/50 leading-snug">
-              Системата ще показва само картите за избраните уреди и всеки ден ще пита кои от тях са използвани, за да
-              напомня какво да се попълни.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              {HOT_APPLIANCES.map((a) => {
-                const on = localAppliances.includes(a.id);
-                return (
-                  <button
-                    key={a.id}
-                    type="button"
-                    onClick={() =>
-                      setLocalAppliances(on ? localAppliances.filter((x) => x !== a.id) : [...localAppliances, a.id])
-                    }
-                    className={`px-3 py-2 rounded-xl text-[10px] font-bold border cursor-pointer transition-colors flex items-center gap-1.5 ${
-                      on
-                        ? "bg-brand-green text-white border-brand-green"
-                        : "bg-white text-brand-dark/55 border-brand-green/15 hover:border-brand-gold"
-                    }`}
-                  >
-                    <span className="text-sm leading-none">{a.emoji}</span>
-                    {a.label}
-                    {on && <Check className="h-3 w-3" />}
-                  </button>
-                );
-              })}
+            <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 mt-0.5 font-black text-sm transition-all ${
+              localHotPoint ? "bg-brand-gold border-brand-gold text-brand-dark" : "border-white/20 text-transparent"
+            }`}>✓</div>
+            <Flame className={`h-5 w-5 shrink-0 mt-0.5 transition-colors ${localHotPoint ? "text-brand-gold" : "text-white/20"}`} />
+            <div>
+              <span className="block text-sm font-black uppercase tracking-wide text-white">Обектът има топла точка</span>
+              <span className="block text-xs text-white/45 leading-relaxed mt-1">
+                Скара, фритюрник, дюнер, печене, готвене, топла витрина… Включва допълнителните контролни и партидни карти (термична обработка, мазнина, супи, алергени и др.)
+              </span>
             </div>
-            {localAppliances.length === 0 && (
-              <p className="text-[10px] text-amber-700 font-bold">
-                Няма избрани уреди — ще се показват всички карти от топлата точка.
+          </button>
+
+          {/* Уреди на топлата точка */}
+          {localHotPoint && (
+            <div className="rounded-2xl border border-brand-gold/20 bg-brand-gold/4 p-5 space-y-3">
+              {sectionTitle(<Flame className="h-4 w-4" />, "Кои уреди има в обекта?")}
+              <p className="text-xs text-white/40 leading-relaxed -mt-1">
+                Системата ще показва само картите за избраните уреди и всеки ден ще пита кои са използвани.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {HOT_APPLIANCES.map((a) => {
+                  const on = localAppliances.includes(a.id);
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() =>
+                        setLocalAppliances(on ? localAppliances.filter((x) => x !== a.id) : [...localAppliances, a.id])
+                      }
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold border cursor-pointer transition-all flex items-center gap-1.5 ${
+                        on
+                          ? "bg-brand-gold text-brand-dark border-brand-gold shadow-md"
+                          : "bg-white/4 text-white/55 border-white/10 hover:border-brand-gold/40 hover:text-white"
+                      }`}
+                    >
+                      <span className="text-base leading-none">{a.emoji}</span>
+                      {a.label}
+                      {on && <Check className="h-3 w-3" />}
+                    </button>
+                  );
+                })}
+              </div>
+              {localAppliances.length === 0 && (
+                <p className="text-xs text-amber-400/80 font-bold">
+                  Няма избрани уреди — ще се показват всички карти от топлата точка.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Хладилни + Фризери */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            {/* Хладилни */}
+            <div className="rounded-2xl border border-white/8 bg-white/2 p-4 space-y-3">
+              {sectionTitle(<Thermometer className="h-4 w-4" />, "Хладилни (0…+4°C)")}
+              <div className="space-y-1.5 min-h-[40px]">
+                {localFridges.length === 0 && (
+                  <p className="text-xs text-white/25 italic px-1">Няма добавени хладилни</p>
+                )}
+                {localFridges.map((f, i) => (
+                  <div key={i}>{listRow(f, () => setLocalFridges(localFridges.filter((_, j) => j !== i)))}</div>
+                ))}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <input
+                  className={inputStyle}
+                  placeholder="напр. Хладилна витрина №1"
+                  value={newFridge}
+                  onChange={(e) => setNewFridge(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const v = newFridge.trim();
+                      if (!v) return;
+                      setLocalFridges([...localFridges, v]);
+                      setNewFridge("");
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const v = newFridge.trim();
+                    if (!v) return;
+                    setLocalFridges([...localFridges, v]);
+                    setNewFridge("");
+                  }}
+                  className="shrink-0 bg-brand-gold text-brand-dark rounded-xl px-3.5 cursor-pointer border-0 hover:bg-brand-gold-light transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Фризери */}
+            <div className="rounded-2xl border border-white/8 bg-white/2 p-4 space-y-3">
+              {sectionTitle(<Snowflake className="h-4 w-4" />, "Фризери (≤ −18°C)")}
+              <div className="space-y-1.5 min-h-[40px]">
+                {localFreezers.length === 0 && (
+                  <p className="text-xs text-white/25 italic px-1">Няма добавени фризери</p>
+                )}
+                {localFreezers.map((f, i) => (
+                  <div key={i}>{listRow(f, () => setLocalFreezers(localFreezers.filter((_, j) => j !== i)))}</div>
+                ))}
+              </div>
+              <div className="flex gap-2 pt-1">
+                <input
+                  className={inputStyle}
+                  placeholder="напр. Фризер №1"
+                  value={newFreezer}
+                  onChange={(e) => setNewFreezer(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const v = newFreezer.trim();
+                      if (!v) return;
+                      setLocalFreezers([...localFreezers, v]);
+                      setNewFreezer("");
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    const v = newFreezer.trim();
+                    if (!v) return;
+                    setLocalFreezers([...localFreezers, v]);
+                    setNewFreezer("");
+                  }}
+                  className="shrink-0 bg-brand-gold text-brand-dark rounded-xl px-3.5 cursor-pointer border-0 hover:bg-brand-gold-light transition-colors"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Служители */}
+          <div className="rounded-2xl border border-white/8 bg-white/2 p-4 space-y-3">
+            {sectionTitle(<Users className="h-4 w-4" />, "Служители")}
+            <div className="space-y-1.5 min-h-[40px]">
+              {localEmployees.length === 0 && (
+                <p className="text-xs text-white/25 italic px-1">Няма добавени служители</p>
+              )}
+              {localEmployees.map((e, i) => (
+                <div key={i}>
+                  {listRow(
+                    `${e.name}${e.role ? ` — ${e.role}` : ""}`,
+                    () => setLocalEmployees(localEmployees.filter((_, j) => j !== i))
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <input
+                className={inputStyle}
+                placeholder="Име и фамилия"
+                value={newEmpName}
+                onChange={(e) => setNewEmpName(e.target.value)}
+              />
+              <input
+                className={inputStyle}
+                placeholder="Длъжност (напр. продавач)"
+                value={newEmpRole}
+                onChange={(e) => setNewEmpRole(e.target.value)}
+              />
+              <button
+                onClick={() => {
+                  const v = newEmpName.trim();
+                  if (!v) return;
+                  setLocalEmployees([...localEmployees, { name: v, role: newEmpRole.trim() }]);
+                  setNewEmpName("");
+                  setNewEmpRole("");
+                }}
+                className="shrink-0 bg-brand-gold text-brand-dark rounded-xl px-4 py-2.5 cursor-pointer border-0 hover:bg-brand-gold-light transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Електронен подпис */}
+          <div className="rounded-2xl border border-white/8 bg-white/2 p-4 space-y-4">
+            {sectionTitle(<PenLine className="h-4 w-4" />, "Електронен подпис")}
+            <p className="text-xs text-white/40 leading-relaxed -mt-1">
+              Нарисувайте подписа си веднъж и системата ще го поставя автоматично на местата за подпис при печат.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setLocalSigMode("draw")}
+                className={`flex-1 min-w-[160px] text-left rounded-xl border px-4 py-3 cursor-pointer transition-all ${
+                  localSigMode === "draw"
+                    ? "bg-brand-gold/10 border-brand-gold/40"
+                    : "bg-white/3 border-white/8 hover:border-brand-gold/25"
+                }`}
+              >
+                <span className="block text-sm font-black text-white">✍️ Електронен подпис</span>
+                <span className="block text-xs text-white/40 mt-0.5">Поставя се автоматично при печат</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLocalSigMode("manual")}
+                className={`flex-1 min-w-[160px] text-left rounded-xl border px-4 py-3 cursor-pointer transition-all ${
+                  localSigMode === "manual"
+                    ? "bg-brand-gold/10 border-brand-gold/40"
+                    : "bg-white/3 border-white/8 hover:border-brand-gold/25"
+                }`}
+              >
+                <span className="block text-sm font-black text-white">🖊️ Ръчен подпис</span>
+                <span className="block text-xs text-white/40 mt-0.5">Оставя празна линия за подпис на ръка</span>
+              </button>
+            </div>
+            {localSigMode === "draw" && (
+              <SignaturePad ref={signaturePadRef} initial={localSignature} onSave={(url) => setLocalSignature(url || undefined)} />
+            )}
+            {localSigMode === "draw" && localSignature && (
+              <p className="text-xs text-green-400 font-bold flex items-center gap-1.5">
+                <Check className="h-3.5 w-3.5" /> Подписът е готов — ще се използва при печат.
               </p>
             )}
           </div>
-        )}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-black uppercase text-brand-green flex items-center gap-1.5">
-              <Thermometer className="h-3.5 w-3.5" /> Хладилни съоръжения (0…+4°C)
-            </h4>
-            {localFridges.map((f, i) => (
-              <div key={i}>{listRow(f, () => setLocalFridges(localFridges.filter((_, j) => j !== i)))}</div>
-            ))}
-            <div className="flex gap-2">
-              <input className={inputCls} placeholder="напр. Хладилна витрина №1" value={newFridge} onChange={(e) => setNewFridge(e.target.value)} />
-              <button
-                onClick={() => {
-                  const v = newFridge.trim();
-                  if (!v) return;
-                  setLocalFridges([...localFridges, v]);
-                  setNewFridge("");
-                }}
-                className="shrink-0 bg-brand-green text-white rounded-lg px-3 cursor-pointer border-0"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-black uppercase text-brand-green flex items-center gap-1.5">
-              <Snowflake className="h-3.5 w-3.5" /> Фризери (≤ −18°C)
-            </h4>
-            {localFreezers.map((f, i) => (
-              <div key={i}>{listRow(f, () => setLocalFreezers(localFreezers.filter((_, j) => j !== i)))}</div>
-            ))}
-            <div className="flex gap-2">
-              <input className={inputCls} placeholder="напр. Фризер №1" value={newFreezer} onChange={(e) => setNewFreezer(e.target.value)} />
-              <button
-                onClick={() => {
-                  const v = newFreezer.trim();
-                  if (!v) return;
-                  setLocalFreezers([...localFreezers, v]);
-                  setNewFreezer("");
-                }}
-                className="shrink-0 bg-brand-green text-white rounded-lg px-3 cursor-pointer border-0"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
         </div>
 
-        <div className="space-y-2">
-          <h4 className="text-[10px] font-black uppercase text-brand-green flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5" /> Служители
-          </h4>
-          {localEmployees.map((e, i) => (
-            <div key={i}>
-              {listRow(`${e.name}${e.role ? ` — ${e.role}` : ""}`, () => setLocalEmployees(localEmployees.filter((_, j) => j !== i)))}
-            </div>
-          ))}
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input className={inputCls} placeholder="Име и фамилия" value={newEmpName} onChange={(e) => setNewEmpName(e.target.value)} />
-            <input className={inputCls} placeholder="Длъжност (напр. продавач)" value={newEmpRole} onChange={(e) => setNewEmpRole(e.target.value)} />
-            <button
-              onClick={() => {
-                const v = newEmpName.trim();
-                if (!v) return;
-                setLocalEmployees([...localEmployees, { name: v, role: newEmpRole.trim() }]);
-                setNewEmpName("");
-                setNewEmpRole("");
-              }}
-              className="shrink-0 bg-brand-green text-white rounded-lg px-3 py-2 cursor-pointer border-0"
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Електронен подпис */}
-        <div className="space-y-3 border-t border-brand-green/10 pt-4">
-          <h4 className="text-[10px] font-black uppercase text-brand-green flex items-center gap-1.5">
-            <PenLine className="h-3.5 w-3.5" /> Електронен подпис
-          </h4>
-          <p className="text-[10px] text-brand-dark/50 leading-snug">
-            Нарисувайте подписа си веднъж и системата ще го поставя автоматично на местата за подпис при печат — за да не
-            се подписвате всеки път на ръка.
+        {/* Sticky footer */}
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-white/8 shrink-0"
+          style={{ background: "rgba(255,255,255,0.02)" }}>
+          <p className="text-xs text-white/30 hidden sm:block">
+            Промените важат за всички дневници
           </p>
-
-          {/* Избор на режим */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-3 ml-auto">
             <button
-              type="button"
-              onClick={() => setLocalSigMode("draw")}
-              className={`flex-1 min-w-[150px] text-left rounded-xl border px-3.5 py-2.5 cursor-pointer transition-colors ${
-                localSigMode === "draw" ? "bg-brand-gold/10 border-brand-gold/40" : "bg-white border-brand-green/15 hover:border-brand-gold/30"
-              }`}
+              onClick={handleClose}
+              className="px-5 py-2.5 rounded-xl border border-white/10 text-white/60 text-sm font-bold cursor-pointer hover:bg-white/5 hover:text-white transition-all"
             >
-              <span className="block text-[11px] font-black text-brand-green">✍️ Електронен подпис</span>
-              <span className="block text-[9px] text-brand-dark/50">Поставя се автоматично при печат</span>
+              Отказ
             </button>
             <button
-              type="button"
-              onClick={() => setLocalSigMode("manual")}
-              className={`flex-1 min-w-[150px] text-left rounded-xl border px-3.5 py-2.5 cursor-pointer transition-colors ${
-                localSigMode === "manual" ? "bg-brand-gold/10 border-brand-gold/40" : "bg-white border-brand-green/15 hover:border-brand-gold/30"
-              }`}
+              onClick={save}
+              disabled={saving}
+              className="px-7 py-2.5 rounded-xl bg-brand-gold text-brand-dark text-sm font-black uppercase tracking-wide cursor-pointer border-0 shadow-lg hover:bg-brand-gold-light transition-all flex items-center gap-2 disabled:opacity-60"
             >
-              <span className="block text-[11px] font-black text-brand-green">🖊️ Ръчен подпис</span>
-              <span className="block text-[9px] text-brand-dark/50">Оставя празна линия за подпис на ръка</span>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              Запази
             </button>
           </div>
-
-          {localSigMode === "draw" && (
-            <SignaturePad ref={signaturePadRef} initial={localSignature} onSave={(url) => setLocalSignature(url || undefined)} />
-          )}
-          {localSigMode === "draw" && localSignature && (
-            <p className="text-[10px] text-green-700 font-bold flex items-center gap-1">
-              <Check className="h-3.5 w-3.5" /> Подписът е готов — ще се използва при печат.
-            </p>
-          )}
-        </div>
-
-        <div className="flex justify-end gap-2 pt-2">
-          <button
-            onClick={onClose}
-            className="text-[10px] font-black uppercase px-4 py-2.5 rounded-xl border border-brand-green/15 text-brand-dark/50 cursor-pointer hover:bg-brand-light"
-          >
-            Отказ
-          </button>
-          <button
-            onClick={save}
-            disabled={saving}
-            className="text-[10px] font-black uppercase px-6 py-2.5 rounded-xl bg-brand-green text-white cursor-pointer border-0 shadow-md flex items-center gap-1.5 disabled:opacity-60"
-          >
-            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-            Запази
-          </button>
         </div>
       </div>
     </div>
   );
 }
+
 
 /* ------------------------------------------------------------------ */
 /*  Основен компонент                                                   */
