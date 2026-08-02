@@ -100,8 +100,8 @@ export default function Header() {
               </div>
             </Link>
 
-            {/* Desktop Navigation — Responsive down to lg (1024px) with auto scaling font sizes */}
-            <nav className="hidden lg:flex items-center justify-center flex-1 min-w-0 overflow-hidden gap-x-0.5 lg:gap-x-1 xl:gap-x-2 px-1 lg:px-2 xl:px-4">
+            {/* Desktop Navigation — spreads across full width at larger screens */}
+            <nav className="hidden lg:flex items-center justify-evenly flex-1 min-w-0 overflow-hidden gap-x-0.5 lg:gap-x-1 xl:gap-x-2 px-1 lg:px-2 xl:px-4">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
