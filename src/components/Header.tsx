@@ -91,11 +91,11 @@ export default function Header() {
                 className="h-10 w-10 sm:h-12 sm:w-12 flex-none object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
               />
               <div className="min-w-0 overflow-hidden">
-                <span className="font-logo text-sm sm:text-base lg:text-base xl:text-lg 2xl:text-xl font-bold text-white tracking-wide block leading-none group-hover:text-brand-gold transition-colors whitespace-nowrap">
-                  Д-р Данка Николова
-                </span>
-                <span className="text-[9px] xl:text-[10px] text-brand-gold font-light tracking-wider uppercase hidden xl:block mt-0.5 truncate whitespace-nowrap">
+                <span className="font-logo text-[11px] sm:text-[12px] lg:text-[12px] xl:text-[13px] 2xl:text-sm font-bold text-brand-gold tracking-wider block leading-none group-hover:text-brand-gold-light transition-colors truncate whitespace-nowrap uppercase hidden xl:block">
                   Академия сигурен хранителен бизнес
+                </span>
+                <span className="font-logo text-sm sm:text-base lg:text-base xl:text-[15px] 2xl:text-lg font-bold text-white tracking-wide block leading-snug group-hover:text-brand-gold transition-colors whitespace-nowrap">
+                  Д-р Данка Николова
                 </span>
               </div>
             </Link>
