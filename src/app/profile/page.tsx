@@ -4417,21 +4417,26 @@ export default function ProfilePage() {
                                           </span>
                                         </td>
                                         <td className="border border-brand-green/10 p-3 text-center">
-                                          {enr.status === "awaiting_payment" ? (
-                                            <button onClick={() => handleGrantEnrollmentAccess(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer inline-flex items-center gap-1">
-                                              <Check className="h-3 w-3" /> Получено плащане
+                                          <div className="flex flex-col items-center gap-1.5">
+                                            {enr.status === "awaiting_payment" ? (
+                                              <button onClick={() => handleGrantEnrollmentAccess(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer inline-flex items-center gap-1">
+                                                <Check className="h-3 w-3" /> Получено плащане
+                                              </button>
+                                            ) : enr.status === "access_granted" ? (
+                                              <span className="text-[9px] font-bold uppercase text-green-700 inline-flex items-center gap-1">
+                                                <CheckCircle className="h-3 w-3" /> Отключен
+                                              </span>
+                                            ) : enr.status === "paid" ? (
+                                              <button onClick={() => handleMarkEnrollmentContacted(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
+                                                Маркирай свързан
+                                              </button>
+                                            ) : (
+                                              <span className="text-[9px] text-brand-dark/40">—</span>
+                                            )}
+                                            <button onClick={() => handleDeleteEnrollment(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1" title="Изтрий записа">
+                                              <Trash2 className="h-3 w-3" /> Изтрий
                                             </button>
-                                          ) : enr.status === "access_granted" ? (
-                                            <span className="text-[9px] font-bold uppercase text-green-700 inline-flex items-center gap-1">
-                                              <CheckCircle className="h-3 w-3" /> Отключен
-                                            </span>
-                                          ) : enr.status === "paid" ? (
-                                            <button onClick={() => handleMarkEnrollmentContacted(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
-                                              Маркирай свързан
-                                            </button>
-                                          ) : (
-                                            <span className="text-[9px] text-brand-dark/40">—</span>
-                                          )}
+                                          </div>
                                         </td>
                                       </tr>
                                     ))}
