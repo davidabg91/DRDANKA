@@ -288,6 +288,9 @@ export default function ProfilePage() {
     updatedAt: "",
   }));
   const { enrollments: allEnrollments } = useEnrollments();
+  // Admin-created courses stored in Firestore /courses (self-service bookstore).
+  // publishedOnly=false so drafts/hidden courses are visible in the admin list.
+  const { courses: dbCourses } = useCourses(false);
   const { overrides: priceOverrides } = usePriceOverrides();
   const { overrides: typeOverrides } = useTypeOverrides();
   const { links: videoLinks } = useVideoLinks();
@@ -1334,7 +1337,7 @@ export default function ProfilePage() {
       // SEO-friendly slug from the title, deduped against existing courses.
       const slug = uniqueSlug(
         slugify(courseDraftTitle),
-        allCourses.map((x) => x.slug).filter((s): s is string => !!s)
+        [...allCourses, ...dbCourses].map((x) => x.slug).filter((s): s is string => !!s)
       );
       // Firestore rejects undefined values, so build the object without the
       // optional fields and add them only when populated.
@@ -3647,14 +3650,135 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Read-only notice — catalog is now curated in code */}
-                      <div className="bg-brand-light/30 p-4 rounded-xl border border-brand-green/10 flex items-start gap-3">
-                        <BookOpen className="h-5 w-5 text-brand-gold shrink-0 mt-0.5" />
-                        <div className="text-xs text-brand-dark/70 leading-relaxed">
-                          <p className="font-bold text-brand-green mb-1">Каталогът се поддържа в кода</p>
-                          <p>Готовите обучения вече се добавят само от разработчика, за да изглежда всеки курс със свой уникален дизайн. Тук виждате статистика — кои клиенти са купили кои материали.</p>
+                      {/* Create a new course — saved to Firestore and shown in the public catalog */}
+                      <form onSubmit={handleCreateCourse} className="bg-brand-light/30 p-4 sm:p-5 rounded-xl border border-brand-green/10 space-y-3">
+                        <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
+                          <Plus className="h-4 w-4 text-brand-gold" />
+                          Добави нов курс в книжарницата
+                        </h3>
+                        <p className="text-[11px] text-brand-dark/60">Попълни данните и качи PDF или посочи външен линк. Курсът се появява автоматично в каталога за всички посетители.</p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <input
+                            type="text"
+                            placeholder="Заглавие на курса *"
+                            value={courseDraftTitle}
+                            onChange={(e) => setCourseDraftTitle(e.target.value)}
+                            className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                          />
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="Цена в € *"
+                            value={courseDraftPrice}
+                            onChange={(e) => setCourseDraftPrice(e.target.value)}
+                            className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                          />
                         </div>
-                      </div>
+
+                        <input
+                          type="text"
+                          placeholder="Кратко описание (показва се на картата) *"
+                          value={courseDraftDesc}
+                          onChange={(e) => setCourseDraftDesc(e.target.value)}
+                          className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                        />
+                        <textarea
+                          placeholder="Пълно описание (по избор — показва се на страницата на курса)"
+                          value={courseDraftLongDesc}
+                          onChange={(e) => setCourseDraftLongDesc(e.target.value)}
+                          rows={3}
+                          className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y"
+                        />
+
+                        <div className="flex flex-wrap items-center gap-3">
+                          <label className="flex items-center gap-1.5 text-[11px] font-bold text-brand-dark/70 cursor-pointer">
+                            <input type="radio" name="courseType" checked={courseDraftType === "pdf"} onChange={() => setCourseDraftType("pdf")} className="cursor-pointer" />
+                            PDF файл
+                          </label>
+                          <label className="flex items-center gap-1.5 text-[11px] font-bold text-brand-dark/70 cursor-pointer">
+                            <input type="radio" name="courseType" checked={courseDraftType === "link"} onChange={() => setCourseDraftType("link")} className="cursor-pointer" />
+                            Външен линк
+                          </label>
+                        </div>
+
+                        {courseDraftType === "pdf" ? (
+                          <label className="flex items-center gap-2 text-[11px] font-bold uppercase text-brand-gold border border-brand-gold/40 hover:bg-brand-gold hover:text-brand-dark transition-colors px-3 py-2 rounded-lg cursor-pointer w-fit">
+                            <Upload className="h-3.5 w-3.5" />
+                            {courseDraftPdf ? courseDraftPdf.name : "Избери PDF файл *"}
+                            <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setCourseDraftPdf(e.target.files?.[0] ?? null)} />
+                          </label>
+                        ) : (
+                          <input
+                            type="url"
+                            placeholder="https://… линк към курса *"
+                            value={courseDraftExternalUrl}
+                            onChange={(e) => setCourseDraftExternalUrl(e.target.value)}
+                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                          />
+                        )}
+
+                        <label className="flex items-center gap-2 text-[11px] font-bold uppercase text-brand-green/80 border border-brand-green/20 hover:bg-brand-green/5 transition-colors px-3 py-2 rounded-lg cursor-pointer w-fit">
+                          <Upload className="h-3.5 w-3.5" />
+                          {courseDraftCover ? courseDraftCover.name : "Корица (по избор)"}
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => setCourseDraftCover(e.target.files?.[0] ?? null)} />
+                        </label>
+
+                        {courseUploadProgress !== null && (
+                          <div className="space-y-1">
+                            <div className="w-full bg-brand-green/10 rounded-full h-1.5 overflow-hidden">
+                              <div className="h-full bg-brand-gold transition-all" style={{ width: `${courseUploadProgress}%` }} />
+                            </div>
+                            <span className="text-[10px] text-brand-dark/60">Качване… {courseUploadProgress}%</span>
+                          </div>
+                        )}
+
+                        <button
+                          type="submit"
+                          disabled={courseUploadProgress !== null}
+                          className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider px-5 py-2.5 rounded-lg bg-brand-green text-white hover:bg-brand-green/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                          {courseUploadProgress !== null ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                          Публикувай курса
+                        </button>
+                      </form>
+
+                      {/* Admin-created courses (Firestore) with publish toggle + delete */}
+                      {dbCourses.length > 0 && (
+                        <div className="space-y-2">
+                          <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Мои качени курсове ({dbCourses.length})</h3>
+                          <div className="space-y-2">
+                            {dbCourses.map((c) => {
+                              const buyers = usersList.filter(u => (u.purchasedCourseIds || []).includes(c.id));
+                              return (
+                                <div key={c.id} className="flex items-center justify-between gap-3 bg-white border border-brand-green/10 rounded-xl px-4 py-3">
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-bold text-brand-green text-sm truncate">{c.title}</span>
+                                      <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${c.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
+                                        {c.published ? "Активен" : "Скрит"}
+                                      </span>
+                                    </div>
+                                    <div className="text-[10px] text-brand-dark/50 truncate">{c.priceEur.toFixed(2)} € · {(c.type ?? "pdf") === "link" ? "външен линк" : "PDF"} · {buyers.length} купувачи</div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <Link href={`/courses/${c.slug || c.id}`} target="_blank" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
+                                      <Eye className="h-3 w-3" /> Виж
+                                    </Link>
+                                    <button onClick={() => handleTogglePublished(c)} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer">
+                                      {c.published ? "Скрий" : "Покажи"}
+                                    </button>
+                                    <button onClick={() => handleDeleteCourse(c)} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer">
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
 
 
@@ -3670,6 +3794,7 @@ export default function ProfilePage() {
                           <select value={courseGrantTargetId} onChange={(e) => setCourseGrantTargetId(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer">
                             <option value="">— избери курс —</option>
                             {allCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                            {dbCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                           </select>
                           <button type="button" onClick={handleGrantCourse} className="text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap">
                             Предостави

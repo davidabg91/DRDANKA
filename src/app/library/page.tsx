@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
+import { useCourses } from "@/lib/firebaseHooks";
 import PageHero from "@/components/PageHero";
 
 /**
@@ -18,6 +19,9 @@ import PageHero from "@/components/PageHero";
  */
 export default function LibraryPage() {
   const { overrides } = usePriceOverrides();
+  // Admin-created courses from Firestore (published only) — the self-service
+  // half of the digital bookstore. Shown alongside the code-curated materials.
+  const { courses: dbCourses } = useCourses();
   const trainingMaterials = LIBRARY_MATERIALS.filter(m => m.category === "training" || (!m.category && m.type === "video"));
   return (
     <div className="min-h-screen pb-24">
@@ -29,7 +33,7 @@ export default function LibraryPage() {
       />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        {trainingMaterials.length === 0 ? (
+        {trainingMaterials.length === 0 && dbCourses.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-md p-10 text-center space-y-2">
             <BookOpen className="h-10 w-10 text-brand-gold/50 mx-auto" />
             <p className="text-brand-dark/60 text-sm">Скоро добавяме материали.</p>
@@ -99,6 +103,61 @@ export default function LibraryPage() {
                           {resolvePrice(m.slug, overrides, m.priceEur).toFixed(2)}<span className="text-sm text-brand-dark/50 font-sans ml-0.5">€</span>
                         </span>
                       </div>
+                    </div>
+                    <span className="relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-green group-hover:bg-brand-gold text-white group-hover:text-brand-dark font-bold text-[10px] uppercase tracking-widest rounded-full shadow-md group-hover:shadow-lg group-hover:shadow-brand-gold/40 transition-all duration-300">
+                      <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none" />
+                      Купи
+                      <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+
+            {/* Admin-created courses from Firestore */}
+            {dbCourses.map(c => (
+              <Link
+                key={c.id}
+                href={`/courses/${c.slug || c.id}`}
+                className="group relative bg-white rounded-3xl border border-brand-green/10 hover:border-brand-gold/50 overflow-hidden shadow-md hover:shadow-2xl hover:shadow-brand-gold/20 hover:-translate-y-1 transition-all duration-300 flex flex-col cursor-pointer"
+              >
+                <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-green/15 to-brand-gold/15 overflow-hidden">
+                  {c.coverImageUrl ? (
+                    <Image
+                      src={c.coverImageUrl}
+                      alt={c.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="relative">
+                        <div className="absolute inset-0 rounded-2xl bg-brand-gold/30 blur-2xl animate-pulse" />
+                        <BookOpen className="relative h-20 w-20 text-brand-green/40" strokeWidth={1.5} />
+                      </div>
+                    </div>
+                  )}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/30 to-transparent" />
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                    <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-white/95 backdrop-blur-sm text-brand-green px-2.5 py-1 rounded-full shadow-sm">
+                      {(c.type ?? "pdf") === "link" ? <><Video className="h-3 w-3" /> Външен курс</> : <><BookOpen className="h-3 w-3" /> PDF</>}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-5 sm:p-6 flex flex-col flex-1 gap-3">
+                  <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green leading-snug group-hover:text-brand-gold transition-colors">
+                    {c.title}
+                  </h3>
+                  <p className="text-xs text-brand-dark/60 leading-relaxed line-clamp-2 flex-1">{c.description}</p>
+
+                  <div className="flex items-end justify-between pt-4 mt-auto border-t border-brand-green/5">
+                    <div>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-brand-dark/40 block leading-none mb-1">Цена</span>
+                      <span className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold leading-none">
+                        {resolvePrice(c.slug || c.id, overrides, c.priceEur).toFixed(2)}<span className="text-sm text-brand-dark/50 font-sans ml-0.5">€</span>
+                      </span>
                     </div>
                     <span className="relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-2.5 bg-brand-green group-hover:bg-brand-gold text-white group-hover:text-brand-dark font-bold text-[10px] uppercase tracking-widest rounded-full shadow-md group-hover:shadow-lg group-hover:shadow-brand-gold/40 transition-all duration-300">
                       <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 pointer-events-none" />
