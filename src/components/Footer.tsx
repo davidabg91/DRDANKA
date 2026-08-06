@@ -142,12 +142,12 @@ export default function Footer() {
               Условия за ползване
             </Link>
             <a
-              href="https://davidax.org"
+              href="https://transitflow.org/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-brand-gold transition-colors flex items-center"
             >
-              Изработка: <span className="font-bold text-white/60 hover:text-brand-gold ml-1 transition-colors">DavidaX</span>
+              Изработка: <span className="font-bold text-white/60 hover:text-brand-gold ml-1 transition-colors">TransitFlow</span>
             </a>
           </div>
         </div>
