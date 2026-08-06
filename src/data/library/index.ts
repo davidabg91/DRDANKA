@@ -15,8 +15,12 @@ import { mesoIMesniProdukti } from "./meso-i-mesni-produkti";
 import { etiketiraneKontrolZashtita } from "./etiketirane-kontrol-zashtita";
 import { haccpPrakticheskaSistema } from "./haccp-prakticheska-sistema";
 import { prakticheskaBibliaChast1 } from "./prakticheska-biblia-chast-1";
+import { prakticheskaBibliaChast2 } from "./prakticheska-biblia-chast-2";
+import { prakticheskaBibliaChast3 } from "./prakticheska-biblia-chast-3";
 
 export const LIBRARY_MATERIALS: ReadonlyArray<LibraryMaterial> = [
+  prakticheskaBibliaChast3,
+  prakticheskaBibliaChast2,
   prakticheskaBibliaChast1,
   haccpPrakticheskaSistema,
   etiketiraneNaHrani,
