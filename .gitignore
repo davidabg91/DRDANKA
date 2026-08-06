@@ -46,3 +46,6 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Large source PDFs (compressed versions uploaded via admin, not tracked)
+golemi failove/

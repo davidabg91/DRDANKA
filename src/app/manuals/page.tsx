@@ -49,7 +49,13 @@ export default function ManualsPage() {
                       alt={m.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className={`object-cover group-hover:scale-110 transition-transform duration-700 ${m.slug === 'etiketirane-kontrol-zashtita' || m.slug === 'haccp-prakticheska-sistema' ? 'object-top' : 'object-center'}`}
+                      className={`object-cover group-hover:scale-110 transition-transform duration-700 ${
+                        m.slug === 'etiketirane-kontrol-zashtita' || m.slug === 'haccp-prakticheska-sistema'
+                          ? 'object-top'
+                          : m.slug.startsWith('prakticheska-biblia')
+                            ? 'object-[center_38%]'
+                            : 'object-center'
+                      }`}
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">
