@@ -16,7 +16,8 @@ import {
   ArrowRight,
   ShieldCheck,
   ChevronRight,
-  Zap
+  Zap,
+  Phone
 } from "lucide-react";
 import FAQAccordion from "@/components/FAQAccordion";
 import ContactForm from "@/components/ContactForm";
@@ -453,6 +454,15 @@ export default function Home() {
                 <div className="flex items-center">
                   <CheckCircle className="h-4.5 w-4.5 text-brand-gold mr-3 shrink-0" />
                   <span>Пълно съдействие при изготвяне и подаване</span>
+                </div>
+                <div className="pt-2">
+                  <a
+                    href="tel:0887902198"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-gold/15 border border-brand-gold/30 text-brand-dark font-bold text-xs hover:bg-brand-gold hover:text-brand-dark transition-all duration-300 shadow-sm cursor-pointer"
+                  >
+                    <Phone className="h-4 w-4 text-brand-green shrink-0" />
+                    <span>Спешен въпрос? Обадете се: <strong className="font-mono underline">0887 902 198</strong></span>
+                  </a>
                 </div>
               </div>
             </div>

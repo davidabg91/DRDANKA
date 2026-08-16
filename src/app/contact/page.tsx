@@ -1,18 +1,25 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/ContactForm";
-import { Mail, Clock, MapPin, ShieldCheck, HelpCircle } from "lucide-react";
+import { Mail, Clock, MapPin, ShieldCheck, HelpCircle, Phone } from "lucide-react";
 import { Suspense } from "react";
 import PageHero from "@/components/PageHero";
 
 export const metadata: Metadata = {
   title: "Контакти — консултация по безопасност на храните",
   description:
-    "Свържете се с д-р Данка Николова за консултация по HACCP, ДПХП, етикетиране и БАБХ регистрация. Офис в гр. Плевен, онлайн консултации за цяла България.",
+    "Свържете се с д-р Данка Николова за консултация по HACCP, ДПХП, етикетиране и БАБХ регистрация. Офис в гр. Плевен, онлайн консултации за цяла България. Тел: 0887 902 198.",
   alternates: { canonical: "/contact" },
 };
 
 export default function Contact() {
   const contactDetails = [
+    {
+      title: "Телефон за връзка",
+      info: "0887 902 198",
+      sub: "Директно обаждане и спешни запитвания",
+      icon: Phone,
+      link: "tel:0887902198",
+    },
     {
       title: "Имейл адрес",
       info: "d.nikolova.haccp@gmail.com",
@@ -148,6 +155,13 @@ export default function Contact() {
                 <p className="text-xs text-brand-dark/80 mt-1 pl-6.5">
                   ул. „Данаил Попов“ 12, ет. 2
                 </p>
+                <a
+                  href="tel:0887902198"
+                  className="inline-flex items-center text-xs font-bold text-brand-green hover:text-brand-gold transition-colors mt-2 pl-6.5 font-mono"
+                >
+                  <Phone className="h-3.5 w-3.5 text-brand-gold mr-1.5 shrink-0" />
+                  0887 902 198
+                </a>
               </div>
               <div className="border-t border-brand-green/5 pt-3">
                 <h4 className="text-[10px] font-bold text-brand-green uppercase tracking-wider mb-1">
@@ -173,6 +187,13 @@ export default function Contact() {
               <p className="text-xs text-brand-dark/85 mt-0.5 pl-6">
                 ул. „Данаил Попов“ 12, ет. 2
               </p>
+              <a
+                href="tel:0887902198"
+                className="inline-flex items-center text-xs font-bold text-brand-green hover:text-brand-gold transition-colors mt-2 pl-6 font-mono"
+              >
+                <Phone className="h-3.5 w-3.5 text-brand-gold mr-1.5 shrink-0" />
+                0887 902 198
+              </a>
             </div>
             <div className="border-t border-brand-green/5 pt-2">
               <h4 className="text-[10px] font-bold text-brand-green uppercase tracking-wider mb-1">

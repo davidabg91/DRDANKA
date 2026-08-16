@@ -26,6 +26,9 @@ export const AUTHOR = {
   name: "Д-р Данка Николова",
   jobTitle: "Консултант по безопасност на храните",
   email: "d.nikolova.haccp@gmail.com",
+  phone: "0887 902 198",
+  phoneRaw: "+359887902198",
+  phoneTel: "tel:0887902198",
   /** Years of experience — surfaced across the site copy. */
   experienceYears: 27,
 } as const;
@@ -36,6 +39,9 @@ export const BUSINESS = {
   addressLocality: "Плевен",
   addressCountry: "BG",
   postalCode: "5800",
+  phone: "0887 902 198",
+  phoneRaw: "+359887902198",
+  phoneTel: "tel:0887902198",
   /** Default social share image (absolute path resolved via metadataBase). */
   ogImage: "/og-image.jpg",
 } as const;

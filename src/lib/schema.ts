@@ -32,6 +32,7 @@ export function organizationSchema() {
     legalName: BUSINESS.legalName,
     url: SITE_URL,
     email: AUTHOR.email,
+    telephone: BUSINESS.phoneRaw,
     image: absoluteUrl(BUSINESS.ogImage),
     logo: absoluteUrl("/logo-icon.png"),
     description:
@@ -67,6 +68,7 @@ export function personSchema() {
     name: AUTHOR.name,
     jobTitle: AUTHOR.jobTitle,
     email: AUTHOR.email,
+    telephone: AUTHOR.phoneRaw,
     url: `${SITE_URL}/about`,
     image: absoluteUrl("/danka-portrait.webp"),
     worksFor: { "@id": ORG_ID },

@@ -66,7 +66,7 @@ export default function Privacy() {
             4. Вашите права
           </h2>
           <p>
-            Имате право по всяко време да поискате достъп до Вашите лични данни, тяхното коригиране или пълно изтриване от нашите системи. За целта се свържете с нас на имейл: <a href="mailto:d.nikolova.haccp@gmail.com" className="text-brand-gold hover:underline font-semibold">d.nikolova.haccp@gmail.com</a>.
+            Имате право по всяко време да поискате достъп до Вашите лични данни, тяхното коригиране или пълно изтриване от нашите системи. За целта се свържете с нас на имейл: <a href="mailto:d.nikolova.haccp@gmail.com" className="text-brand-gold hover:underline font-semibold">d.nikolova.haccp@gmail.com</a> или по телефон: <a href="tel:0887902198" className="text-brand-gold hover:underline font-semibold font-mono">0887 902 198</a>.
           </p>
 
           <div className="pt-8 border-t border-brand-green/10 mt-8">

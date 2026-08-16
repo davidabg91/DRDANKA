@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, Mail, Clock, MapPin } from "lucide-react";
+import { ShieldCheck, Mail, Clock, MapPin, Phone } from "lucide-react";
 
 
 export default function Footer() {
@@ -112,6 +112,12 @@ export default function Footer() {
                 <span className="text-white/75">
                   гр. Плевен, ул. „Данаил Попов“ 12<br />(Консултации за цяла България)
                 </span>
+              </li>
+              <li className="flex items-center">
+                <Phone className="h-4 w-4 text-brand-gold mr-3 shrink-0" />
+                <a href="tel:0887902198" className="text-white/75 hover:text-brand-gold transition-colors font-medium">
+                  0887 902 198
+                </a>
               </li>
               <li className="flex items-center">
                 <Mail className="h-4 w-4 text-brand-gold mr-3 shrink-0" />
