@@ -134,47 +134,32 @@ export default function Home() {
                 <span className="text-brand-gold italic font-medium">работят</span> при реални проверки
               </h1>
               
-              <div className="flex flex-wrap justify-center lg:justify-start gap-2 pt-2">
-                {["GMP", "HACCP", "ISO 22000", "FSSC 22000", "IFS", "ISO 9001"].map((cert) => (
-                  <span key={cert} className="px-3 sm:px-4 py-1.5 bg-white/[0.03] border border-white/10 rounded-full text-[9px] sm:text-[10px] font-bold text-white/90 uppercase tracking-widest backdrop-blur-sm shadow-inner transition-colors hover:bg-brand-gold/10 hover:border-brand-gold/30 cursor-default">
-                    {cert}
-                  </span>
-                ))}
-              </div>
+              <p className="text-lg sm:text-xl lg:text-2xl text-white/90 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                Имате предписание, проблем с етикет, предстои Ви регистрация на хранителен обект или проверка от ОДБХ?
+              </p>
 
-              <div className="text-base sm:text-lg text-white/80 leading-relaxed max-w-2xl mx-auto lg:mx-0 font-medium">
-                Професионални консултации, проектиране и подготовка на пълна документация за БАБХ. Разработване и внедряване на системи за управление безопасността на храните за производители и търговци.
-              </div>
+              {/* Direct Quick Contact Options: Phone & Viber */}
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-1">
+                <a
+                  href="tel:+359887902198"
+                  className="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-brand-gold/30 hover:border-brand-gold text-white font-medium text-sm sm:text-base transition-all duration-200 shadow-sm group backdrop-blur-sm"
+                >
+                  <span className="text-lg">📞</span>
+                  <span>Обадете се: <strong className="text-brand-gold group-hover:underline font-mono ml-1">0887 902 198</strong></span>
+                </a>
 
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-5 sm:p-6 backdrop-blur-sm max-w-2xl mx-auto lg:mx-0 text-left shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-brand-gold/20 transition-all duration-700"></div>
-                <div className="flex items-center gap-3 mb-5 relative z-10">
-                  <div className="w-8 h-8 rounded-full bg-brand-gold/20 flex items-center justify-center border border-brand-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
-                    <Award className="h-4 w-4 text-brand-gold" />
-                  </div>
-                  <h3 className="text-white font-bold text-xs uppercase tracking-widest">Професионални Обучения</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-4 relative z-10">
-                  {[
-                    "HACCP / НАССР",
-                    "ДПХП / ДХП",
-                    "Етикетиране на храните",
-                    "ISO 22000",
-                    "Добри производствени практики",
-                    "Подготовка за проверки",
-                  ].map((item, idx) => (
-                     <div key={idx} className="flex items-start gap-2.5 group/item">
-                       <ShieldCheck className="h-4 w-4 text-brand-gold shrink-0 mt-0.5 group-hover/item:scale-110 transition-transform" />
-                       <span className="text-xs sm:text-sm text-white/80 font-medium group-hover/item:text-white transition-colors">{item}</span>
-                     </div>
-                  ))}
-                </div>
+                <a
+                  href="viber://chat?number=%2B359887902198"
+                  className="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-[#7360F2]/15 hover:bg-[#7360F2]/25 border border-[#7360F2]/40 hover:border-[#7360F2]/80 text-white font-medium text-sm sm:text-base transition-all duration-200 shadow-sm group backdrop-blur-sm"
+                >
+                  <span className="text-lg">💬</span>
+                  <span>Пишете ми във <strong className="text-[#A294FF] group-hover:underline">Viber</strong></span>
+                </a>
               </div>
 
               <div className="inline-flex items-center gap-4 border-l-2 border-brand-gold/50 pl-5 text-left max-w-2xl mx-auto lg:mx-0">
-                <p className="italic text-sm sm:text-base text-white/60 font-logo leading-relaxed">
-                  "Практически решения, изградени върху 27-годишен реален опит в официалния контрол на храните."
+                <p className="italic text-sm sm:text-base text-white/65 font-logo leading-relaxed">
+                  &ldquo;Практически решения, изградени върху 27-годишен реален опит в официалния контрол на храните.&rdquo;
                 </p>
               </div>
 
@@ -184,14 +169,14 @@ export default function Home() {
                   className="relative overflow-hidden px-8 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest transition-all duration-300 rounded-full shadow-lg shadow-brand-gold/20 hover:shadow-xl hover:shadow-brand-gold/35 flex items-center justify-center cursor-pointer group"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
-                  Безплатен 10-мин. разговор
+                  Безплатен 10-минутен разговор
                   <ArrowRight className="h-4 w-4 ml-2 transition-transform duration-200 group-hover:translate-x-1" />
                 </Link>
                 <Link
                   href="/services"
                   className="px-8 py-4 rounded-full border border-white/20 hover:border-brand-gold/80 text-white/80 hover:text-brand-gold bg-white/5 hover:bg-brand-gold/10 backdrop-blur-sm font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center cursor-pointer"
                 >
-                  Разгледай услугите
+                  Разгледайте услугите
                 </Link>
               </div>
 
