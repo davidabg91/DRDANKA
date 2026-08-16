@@ -26,18 +26,6 @@ import RemotionVideoWidget from "@/remotion/RemotionVideoWidget";
 import HeroTrainingCarousel from "@/components/HeroTrainingCarousel";
 import SectionHeading from "@/components/SectionHeading";
 export default function Home() {
-  // Stats shown in the animated ticker band under the hero.
-  const stats = [
-    { num: "27", suffix: "+", label: "Години стаж в хранителния контрол", Icon: Award },
-    { num: "500", suffix: "+", label: "Консултирани обекта в България", Icon: Users },
-    { num: "100", suffix: "%", label: "Одобрение от БАБХ при проверки", Icon: ShieldCheck },
-    { num: "0", suffix: " €", label: "Глоби след предварителен одит", Icon: CheckCircle },
-    { num: "24", suffix: " ч.", label: "Реакция при спешни казуси", Icon: Zap },
-    { num: "3", suffix: "", label: "Стандарта: НАССР · ISO 22000 · IFS", Icon: FileCheck },
-    { num: "1000", suffix: "+", label: "Обучени служители по хигиена", Icon: ForkKnife },
-    { num: "", suffix: "БЪЛГАРИЯ", label: "Онлайн консултации в цялата страна", Icon: Truck },
-  ];
-
   const industries = [
     {
       title: "Ресторанти и заведения",
@@ -218,8 +206,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Stats Ticker — thin animated band under the hero */}
-      <section className="bg-gradient-to-r from-[#A4855C] via-[#C5A880] to-[#A4855C] border-y border-[#A4855C]/50 relative overflow-hidden shadow-inner z-10">
+      {/* 2. Headline Ribbon under the hero — static full width */}
+      <section className="bg-gradient-to-r from-[#A4855C] via-[#C5A880] to-[#A4855C] border-y border-[#A4855C]/50 relative overflow-hidden shadow-inner z-10 py-4 sm:py-5">
         {/* Subtle mesh pattern for texture */}
         <div
           className="absolute inset-0 pointer-events-none opacity-[0.08]"
@@ -228,26 +216,10 @@ export default function Home() {
           }}
         />
 
-        <div className="marquee-viewport overflow-hidden py-3.5 relative z-10">
-          <div className="marquee-track">
-            {[0, 1].map((group) => (
-              <div key={group} className="flex items-center shrink-0" aria-hidden={group === 1}>
-                {stats.map((s, i) => (
-                  <div key={i} className="flex items-center gap-2.5 px-6 sm:px-9 border-r border-brand-green/15 shrink-0">
-                    <div className="w-8 h-8 rounded-lg bg-brand-green/10 border border-brand-green/20 flex items-center justify-center shrink-0">
-                      <s.Icon className="h-4 w-4 text-brand-green" />
-                    </div>
-                    <span className="font-logo text-2xl sm:text-[1.6rem] font-extrabold text-brand-green leading-none whitespace-nowrap tabular-nums">
-                      {s.num}<span className="text-brand-gold-dark text-lg font-sans">{s.suffix}</span>
-                    </span>
-                    <span className="text-xs font-bold text-brand-dark/75 whitespace-nowrap">
-                      {s.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+        <div className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <p className="font-serif text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-brand-green tracking-wide leading-tight drop-shadow-sm">
+            Откриваме пропуските и ви подготвяме професионално за проверка
+          </p>
         </div>
       </section>
 
