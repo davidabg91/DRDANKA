@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Send, CheckCircle2, AlertCircle } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function ContactForm() {
   const searchParams = useSearchParams();
@@ -42,9 +44,74 @@ export default function ContactForm() {
 
     setStatus("loading");
 
-    // Simulate API request (Firebase integration ready)
+    const cleanEmail = formData.email.trim().toLowerCase();
+    const cleanName = formData.name.trim();
+    const cleanPhone = formData.phone.trim();
+    const cleanMessage = formData.message.trim();
+    const businessTypeLabel =
+      formData.businessType === "restaurant" ? "Ресторант / Заведение" :
+      formData.businessType === "production" ? "Хранително производство / Цех" :
+      formData.businessType === "bakery" ? "Пекарна / Сладкарница" :
+      formData.businessType === "store" ? "Магазин за храни" :
+      formData.businessType === "catering" ? "Кетъринг фирма" : "Друг обект";
+
+    const serviceTitle = serviceParam ? `Запитване за оферта: ${serviceParam}` : "Запитване за индивидуална оферта";
+    const fullNote = `[Обект: ${businessTypeLabel}] ${cleanMessage}`;
+    const bookingId = `offer_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const enrollId = `enroll_offer_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const nowIso = new Date().toISOString();
+
+    const payload = {
+      id: bookingId,
+      name: cleanName,
+      phone: cleanPhone,
+      email: cleanEmail,
+      note: fullNote,
+      packageId: "offer-inquiry",
+      packageName: serviceTitle,
+      duration: "Индивидуална оферта",
+      price: "По запитване",
+      priceEur: 0,
+      date: new Date().toISOString().split("T")[0],
+      time: "За връзка",
+      mode: "offer",
+      status: "pending",
+      createdAt: nowIso,
+    };
+
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // 1. Dispatch to server-side API (Admin SDK save + Email notification to Dr. Danka)
+      fetch("/api/notify-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch((e) => console.warn("Background notify-booking call warning:", e));
+
+      // 2. Direct client Firestore write to /enrollments
+      await setDoc(doc(db, "enrollments", enrollId), {
+        id: enrollId,
+        trainingId: "offer-inquiry",
+        trainingTitle: serviceTitle,
+        trainingType: "consultation",
+        packageKind: "consultation",
+        fullName: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        company: businessTypeLabel,
+        priceEur: 0,
+        duration: "Индивидуална оферта",
+        date: new Date().toISOString().split("T")[0],
+        time: "За връзка",
+        note: fullNote,
+        status: "pending",
+        createdAt: nowIso,
+      }).catch((e) => console.warn("Client enrollments save warning:", e));
+
+      // 3. Direct client Firestore write to /bookings
+      await setDoc(doc(db, "bookings", bookingId), payload).catch((e) =>
+        console.warn("Client bookings save warning:", e)
+      );
+
       setStatus("success");
       setFormData({
         name: "",
@@ -54,7 +121,8 @@ export default function ContactForm() {
         message: "",
         agreeToTerms: false,
       });
-    } catch {
+    } catch (err: any) {
+      console.error("Error submitting contact form:", err);
       setStatus("error");
       setErrorMessage("Възникна грешка при изпращането. Моля, опитайте отново.");
     }

@@ -430,7 +430,7 @@ export default function ProfilePage() {
     u.role === "user" && (u.status === "pending" || u.subscriptionStatus === "pending")
   ).length;
 
-  // Merge bookings from both allBookings collection and allEnrollments (consultation kind)
+  // Merge bookings & inquiries from both allBookings collection and allEnrollments (consultation & offer kinds)
   const combinedConsultationBookings: Booking[] = [
     ...allBookings,
     ...allEnrollments
@@ -440,6 +440,9 @@ export default function ProfilePage() {
           e.trainingType === "consultation" ||
           e.id.startsWith("booking_") ||
           e.id.startsWith("consultation_") ||
+          e.id.startsWith("offer_") ||
+          e.id.startsWith("enroll_offer_") ||
+          e.trainingId === "offer-inquiry" ||
           e.trainingId?.startsWith("consultation") ||
           e.trainingId === "free-intro" ||
           e.trainingId === "basic" ||
@@ -455,10 +458,10 @@ export default function ProfilePage() {
         packageId: e.trainingId || "consultation",
         packageName: e.trainingTitle || "Онлайн консултация",
         duration: e.duration || "30 минути",
-        price: `${e.priceEur || 0} €`,
+        price: e.priceEur && e.priceEur > 0 ? `${e.priceEur} €` : "По запитване",
         priceEur: e.priceEur || 0,
         date: e.date || (e.createdAt ? e.createdAt.split("T")[0] : ""),
-        time: e.time || "",
+        time: e.time || "За връзка",
         mode: "consultation" as const,
         status: (e.status === "awaiting_payment" ? "pending" : (e.status as BookingStatus)) || "pending",
         createdAt: e.createdAt || new Date().toISOString(),
