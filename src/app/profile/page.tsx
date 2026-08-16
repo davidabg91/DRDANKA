@@ -429,12 +429,66 @@ export default function ProfilePage() {
   const pendingCandidatesCount = usersList.filter(u =>
     u.role === "user" && (u.status === "pending" || u.subscriptionStatus === "pending")
   ).length;
-  const pendingBookingsCount = allBookings.filter(b => b.status === "pending").length;
-  const pendingEnrollmentsCount = allEnrollments.filter(e => {
-    if (e.status !== "awaiting_payment") return false;
-    if (!e.createdAt) return true;
-    return new Date(e.createdAt).getTime() > lastSeenEnrollmentsAt;
-  }).length;
+
+  // Merge bookings from both allBookings collection and allEnrollments (consultation kind)
+  const combinedConsultationBookings: Booking[] = [
+    ...allBookings,
+    ...allEnrollments
+      .filter(
+        (e) =>
+          e.packageKind === "consultation" ||
+          e.trainingType === "consultation" ||
+          e.id.startsWith("booking_") ||
+          e.id.startsWith("consultation_") ||
+          e.trainingId?.startsWith("consultation") ||
+          e.trainingId === "free-intro" ||
+          e.trainingId === "basic" ||
+          e.trainingId === "startup" ||
+          e.trainingId === "audit"
+      )
+      .map((e) => ({
+        id: e.id,
+        name: e.fullName || "Клиент",
+        phone: e.phone || "",
+        email: e.email || "",
+        note: e.note || "",
+        packageId: e.trainingId || "consultation",
+        packageName: e.trainingTitle || "Онлайн консултация",
+        duration: e.duration || "30 минути",
+        price: `${e.priceEur || 0} €`,
+        priceEur: e.priceEur || 0,
+        date: e.date || (e.createdAt ? e.createdAt.split("T")[0] : ""),
+        time: e.time || "",
+        mode: "consultation" as const,
+        status: (e.status === "awaiting_payment" ? "pending" : (e.status as BookingStatus)) || "pending",
+        createdAt: e.createdAt || new Date().toISOString(),
+      })),
+  ]
+    .filter(
+      (item, index, self) =>
+        index ===
+        self.findIndex(
+          (t) =>
+            t.id === item.id ||
+            (t.email === item.email &&
+              t.date === item.date &&
+              t.time === item.time &&
+              Math.abs(new Date(t.createdAt).getTime() - new Date(item.createdAt).getTime()) < 60000)
+        )
+    )
+    .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
+  const pendingBookingsCount = combinedConsultationBookings.filter(
+    (b) => b.status === "pending" || (b.status as any) === "awaiting_payment"
+  ).length;
+
+  const pendingEnrollmentsCount = allEnrollments
+    .filter((e) => e.packageKind !== "consultation" && e.trainingType !== "consultation")
+    .filter((e) => {
+      if (e.status !== "awaiting_payment") return false;
+      if (!e.createdAt) return true;
+      return new Date(e.createdAt).getTime() > lastSeenEnrollmentsAt;
+    }).length;
 
   // Specialized trainings admin state
   const [trainingDraftTitle, setTrainingDraftTitle] = useState("");
@@ -1632,7 +1686,10 @@ export default function ProfilePage() {
 
   const handleUpdateBookingStatus = async (bookingId: string, newStatus: BookingStatus) => {
     try {
-      await updateDoc(doc(db, "bookings", bookingId), { status: newStatus });
+      await Promise.all([
+        updateDoc(doc(db, "bookings", bookingId), { status: newStatus }).catch(() => {}),
+        updateDoc(doc(db, "enrollments", bookingId), { status: newStatus }).catch(() => {}),
+      ]);
     } catch (err: any) {
       console.error("Error updating booking status:", err);
       alert("Грешка при обновяване на статуса: " + (err?.message || err));
@@ -1642,7 +1699,10 @@ export default function ProfilePage() {
   const handleDeleteBooking = async (b: Booking) => {
     if (!confirm(`Сигурни ли сте, че искате да изтриете резервацията на „${b.name}“ за ${b.date} (${b.time} ч.)?`)) return;
     try {
-      await deleteDoc(doc(db, "bookings", b.id));
+      await Promise.all([
+        deleteDoc(doc(db, "bookings", b.id)).catch(() => {}),
+        deleteDoc(doc(db, "enrollments", b.id)).catch(() => {}),
+      ]);
     } catch (err: any) {
       console.error("Error deleting booking:", err);
       alert("Грешка при изтриване на записа: " + (err?.message || err));
@@ -3191,7 +3251,7 @@ export default function ProfilePage() {
 
                   {/* ADMIN TAB: BOOKINGS / CONSULTATIONS */}
                   {activeAdminTab === "bookings" && (() => {
-                    const filteredBookings = allBookings.filter((b) => {
+                    const filteredBookings = combinedConsultationBookings.filter((b) => {
                       const q = bookingSearchQuery.toLowerCase().trim();
                       const matchQuery =
                         !q ||
@@ -3208,9 +3268,9 @@ export default function ProfilePage() {
                       return matchQuery && matchStatus;
                     });
 
-                    const pendingCount = allBookings.filter((b) => b.status === "pending").length;
-                    const confirmedCount = allBookings.filter((b) => b.status === "confirmed").length;
-                    const completedCount = allBookings.filter((b) => b.status === "completed").length;
+                    const pendingCount = combinedConsultationBookings.filter((b) => b.status === "pending" || (b.status as any) === "awaiting_payment").length;
+                    const confirmedCount = combinedConsultationBookings.filter((b) => b.status === "confirmed").length;
+                    const completedCount = combinedConsultationBookings.filter((b) => b.status === "completed").length;
 
                     return (
                       <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
@@ -3234,7 +3294,7 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                           <div className="bg-brand-light/60 border border-brand-green/10 rounded-xl p-3.5 text-center">
                             <span className="text-[10px] font-bold text-brand-dark/50 uppercase block">Всички заявки</span>
-                            <span className="font-serif text-2xl font-black text-brand-green">{allBookings.length}</span>
+                            <span className="font-serif text-2xl font-black text-brand-green">{combinedConsultationBookings.length}</span>
                           </div>
                           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-center">
                             <span className="text-[10px] font-bold text-amber-800 uppercase block">Чакащи връзка</span>

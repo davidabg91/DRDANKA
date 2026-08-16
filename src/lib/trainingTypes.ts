@@ -46,11 +46,16 @@ export interface Enrollment {
   trainingTitle: string;
   /** Legacy delivery hint. 'library' marks a request that came from the digital
    *  bookstore rather than the /trainings catalog. Prefer packageKind below. */
-  trainingType?: TrainingType | "library";
+  trainingType?: TrainingType | "library" | "consultation";
   /** Which catalog the purchased package belongs to. */
-  packageKind?: "library" | "training";
+  packageKind?: "library" | "training" | "consultation";
   /** Content format the buyer will read/watch once unlocked. */
   contentType?: "pdf" | "video";
+  /** Selected meeting date and time for consultations. */
+  date?: string;
+  time?: string;
+  duration?: string;
+  note?: string;
   /** For video trainings — denormalized URL captured at enrollment time so the
    *  buyer keeps access even if admin later removes the URL from the training. */
   videoUrl?: string;
@@ -67,7 +72,7 @@ export interface Enrollment {
    *   Legacy values ('pending'/'paid'/'contacted'/'completed'/'refunded') are
    *   kept for older docs and the zoom "mark contacted" flow.
    */
-  status: "awaiting_payment" | "access_granted" | "pending" | "paid" | "contacted" | "completed" | "refunded";
+  status: "awaiting_payment" | "access_granted" | "pending" | "paid" | "contacted" | "completed" | "refunded" | "confirmed" | "cancelled";
   paidAt?: string;
   /** Timestamp when admin confirmed payment and unlocked the package. */
   accessGrantedAt?: string;

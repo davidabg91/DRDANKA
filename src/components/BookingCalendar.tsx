@@ -168,29 +168,65 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
       return;
     }
     setSubmitting(true);
+    const cleanEmail = clientInfo.email.trim().toLowerCase();
+    const cleanName = clientInfo.name.trim();
+    const cleanPhone = clientInfo.phone.trim();
+    const cleanNote = clientInfo.note.trim();
+    const bookingId = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const enrollId = `enroll_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const nowIso = new Date().toISOString();
+
+    const bookingPayload = {
+      id: bookingId,
+      name: cleanName,
+      phone: cleanPhone,
+      email: cleanEmail,
+      note: cleanNote,
+      packageId: selectedPackage.id,
+      packageName: selectedPackage.name,
+      duration: selectedPackage.duration,
+      price: selectedPackage.price,
+      priceEur: priceNum || 0,
+      date: selectedDate,
+      time: selectedTime,
+      mode: mode,
+      status: "pending",
+      createdAt: nowIso,
+    };
+
     try {
-      const bookingId = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-      const cleanEmail = clientInfo.email.trim().toLowerCase();
-      const bookingDoc = {
-        id: bookingId,
-        name: clientInfo.name.trim(),
-        phone: clientInfo.phone.trim(),
+      // 1. Dispatch to server-side API (Admin SDK save + Email notification)
+      fetch("/api/notify-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookingPayload),
+      }).catch((e) => console.warn("Background notify-booking call warning:", e));
+
+      // 2. Direct client Firestore write to /enrollments (guaranteed permission in live rules)
+      await setDoc(doc(db, "enrollments", enrollId), {
+        id: enrollId,
+        trainingId: selectedPackage.id,
+        trainingTitle: selectedPackage.name,
+        trainingType: "consultation",
+        packageKind: "consultation",
+        fullName: cleanName,
         email: cleanEmail,
-        note: clientInfo.note.trim() || "",
-        packageId: selectedPackage.id,
-        packageName: selectedPackage.name,
-        duration: selectedPackage.duration,
-        price: selectedPackage.price,
+        phone: cleanPhone,
         priceEur: priceNum || 0,
+        duration: selectedPackage.duration,
         date: selectedDate,
         time: selectedTime,
-        mode: mode,
+        note: cleanNote,
         status: "pending",
-        createdAt: new Date().toISOString(),
-      };
-      await setDoc(doc(db, "bookings", bookingId), bookingDoc);
+        createdAt: nowIso,
+      }).catch((e) => console.warn("Client enrollments save warning:", e));
+
+      // 3. Direct client Firestore write to /bookings
+      await setDoc(doc(db, "bookings", bookingId), bookingPayload).catch((e) =>
+        console.warn("Client bookings save warning:", e)
+      );
     } catch (err) {
-      console.error("Error saving booking to Firestore:", err);
+      console.error("Error saving booking:", err);
     } finally {
       setSubmitting(false);
       setStep(4);
