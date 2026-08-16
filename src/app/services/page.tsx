@@ -153,8 +153,92 @@ export default function Services() {
       {/* Main Container - Aligned from left boundary to match navbar */}
       <div className="w-full max-w-[1536px] px-4 sm:px-6 lg:px-8 space-y-10 mt-6">
 
-        {/* ═══════════════ TOP SECTION: THE 2 KEY FEATURED SERVICES (DESKTOP 2-COLUMN GRID) ═══════════════ */}
-        <section className="space-y-4">
+        {/* ═══════════════ SECTION 1: ALL STANDARD CONSULTING SERVICES (COMPACT 3-COLUMN DESKTOP GRID) ═══════════════ */}
+        <section className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-brand-green/10 pb-3">
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold block">Пълен каталог</span>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green">Еднократни & Стандартни Услуги</h2>
+            </div>
+            <p className="text-xs text-brand-dark/50">
+              Компактен преглед на всички налични решения по безопасност на храните
+            </p>
+          </div>
+
+          {/* Compact 3-Column Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {SERVICES.map((srv, index) => {
+              const Icon = srv.icon;
+              return (
+                <div
+                  key={index}
+                  className="bg-white border border-brand-green/10 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-brand-gold/40 transition-all duration-200 flex flex-col justify-between text-brand-dark space-y-4"
+                >
+                  <div className="space-y-3">
+                    {/* Top Row: Icon + Badge */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="p-2 bg-brand-green/5 border border-brand-green/10 text-brand-green rounded-lg shrink-0">
+                        <Icon className="h-5 w-5 text-brand-green" />
+                      </div>
+                      <span className="text-[9px] font-bold uppercase tracking-wider bg-brand-gold/10 text-brand-dark border border-brand-gold/30 px-2.5 py-0.5 rounded-full truncate">
+                        {srv.badge}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-serif text-base font-bold text-brand-green leading-snug">
+                      {srv.title}
+                    </h3>
+
+                    {/* Desc */}
+                    <p className="text-[11px] text-brand-dark/70 leading-relaxed line-clamp-3">
+                      {srv.desc}
+                    </p>
+
+                    {/* Scope list */}
+                    <div className="space-y-1.5 pt-1 border-t border-brand-green/5">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-brand-dark/50 block">Обхват:</span>
+                      <ul className="space-y-1 text-[11px] text-brand-dark/80">
+                        {srv.scope.slice(0, 3).map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-1.5 leading-tight">
+                            <Check className="h-3 w-3 text-brand-gold shrink-0 mt-0.5" strokeWidth={2.5} />
+                            <span className="truncate">{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Bottom Benefit + Actions */}
+                  <div className="space-y-3 pt-3 border-t border-brand-green/5">
+                    <div className="bg-brand-light p-2.5 rounded-lg text-[10px] text-brand-dark/80 flex items-start gap-1.5 border border-brand-green/5">
+                      <TrendingUp className="h-3.5 w-3.5 text-brand-gold shrink-0 mt-0.5" />
+                      <span className="leading-tight"><strong className="text-brand-green">Полза:</strong> {srv.benefits}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        href="/consultations"
+                        className="text-center py-2 text-[10px] font-bold uppercase tracking-wider rounded bg-brand-green/5 text-brand-green border border-brand-green/15 hover:bg-brand-green hover:text-white transition-colors"
+                      >
+                        Консултация
+                      </Link>
+                      <Link
+                        href={`/contact?service=${encodeURIComponent(srv.title)}`}
+                        className="text-center py-2 text-[10px] font-black uppercase tracking-wider rounded bg-brand-gold hover:bg-brand-gold-light text-brand-dark transition-colors shadow-sm"
+                      >
+                        Оферта
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ═══════════════ SECTION 2: THE 2 KEY FEATURED SERVICES (DESKTOP 2-COLUMN GRID) ═══════════════ */}
+        <section className="space-y-4 pt-4">
           <div className="flex items-center justify-between border-b border-brand-green/10 pb-3">
             <div className="flex items-center gap-2">
               <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green">Основни Премиум Услуги</h2>
@@ -301,90 +385,6 @@ export default function Services() {
               </div>
             </div>
 
-          </div>
-        </section>
-
-        {/* ═══════════════ SECTION 2: ALL STANDARD CONSULTING SERVICES (COMPACT 3-COLUMN DESKTOP GRID) ═══════════════ */}
-        <section className="space-y-6 pt-4">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-brand-green/10 pb-3">
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold block">Пълен каталог</span>
-              <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green">Еднократни & Стандартни Услуги</h2>
-            </div>
-            <p className="text-xs text-brand-dark/50">
-              Компактен преглед на всички налични решения по безопасност на храните
-            </p>
-          </div>
-
-          {/* Compact 3-Column Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {SERVICES.map((srv, index) => {
-              const Icon = srv.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-white border border-brand-green/10 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-brand-gold/40 transition-all duration-200 flex flex-col justify-between text-brand-dark space-y-4"
-                >
-                  <div className="space-y-3">
-                    {/* Top Row: Icon + Badge */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="p-2 bg-brand-green/5 border border-brand-green/10 text-brand-green rounded-lg shrink-0">
-                        <Icon className="h-5 w-5 text-brand-green" />
-                      </div>
-                      <span className="text-[9px] font-bold uppercase tracking-wider bg-brand-gold/10 text-brand-dark border border-brand-gold/30 px-2.5 py-0.5 rounded-full truncate">
-                        {srv.badge}
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="font-serif text-base font-bold text-brand-green leading-snug">
-                      {srv.title}
-                    </h3>
-
-                    {/* Desc */}
-                    <p className="text-[11px] text-brand-dark/70 leading-relaxed line-clamp-3">
-                      {srv.desc}
-                    </p>
-
-                    {/* Scope list */}
-                    <div className="space-y-1.5 pt-1 border-t border-brand-green/5">
-                      <span className="text-[9px] font-black uppercase tracking-wider text-brand-dark/50 block">Обхват:</span>
-                      <ul className="space-y-1 text-[11px] text-brand-dark/80">
-                        {srv.scope.slice(0, 3).map((item, idx) => (
-                          <li key={idx} className="flex items-start gap-1.5 leading-tight">
-                            <Check className="h-3 w-3 text-brand-gold shrink-0 mt-0.5" strokeWidth={2.5} />
-                            <span className="truncate">{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Bottom Benefit + Actions */}
-                  <div className="space-y-3 pt-3 border-t border-brand-green/5">
-                    <div className="bg-brand-light p-2.5 rounded-lg text-[10px] text-brand-dark/80 flex items-start gap-1.5 border border-brand-green/5">
-                      <TrendingUp className="h-3.5 w-3.5 text-brand-gold shrink-0 mt-0.5" />
-                      <span className="leading-tight"><strong className="text-brand-green">Полза:</strong> {srv.benefits}</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <Link
-                        href="/consultations"
-                        className="text-center py-2 text-[10px] font-bold uppercase tracking-wider rounded bg-brand-green/5 text-brand-green border border-brand-green/15 hover:bg-brand-green hover:text-white transition-colors"
-                      >
-                        Консултация
-                      </Link>
-                      <Link
-                        href={`/contact?service=${encodeURIComponent(srv.title)}`}
-                        className="text-center py-2 text-[10px] font-black uppercase tracking-wider rounded bg-brand-gold hover:bg-brand-gold-light text-brand-dark transition-colors shadow-sm"
-                      >
-                        Оферта
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </section>
 
