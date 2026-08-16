@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, UserCircle2, Zap, Phone } from "lucide-react";
+import { Menu, X, UserCircle2, Zap } from "lucide-react";
 import { useAuth, useDankaUsers } from "@/lib/firebaseHooks";
 
 export default function Header() {
@@ -126,17 +126,7 @@ export default function Header() {
             </nav>
 
             {/* Desktop Call to Action Buttons — always visible, never shrink */}
-            <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 flex-none">
-              {/* Direct Phone Call Button */}
-              <a
-                href="tel:0887902198"
-                title="Обадете се на д-р Данка Николова"
-                className="inline-flex items-center justify-center gap-1.5 px-2.5 lg:px-3 xl:px-3.5 py-1.5 text-[10px] lg:text-[11px] xl:text-[12px] font-bold text-white/90 hover:text-brand-gold hover:bg-white/10 rounded-full border border-white/15 transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer"
-              >
-                <Phone className="h-3.5 w-3.5 text-brand-gold shrink-0" />
-                <span className="font-mono tracking-tight">0887 902 198</span>
-              </a>
-
+            <div className="hidden lg:flex items-center flex-none">
               {/* Portal/Login CTA */}
               <Link
                 href="/profile"
@@ -154,15 +144,8 @@ export default function Header() {
               </Link>
             </div>
 
-            {/* Mobile Menu Button & Quick Call — Triggers only on screens smaller than 1024px (lg) */}
-            <div className="lg:hidden flex items-center gap-2">
-              <a
-                href="tel:0887902198"
-                aria-label="Обаждане на 0887 902 198"
-                className="text-brand-gold hover:text-white p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-brand-gold/10 transition-colors flex items-center"
-              >
-                <Phone className="h-4.5 w-4.5" />
-              </a>
+            {/* Mobile Menu Button — Triggers only on screens smaller than 1024px (lg) */}
+            <div className="lg:hidden flex items-center">
               <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="text-white hover:text-brand-gold focus:outline-none p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-brand-gold/10 transition-colors"
@@ -208,14 +191,6 @@ export default function Header() {
           </nav>
 
           <div className="space-y-3 pb-16">
-            <a
-              href="tel:0887902198"
-              onClick={() => setIsOpen(false)}
-              className="w-full text-center flex items-center justify-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-wider text-white bg-white/5 border border-white/15 rounded-xl hover:bg-brand-gold/10 hover:border-brand-gold hover:text-brand-gold transition-all shadow-sm cursor-pointer"
-            >
-              <Phone className="h-4 w-4 text-brand-gold" />
-              <span className="font-mono text-sm">0887 902 198</span>
-            </a>
             <Link
               href="/profile"
               onClick={() => setIsOpen(false)}
