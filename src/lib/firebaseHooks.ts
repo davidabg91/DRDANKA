@@ -22,6 +22,9 @@ import {
 import { DankaUser } from '../app/profile/page';
 import { Course } from './courseTypes';
 import { Training, Enrollment } from './trainingTypes';
+import { Booking } from './bookingTypes';
+
+export * from './bookingTypes';
 
 export function useAuth() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -265,5 +268,67 @@ export function useCourses(publishedOnly: boolean = true) {
   }, [publishedOnly]);
 
   return { courses, loading };
+}
+
+/**
+  * Admin-only: subscribe to /bookings collection (online consultations / training requests).
+  */
+export function useBookings() {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsub = onSnapshot(
+      query(collection(db, "bookings")),
+      (snap) => {
+        const list: Booking[] = [];
+        snap.forEach((d) => list.push(d.data() as Booking));
+        list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+        setBookings(list);
+        setLoading(false);
+      },
+      (error) => {
+        if (error?.code !== "permission-denied") {
+          console.error("Error fetching bookings:", error);
+        }
+        setLoading(false);
+      }
+    );
+    return unsub;
+  }, []);
+
+  return { bookings, loading };
+}
+
+/**
+ * User-scoped view of /bookings for the profile page.
+ */
+export function useMyBookings(email: string | undefined) {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const clean = (email || "").trim().toLowerCase();
+    if (!clean) return;
+    const unsub = onSnapshot(
+      query(collection(db, "bookings"), where("email", "==", clean)),
+      (snap) => {
+        const list: Booking[] = [];
+        snap.forEach((d) => list.push(d.data() as Booking));
+        list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+        setBookings(list);
+        setLoading(false);
+      },
+      (error) => {
+        if (error?.code !== "permission-denied") {
+          console.error("Error fetching my bookings:", error);
+        }
+        setLoading(false);
+      }
+    );
+    return unsub;
+  }, [email]);
+
+  return { bookings, loading };
 }
 

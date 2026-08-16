@@ -2,14 +2,15 @@
 
 import { useState, useEffect, Fragment } from "react";
 import Link from "next/link";
-import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments, useMyEnrollments } from "@/lib/firebaseHooks";
+import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments, useMyEnrollments, useBookings, useMyBookings } from "@/lib/firebaseHooks";
 import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { Course } from "@/lib/courseTypes";
 import { Training, Enrollment } from "@/lib/trainingTypes";
+import { Booking, BookingStatus } from "@/lib/bookingTypes";
 import { slugify, uniqueSlug } from "@/lib/slugify";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { LIVE_COURSES } from "@/data/live-courses";
@@ -288,6 +289,9 @@ export default function ProfilePage() {
     updatedAt: "",
   }));
   const { enrollments: allEnrollments } = useEnrollments();
+  const { bookings: allBookings } = useBookings();
+  const [bookingSearchQuery, setBookingSearchQuery] = useState("");
+  const [bookingStatusFilter, setBookingStatusFilter] = useState<string>("all");
   // Admin-created courses stored in Firestore /courses (self-service bookstore).
   // publishedOnly=false so drafts/hidden courses are visible in the admin list.
   const { courses: dbCourses } = useCourses(false);
@@ -412,7 +416,7 @@ export default function ProfilePage() {
   const [watchLinkSlug, setWatchLinkSlug] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
   const [usersList, setUsersList] = useState<DankaUser[]>([]);
-  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "users" | "materials" | "courses" | "trainings" | "messages" | "logs">("candidates");
+  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "bookings" | "users" | "materials" | "courses" | "trainings" | "messages" | "logs">("candidates");
 
   const [lastSeenEnrollmentsAt, setLastSeenEnrollmentsAt] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
@@ -425,6 +429,7 @@ export default function ProfilePage() {
   const pendingCandidatesCount = usersList.filter(u =>
     u.role === "user" && (u.status === "pending" || u.subscriptionStatus === "pending")
   ).length;
+  const pendingBookingsCount = allBookings.filter(b => b.status === "pending").length;
   const pendingEnrollmentsCount = allEnrollments.filter(e => {
     if (e.status !== "awaiting_payment") return false;
     if (!e.createdAt) return true;
@@ -1621,6 +1626,25 @@ export default function ProfilePage() {
       await deleteDoc(doc(db, "enrollments", enr.id));
     } catch (err: any) {
       console.error("Error deleting enrollment:", err);
+      alert("Грешка при изтриване на записа: " + (err?.message || err));
+    }
+  };
+
+  const handleUpdateBookingStatus = async (bookingId: string, newStatus: BookingStatus) => {
+    try {
+      await updateDoc(doc(db, "bookings", bookingId), { status: newStatus });
+    } catch (err: any) {
+      console.error("Error updating booking status:", err);
+      alert("Грешка при обновяване на статуса: " + (err?.message || err));
+    }
+  };
+
+  const handleDeleteBooking = async (b: Booking) => {
+    if (!confirm(`Сигурни ли сте, че искате да изтриете резервацията на „${b.name}“ за ${b.date} (${b.time} ч.)?`)) return;
+    try {
+      await deleteDoc(doc(db, "bookings", b.id));
+    } catch (err: any) {
+      console.error("Error deleting booking:", err);
       alert("Грешка при изтриване на записа: " + (err?.message || err));
     }
   };
@@ -2880,6 +2904,18 @@ export default function ProfilePage() {
                           </span>
                         )}
                       </button>
+                      <button
+                        onClick={() => setActiveAdminTab("bookings")}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "bookings" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                      >
+                        <Calendar className={`h-4 w-4 ${activeAdminTab === "bookings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        Консултации & Срещи
+                        {pendingBookingsCount > 0 && (
+                          <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-brand-gold text-brand-dark text-[9px] font-black leading-none shadow-sm animate-pulse">
+                            {pendingBookingsCount}
+                          </span>
+                        )}
+                      </button>
                       <button 
                         onClick={() => setActiveAdminTab("users")}
                         className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "users" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
@@ -3147,6 +3183,250 @@ export default function ProfilePage() {
                                 </div>
                               </div>
                             ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* ADMIN TAB: BOOKINGS / CONSULTATIONS */}
+                  {activeAdminTab === "bookings" && (() => {
+                    const filteredBookings = allBookings.filter((b) => {
+                      const q = bookingSearchQuery.toLowerCase().trim();
+                      const matchQuery =
+                        !q ||
+                        b.name.toLowerCase().includes(q) ||
+                        b.email.toLowerCase().includes(q) ||
+                        b.phone.toLowerCase().includes(q) ||
+                        b.packageName.toLowerCase().includes(q) ||
+                        b.date.includes(q) ||
+                        (b.note || "").toLowerCase().includes(q);
+
+                      const matchStatus =
+                        bookingStatusFilter === "all" || b.status === bookingStatusFilter;
+
+                      return matchQuery && matchStatus;
+                    });
+
+                    const pendingCount = allBookings.filter((b) => b.status === "pending").length;
+                    const confirmedCount = allBookings.filter((b) => b.status === "confirmed").length;
+                    const completedCount = allBookings.filter((b) => b.status === "completed").length;
+
+                    return (
+                      <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-brand-green/5 pb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2.5 bg-brand-gold/10 text-brand-gold rounded-xl">
+                              <Calendar className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <h2 className="font-serif text-xl font-bold text-brand-green">
+                                Заявки за Онлайн Консултации и Срещи
+                              </h2>
+                              <p className="text-xs text-brand-dark/50">
+                                Всички записани часове за консултации и обучения директно от сайта в реално време.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Top KPI Metrics Cards */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <div className="bg-brand-light/60 border border-brand-green/10 rounded-xl p-3.5 text-center">
+                            <span className="text-[10px] font-bold text-brand-dark/50 uppercase block">Всички заявки</span>
+                            <span className="font-serif text-2xl font-black text-brand-green">{allBookings.length}</span>
+                          </div>
+                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-center">
+                            <span className="text-[10px] font-bold text-amber-800 uppercase block">Чакащи връзка</span>
+                            <span className="font-serif text-2xl font-black text-amber-700">{pendingCount}</span>
+                          </div>
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-center">
+                            <span className="text-[10px] font-bold text-blue-800 uppercase block">Потвърдени</span>
+                            <span className="font-serif text-2xl font-black text-blue-700">{confirmedCount}</span>
+                          </div>
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-center">
+                            <span className="text-[10px] font-bold text-emerald-800 uppercase block">Завършени</span>
+                            <span className="font-serif text-2xl font-black text-emerald-700">{completedCount}</span>
+                          </div>
+                        </div>
+
+                        {/* Search & Filter Controls */}
+                        <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+                          <div className="relative w-full md:w-80">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-dark/40" />
+                            <input
+                              type="text"
+                              value={bookingSearchQuery}
+                              onChange={(e) => setBookingSearchQuery(e.target.value)}
+                              placeholder="Търсене по име, телефон, имейл..."
+                              className="w-full pl-9 pr-4 py-2 bg-brand-light/50 border border-brand-green/10 rounded-xl text-xs focus:border-brand-gold focus:outline-none"
+                            />
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
+                            {[
+                              { id: "all", label: "Всички" },
+                              { id: "pending", label: "Чакащи" },
+                              { id: "confirmed", label: "Потвърдени" },
+                              { id: "completed", label: "Завършени" },
+                              { id: "cancelled", label: "Отказани" },
+                            ].map((tab) => (
+                              <button
+                                key={tab.id}
+                                onClick={() => setBookingStatusFilter(tab.id)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                  bookingStatusFilter === tab.id
+                                    ? "bg-brand-green text-white shadow-sm"
+                                    : "bg-brand-light text-brand-dark/70 hover:bg-brand-green/10"
+                                }`}
+                              >
+                                {tab.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Bookings Table / List */}
+                        {filteredBookings.length === 0 ? (
+                          <div className="text-center py-12 border border-dashed border-brand-green/15 rounded-2xl bg-brand-light/20 space-y-2">
+                            <Calendar className="h-10 w-10 text-brand-dark/30 mx-auto" />
+                            <p className="font-bold text-sm text-brand-dark/70">Няма намерени заявки за консултации</p>
+                            <p className="text-xs text-brand-dark/40 max-w-sm mx-auto">
+                              Когато потребител запази час от страницата за консултации, заявката ще се появи автоматично тук.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="overflow-x-auto font-sans">
+                            <table className="w-full text-xs border-collapse border border-brand-green/10">
+                              <thead>
+                                <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
+                                  <th className="border border-brand-green/10 p-3 text-left">Дата & Час на срещата</th>
+                                  <th className="border border-brand-green/10 p-3 text-left">Клиент & Контакти</th>
+                                  <th className="border border-brand-green/10 p-3 text-left">Услуга / Пакет</th>
+                                  <th className="border border-brand-green/10 p-3 text-left">Въпрос / Бележка</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Статус</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Действия</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {filteredBookings.map((b) => (
+                                  <tr key={b.id} className="hover:bg-brand-light/30 transition-colors">
+                                    {/* Date & Time */}
+                                    <td className="border border-brand-green/10 p-3 align-top">
+                                      <div className="font-bold text-brand-green flex items-center gap-1.5">
+                                        <Calendar className="h-3.5 w-3.5 text-brand-gold shrink-0" />
+                                        <span>{b.date ? b.date.split("-").reverse().join(".") + " г." : "—"}</span>
+                                      </div>
+                                      <div className="text-xs font-mono font-bold text-brand-dark/90 mt-0.5 ml-5">
+                                        в {b.time} ч.
+                                      </div>
+                                      <div className="text-[9px] text-brand-dark/40 font-mono mt-1">
+                                        Подадена: {b.createdAt ? new Date(b.createdAt).toLocaleString("bg-BG") : "—"}
+                                      </div>
+                                    </td>
+
+                                    {/* Client Details */}
+                                    <td className="border border-brand-green/10 p-3 align-top">
+                                      <div className="font-bold text-brand-dark text-sm">{b.name}</div>
+                                      <div className="mt-1 space-y-0.5">
+                                        <a
+                                          href={`tel:${b.phone}`}
+                                          className="text-brand-green hover:text-brand-gold font-mono font-bold block hover:underline"
+                                          title="Натиснете за обаждане"
+                                        >
+                                          📞 {b.phone}
+                                        </a>
+                                        <a
+                                          href={`mailto:${b.email}`}
+                                          className="text-brand-dark/70 hover:text-brand-green font-mono block truncate max-w-[200px]"
+                                          title="Изпратете имейл"
+                                        >
+                                          ✉️ {b.email}
+                                        </a>
+                                      </div>
+                                    </td>
+
+                                    {/* Service & Price */}
+                                    <td className="border border-brand-green/10 p-3 align-top">
+                                      <div className="font-bold text-brand-green">{b.packageName}</div>
+                                      <div className="text-[10px] text-brand-dark/60 mt-0.5">Продължителност: {b.duration}</div>
+                                      <div className="text-xs font-mono font-bold text-brand-gold mt-1">Цена: {b.price}</div>
+                                    </td>
+
+                                    {/* Note / Inquiry */}
+                                    <td className="border border-brand-green/10 p-3 align-top max-w-xs">
+                                      {b.note ? (
+                                        <div className="bg-brand-light/70 border border-brand-green/10 rounded-lg p-2 text-[11px] text-brand-dark/80 italic leading-relaxed">
+                                          „{b.note}“
+                                        </div>
+                                      ) : (
+                                        <span className="text-brand-dark/30 italic">Няма добавена бележка</span>
+                                      )}
+                                    </td>
+
+                                    {/* Status Badge */}
+                                    <td className="border border-brand-green/10 p-3 text-center align-top">
+                                      <span
+                                        className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                          b.status === "pending"
+                                            ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                            : b.status === "confirmed"
+                                            ? "bg-blue-100 text-blue-800 border border-blue-300"
+                                            : b.status === "completed"
+                                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                                            : "bg-gray-100 text-gray-700"
+                                        }`}
+                                      >
+                                        {b.status === "pending"
+                                          ? "Чака връзка"
+                                          : b.status === "confirmed"
+                                          ? "Потвърдена / Свързан"
+                                          : b.status === "completed"
+                                          ? "Завършена"
+                                          : "Отказана"}
+                                      </span>
+                                    </td>
+
+                                    {/* Actions */}
+                                    <td className="border border-brand-green/10 p-3 text-center align-top">
+                                      <div className="flex flex-col items-center gap-1.5">
+                                        {b.status === "pending" && (
+                                          <button
+                                            onClick={() => handleUpdateBookingStatus(b.id, "confirmed")}
+                                            className="w-full text-[9px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer inline-flex items-center justify-center gap-1 shadow-sm"
+                                          >
+                                            <Check className="h-3 w-3" /> Потвърди час
+                                          </button>
+                                        )}
+                                        {b.status === "confirmed" && (
+                                          <button
+                                            onClick={() => handleUpdateBookingStatus(b.id, "completed")}
+                                            className="w-full text-[9px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer inline-flex items-center justify-center gap-1 shadow-sm"
+                                          >
+                                            <CheckCircle className="h-3 w-3" /> Завършена
+                                          </button>
+                                        )}
+                                        {b.status !== "cancelled" && b.status !== "completed" && (
+                                          <button
+                                            onClick={() => handleUpdateBookingStatus(b.id, "cancelled")}
+                                            className="w-full text-[9px] font-bold uppercase px-2 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+                                          >
+                                            Откажи
+                                          </button>
+                                        )}
+                                        <button
+                                          onClick={() => handleDeleteBooking(b)}
+                                          className="w-full text-[9px] font-bold uppercase px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer inline-flex items-center justify-center gap-1"
+                                          title="Изтрий записа"
+                                        >
+                                          <Trash2 className="h-3 w-3" /> Изтрий
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         )}
                       </div>

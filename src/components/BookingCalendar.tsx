@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, ArrowLeft, Landmark } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, ArrowLeft, Landmark, Loader2 } from "lucide-react";
 import { getLocalDateISO } from "@/lib/dateUtils";
+import { db } from "@/lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 interface Package {
   id: string;
@@ -153,20 +155,47 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
     scrollToContainerTop();
   };
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleClientInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setClientInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (!clientInfo.name || !clientInfo.phone || !clientInfo.email) {
       alert("Моля, попълнете всички задължителни полета.");
       return;
     }
-    // Both free and paid bookings are confirmed here. Paid bookings are settled
-    // via bank transfer — the details and next steps are shown on the success step.
-    setStep(4);
-    scrollToContainerTop();
+    setSubmitting(true);
+    try {
+      const bookingId = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const cleanEmail = clientInfo.email.trim().toLowerCase();
+      const bookingDoc = {
+        id: bookingId,
+        name: clientInfo.name.trim(),
+        phone: clientInfo.phone.trim(),
+        email: cleanEmail,
+        note: clientInfo.note.trim() || "",
+        packageId: selectedPackage.id,
+        packageName: selectedPackage.name,
+        duration: selectedPackage.duration,
+        price: selectedPackage.price,
+        priceEur: priceNum || 0,
+        date: selectedDate,
+        time: selectedTime,
+        mode: mode,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+      await setDoc(doc(db, "bookings", bookingId), bookingDoc);
+    } catch (err) {
+      console.error("Error saving booking to Firestore:", err);
+    } finally {
+      setSubmitting(false);
+      setStep(4);
+      scrollToContainerTop();
+    }
   };
 
   return (
@@ -444,10 +473,20 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
               </button>
               <button
                 onClick={handleBook}
-                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors flex items-center cursor-pointer"
+                disabled={submitting}
+                className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors flex items-center disabled:opacity-50 cursor-pointer"
               >
-                {mode === "training" ? "Заяви обучението" : (isFree ? "Резервирай консултация" : "Потвърди заявката")}
-                <CheckCircle className="h-4 w-4 ml-2 text-brand-gold" />
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin text-brand-gold" />
+                    Записване...
+                  </>
+                ) : (
+                  <>
+                    {mode === "training" ? "Заяви обучението" : (isFree ? "Резервирай консултация" : "Потвърди заявката")}
+                    <CheckCircle className="h-4 w-4 ml-2 text-brand-gold" />
+                  </>
+                )}
               </button>
             </div>
           </div>
