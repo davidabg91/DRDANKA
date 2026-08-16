@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Send, CheckCircle2, AlertCircle } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import BankTransferNotice from "@/components/BankTransferNotice";
 
 export default function ContactForm() {
   const searchParams = useSearchParams();
@@ -61,17 +62,21 @@ export default function ContactForm() {
     const enrollId = `enroll_offer_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const nowIso = new Date().toISOString();
 
+    const isAuditService = serviceTitle.includes("Проверка преди проверката");
+    const servicePriceEur = isAuditService ? 600 : 0;
+    const servicePriceLabel = isAuditService ? "600 €" : "По запитване";
+
     const payload = {
       id: bookingId,
       name: cleanName,
       phone: cleanPhone,
       email: cleanEmail,
       note: fullNote,
-      packageId: "offer-inquiry",
+      packageId: isAuditService ? "proverka-predi-proverkata" : "offer-inquiry",
       packageName: serviceTitle,
-      duration: "Индивидуална оферта",
-      price: "По запитване",
-      priceEur: 0,
+      duration: isAuditService ? "Одит на място" : "Индивидуална оферта",
+      price: servicePriceLabel,
+      priceEur: servicePriceEur,
       date: new Date().toISOString().split("T")[0],
       time: "За връзка",
       mode: "offer",
@@ -90,7 +95,7 @@ export default function ContactForm() {
       // 2. Direct client Firestore write to /enrollments
       await setDoc(doc(db, "enrollments", enrollId), {
         id: enrollId,
-        trainingId: "offer-inquiry",
+        trainingId: isAuditService ? "proverka-predi-proverkata" : "offer-inquiry",
         trainingTitle: serviceTitle,
         trainingType: "consultation",
         packageKind: "consultation",
@@ -98,8 +103,8 @@ export default function ContactForm() {
         email: cleanEmail,
         phone: cleanPhone,
         company: businessTypeLabel,
-        priceEur: 0,
-        duration: "Индивидуална оферта",
+        priceEur: servicePriceEur,
+        duration: isAuditService ? "Одит на място" : "Индивидуална оферта",
         date: new Date().toISOString().split("T")[0],
         time: "За връзка",
         note: fullNote,
@@ -128,21 +133,42 @@ export default function ContactForm() {
     }
   };
 
+  const isAudit = serviceParam?.includes("Проверка преди проверката");
+
   if (status === "success") {
     return (
-      <div className="bg-white border border-brand-gold/30 rounded-xl p-8 text-center shadow-lg max-w-xl mx-auto my-6">
-        <CheckCircle2 className="h-16 w-16 text-brand-gold mx-auto mb-4" />
-        <h3 className="font-serif text-2xl font-bold text-brand-green mb-2">
-          Запитването е изпратено!
-        </h3>
-        <p className="text-brand-dark/80 text-sm mb-6 leading-relaxed">
-          Благодарим Ви, че се свързахте с нас. Д-р Данка Николова или член на нашия екип ще се свърже с Вас в рамките на следващите 24 часа.
-        </p>
+      <div className="bg-white border border-brand-gold/30 rounded-2xl p-6 sm:p-8 text-center shadow-xl max-w-xl mx-auto my-6 space-y-6">
+        <CheckCircle2 className="h-16 w-16 text-brand-gold mx-auto" />
+        <div className="space-y-2">
+          <h3 className="font-serif text-2xl font-bold text-brand-green">
+            {isAudit ? "Заявката за одит е приета успешно!" : "Запитването е изпратено!"}
+          </h3>
+          <p className="text-brand-dark/80 text-sm leading-relaxed max-w-md mx-auto">
+            {isAudit ? (
+              <>
+                Вашата заявка за <strong className="text-brand-green">„Проверка преди проверката“</strong> е записана. За да потвърдите датата за одит на място, направете банков превод по сметката по-долу:
+              </>
+            ) : (
+              <>
+                Благодарим Ви, че се свързахте с нас. Д-р Данка Николова ще се свърже с Вас в рамките на следващите 24 часа.
+              </>
+            )}
+          </p>
+        </div>
+
+        {isAudit && (
+          <BankTransferNotice
+            amount="600 €"
+            reference="Проверка преди проверката"
+            variant="dark"
+          />
+        )}
+
         <button
           onClick={() => setStatus("idle")}
-          className="px-6 py-2.5 bg-brand-green text-white text-xs font-semibold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors"
+          className="px-6 py-2.5 bg-brand-green text-white text-xs font-semibold uppercase tracking-wider rounded-xl hover:bg-brand-green/90 transition-colors cursor-pointer"
         >
-          Ново запитване
+          {isAudit ? "Нова заявка" : "Ново запитване"}
         </button>
       </div>
     );
