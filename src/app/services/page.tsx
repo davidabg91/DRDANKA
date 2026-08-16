@@ -150,8 +150,8 @@ export default function Services() {
         subtitle="Индивидуални консултации, проектиране, одити и дигитална поддръжка на Вашите системи за самоконтрол. 27 години опит."
       />
 
-      {/* Main Container - Aligned from left boundary to match navbar */}
-      <div className="w-full max-w-[1536px] px-4 sm:px-6 lg:px-8 space-y-10 mt-6">
+      {/* Main Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 mt-6">
 
         {/* ═══════════════ SECTION 1: ALL STANDARD CONSULTING SERVICES (COMPACT 3-COLUMN DESKTOP GRID) ═══════════════ */}
         <section className="space-y-6">

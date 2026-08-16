@@ -140,7 +140,7 @@ export default function BabhSistemaClient() {
         <div className="absolute top-0 right-1/4 w-[28rem] h-[28rem] bg-brand-gold/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2" />
         <div className="absolute bottom-0 left-1/4 w-[28rem] h-[28rem] bg-brand-green/20 rounded-full blur-[100px] pointer-events-none translate-y-1/3" />
         
-        <div className="w-full max-w-[1536px] px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
             <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] bg-brand-gold/20 text-brand-gold border border-brand-gold/40 px-3 py-1 rounded-md">
               <Zap className="h-3.5 w-3.5" fill="currentColor" /> БАБХ Система & Електронни Дневници
@@ -207,7 +207,7 @@ export default function BabhSistemaClient() {
 
       {/* ═══════════════ ALL 10 MANDATORY BABH REGISTERS SECTION ═══════════════ */}
       <section id="babh-registers-section" className="py-12 border-b border-white/10 bg-[#081813]">
-        <div className="w-full max-w-[1536px] px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-white/10 pb-4">
             <div>
@@ -274,7 +274,7 @@ export default function BabhSistemaClient() {
 
       {/* ═══════════════ INTERACTIVE SYSTEM MODULE SWITCHER (COMPACT) ═══════════════ */}
       <section className="py-12 border-b border-white/10">
-        <div className="w-full max-w-[1536px] px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           
           <div className="text-center space-y-2 max-w-2xl mx-auto">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-brand-green text-brand-gold px-3 py-1 rounded-md inline-block border border-brand-gold/30">
@@ -533,7 +533,7 @@ export default function BabhSistemaClient() {
 
       {/* ═══════════════ COMPARISON TABLE (COMPACT) ═══════════════ */}
       <section className="py-10 border-b border-white/10 bg-[#081813]">
-        <div className="w-full max-w-[1536px] px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           
           <div className="text-center space-y-1 max-w-2xl mx-auto">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-brand-gold/20 text-brand-gold border border-brand-gold/40 px-3 py-1 rounded-md inline-block">
