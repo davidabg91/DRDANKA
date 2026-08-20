@@ -15,6 +15,11 @@ import {
   Scale,
   Check,
   ChevronRight,
+  AlertTriangle,
+  Quote,
+  Star,
+  BadgeCheck,
+  Wallet,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import JsonLd from "@/components/JsonLd";
@@ -25,6 +30,11 @@ import {
   webPageSchema,
 } from "@/lib/schema";
 import { AREAS_SERVED, AUTHOR, BUSINESS } from "@/lib/siteConfig";
+import { pickTestimonials } from "@/data/testimonials";
+
+// The two quotes that match the highest-intent visitors: someone whose project
+// БАБХ has already rejected, and someone opening their first outlet.
+const PROOF = pickTestimonials("meso-vurnat-proekt", "zavedenie-purvi-stupki");
 
 /**
  * Exact-match landing page for the highest-intent commercial query in this
@@ -255,7 +265,7 @@ export default function HaccpSistemaPage() {
           <p className="text-sm sm:text-base text-brand-dark/85 leading-relaxed">
             {SUMMARY}
           </p>
-          <dl className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-5 border-t border-brand-green/10">
+          <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-5 border-t border-brand-green/10">
             <div>
               <dt className="text-[10px] font-black uppercase tracking-widest text-brand-dark/50">
                 Срок
@@ -280,6 +290,14 @@ export default function HaccpSistemaPage() {
                 {AUTHOR.experienceYears} години в контрола
               </dd>
             </div>
+            <div>
+              <dt className="text-[10px] font-black uppercase tracking-widest text-brand-dark/50">
+                Първа консултация
+              </dt>
+              <dd className="font-serif text-lg font-bold text-brand-green">
+                Безплатна
+              </dd>
+            </div>
           </dl>
         </section>
 
@@ -301,6 +319,42 @@ export default function HaccpSistemaPage() {
             внедряването — HACCP план, ДПХП процедури и мониторингови дневници.
           </figcaption>
         </figure>
+
+        {/* Buyers who already hold an inspection notice convert on a different
+            path from buyers who are planning ahead. Previously the sanctions
+            fact sat in the last FAQ item, below everything. */}
+        <section className="rounded-2xl border border-red-200 bg-red-50/60 p-6 sm:p-7">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="space-y-3">
+              <h2 className="font-serif text-lg sm:text-xl font-bold text-brand-green">
+                Получихте предписание от БАБХ или Ви предстои проверка?
+              </h2>
+              <p className="text-sm text-brand-dark/80 leading-relaxed">
+                Обадете се, преди да изтече срокът по предписанието. При
+                констатирана липса на работеща система за самоконтрол
+                имуществените санкции за юридически лица започват от 1 000 € и
+                могат да достигнат до временно затваряне на обекта. При спешни
+                случаи срокът за изготвяне се съкращава — уточнява се по телефон
+                според състоянието на документацията.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <a
+                  href={AUTHOR.phoneTel}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl bg-brand-green text-white hover:bg-brand-green/90 transition-colors"
+                >
+                  <Phone className="h-4 w-4 text-brand-gold" /> Обадете се сега — {AUTHOR.phone}
+                </a>
+                <Link
+                  href="/consultations"
+                  className="inline-flex items-center justify-center px-5 py-2.5 text-xs font-bold uppercase tracking-widest rounded-xl border border-brand-green/25 text-brand-green hover:bg-brand-green hover:text-white transition-colors"
+                >
+                  Спешна консултация
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* What the system contains */}
         <section className="space-y-6">
@@ -377,6 +431,136 @@ export default function HaccpSistemaPage() {
           </p>
         </section>
 
+        {/* Proof. These quotes already existed on /about — the gap was that
+            they sat on the page buyers reach last, not that they were missing. */}
+        <section className="space-y-6">
+          <div className="border-b border-brand-green/10 pb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold block">
+              Отзиви
+            </span>
+            <h2 className="font-serif text-2xl font-bold text-brand-green">
+              Какво казват клиенти, минали през същото
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {PROOF.map((t) => (
+              <figure
+                key={t.id}
+                className="bg-white border border-brand-green/10 rounded-xl p-6 shadow-sm flex flex-col justify-between gap-4"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((n) => (
+                        <Star
+                          key={n}
+                          className="h-3.5 w-3.5 fill-brand-gold text-brand-gold"
+                        />
+                      ))}
+                    </div>
+                    <Quote className="h-4 w-4 text-brand-gold/50" />
+                  </div>
+                  <blockquote className="font-serif text-sm sm:text-base font-bold text-brand-green leading-snug">
+                    „{t.headline}“
+                  </blockquote>
+                  {t.body.slice(0, 2).map((para) => (
+                    <p key={para} className="text-xs text-brand-dark/70 leading-relaxed">
+                      {para}
+                    </p>
+                  ))}
+                </div>
+                <figcaption className="flex items-center gap-3 pt-3 border-t border-brand-green/10">
+                  <span className="h-10 w-10 rounded-full bg-brand-green text-brand-gold flex items-center justify-center font-bold text-sm shrink-0">
+                    {t.initials}
+                  </span>
+                  <span>
+                    <span className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
+                      {t.author}
+                      <BadgeCheck className="h-4 w-4 text-emerald-500" />
+                    </span>
+                    <span className="text-[10px] text-brand-dark/50 font-medium block">
+                      {t.role}
+                    </span>
+                  </span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <p className="text-xs text-brand-dark/55">
+            Още отзиви на{" "}
+            <Link href="/about#reviews" className="text-brand-green font-semibold underline hover:text-brand-gold">
+              страницата за д-р Николова
+            </Link>
+            .
+          </p>
+        </section>
+
+        {/* Pricing. The page targets the "цена" query and previously said
+            nothing about money at all. Only figures published elsewhere on the
+            site appear here; the system itself is genuinely quoted per object,
+            so that is what it says rather than inventing a range. */}
+        <section className="space-y-4">
+          <div className="border-b border-brand-green/10 pb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold block">
+              Цена
+            </span>
+            <h2 className="font-serif text-2xl font-bold text-brand-green">
+              Колко струва внедряването?
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="bg-white border border-brand-green/10 rounded-xl p-5 shadow-sm space-y-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-brand-dark/50 block">
+                Първоначална консултация
+              </span>
+              <span className="font-serif text-2xl font-black text-brand-green block">
+                0 €
+              </span>
+              <p className="text-xs text-brand-dark/70 leading-relaxed">
+                Уточняване на обекта и дейностите, след което получавате
+                конкретна оферта със срок и цена.
+              </p>
+            </div>
+            <div className="bg-white border border-brand-green/10 rounded-xl p-5 shadow-sm space-y-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-brand-dark/50 block">
+                HACCP (ХАСЕП) система
+              </span>
+              <span className="font-serif text-lg font-black text-brand-green block">
+                По оферта
+              </span>
+              <p className="text-xs text-brand-dark/70 leading-relaxed">
+                Цената зависи от типа обект, броя дейности и сложността на
+                технологичния поток. Заведение с типово меню и производствен цех
+                с няколко линии не изискват еднакъв обем работа.
+              </p>
+            </div>
+            <div className="bg-white border border-brand-gold/30 rounded-xl p-5 shadow-sm space-y-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-brand-dark/50 block">
+                Одит преди проверка от БАБХ
+              </span>
+              <span className="font-serif text-2xl font-black text-brand-green block">
+                600 €
+              </span>
+              <p className="text-xs text-brand-dark/70 leading-relaxed">
+                Фиксирана цена за независим одит на място с писмен доклад и план
+                с коригиращи действия.{" "}
+                <Link
+                  href="/services#proverka-predi-proverkata"
+                  className="text-brand-green font-semibold underline hover:text-brand-gold"
+                >
+                  Подробно
+                </Link>
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-brand-dark/55 flex items-start gap-2">
+            <Wallet className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+            Офертата е фиксирана преди започване на работа — без доплащане за
+            корекции по системата в рамките на договорения обхват.
+          </p>
+        </section>
+
         {/* Who it is for */}
         <section className="space-y-6">
           <div className="border-b border-brand-green/10 pb-3">
@@ -401,6 +585,57 @@ export default function HaccpSistemaPage() {
               </li>
             ))}
           </ul>
+        </section>
+
+        {/* The strongest differentiator was mentioned once, in the closing CTA
+            paragraph. It earns its own section. */}
+        <section className="space-y-4">
+          <div className="border-b border-brand-green/10 pb-3">
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold block">
+              Защо д-р Николова
+            </span>
+            <h2 className="font-serif text-2xl font-bold text-brand-green">
+              Защо да изберете точно този консултант?
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="bg-white border border-brand-green/10 rounded-xl p-5 shadow-sm space-y-2">
+              <h3 className="font-serif text-base font-bold text-brand-green">
+                {AUTHOR.experienceYears} години от страната на контрола
+              </h3>
+              <p className="text-xs text-brand-dark/75 leading-relaxed">
+                Опитът е натрупан в системата на официалния контрол и на
+                ръководна длъжност в ОДБХ — тоест от страната, която проверява.
+                Системата се проектира според това, което инспекторът реално
+                търси при проверка.
+              </p>
+            </div>
+            <div className="bg-white border border-brand-green/10 rounded-xl p-5 shadow-sm space-y-2">
+              <h3 className="font-serif text-base font-bold text-brand-green">
+                Научна степен и одиторска лицензия
+              </h3>
+              <p className="text-xs text-brand-dark/75 leading-relaxed">
+                Доктор по контрол на храните и ветеринарно-санитарна експертиза,
+                лицензиран водещ одитор по ISO 22000, IFS Food и ISO 9001.
+              </p>
+            </div>
+            <div className="bg-white border border-brand-green/10 rounded-xl p-5 shadow-sm space-y-2">
+              <h3 className="font-serif text-base font-bold text-brand-green">
+                Работата се извършва лично
+              </h3>
+              <p className="text-xs text-brand-dark/75 leading-relaxed">
+                Одитът, документацията и обучението на екипа се правят от д-р
+                Николова, а не се преотстъпват на сътрудник.{" "}
+                <Link
+                  href="/about"
+                  className="text-brand-green font-semibold underline hover:text-brand-gold"
+                >
+                  Пълна биография
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
         </section>
 
         {/* Legal basis */}

@@ -8,11 +8,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 import Image from "next/image";
-import { ShieldCheck, Award, GraduationCap, CheckCircle, FileText, Heart, Quote, Star, BadgeCheck } from "lucide-react";
+import { ShieldCheck, Award, GraduationCap, CheckCircle, Heart, Quote, Star, BadgeCheck } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import PageHero from "@/components/PageHero";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbSchema, webPageSchema } from "@/lib/schema";
+import { TESTIMONIALS } from "@/data/testimonials";
 
 
 export default function About() {
@@ -312,164 +313,49 @@ export default function About() {
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Testimonial 1 */}
-            <div className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-center mb-5">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
+            {TESTIMONIALS.map((t) => (
+              <div
+                key={t.id}
+                className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group"
+              >
+                <div>
+                  <div className="flex justify-between items-center mb-5">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">
+                      {t.timeAgo}
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
+                    &quot;{t.headline}&quot;
+                  </h3>
+                  <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
+                    {t.body.map((para) => (
+                      <p key={para}>{para}</p>
                     ))}
                   </div>
-                  <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">Преди 3 седмици</span>
                 </div>
-                
-                <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
-                  "Бяхме притеснени дали изобщо ще успеем да регистрираме пекарната си за закуски и козунаци"
-                </h3>
-                <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
-                  <p>
-                    Много време се лутахме и не знаехме как да подредим нещата правилно… Месеци наред обикаляхме между различни институции, без да получим ясна посока.
-                  </p>
-                  <p>
-                    С помощта на д-р Николова най-накрая получихме яснота. Подредихме всичко, направихме нужните стъпки и подготвихме обекта както трябва.
-                  </p>
-                </div>
-              </div>
 
-              <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
-                  СМ
-                </div>
-                <div>
-                  <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
-                    Северина М.
-                    <BadgeCheck className="w-4 h-4 text-emerald-500" />
-                  </h4>
-                  <span className="text-[10px] text-brand-dark/50 font-medium">Собственик на Пекарна за закуски</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 2 */}
-            <div className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-center mb-5">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
-                    ))}
+                <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
+                    {t.initials}
                   </div>
-                  <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">Преди 1 месец</span>
-                </div>
-                
-                <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
-                  "След срещата с д-р Николова осъзнах, че нещата не са толкова сложни, колкото изглеждат"
-                </h3>
-                <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
-                  <p>
-                    Преди това идеята ни да регистрираме мини мандра по Наредба №26 за директни доставки звучеше почти невъзможна.
-                  </p>
-                  <p>
-                    С нейна помощ получихме яснота какво точно се изисква и как да го приложим на практика.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
-                  ВР
-                </div>
-                <div>
-                  <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
-                    Виктория Р.
-                    <BadgeCheck className="w-4 h-4 text-emerald-500" />
-                  </h4>
-                  <span className="text-[10px] text-brand-dark/50 font-medium">Собственик на мини мандра</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 3 */}
-            <div className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-center mb-5">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
-                    ))}
+                  <div>
+                    <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
+                      {t.author}
+                      <BadgeCheck className="w-4 h-4 text-emerald-500" />
+                    </h4>
+                    <span className="text-[10px] text-brand-dark/50 font-medium">
+                      {t.role}
+                    </span>
                   </div>
-                  <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">Преди 2 месеца</span>
-                </div>
-                
-                <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
-                  "Проектът ми за производство на месни заготовки беше върнат три пъти от БАБХ"
-                </h3>
-                <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
-                  <p>
-                    Всеки път правех корекции, но без ясна посока. В един момент вече бях напълно объркан и не знаех какво да променя.
-                  </p>
-                  <p>
-                    След срещата с д-р Николова всичко се изясни – получих конкретни насоки, разбрах изискванията, направихме нужните корекции и процесът тръгна напред.
-                  </p>
                 </div>
               </div>
-
-              <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
-                  КТ
-                </div>
-                <div>
-                  <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
-                    Крум Т.
-                    <BadgeCheck className="w-4 h-4 text-emerald-500" />
-                  </h4>
-                  <span className="text-[10px] text-brand-dark/50 font-medium">Собственик на цех за месо</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial 4 */}
-            <div className="bg-white border border-brand-green/10 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group">
-              <div>
-                <div className="flex justify-between items-center mb-5">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-4 h-4 fill-brand-gold text-brand-gold drop-shadow-sm group-hover:scale-110 transition-transform duration-300" style={{transitionDelay: `${star * 50}ms`}} />
-                    ))}
-                  </div>
-                  <span className="text-[10px] text-brand-dark/40 uppercase tracking-wider font-semibold">Преди 1 седмица</span>
-                </div>
-                
-                <h3 className="text-sm sm:text-base font-bold text-brand-green mb-3 leading-snug">
-                  "Професионалист като нея би ми спестил много нерви и пари, защото във бизнеса всяка грешка се заплаща!"
-                </h3>
-                <div className="text-xs sm:text-sm text-brand-dark/70 space-y-3 leading-relaxed">
-                  <p>
-                    Щастлива съм, че срещнах Д-р Николова. Откривам заведение и нейните съвети и консултации ми бяха изключително ценни! Подкрепена в точния момент! Имах много въпроси, на които получих бърз професионален отговор!
-                  </p>
-                  <p>
-                    Изключително важно и решаващо за първите стъпки в бизнеса е да бъдеш правилно консултиран и да тръгнеш в правилната посока!
-                  </p>
-                  <p>
-                    Не се колебайте да се консултирате с Д-р Николова, тя е верният партньор до вас!
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-8 pt-5 border-t border-brand-green/10 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-green to-[#0a1f17] text-brand-gold flex items-center justify-center font-bold text-lg shadow-inner shrink-0">
-                  АК
-                </div>
-                <div>
-                  <h4 className="font-serif text-sm font-bold text-brand-green flex items-center gap-1.5">
-                    Албена Колева
-                    <BadgeCheck className="w-4 h-4 text-emerald-500" />
-                  </h4>
-                  <span className="text-[10px] text-brand-dark/50 font-medium">Собственик на заведение</span>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
