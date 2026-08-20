@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ShieldCheck,
   FileCheck,
@@ -282,6 +283,25 @@ export default function HaccpSistemaPage() {
           </dl>
         </section>
 
+        {/* Pages carrying text plus a relevant image are selected noticeably
+            more often than text-only ones, and this page had no visual at all. */}
+        <figure className="space-y-2">
+          <div className="relative aspect-[16/7] w-full overflow-hidden rounded-2xl border border-brand-green/10 shadow-sm">
+            <Image
+              src="/haccp-prakticheska-sistema.webp"
+              alt="Работеща HACCP (ХАСЕП) система и документация по самоконтрол за хранителен обект"
+              fill
+              sizes="(max-width: 1024px) 100vw, 960px"
+              className="object-cover"
+              priority
+            />
+          </div>
+          <figcaption className="text-xs text-brand-dark/55">
+            Комплектът документация по самоконтрол, който остава при Вас след
+            внедряването — HACCP план, ДПХП процедури и мониторингови дневници.
+          </figcaption>
+        </figure>
+
         {/* What the system contains */}
         <section className="space-y-6">
           <div className="border-b border-brand-green/10 pb-3">
@@ -289,7 +309,7 @@ export default function HaccpSistemaPage() {
               Обхват на услугата
             </span>
             <h2 className="font-serif text-2xl font-bold text-brand-green">
-              Какво включва внедряването на HACCP (ХАСЕП) система
+              Какво включва внедряването на HACCP (ХАСЕП) система?
             </h2>
           </div>
 
@@ -325,7 +345,7 @@ export default function HaccpSistemaPage() {
               Процес
             </span>
             <h2 className="font-serif text-2xl font-bold text-brand-green">
-              Как протича внедряването — стъпка по стъпка
+              Как протича внедряването, стъпка по стъпка?
             </h2>
           </div>
 
@@ -364,7 +384,7 @@ export default function HaccpSistemaPage() {
               За кого
             </span>
             <h2 className="font-serif text-2xl font-bold text-brand-green">
-              Обекти, за които разработваме ХАСЕП система
+              За кои обекти е задължителна ХАСЕП система?
             </h2>
           </div>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
@@ -390,7 +410,7 @@ export default function HaccpSistemaPage() {
               Нормативна база
             </span>
             <h2 className="font-serif text-2xl font-bold text-brand-green">
-              На какво стъпва системата
+              На кои нормативни изисквания стъпва системата?
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -420,7 +440,7 @@ export default function HaccpSistemaPage() {
               Къде работим
             </span>
             <h2 className="font-serif text-2xl font-bold text-brand-green">
-              Обслужвани райони
+              В кои градове предлагаме услугата?
             </h2>
           </div>
           <p className="text-sm text-brand-dark/80 leading-relaxed">

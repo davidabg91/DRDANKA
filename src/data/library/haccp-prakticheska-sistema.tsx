@@ -189,6 +189,7 @@ function HaccpPrakticheskaSistemaPage() {
 export const haccpPrakticheskaSistema: LibraryMaterial = {
   slug: "haccp-prakticheska-sistema",
   title: "Обучение по разработване, въвеждане и прилагане на ДПХП и процедури (НАССР)",
+  seoTitle: "Практическа HACCP (НАССР) и ДПХП система",
   tagline:
     "Практическа система за реален контрол и спокойствие при проверки от ОДБХ. Включва 5 ценни бонуса.",
   priceEur: 29, // 56.73 lv

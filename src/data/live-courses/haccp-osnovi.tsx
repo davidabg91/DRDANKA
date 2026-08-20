@@ -116,6 +116,7 @@ function HaccpOsnoviPage() {
 export const haccpOsnovi: LiveCourse = {
   slug: "haccp-osnovi",
   title: "Практически курс по разработване, въвеждане и поддържане на НАССР система",
+  seoTitle: "Курс по НАССР (HACCP) система — основи",
   tagline:
     "3 сесии онлайн в Zoom за внедряване на НАССР в реалния обект — с Вашите казуси, не учебникови.",
   priceEur: 149.0,

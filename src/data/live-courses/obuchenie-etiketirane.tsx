@@ -233,6 +233,7 @@ function EtiketiranePage() {
 export const obuchenieEtiketirane: LiveCourse = {
   slug: "obuchenie-etiketirane",
   title: "Двудневно практическо обучение по етикетиране на храните",
+  seoTitle: "Обучение по етикетиране на храните",
   tagline:
     "От законовите изисквания до правилно разработения етикет — с реални продукти, реални етикети и реални казуси.",
   priceEur: 199.0,

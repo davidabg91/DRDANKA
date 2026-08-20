@@ -44,4 +44,10 @@ export interface LiveCourse {
   /** Custom React component for the /live/<slug> detail page. */
   page: () => ReactNode;
   metaDescription?: string;
+  /**
+   * Optional: <title> override, when the course's display name buries the
+   * subject. A catalogue card has a cover and a tagline for context; a search
+   * result has ~60 characters, so the keyword has to come first there.
+   */
+  seoTitle?: string;
 }
