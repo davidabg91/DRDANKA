@@ -300,6 +300,9 @@ export const BLOG_POSTS: BlogPost[] = [
         <p>
           Регистрацията на обект за храни в БАБХ е напълно постижима, стига да подходите систематично: правилно помещение, реална система за самоконтрол и пълен комплект документи. Подготовката отнема повече време от самата процедура — затова започнете рано и не оставяйте НАССР частта за последно.
         </p>
+        <p className="text-xs text-brand-dark/60 mt-4">
+          Ако предпочитате цялата документация да бъде изготвена вместо Вас, вижте услугата <Link href="/haccp-sistema" className="text-brand-green font-semibold underline hover:text-brand-gold">разработка и внедряване на HACCP (ХАСЕП) система</Link> — стандартен срок 5–10 работни дни.
+        </p>
       </div>
     )
   },
@@ -469,6 +472,9 @@ export const BLOG_POSTS: BlogPost[] = [
         <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-8">Заключение</h3>
         <p>
           Системата за самоконтрол не е бюрокрация заради бюрокрацията — тя е Вашата защита при проверка и, по-важно, гаранция за безопасността на клиентите Ви. Водете дневниците честно и ежедневно, реагирайте на отклоненията и ги записвайте. Така всяка инспекция от БАБХ ще минава спокойно.
+        </p>
+        <p className="text-xs text-brand-dark/60 mt-4">
+          Дневниците са само една част от системата. Вижте как протича <Link href="/haccp-sistema" className="text-brand-green font-semibold underline hover:text-brand-gold">разработката и внедряването на HACCP (ХАСЕП) система</Link> за конкретен обект.
         </p>
       </div>
     )
@@ -759,6 +765,9 @@ export const BLOG_POSTS: BlogPost[] = [
             </div>
           </div>
         </div>
+        <p className="text-xs text-brand-dark/60 mt-4">
+          Входящият контрол на суровините е една от критичните контролни точки. Вижте пълния обхват на <Link href="/haccp-sistema" className="text-brand-green font-semibold underline hover:text-brand-gold">внедряването на HACCP (ХАСЕП) система</Link>.
+        </p>
       </div>
     )
   },
@@ -927,6 +936,9 @@ export const BLOG_POSTS: BlogPost[] = [
             <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
+        <p className="text-xs text-brand-dark/60 mt-4">
+          Ако документацията Ви трябва да бъде изградена от нулата, вижте услугата <Link href="/haccp-sistema" className="text-brand-green font-semibold underline hover:text-brand-gold">разработка и внедряване на HACCP (ХАСЕП) система</Link>.
+        </p>
       </div>
     )
   },

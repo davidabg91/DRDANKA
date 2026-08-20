@@ -20,7 +20,6 @@ import JsonLd from "@/components/JsonLd";
 import {
   breadcrumbSchema,
   faqSchema,
-  howToSchema,
   serviceSchema,
   webPageSchema,
 } from "@/lib/schema";
@@ -39,8 +38,15 @@ import { AREAS_SERVED, AUTHOR, BUSINESS } from "@/lib/siteConfig";
 
 const PATH = "/haccp-sistema";
 
+/**
+ * The page's citable passage. Sized to 134–167 words on purpose: that is the
+ * band that gets lifted into AI answers, and ~44% of AI citations come from the
+ * first 30% of a page — so this sits directly under the H1, above everything
+ * else. It must survive being quoted with no surrounding context, which is why
+ * it restates who, what, how long, what it covers, and what it costs to skip.
+ */
 const SUMMARY =
-  "Д-р Данка Николова разработва и внедрява HACCP (ХАСЕП) системи и системи за самоконтрол за хранителни обекти в цяла България — заведения, магазини, производствени цехове, складове, кетъринг и подвижни обекти. Стандартна система се изготвя за 5 до 10 работни дни след първоначален одит на обекта и включва анализ на опасностите, определяне на критичните контролни точки, ДПХП процедури, мониторингови дневници и пълна документация за проверка от БАБХ.";
+  "Д-р Данка Николова разработва и внедрява HACCP (ХАСЕП) системи и системи за самоконтрол за хранителни обекти в цяла България — заведения, магазини, производствени цехове, складове, кетъринг компании и подвижни обекти. HACCP, НАССР и ХАСЕП означават едно и също: системата за анализ на опасностите и контрол на критичните точки, задължителна по Закона за храните и Регламент (ЕО) № 852/2004 за всеки обект, който произвежда, съхранява, транспортира или търгува с храни. Стандартна система се изготвя за 5 до 10 работни дни след първоначален одит на обекта и включва анализ на биологичните, химичните и физичните опасности, определяне на критичните контролни точки с критични граници, ДПХП процедури, мониторингови дневници, обучение на персонала и пълната документация за проверка от БАБХ. При констатирана липса на работеща система имуществените санкции за юридически лица започват от 1 000 € и могат да достигнат до временно затваряне на обекта.";
 
 const DELIVERABLES = [
   {
@@ -165,8 +171,11 @@ const FAQS = [
 ];
 
 export const metadata: Metadata = {
-  title:
-    "Разработка и внедряване на HACCP (ХАСЕП) система — за 5–10 работни дни",
+  // 39 chars, so the full rendered title with the " | Д-р Данка Николова"
+  // suffix lands at 60 — the head phrase survives SERP truncation intact
+  // instead of being cut mid-word. The 5–10 day promise moves to the
+  // description, where there is room for it.
+  title: "Внедряване на HACCP (ХАСЕП) система",
   description:
     "Разработка и внедряване на HACCP / НАССР / ХАСЕП система и система за самоконтрол за хранителни обекти в цяла България. Анализ на опасностите и ККТ, ДПХП процедури, дневници и пълна документация за БАБХ. Срок 5–10 работни дни. Д-р Данка Николова, 27 години опит в официалния контрол.",
   keywords: [
@@ -207,13 +216,14 @@ export default function HaccpSistemaPage() {
             serviceType: "Разработка и внедряване на HACCP система",
             image: "/haccp-prakticheska-sistema.webp",
           }),
-          howToSchema({
-            name: "Как протича внедряването на HACCP (ХАСЕП) система",
-            description:
-              "Петте стъпки от първоначалната консултация до готова, внедрена система за самоконтрол, приета при проверка от БАБХ.",
-            totalTime: "P10D",
-            steps: PROCESS,
-          }),
+          // No HowTo node here on purpose: Google removed how-to rich results
+          // in September 2023 and the type is now on the never-recommend list.
+          // The visible 5-step section below stays — it earns its place as
+          // content; it just does not need dead markup wrapped around it.
+          // FAQPage, by contrast, is kept deliberately. Its rich results were
+          // retired on 7 May 2026, but it remains a live entity-verification
+          // signal that AI Overviews and AI Mode read during answer synthesis,
+          // which is exactly what this page is optimised for.
           faqSchema(FAQS),
           webPageSchema({
             name: "Разработка и внедряване на HACCP (ХАСЕП) система",

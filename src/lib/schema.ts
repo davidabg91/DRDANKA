@@ -61,6 +61,30 @@ export function organizationSchema() {
       postalCode: BUSINESS.postalCode,
       addressCountry: BUSINESS.addressCountry,
     },
+    // geo is a documented LocalBusiness property and one of the few signals
+    // that ties the entity to a point on the map without a Google Business
+    // Profile. Coordinates match the map embed already shown on /contact.
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: BUSINESS.latitude,
+      longitude: BUSINESS.longitude,
+    },
+    hasMap: BUSINESS.mapUrl,
+    // Mirrors the hours rendered in the footer on every page ("Пон - Пет:
+    // 09:00 - 18:00 ч."). Structured data that contradicts the visible page is
+    // a spam signal, so these two must be changed together.
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "https://schema.org/Monday",
+        "https://schema.org/Tuesday",
+        "https://schema.org/Wednesday",
+        "https://schema.org/Thursday",
+        "https://schema.org/Friday",
+      ],
+      opens: "09:00",
+      closes: "18:00",
+    },
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer service",
@@ -219,18 +243,28 @@ export function webPageSchema(input: {
   name: string;
   description: string;
   path: string;
-  type?: "WebPage" | "AboutPage" | "ContactPage" | "CollectionPage";
+  type?:
+    | "WebPage"
+    | "AboutPage"
+    | "ProfilePage"
+    | "ContactPage"
+    | "CollectionPage";
 }) {
+  const type = input.type ?? "WebPage";
+  // ProfilePage is the type Google added for author/creator profiles and is
+  // the stronger E-E-A-T signal of the two; AboutPage still resolves the
+  // person, so both point mainEntity at the Person node.
+  const isPersonPage = type === "ProfilePage" || type === "AboutPage";
   return {
     "@context": "https://schema.org",
-    "@type": input.type ?? "WebPage",
+    "@type": type,
     name: input.name,
     description: input.description,
     url: absoluteUrl(input.path),
     inLanguage: "bg-BG",
     isPartOf: { "@id": WEBSITE_ID },
     about: { "@id": ORG_ID },
-    ...(input.type === "AboutPage" ? { mainEntity: { "@id": PERSON_ID } } : {}),
+    ...(isPersonPage ? { mainEntity: { "@id": PERSON_ID } } : {}),
     publisher: { "@id": ORG_ID },
   };
 }
@@ -249,26 +283,46 @@ export function breadcrumbSchema(items: Array<{ name: string; path: string }>) {
   };
 }
 
-/** HowTo node — the step-by-step delivery process for a service. */
-export function howToSchema(input: {
+/*
+ * Intentionally no HowTo builder. Google removed how-to rich results in
+ * September 2023 and the type is on the never-recommend list; emitting it buys
+ * nothing and adds bytes to every page that carries it. Step-by-step content
+ * belongs in the visible markup, not in dead structured data.
+ */
+
+/**
+ * WebApplication node for the browser-based self-control logbook platform.
+ *
+ * WebApplication rather than SoftwareApplication: the product runs in a
+ * browser, and the browser-based subtype is the documented match. It also
+ * carries browserRequirements/featureList, which SoftwareApplication does not
+ * meaningfully use.
+ *
+ * Deliberately no `offers` with price 0. A 14-day trial does not make the
+ * product free, and a zero-price Offer states exactly that. Until the real
+ * subscription price is published, no Offer is the honest option — a wrong
+ * price in structured data is treated as a spam signal, and it would also
+ * contradict the paid subscription the page sells.
+ */
+export function webApplicationSchema(input: {
   name: string;
   description: string;
-  totalTime?: string;
-  steps: ReadonlyArray<{ name: string; text: string }>;
+  path: string;
+  featureList: readonly string[];
 }) {
   return {
     "@context": "https://schema.org",
-    "@type": "HowTo",
+    "@type": "WebApplication",
     name: input.name,
     description: input.description,
+    url: absoluteUrl(input.path),
+    applicationCategory: "BusinessApplication",
+    operatingSystem: "Web browser",
+    browserRequirements: "Requires JavaScript. Chrome, Firefox, Safari, Edge.",
     inLanguage: "bg-BG",
-    ...(input.totalTime ? { totalTime: input.totalTime } : {}),
-    step: input.steps.map((step, i) => ({
-      "@type": "HowToStep",
-      position: i + 1,
-      name: step.name,
-      text: step.text,
-    })),
+    featureList: [...input.featureList],
+    provider: { "@id": ORG_ID },
+    publisher: { "@id": ORG_ID },
   };
 }
 

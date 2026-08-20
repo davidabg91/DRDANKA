@@ -22,13 +22,14 @@ export async function generateMetadata({
 
   const description = material.metaDescription ?? material.tagline;
   const image = material.card.cover;
+  const title = material.seoTitle ?? material.title;
 
   return {
-    title: material.title,
+    title,
     description,
     alternates: { canonical: `/library/${material.slug}` },
     openGraph: {
-      title: material.title,
+      title,
       description,
       url: `/library/${material.slug}`,
       ...(image ? { images: [{ url: image }] } : {}),

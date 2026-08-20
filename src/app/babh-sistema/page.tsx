@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import BabhSistemaClient from "./BabhSistemaClient";
+import JsonLd from "@/components/JsonLd";
+import {
+  breadcrumbSchema,
+  webApplicationSchema,
+  webPageSchema,
+} from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "Автоматична Система за БАБХ Дневници & HACCP — Електронни Регистри",
@@ -29,32 +35,36 @@ export const metadata: Metadata = {
 };
 
 export default function BabhSistemaPage() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Система „Дигитално Спокойствие“ — Автоматични БАБХ Дневници",
-    "operatingSystem": "Web, Mobile, Desktop",
-    "applicationCategory": "BusinessApplication",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "EUR",
-      "priceValidUntil": "2027-12-31",
-      "description": "14 Дни Безплатен Пробен Период"
-    },
-    "description": "Пълна автоматизация на 10-те задължителни БАБХ дневника по самоконтрол, генератор на етикети за проследимост и 24/7 поддръжка от експерти по безопасност на храните.",
-    "publisher": {
-      "@type": "Organization",
-      "name": "Академия сигурен хранителен бизнес — д-р Данка Николова",
-      "url": "https://www.haccpspokoystvie.bg"
-    }
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      <JsonLd
+        data={[
+          webApplicationSchema({
+            name: "Система „Дигитално Спокойствие“ — автоматични БАБХ дневници",
+            description:
+              "Уеб платформа за водене на 10-те задължителни дневника по самоконтрол: автоматично попълване, напомняния за температурни режими, хигиена, здравни книжки и обучения, генератор на етикети за проследимост и печат на официални документи за пред БАБХ. Предлага 14-дневен безплатен пробен период.",
+            path: "/babh-sistema",
+            featureList: [
+              "Автоматично попълване на 10-те задължителни дневника по самоконтрол",
+              "Напомняния за температурни режими, хигиена и дезинфекция",
+              "Проследяване на здравни книжки и обучения на персонала",
+              "Генератор на етикети за проследимост",
+              "Печат на официални документи за проверка от БАБХ",
+              "Дигитални тестове и сертификати за персонала",
+              "24/7 чат поддръжка от д-р Данка Николова",
+            ],
+          }),
+          webPageSchema({
+            name: "Автоматична система за БАБХ дневници",
+            description:
+              "Електронни БАБХ дневници и HACCP (ХАСЕП) система за ресторанти, магазини и производства, с автоматично попълване и 14-дневен безплатен тест.",
+            path: "/babh-sistema",
+          }),
+          breadcrumbSchema([
+            { name: "Начало", path: "/" },
+            { name: "БАБХ система", path: "/babh-sistema" },
+          ]),
+        ]}
       />
       <BabhSistemaClient />
     </>

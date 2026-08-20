@@ -51,8 +51,10 @@ export default function About() {
 
   return (
     <div className="min-h-screen pb-24">
-      {/* AboutPage + Person: the credentials below are the E-E-A-T evidence an
-          answer engine needs before it will name a person as an expert. */}
+      {/* ProfilePage, not AboutPage: this page is a person's profile, and
+          ProfilePage is the type Google added for exactly that. The credentials
+          below are the E-E-A-T evidence an answer engine needs before it will
+          name a person as an expert. */}
       <JsonLd
         data={[
           webPageSchema({
@@ -60,7 +62,7 @@ export default function About() {
             description:
               "Доктор по контрол на храните и ветеринарно-санитарна експертиза, лицензиран водещ одитор по ISO 22000, IFS Food и ISO 9001, с над 27 години опит в официалния контрол на храните в България.",
             path: "/about",
-            type: "AboutPage",
+            type: "ProfilePage",
           }),
           breadcrumbSchema([
             { name: "Начало", path: "/" },

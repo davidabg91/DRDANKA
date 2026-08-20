@@ -141,6 +141,10 @@ function MeatGuidePage() {
 export const mesoIMesniProdukti: LibraryMaterial = {
   slug: "meso-i-mesni-produkti",
   title: "Практическо ръководство: Готов ли е обектът ти за регистрация?",
+  // The display name never says what the guide is about. On a card the cover
+  // and tagline carry that; in a search result they do not, so the <title>
+  // states the subject outright.
+  seoTitle: "Месо и месни продукти — готов ли е обектът за регистрация",
   tagline: "Практическо мини ръководство за обекти с месо и месни продукти. Как да избегнеш отказ, забавяне и излишни разходи.",
   priceEur: 9.99,
   type: "pdf",

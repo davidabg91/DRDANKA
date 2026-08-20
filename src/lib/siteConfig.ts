@@ -42,6 +42,12 @@ export const BUSINESS = {
   phone: "0887 902 198",
   phoneRaw: "+359887902198",
   phoneTel: "tel:0887902198",
+  /** Coordinates of the Pleven office. Taken from the map embed already shown
+   *  on /contact, so the schema and the visible map cannot disagree. */
+  latitude: 43.41226,
+  longitude: 24.616616,
+  mapUrl:
+    "https://www.google.com/maps/search/?api=1&query=43.41226,24.616616",
   /** Default social share image (absolute path resolved via metadataBase). */
   ogImage: "/og-image.jpg",
 } as const;
