@@ -11,6 +11,8 @@ import Image from "next/image";
 import { ShieldCheck, Award, GraduationCap, CheckCircle, FileText, Heart, Quote, Star, BadgeCheck } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import PageHero from "@/components/PageHero";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema, webPageSchema } from "@/lib/schema";
 
 
 export default function About() {
@@ -49,6 +51,23 @@ export default function About() {
 
   return (
     <div className="min-h-screen pb-24">
+      {/* AboutPage + Person: the credentials below are the E-E-A-T evidence an
+          answer engine needs before it will name a person as an expert. */}
+      <JsonLd
+        data={[
+          webPageSchema({
+            name: "За д-р Данка Николова",
+            description:
+              "Доктор по контрол на храните и ветеринарно-санитарна експертиза, лицензиран водещ одитор по ISO 22000, IFS Food и ISO 9001, с над 27 години опит в официалния контрол на храните в България.",
+            path: "/about",
+            type: "AboutPage",
+          }),
+          breadcrumbSchema([
+            { name: "Начало", path: "/" },
+            { name: "За мен", path: "/about" },
+          ]),
+        ]}
+      />
       {/* Page Header */}
       <PageHero
         badgeText="ЗА МЕН · ЕКСПЕРТИЗА И ДОВЕРИЕ"

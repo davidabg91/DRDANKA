@@ -4,6 +4,8 @@ import { Laptop, Clock, ShieldCheck, HelpCircle } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import ConsultationStepsWidget from "@/remotion/ConsultationStepsWidget";
 import PageHero from "@/components/PageHero";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema, serviceSchema, webPageSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "Онлайн консултации — запишете час",
@@ -33,6 +35,27 @@ export default function Consultations() {
 
   return (
     <div className="min-h-screen pb-24">
+      <JsonLd
+        data={[
+          serviceSchema({
+            name: "Онлайн консултация по безопасност на храните",
+            description:
+              "Индивидуална онлайн консултация с д-р Данка Николова през Google Meet или телефон по конкретен казус — предписание от БАБХ, предстояща проверка, HACCP (ХАСЕП) документация, етикетиране или регистрация на обект. Завършва с писмен доклад с конкретни стъпки.",
+            path: "/consultations",
+            serviceType: "Онлайн консултация по безопасност на храните",
+          }),
+          webPageSchema({
+            name: "Онлайн консултации — запишете час",
+            description:
+              "Запишете онлайн консултация по HACCP, ДПХП, етикетиране и проверки от БАБХ. Обслужване за цяла България.",
+            path: "/consultations",
+          }),
+          breadcrumbSchema([
+            { name: "Начало", path: "/" },
+            { name: "Консултации", path: "/consultations" },
+          ]),
+        ]}
+      />
       {/* Page Header */}
       <PageHero
         badgeText="ДИСТАНЦИОННО СЪДЕЙСТВИЕ"

@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import FAQAccordion from "@/components/FAQAccordion";
 import ContactForm from "@/components/ContactForm";
+import JsonLd from "@/components/JsonLd";
+import { FAQS } from "@/data/faq";
+import { faqSchema, webPageSchema } from "@/lib/schema";
 import { Suspense } from "react";
 import RemotionVideoWidget from "@/remotion/RemotionVideoWidget";
 import HeroTrainingCarousel from "@/components/HeroTrainingCarousel";
@@ -107,6 +110,25 @@ export default function Home() {
 
   return (
     <div>
+      {/*
+        The FAQ answers below carry the concrete, quotable facts an answer
+        engine needs to name us (5–10 работни дни, санкции от 1 000 €,
+        Регламент 852/2004). Mirroring them as FAQPage turns them from prose
+        into citable claims. The service catalogue is not repeated here — the
+        Organization node in the root layout already carries it site-wide.
+      */}
+      <JsonLd
+        data={[
+          webPageSchema({
+            name: "Разработка и внедряване на HACCP (ХАСЕП) системи в България",
+            description:
+              "Д-р Данка Николова — разработка, внедряване и одит на HACCP (ХАСЕП) системи, системи за самоконтрол, ДПХП, ISO 22000 и IFS Food, и подготовка на документация за БАБХ за обекти в цяла България.",
+            path: "/",
+          }),
+          faqSchema(FAQS),
+        ]}
+      />
+
       {/* 1. Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] pt-10 pb-20 sm:pt-12 sm:pb-20 md:pt-16 md:pb-28 border-b border-brand-gold/20 z-10">
         {/* Glow blobs */}
