@@ -188,7 +188,7 @@ function HaccpDhppPraktikaPage() {
 
 export const haccpDhppPraktika: LiveCourse = {
   slug: "haccp-dhpp-praktika",
-  title: "Практическо обучение за ДХПП и HACCP",
+  title: "Практическо обучение за ДПХП и HACCP",
   tagline:
     "За разработване, внедряване и поддържане на добри хигиенни и производствени практики и процедури, основани на принципите на HACCP",
   priceEur: 79.0,

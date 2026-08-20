@@ -33,6 +33,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     entry("", 1.0, "weekly"),
     entry("/babh-sistema", 0.95, "weekly"),
+    entry("/haccp-sistema", 0.95, "monthly"),
     entry("/services", 0.9, "monthly"),
     entry("/consultations", 0.9, "monthly"),
     entry("/library", 0.9, "weekly"),

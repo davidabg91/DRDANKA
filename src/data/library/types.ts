@@ -52,4 +52,11 @@ export interface LibraryMaterial {
   page: () => ReactNode;
   /** Optional: meta description for SEO. */
   metaDescription?: string;
+  /**
+   * Optional: <title> override, when the product's display name is not what a
+   * buyer would search for. Falls back to `title`. Use it when the marketing
+   * name omits the subject — a card can rely on its cover image and tagline for
+   * context, a search result cannot.
+   */
+  seoTitle?: string;
 }

@@ -245,6 +245,7 @@ function RegistraciaObektPage() {
 export const registraciaObekt: LiveCourse = {
   slug: "registracia-obekt",
   title: "От идея до регистрация — всичко преди да инвестирате в хранителен бизнес",
+  seoTitle: "Регистрация на хранителен обект в БАБХ — курс",
   tagline:
     "Еднодневно практическо обучение: избор на обект, изисквания към сградния фонд, документи и проверката от ОДБХ.",
   priceEur: 99.0,

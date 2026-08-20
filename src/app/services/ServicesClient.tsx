@@ -33,14 +33,18 @@ interface ServiceItem {
   desc: string;
   scope: string[];
   benefits: string;
+  /** Dedicated landing page, when the service has one. Renders the card title
+   *  as a link so the deeper page is reachable by crawlers and by clients. */
+  href?: string;
 }
 
 const SERVICES: ServiceItem[] = [
   {
-    title: "НАССР Системи (ХАСЕП)",
+    title: "Разработка и внедряване на HACCP (НАССР / ХАСЕП) система",
     badge: "Задължително по Закон",
     icon: ShieldCheck,
-    desc: "Анализ на опасностите и критични контролни точки. Разработване, внедряване и подготовка на пълна документация за БАБХ съгласно Закона за храните.",
+    href: "/haccp-sistema",
+    desc: "Анализ на опасностите и критичните контролни точки. Разработване, внедряване и подготовка на пълна документация за БАБХ съгласно Закона за храните и Регламент (ЕО) № 852/2004. Стандартен срок 5–10 работни дни.",
     scope: [
       "Анализ на опасностите и ККТ контрол",
       "Разработване на ДПХП процедури",
@@ -178,13 +182,28 @@ export default function ServicesClient() {
 
                     {/* Title */}
                     <h3 className="font-serif text-base font-bold text-brand-green leading-snug">
-                      {srv.title}
+                      {srv.href ? (
+                        <Link href={srv.href} className="hover:text-brand-gold transition-colors">
+                          {srv.title}
+                        </Link>
+                      ) : (
+                        srv.title
+                      )}
                     </h3>
 
                     {/* Desc */}
                     <p className="text-[11px] text-brand-dark/70 leading-relaxed line-clamp-3">
                       {srv.desc}
                     </p>
+
+                    {srv.href && (
+                      <Link
+                        href={srv.href}
+                        className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-brand-gold hover:text-brand-green transition-colors"
+                      >
+                        Подробно за услугата <ChevronRight className="h-3 w-3" />
+                      </Link>
+                    )}
 
                     {/* Scope list */}
                     <div className="space-y-1.5 pt-1 border-t border-brand-green/5">

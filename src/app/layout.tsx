@@ -33,10 +33,15 @@ export const metadata: Metadata = {
     default: "Д-р Данка Николова | Консултант по безопасност на храните",
     template: "%s | Д-р Данка Николова",
   },
-  description: "Професионални консултации, внедряване и одит на системи за безопасност на храните (HACCP, ISO 22000, IFS, GMP) от д-р Данка Николова. 27 години опит в хранителния контрол.",
+  description: "Разработка и внедряване на HACCP (НАССР / ХАСЕП) системи, системи за самоконтрол, ISO 22000, IFS Food и ДПХП от д-р Данка Николова. Пълна документация за БАБХ, обекти в цяла България, 27 години опит в хранителния контрол.",
   keywords: [
     "HACCP",
     "НАССР",
+    "ХАСЕП",
+    "ХАСАП",
+    "разработка и внедряване на HACCP система",
+    "внедряване на ХАСЕП система",
+    "НАССР система",
     "безопасност на храните",
     "ISO 22000",
     "IFS Food",
@@ -105,6 +110,9 @@ export default function RootLayout({
             (catalog, training cards) start downloading without an extra RTT. */}
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+        {/* llms.txt lives at the root by convention; advertising it here too
+            costs nothing and helps the agents that look for a declared copy. */}
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt" />
       </head>
       <body className="min-h-full flex flex-col bg-transparent text-brand-dark">
         <JsonLd data={[organizationSchema(), personSchema(), websiteSchema()]} />

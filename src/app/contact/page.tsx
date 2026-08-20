@@ -3,6 +3,8 @@ import ContactForm from "@/components/ContactForm";
 import { Mail, Clock, MapPin, ShieldCheck, HelpCircle, Phone } from "lucide-react";
 import { Suspense } from "react";
 import PageHero from "@/components/PageHero";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbSchema, webPageSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "Контакти — консултация по безопасност на храните",
@@ -38,6 +40,23 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen pb-24">
+      {/* ContactPage + the full NAP block. Answer engines that recommend a
+          business almost always quote a phone number alongside it. */}
+      <JsonLd
+        data={[
+          webPageSchema({
+            name: "Контакти — д-р Данка Николова",
+            description:
+              "Телефон, имейл, адрес на офиса в гр. Плевен и форма за запитване по HACCP (ХАСЕП), ДПХП, етикетиране и регистрация на обект в БАБХ.",
+            path: "/contact",
+            type: "ContactPage",
+          }),
+          breadcrumbSchema([
+            { name: "Начало", path: "/" },
+            { name: "Контакти", path: "/contact" },
+          ]),
+        ]}
+      />
       {/* Page Header */}
       <PageHero
         badgeText="СВЪРЖЕТЕ СЕ С НАШИЯ ЕКИП"
@@ -108,8 +127,7 @@ export default function Contact() {
               <p className="text-brand-dark/80 leading-relaxed">
                 Работим с клиенти от цялата страна. Онлайн консултации и обмен на документи се извършват в рамките на официалното работно време.
               </p>
-              <div className="border-t border-brand-green/5 pt-3 text-[10px] text-brand-dark/60 flex items-center justify-between">
-                <span>ЕИК/Булстат: BG123456789</span>
+              <div className="border-t border-brand-green/5 pt-3 text-[10px] text-brand-dark/60 flex items-center justify-end">
                 <span className="flex items-center text-brand-green font-semibold">
                   <ShieldCheck className="h-3.5 w-3.5 text-brand-gold mr-1" />
                   Регистриран консултант

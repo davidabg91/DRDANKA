@@ -59,6 +59,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/haccp-sistema" className="text-white/70 hover:text-brand-gold transition-colors duration-200">
+                  Внедряване на HACCP (ХАСЕП) система
+                </Link>
+              </li>
+              <li>
                 <Link href="/consultations" className="text-white/70 hover:text-brand-gold transition-colors duration-200">
                   Онлайн консултации
                 </Link>

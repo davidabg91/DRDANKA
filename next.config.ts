@@ -17,6 +17,34 @@ const nextConfig: NextConfig = {
     // variants for 31 days instead of re-optimizing on every visit.
     minimumCacheTTL: 2678400,
   },
+  /**
+   * Security headers. Vercel already sends Strict-Transport-Security, so these
+   * fill the remaining gaps flagged by the audit.
+   *
+   * No Content-Security-Policy here on purpose: this site loads Stripe,
+   * Firebase, the Google Maps embed and Vercel Analytics, so a CSP written
+   * blind would break checkout or the map. It needs to be built from a real
+   * report-only run before it is enforced.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
