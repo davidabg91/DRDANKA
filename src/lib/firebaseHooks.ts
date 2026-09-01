@@ -102,7 +102,7 @@ export function useDankaUsers() {
     const docId = email.trim().toLowerCase();
     try {
       const userRef = doc(db, "users", docId);
-      await updateDoc(userRef, data);
+      await setDoc(userRef, { email: docId, ...data }, { merge: true });
       return true;
     } catch (error: any) {
       console.error("Error updating user:", docId, error);

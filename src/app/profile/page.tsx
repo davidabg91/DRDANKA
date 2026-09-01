@@ -295,6 +295,7 @@ export default function ProfilePage() {
   // Admin-created courses stored in Firestore /courses (self-service bookstore).
   // publishedOnly=false so drafts/hidden courses are visible in the admin list.
   const { courses: dbCourses } = useCourses(false);
+  const { trainings: dbTrainings } = useTrainings(false);
   const { overrides: priceOverrides } = usePriceOverrides();
   const { overrides: typeOverrides } = useTypeOverrides();
   const { links: videoLinks } = useVideoLinks();
@@ -1644,6 +1645,22 @@ export default function ProfilePage() {
     }
   };
 
+  const handleUpdateEnrollmentStatus = async (enr: Enrollment, newStatus: string) => {
+    try {
+      await setDoc(
+        doc(db, "enrollments", enr.id),
+        {
+          ...enr,
+          status: newStatus,
+          ...(newStatus === "contacted" ? { contactedAt: new Date().toISOString() } : {}),
+        },
+        { merge: true }
+      );
+    } catch (err: any) {
+      alert("Грешка при обновяване на статуса: " + (err?.message || err));
+    }
+  };
+
   /**
    * Admin confirms the bank transfer and UNLOCKS the package: adds the
    * enrollment's trainingId (slug / training id) to the buyer's
@@ -1654,28 +1671,46 @@ export default function ProfilePage() {
    */
   const handleGrantEnrollmentAccess = async (enr: Enrollment) => {
     const email = enr.email.trim().toLowerCase();
-    const target = usersList.find(u => u.email.toLowerCase() === email);
-    if (!target) {
-      alert(`Няма потребителски профил за ${email}. Клиентът трябва първо да завърши регистрацията си.`);
-      return;
-    }
-    if (!confirm(`Потвърждаваш ли, че плащането за „${enr.trainingTitle}" от ${email} е получено? Пакетът ще се отключи веднага.`)) return;
+    if (!confirm(`Потвърждаваш ли, че плащането за „${enr.trainingTitle}" от ${email} е получено? Пакетът ще се отключи веднага в профила на клиента.`)) return;
     try {
-      const existing = target.purchasedCourseIds || [];
-      if (!existing.includes(enr.trainingId)) {
-        const ok = await updateUser(email, { purchasedCourseIds: [...existing, enr.trainingId] });
-        if (!ok) return;
-      }
+      const target = usersList.find(u => u.email.toLowerCase() === email);
+      const existing = target?.purchasedCourseIds || [];
+
+      // Collect all identifiers for this course (trainingId, slug, title, id from dbCourses/LIBRARY_MATERIALS)
+      const matchingDbCourse = dbCourses.find(c => c.id === enr.trainingId || c.slug === enr.trainingId || c.title.toLowerCase() === enr.trainingTitle.toLowerCase());
+      const matchingLib = LIBRARY_MATERIALS.find(m => m.slug === enr.trainingId || m.title.toLowerCase() === enr.trainingTitle.toLowerCase());
+      const matchingTr = dbTrainings.find(t => t.id === enr.trainingId || t.slug === enr.trainingId || t.title.toLowerCase() === enr.trainingTitle.toLowerCase());
+      const matchingLive = LIVE_COURSES.find(l => l.slug === enr.trainingId || l.title.toLowerCase() === enr.trainingTitle.toLowerCase());
+
+      const newIds = [
+        enr.trainingId,
+        matchingDbCourse?.id,
+        matchingDbCourse?.slug,
+        matchingLib?.slug,
+        matchingTr?.id,
+        matchingTr?.slug,
+        matchingLive?.slug,
+      ].filter((x): x is string => !!x);
+
+      const mergedIds = Array.from(new Set([...existing, ...newIds]));
+
+      await updateUser(email, {
+        purchasedCourseIds: mergedIds,
+        contact: target?.contact || enr.fullName || "",
+        phone: target?.phone || enr.phone || "",
+      });
+
       await setDoc(
         doc(db, "enrollments", enr.id),
         { ...enr, status: "access_granted", accessGrantedAt: new Date().toISOString() },
         { merge: true },
       );
-      alert(`Пакетът беше отключен за ${email}.`);
+      alert(`Пакетът „${enr.trainingTitle}" беше успешно отключен за ${email}.`);
     } catch (err: any) {
       alert("Грешка при отключване: " + (err?.message || err));
     }
   };
+
 
   const handleDeleteEnrollment = async (enr: Enrollment) => {
     if (!confirm(`Сигурни ли сте, че искате да изтриете записа на „${enr.fullName}“ за „${enr.trainingTitle}“?`)) return;
@@ -1810,22 +1845,33 @@ export default function ProfilePage() {
       return;
     }
     const target = usersList.find(u => u.email.toLowerCase() === email);
-    if (!target) {
-      alert(`Няма потребител с email ${email}. Първо клиентът трябва да си направи акаунт.`);
-      return;
-    }
-    const existing = target.purchasedCourseIds || [];
-    if (existing.includes(courseGrantTargetId)) {
-      alert("Този потребител вече има достъп до този курс.");
-      return;
-    }
-    const ok = await updateUser(email, { purchasedCourseIds: [...existing, courseGrantTargetId] });
+    const existing = target?.purchasedCourseIds || [];
+
+    const matchingDbCourse = dbCourses.find(c => c.id === courseGrantTargetId || c.slug === courseGrantTargetId || c.title === courseGrantTargetId);
+    const matchingLib = LIBRARY_MATERIALS.find(m => m.slug === courseGrantTargetId || m.title === courseGrantTargetId);
+    const matchingTr = dbTrainings.find(t => t.id === courseGrantTargetId || t.slug === courseGrantTargetId || t.title === courseGrantTargetId);
+    const matchingLive = LIVE_COURSES.find(l => l.slug === courseGrantTargetId || l.title === courseGrantTargetId);
+
+    const newIds = [
+      courseGrantTargetId,
+      matchingDbCourse?.id,
+      matchingDbCourse?.slug,
+      matchingLib?.slug,
+      matchingTr?.id,
+      matchingTr?.slug,
+      matchingLive?.slug,
+    ].filter((x): x is string => !!x);
+
+    const mergedIds = Array.from(new Set([...existing, ...newIds]));
+
+    const ok = await updateUser(email, { purchasedCourseIds: mergedIds });
     if (ok) {
       setCourseGrantEmail("");
       setCourseGrantTargetId("");
-      alert(`Достъпът беше предоставен на ${email}.`);
+      alert(`Достъпът беше успешно предоставен на ${email}.`);
     }
   };
+
 
   const handleSaveFirm = (e: React.FormEvent) => {
     e.preventDefault();
@@ -4093,7 +4139,7 @@ export default function ProfilePage() {
                           <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Мои качени курсове ({dbCourses.length})</h3>
                           <div className="space-y-2">
                             {dbCourses.map((c) => {
-                              const buyers = usersList.filter(u => (u.purchasedCourseIds || []).includes(c.id));
+                              const buyers = usersList.filter(u => (u.purchasedCourseIds || []).some(id => id === c.id || (c.slug && id === c.slug) || (c.title && id === c.title)));
                               return (
                                 <div key={c.id} className="flex items-center justify-between gap-3 bg-white border border-brand-green/10 rounded-xl px-4 py-3">
                                   <div className="min-w-0">
@@ -4105,9 +4151,18 @@ export default function ProfilePage() {
                                     </div>
                                     <div className="text-[10px] text-brand-dark/50 truncate">{c.priceEur.toFixed(2)} € · {(c.type ?? "pdf") === "link" ? "външен линк" : "PDF"} · {buyers.length} купувачи</div>
                                   </div>
-                                  <div className="flex items-center gap-1.5 shrink-0">
+                                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                                    {(c.type ?? "pdf") === "pdf" ? (
+                                      <Link href={`/courses/${c.slug || c.id}/viewer`} target="_blank" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer" title="Преглед на качения PDF файл">
+                                        <BookOpen className="h-3 w-3" /> Преглед PDF
+                                      </Link>
+                                    ) : c.externalUrl ? (
+                                      <a href={c.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer" title="Отвори външния линк">
+                                        <ExternalLink className="h-3 w-3" /> Отвори линк
+                                      </a>
+                                    ) : null}
                                     <Link href={`/courses/${c.slug || c.id}`} target="_blank" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
-                                      <Eye className="h-3 w-3" /> Виж
+                                      <Eye className="h-3 w-3" /> Страница
                                     </Link>
                                     <button onClick={() => handleTogglePublished(c)} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer">
                                       {c.published ? "Скрий" : "Покажи"}
@@ -4135,15 +4190,25 @@ export default function ProfilePage() {
                         <div className="flex flex-col sm:flex-row gap-2">
                           <input type="email" placeholder="email на клиента" value={courseGrantEmail} onChange={(e) => setCourseGrantEmail(e.target.value)} className="flex-1 text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" />
                           <select value={courseGrantTargetId} onChange={(e) => setCourseGrantTargetId(e.target.value)} className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer">
-                            <option value="">— избери курс —</option>
-                            {allCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-                            {dbCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                            <option value="">— избери курс / обучение —</option>
+                            <optgroup label="Дигитална библиотека / Наръчници">
+                              {allCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                            </optgroup>
+                            {dbCourses.length > 0 && (
+                              <optgroup label="Мои качени курсове (База данни)">
+                                {dbCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                              </optgroup>
+                            )}
+                            <optgroup label="Live онлайн курсове">
+                              {LIVE_COURSES.map(c => <option key={c.slug} value={c.slug}>{c.title}</option>)}
+                            </optgroup>
                           </select>
                           <button type="button" onClick={handleGrantCourse} className="text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap">
                             Предостави
                           </button>
                         </div>
                       </div>
+
 
                       {/* Course list */}
                       <div className="space-y-2">
@@ -4173,6 +4238,24 @@ export default function ProfilePage() {
                                       <td className="border border-brand-green/10 p-3">
                                         <div className="font-bold text-brand-green">{c.title}</div>
                                         <div className="text-[10px] text-brand-dark/50">{c.description}</div>
+                                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                          <Link
+                                            href={`/library/${c.slug}/viewer`}
+                                            target="_blank"
+                                            className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer"
+                                            title="Преглед на качения материал в четеца"
+                                          >
+                                            <Eye className="h-3 w-3" /> Преглед (Viewer)
+                                          </Link>
+                                          <Link
+                                            href={`/library/${c.slug}`}
+                                            target="_blank"
+                                            className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
+                                            title="Отвори публичната страница на материала"
+                                          >
+                                            <ExternalLink className="h-3 w-3" /> Страница
+                                          </Link>
+                                        </div>
                                       </td>
                                       <td className="border border-brand-green/10 p-3 text-center text-[10px]">
                                         {(() => {
@@ -4724,65 +4807,99 @@ export default function ProfilePage() {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {filtered.map((enr) => (
-                                      <tr key={enr.id} className="hover:bg-brand-light/30">
-                                        <td className="border border-brand-green/10 p-3">
-                                          <div className="font-bold text-brand-green">{enr.fullName}</div>
-                                          {enr.company && <div className="text-[10px] text-brand-dark/50">{enr.company}</div>}
-                                          <div className="text-[9px] text-brand-dark/40 font-mono mt-0.5">{new Date(enr.createdAt).toLocaleString("bg-BG")}</div>
-                                        </td>
-                                        <td className="border border-brand-green/10 p-3">
-                                          <a href={`mailto:${enr.email}`} className="text-brand-green hover:text-brand-gold font-mono block">{enr.email}</a>
-                                          <a href={`tel:${enr.phone}`} className="text-brand-dark/70 font-mono block mt-0.5">{enr.phone}</a>
-                                        </td>
-                                        <td className="border border-brand-green/10 p-3">
-                                          <div className="font-bold">{enr.trainingTitle}</div>
-                                          <div className="text-[10px] text-brand-dark/50">
-                                            {enr.trainingType === "video" ? "📹 Видео" : enr.trainingType === "zoom" ? "📞 Zoom" : ""}
-                                          </div>
-                                        </td>
-                                        <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{enr.priceEur.toFixed(2)} €</td>
-                                        <td className="border border-brand-green/10 p-3 text-center">
-                                          <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${
-                                            enr.status === "awaiting_payment" ? "bg-amber-100 text-amber-800" :
-                                            enr.status === "access_granted" ? "bg-green-100 text-green-800" :
-                                            enr.status === "paid" ? "bg-amber-100 text-amber-800" :
-                                            enr.status === "contacted" ? "bg-blue-100 text-blue-800" :
-                                            enr.status === "completed" ? "bg-green-100 text-green-800" :
-                                            "bg-gray-100 text-gray-800"
-                                          }`}>
-                                            {enr.status === "awaiting_payment" ? "Чака плащане"
-                                              : enr.status === "access_granted" ? "Отключен"
-                                              : enr.status === "paid" ? "Платено"
-                                              : enr.status === "contacted" ? "Свързан"
-                                              : enr.status === "completed" ? "Завършил"
-                                              : enr.status}
-                                          </span>
-                                        </td>
-                                        <td className="border border-brand-green/10 p-3 text-center">
-                                          <div className="flex flex-col items-center gap-1.5">
-                                            {enr.status === "awaiting_payment" ? (
-                                              <button onClick={() => handleGrantEnrollmentAccess(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer inline-flex items-center gap-1">
-                                                <Check className="h-3 w-3" /> Получено плащане
+                                    {filtered.map((enr) => {
+                                      const isLiveMeeting = enr.trainingType === "zoom" || LIVE_COURSES.some(l => l.slug === enr.trainingId);
+                                      return (
+                                        <tr key={enr.id} className="hover:bg-brand-light/30">
+                                          <td className="border border-brand-green/10 p-3">
+                                            <div className="font-bold text-brand-green">{enr.fullName || "Няма въведено име"}</div>
+                                            {enr.company && <div className="text-[10px] text-brand-dark/50">{enr.company}</div>}
+                                            <div className="text-[9px] text-brand-dark/40 font-mono mt-0.5">{new Date(enr.createdAt).toLocaleString("bg-BG")}</div>
+                                          </td>
+                                          <td className="border border-brand-green/10 p-3">
+                                            <a href={`mailto:${enr.email}`} className="text-brand-green hover:text-brand-gold font-mono block">{enr.email}</a>
+                                            {enr.phone && <a href={`tel:${enr.phone}`} className="text-brand-dark/70 font-mono block mt-0.5">{enr.phone}</a>}
+                                          </td>
+                                          <td className="border border-brand-green/10 p-3">
+                                            <div className="font-bold">{enr.trainingTitle}</div>
+                                            <div className="text-[10px] text-brand-dark/50">
+                                              {isLiveMeeting ? "📹 Live среща (Zoom)" : enr.trainingType === "video" ? "📹 Видео курс" : "📄 PDF Наръчник"}
+                                            </div>
+                                          </td>
+                                          <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{enr.priceEur.toFixed(2)} €</td>
+                                          <td className="border border-brand-green/10 p-3 text-center">
+                                            <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold uppercase ${
+                                              isLiveMeeting
+                                                ? (enr.status === "contacted" ? "bg-blue-100 text-blue-800" :
+                                                   enr.status === "scheduled" ? "bg-purple-100 text-purple-800" :
+                                                   enr.status === "completed" ? "bg-green-100 text-green-800" :
+                                                   "bg-amber-100 text-amber-800")
+                                                : (enr.status === "awaiting_payment" ? "bg-amber-100 text-amber-800" :
+                                                   enr.status === "access_granted" ? "bg-green-100 text-green-800" :
+                                                   enr.status === "paid" ? "bg-amber-100 text-amber-800" :
+                                                   "bg-gray-100 text-gray-800")
+                                            }`}>
+                                              {isLiveMeeting ? (
+                                                enr.status === "contacted" ? "Свързан" :
+                                                enr.status === "scheduled" ? "Насрочен" :
+                                                enr.status === "completed" ? "Приключил" :
+                                                "За насрочване"
+                                              ) : (
+                                                enr.status === "awaiting_payment" ? "Чака плащане" :
+                                                enr.status === "access_granted" ? "Отключен" :
+                                                enr.status === "paid" ? "Платено" :
+                                                enr.status
+                                              )}
+                                            </span>
+                                          </td>
+                                          <td className="border border-brand-green/10 p-3 text-center">
+                                            <div className="flex flex-col items-center gap-1.5">
+                                              {isLiveMeeting ? (
+                                                <>
+                                                  {(!enr.status || enr.status === "pending" || enr.status === "awaiting_payment") && (
+                                                    <button onClick={() => handleUpdateEnrollmentStatus(enr, "contacted")} className="text-[9px] font-bold uppercase px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer">
+                                                      Маркирай свързан
+                                                    </button>
+                                                  )}
+                                                  {enr.status === "contacted" && (
+                                                    <button onClick={() => handleUpdateEnrollmentStatus(enr, "scheduled")} className="text-[9px] font-bold uppercase px-2 py-1 rounded bg-purple-600 text-white hover:bg-purple-700 transition-colors cursor-pointer">
+                                                      Насрочена среща
+                                                    </button>
+                                                  )}
+                                                  {enr.status === "scheduled" && (
+                                                    <button onClick={() => handleUpdateEnrollmentStatus(enr, "completed")} className="text-[9px] font-bold uppercase px-2 py-1 rounded bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer">
+                                                      Приключи
+                                                    </button>
+                                                  )}
+                                                </>
+                                              ) : (
+                                                <>
+                                                  {enr.status === "awaiting_payment" ? (
+                                                    <button onClick={() => handleGrantEnrollmentAccess(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer inline-flex items-center gap-1">
+                                                      <Check className="h-3 w-3" /> Получено плащане
+                                                    </button>
+                                                  ) : enr.status === "access_granted" ? (
+                                                    <span className="text-[9px] font-bold uppercase text-green-700 inline-flex items-center gap-1">
+                                                      <CheckCircle className="h-3 w-3" /> Отключен
+                                                    </span>
+                                                  ) : enr.status === "paid" ? (
+                                                    <button onClick={() => handleMarkEnrollmentContacted(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
+                                                      Маркирай свързан
+                                                    </button>
+                                                  ) : (
+                                                    <span className="text-[9px] text-brand-dark/40">—</span>
+                                                  )}
+                                                </>
+                                              )}
+                                              <button onClick={() => handleDeleteEnrollment(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1" title="Изтрий записа">
+                                                <Trash2 className="h-3 w-3" /> Изтрий
                                               </button>
-                                            ) : enr.status === "access_granted" ? (
-                                              <span className="text-[9px] font-bold uppercase text-green-700 inline-flex items-center gap-1">
-                                                <CheckCircle className="h-3 w-3" /> Отключен
-                                              </span>
-                                            ) : enr.status === "paid" ? (
-                                              <button onClick={() => handleMarkEnrollmentContacted(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
-                                                Маркирай свързан
-                                              </button>
-                                            ) : (
-                                              <span className="text-[9px] text-brand-dark/40">—</span>
-                                            )}
-                                            <button onClick={() => handleDeleteEnrollment(enr)} className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer inline-flex items-center gap-1" title="Изтрий записа">
-                                              <Trash2 className="h-3 w-3" /> Изтрий
-                                            </button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    ))}
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+
                                   </tbody>
                                 </table>
                               </div>
@@ -5215,10 +5332,69 @@ export default function ProfilePage() {
               })()}
 {/* TAB 3: MY PURCHASED COURSES */}
               {activeTab === "courses" && (() => {
+                const currentUser = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
                 const myIds = currentUser?.purchasedCourseIds || [];
-                const unlockedMaterials = LIBRARY_MATERIALS.filter(m => myIds.includes(m.slug));
-                const pendingEnrollments = myEnrollments.filter(e => e.status === "awaiting_payment" || e.status === "pending");
-                const hasAny = unlockedMaterials.length > 0 || pendingEnrollments.length > 0;
+                const grantedEnrollmentIds = myEnrollments
+                  .filter(e => e.status === "access_granted" || e.status === "paid")
+                  .flatMap(e => [e.trainingId, e.trainingTitle].filter(Boolean));
+
+                const allMyUnlockedIds = Array.from(new Set([...myIds, ...grantedEnrollmentIds]));
+
+                // 1. Static Library Materials
+                const unlockedMaterials = LIBRARY_MATERIALS.filter(m => 
+                  allMyUnlockedIds.some(id => 
+                    id === m.slug || 
+                    id === m.title || 
+                    id.toLowerCase() === m.title.toLowerCase() || 
+                    id.toLowerCase() === m.slug.toLowerCase()
+                  )
+                );
+
+                // 2. Admin database courses (Firestore courses collection)
+                const unlockedDbCourses = dbCourses.filter(c => 
+                  allMyUnlockedIds.some(id => 
+                    id === c.id || 
+                    (c.slug && id === c.slug) || 
+                    id === c.title || 
+                    id.toLowerCase() === c.title.toLowerCase() ||
+                    (c.slug && id.toLowerCase() === c.slug.toLowerCase())
+                  )
+                );
+
+                // 3. Admin database trainings (Firestore trainings collection)
+                const unlockedDbTrainings = dbTrainings.filter(t => 
+                  allMyUnlockedIds.some(id => 
+                    id === t.id || 
+                    (t.slug && id === t.slug) || 
+                    id === t.title || 
+                    id.toLowerCase() === t.title.toLowerCase()
+                  )
+                );
+
+                // 4. Live Courses
+                const unlockedLive = LIVE_COURSES.filter(l => 
+                  allMyUnlockedIds.some(id => 
+                    id === l.slug || 
+                    id === l.title || 
+                    id.toLowerCase() === l.title.toLowerCase()
+                  )
+                );
+
+                // 5. Extra enrollments with access granted that didn't match the lists above
+                const matchedTitles = new Set([
+                  ...unlockedMaterials.map(m => m.title.toLowerCase()),
+                  ...unlockedDbCourses.map(c => c.title.toLowerCase()),
+                  ...unlockedDbTrainings.map(t => t.title.toLowerCase()),
+                  ...unlockedLive.map(l => l.title.toLowerCase()),
+                ]);
+
+                const extraUnlockedEnrollments = myEnrollments.filter(e => 
+                  (e.status === "access_granted" || e.status === "paid" || myIds.includes(e.trainingId) || myIds.includes(e.trainingTitle)) &&
+                  !matchedTitles.has((e.trainingTitle || "").toLowerCase())
+                );
+
+                const pendingEnrollments = myEnrollments.filter(e => e.status === "awaiting_payment" || e.status === "pending" || e.status === "contacted" || e.status === "scheduled");
+                const hasAny = unlockedMaterials.length > 0 || unlockedDbCourses.length > 0 || unlockedDbTrainings.length > 0 || unlockedLive.length > 0 || extraUnlockedEnrollments.length > 0 || pendingEnrollments.length > 0;
 
                 return (
                   <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6">
@@ -5229,12 +5405,12 @@ export default function ProfilePage() {
                         </div>
                         <div>
                           <h2 className="font-serif text-xl font-bold text-brand-green">Моите обучения</h2>
-                          <p className="text-xs text-brand-dark/50">Отключените и чакащите плащане материали във Вашия профил</p>
+                          <p className="text-xs text-brand-dark/50">Отключените и чакащите материали във Вашия профил</p>
                         </div>
                       </div>
-                      <Link href="/training" className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer whitespace-nowrap">
+                      <Link href="/library" className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer whitespace-nowrap">
                         <PlusCircle className="h-3.5 w-3.5" />
-                        Купи още
+                        Дигитална книжарница
                       </Link>
                     </div>
 
@@ -5248,7 +5424,7 @@ export default function ProfilePage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                        {/* UNLOCKED MATERIALS (GREEN) */}
+                        {/* UNLOCKED STATIC LIBRARY MATERIALS (GREEN) */}
                         {unlockedMaterials.map(m => {
                           const isVideo = effectiveMaterialType(m.slug) === "video";
                           const hasLink = isVideo && !!videoLinks[m.slug];
@@ -5266,11 +5442,11 @@ export default function ProfilePage() {
                                 <h4 className="font-serif text-base font-bold text-brand-green">{m.title}</h4>
                                 <p className="text-xs text-brand-dark/60 leading-normal">{m.tagline}</p>
                               </div>
-                              <div>
+                              <div className="space-y-2 mt-6">
                                 {hasLink ? (
                                   <button
                                     onClick={() => setWatchLinkSlug(m.slug)}
-                                    className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow border-0"
+                                    className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow border-0"
                                   >
                                     <Video className="h-4 w-4" />
                                     Гледай в профила
@@ -5278,55 +5454,218 @@ export default function ProfilePage() {
                                 ) : (
                                   <Link
                                     href={`/library/${m.slug}/viewer`}
-                                    className="mt-6 inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
+                                    className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
                                   >
                                     {isVideo ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
                                     {isVideo ? "Гледай в профила" : "Чети в профила"}
                                   </Link>
                                 )}
-                                <p className="mt-2 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
-                                  <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Достъпен за четене
+
+                                {m.downloadUrl && (
+                                  <a
+                                    href={m.downloadUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center gap-1.5 bg-brand-gold/10 hover:bg-brand-gold/20 text-brand-dark font-bold text-xs uppercase py-2.5 px-3 rounded-xl transition-colors w-full cursor-pointer text-center border border-brand-gold/30"
+                                  >
+                                    <Download className="h-3.5 w-3.5 text-brand-gold" /> Изтегли файла (Drive)
+                                  </a>
+                                )}
+
+                                {m.bonus && (
+                                  <a
+                                    href={m.bonus.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center gap-1.5 bg-brand-green/5 hover:bg-brand-green/10 text-brand-green font-bold text-[11px] uppercase py-2 px-3 rounded-xl transition-colors w-full cursor-pointer text-center border border-brand-green/15"
+                                  >
+                                    <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Бонус: {m.bonus.title}
+                                  </a>
+                                )}
+
+                                <p className="pt-1 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
+                                  <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Достъпен за четене онлайн
                                 </p>
                               </div>
                             </div>
                           );
                         })}
 
-                        {/* PENDING / LOCKED MATERIALS (RED) */}
-                        {pendingEnrollments.map(enr => {
-                          const mat = LIBRARY_MATERIALS.find(m => m.slug === enr.trainingId || m.title === enr.trainingTitle);
+                        {/* UNLOCKED DATABASE COURSES (GREEN) */}
+                        {unlockedDbCourses.map(c => {
+                          const isLink = (c.type ?? "pdf") === "link";
                           return (
-                            <div key={enr.id} className="border-2 border-red-200 bg-red-50/40 rounded-2xl p-5 flex flex-col justify-between hover:border-red-300 transition-all duration-300 shadow-sm relative overflow-hidden">
+                            <div key={c.id} className="border border-brand-green/15 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-gold/40 hover:shadow-md transition-all duration-300 bg-white">
                               <div className="space-y-3">
                                 <div className="flex items-center justify-between gap-2">
-                                  <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase bg-red-100 text-red-700 px-2.5 py-1 rounded-full border border-red-200">
-                                    <Lock className="h-3 w-3 text-red-600" /> Заключен
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2.5 py-1 rounded-full">
+                                    <CheckCircle className="h-3 w-3 text-green-600" /> Отключен
+                                  </span>
+                                  <span className="text-[10px] text-brand-dark/40 font-mono">
+                                    {isLink ? "🌐 Външен курс" : "📄 PDF Наръчник"}
+                                  </span>
+                                </div>
+                                <h4 className="font-serif text-base font-bold text-brand-green">{c.title}</h4>
+                                <p className="text-xs text-brand-dark/60 leading-normal">{c.description}</p>
+                              </div>
+                              <div className="space-y-2 mt-6">
+                                {isLink && c.externalUrl ? (
+                                  <a
+                                    href={c.externalUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
+                                  >
+                                    <ExternalLink className="h-4 w-4" /> Отвори курса
+                                  </a>
+                                ) : (
+                                  <Link
+                                    href={`/courses/${c.slug || c.id}/viewer`}
+                                    className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
+                                  >
+                                    <BookOpen className="h-4 w-4" /> Чети в профила
+                                  </Link>
+                                )}
+                                <p className="pt-1 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
+                                  <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Достъпен за четене онлайн
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+
+                        {/* UNLOCKED DATABASE TRAININGS (GREEN) */}
+                        {unlockedDbTrainings.map(t => (
+                          <div key={t.id} className="border border-brand-green/15 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-gold/40 hover:shadow-md transition-all duration-300 bg-white">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2.5 py-1 rounded-full">
+                                  <CheckCircle className="h-3 w-3 text-green-600" /> Отключен
+                                </span>
+                                <span className="text-[10px] text-brand-dark/40 font-mono">
+                                  {t.type === "zoom" ? "📹 Live/Zoom" : "📹 Видео курс"}
+                                </span>
+                              </div>
+                              <h4 className="font-serif text-base font-bold text-brand-green">{t.title}</h4>
+                              <p className="text-xs text-brand-dark/60 leading-normal">{t.shortDesc}</p>
+                            </div>
+                            <div className="space-y-2 mt-6">
+                              {t.videoUrl ? (
+                                <a
+                                  href={t.videoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
+                                >
+                                  <Video className="h-4 w-4" /> Гледай обучението
+                                </a>
+                              ) : (
+                                <div className="p-3 bg-brand-green/5 border border-brand-green/10 rounded-xl text-center text-xs text-brand-green font-medium">
+                                  {t.type === "zoom" ? "Д-р Николова ще се свърже с Вас с данни за сесията." : "Обучението е успешно отключено."}
+                                </div>
+                              )}
+                              <p className="pt-1 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
+                                <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Достъпно в профила
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* UNLOCKED LIVE COURSES (GREEN) */}
+                        {unlockedLive.map(l => (
+                          <div key={l.slug} className="border border-brand-green/15 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-gold/40 hover:shadow-md transition-all duration-300 bg-white">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2.5 py-1 rounded-full">
+                                  <CheckCircle className="h-3 w-3 text-green-600" /> Записан / Отключен
+                                </span>
+                                <span className="text-[10px] text-brand-dark/40 font-mono">
+                                  📹 Live Zoom
+                                </span>
+                              </div>
+                              <h4 className="font-serif text-base font-bold text-brand-green">{l.title}</h4>
+                              <p className="text-xs text-brand-dark/60 leading-normal">{l.tagline}</p>
+                            </div>
+                            <div className="space-y-2 mt-6">
+                              <div className="p-3 bg-brand-green/5 border border-brand-green/10 rounded-xl text-center text-xs text-brand-green font-medium">
+                                Вие сте записани за това live обучение. Д-р Николова ще се свърже с Вас за датите на сесиите.
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* EXTRA UNLOCKED ENROLLMENTS (GREEN) */}
+                        {extraUnlockedEnrollments.map(enr => (
+                          <div key={enr.id} className="border border-brand-green/15 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-gold/40 hover:shadow-md transition-all duration-300 bg-white">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-green-100 text-green-800 px-2.5 py-1 rounded-full">
+                                  <CheckCircle className="h-3 w-3 text-green-600" /> Отключен
+                                </span>
+                                <span className="text-[10px] text-brand-dark/40 font-mono">
+                                  📄 Материал
+                                </span>
+                              </div>
+                              <h4 className="font-serif text-base font-bold text-brand-green">{enr.trainingTitle}</h4>
+                              <p className="text-xs text-brand-dark/60 leading-normal">
+                                Достъпът до това обучение е потвърден от администратор.
+                              </p>
+                            </div>
+                            <div className="space-y-2 mt-6">
+                              <p className="pt-1 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
+                                <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Достъпен в профила
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* PENDING / LOCKED ENROLLMENTS (AMBER/BLUE) */}
+                        {pendingEnrollments.map(enr => {
+                          const isLive = enr.trainingType === "zoom" || LIVE_COURSES.some(l => l.slug === enr.trainingId);
+                          const mat = LIBRARY_MATERIALS.find(m => m.slug === enr.trainingId || m.title === enr.trainingTitle);
+                          return (
+                            <div key={enr.id} className="border-2 border-amber-200 bg-amber-50/40 rounded-2xl p-5 flex flex-col justify-between hover:border-amber-300 transition-all duration-300 shadow-sm relative overflow-hidden">
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className={`inline-flex items-center gap-1.5 text-[9px] font-black uppercase px-2.5 py-1 rounded-full border ${
+                                    isLive ? "bg-blue-100 text-blue-800 border-blue-200" : "bg-red-100 text-red-700 border-red-200"
+                                  }`}>
+                                    {isLive ? <Video className="h-3 w-3 text-blue-600" /> : <Lock className="h-3 w-3 text-red-600" />}
+                                    {isLive ? (enr.status === "contacted" ? "Свързан с д-р Николова" : enr.status === "scheduled" ? "Насрочена среща" : "Заявка за Live среща") : "Заключен"}
                                   </span>
                                   <span className="text-xs font-bold text-brand-green font-mono bg-white px-2 py-0.5 rounded-md border border-brand-green/10">
                                     {enr.priceEur.toFixed(2)} €
                                   </span>
                                 </div>
 
-                                <h4 className="font-serif text-base font-bold text-red-950">{enr.trainingTitle}</h4>
-                                <p className="text-xs text-red-900/70 leading-normal">
-                                  {mat?.tagline || "Заявката е приета. След извършване на банков превод пакетът се отключва автоматично в профила Ви."}
+                                <h4 className="font-serif text-base font-bold text-brand-green">{enr.trainingTitle}</h4>
+                                <p className="text-xs text-brand-dark/70 leading-normal">
+                                  {mat?.tagline || (isLive ? "Заявката за Live обучение е приета успешно." : "След извършване на банков превод пакетът се отключва автоматично в профила Ви.")}
                                 </p>
 
-                                <div className="bg-white/80 rounded-xl p-2.5 border border-red-100 text-[11px] text-red-900/80 leading-tight space-y-1">
-                                  <div className="font-bold flex items-center gap-1 text-red-700">
-                                    <Clock className="h-3.5 w-3.5" /> Чака плащане
+
+                                <div className="bg-white/80 rounded-xl p-2.5 border border-amber-200/60 text-[11px] text-brand-dark/80 leading-tight space-y-1">
+                                  <div className="font-bold flex items-center gap-1 text-brand-green">
+                                    <Clock className="h-3.5 w-3.5 text-brand-gold" />
+                                    {isLive ? "Очаквайте връзка за насрочване" : "Чака плащане по банков път"}
                                   </div>
-                                  <div>До 24 часа след превода обучението ще се отключи.</div>
+                                  <div>
+                                    {isLive
+                                      ? "Д-р Николова ще се свърже с Вас на посочените телефон и имейл за уточняване на датата и часа на провеждане."
+                                      : "До 24 часа след постъпване на превода обучението ще се отключи в профила Ви."}
+                                  </div>
                                 </div>
                               </div>
 
-                              <button
-                                onClick={() => setPayEnrollment(enr)}
-                                className="mt-6 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold text-xs uppercase py-3 rounded-xl transition-all w-full cursor-pointer text-center shadow-md shadow-red-500/20 border-0"
-                              >
-                                <Landmark className="h-4 w-4 text-brand-gold" />
-                                Направи плащане
-                              </button>
+                              {!isLive && (
+                                <button
+                                  onClick={() => setPayEnrollment(enr)}
+                                  className="mt-6 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-gold to-amber-500 hover:from-amber-500 hover:to-brand-gold text-brand-dark font-bold text-xs uppercase py-3 rounded-xl transition-all w-full cursor-pointer text-center shadow-md shadow-brand-gold/20 border-0"
+                                >
+                                  <Landmark className="h-4 w-4 text-brand-dark" />
+                                  Данни за банков превод
+                                </button>
+                              )}
                             </div>
                           );
                         })}

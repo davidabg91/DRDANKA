@@ -72,7 +72,7 @@ export interface Enrollment {
    *   Legacy values ('pending'/'paid'/'contacted'/'completed'/'refunded') are
    *   kept for older docs and the zoom "mark contacted" flow.
    */
-  status: "awaiting_payment" | "access_granted" | "pending" | "paid" | "contacted" | "completed" | "refunded" | "confirmed" | "cancelled";
+  status: "awaiting_payment" | "access_granted" | "pending" | "paid" | "contacted" | "scheduled" | "completed" | "refunded" | "confirmed" | "cancelled";
   paidAt?: string;
   /** Timestamp when admin confirmed payment and unlocked the package. */
   accessGrantedAt?: string;
