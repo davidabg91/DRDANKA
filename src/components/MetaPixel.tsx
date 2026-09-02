@@ -3,7 +3,7 @@
 import { useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
-import { FB_PIXEL_ID, pageview } from "@/lib/fpixel";
+import { FB_PIXEL_IDS, pageview } from "@/lib/fpixel";
 
 function MetaPixelTracker() {
   const pathname = usePathname();
@@ -34,19 +34,22 @@ export default function MetaPixel() {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '${FB_PIXEL_ID}');
+            ${FB_PIXEL_IDS.map((id) => `fbq('init', '${id}');`).join("\n            ")}
             fbq('track', 'PageView');
           `,
         }}
       />
       <noscript>
-        <img
-          height="1"
-          width="1"
-          style={{ display: "none" }}
-          src={`https://www.facebook.com/tr?id=${FB_PIXEL_ID}&ev=PageView&noscript=1`}
-          alt="facebook-pixel"
-        />
+        {FB_PIXEL_IDS.map((id) => (
+          <img
+            key={id}
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src={`https://www.facebook.com/tr?id=${id}&ev=PageView&noscript=1`}
+            alt={`facebook-pixel-${id}`}
+          />
+        ))}
       </noscript>
       <Suspense fallback={null}>
         <MetaPixelTracker />

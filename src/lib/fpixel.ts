@@ -1,4 +1,5 @@
-﻿export const FB_PIXEL_ID = "2282962182552006";
+export const FB_PIXEL_ID = "2170194070520793";
+export const FB_PIXEL_IDS = ["2170194070520793", "2282962182552006"];
 
 export const generateEventId = (prefix = "evt") => {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
