@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-export const FB_PIXEL_IDS = ["2170194070520793", "2282962182552006"];
+export const FB_PIXEL_IDS = ["2170194070520793"];
 export const FB_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN || "";
 
 function sha256(value: string): string {
