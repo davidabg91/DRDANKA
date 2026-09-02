@@ -1,9 +1,7 @@
-﻿import crypto from "crypto";
+import crypto from "crypto";
 
 export const FB_PIXEL_IDS = ["2170194070520793", "2282962182552006"];
-export const FB_ACCESS_TOKEN =
-  process.env.FB_ACCESS_TOKEN ||
-  "EAAKtMwIm4qwBSfGXd0ZAo3SYj9I26H5xD6SkbhsQ6oHOo4ZBgJvoYOVgtGDub0WxtnhBytPjILVhJL7Mx4nlE2UARgms6InRiH9PHrxYHwklyBhFTv0cLN3neHu2wAwTOsjLWQuZBTY20TnTWEBtIqTZBSCgukex9Xn8RZCAgrFOvq6420kZAtOjrTpKLH8QZDZD";
+export const FB_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN || process.env.META_ACCESS_TOKEN || "";
 
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value.trim().toLowerCase()).digest("hex");
