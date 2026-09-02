@@ -234,6 +234,11 @@ export default function PackagePurchaseModal({
         value: priceEur,
         currency: "EUR",
         num_items: 1,
+        userData: {
+          email: cleanEmail,
+          phone: phone.trim(),
+          fullName: fullName.trim(),
+        },
       });
 
       setStatus("success");

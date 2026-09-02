@@ -84,6 +84,11 @@ export default function LiveCourseDetailPage() {
         value: livePrice,
         currency: "EUR",
         num_items: 1,
+        userData: {
+          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
+          fullName: name.trim(),
+        },
       });
       event("Lead", {
         content_name: course.title,
