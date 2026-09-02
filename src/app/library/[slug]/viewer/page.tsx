@@ -6,9 +6,10 @@ import { useParams } from "next/navigation";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import { auth, storage } from "@/lib/firebase";
+import { auth, storage, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { ref as storageRef, getBlob } from "firebase/storage";
+import { collection, query, where, getDocs, doc, getDoc, limit } from "firebase/firestore";
 import { findLibraryMaterial } from "@/data/library";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock } from "lucide-react";
@@ -64,14 +65,40 @@ export default function LibraryViewerPage() {
 
       const tryLoad = async (kind: "pdf" | "video") => {
         const fileName = kind === "pdf" ? "file.pdf" : "file.mp4";
-        const blob = await getBlob(storageRef(storage, `library/${slug}/${fileName}`));
-        if (kind === "pdf") {
-          setPdfFile(blob);
-        } else {
-          objectUrl = URL.createObjectURL(blob);
-          setVideoUrl(objectUrl);
+        try {
+          const blob = await getBlob(storageRef(storage, `library/${slug}/${fileName}`));
+          if (kind === "pdf") {
+            setPdfFile(blob);
+          } else {
+            objectUrl = URL.createObjectURL(blob);
+            setVideoUrl(objectUrl);
+          }
+          setMediaKind(kind);
+          return;
+        } catch (err: any) {
+          if (err?.code !== "storage/object-not-found") throw err;
+          // Fallback to Firestore dbCourses collection
+          const slugQ = query(collection(db, "courses"), where("slug", "==", slug), limit(1));
+          const bySlug = await getDocs(slugQ);
+          let courseData: any = null;
+          if (!bySlug.empty) {
+            courseData = bySlug.docs[0].data();
+          } else {
+            const snap = await getDoc(doc(db, "courses", slug));
+            if (snap.exists()) courseData = snap.data();
+          }
+          if (courseData?.filePath) {
+            const blob = await getBlob(storageRef(storage, courseData.filePath));
+            setPdfFile(blob);
+            setMediaKind("pdf");
+            return;
+          }
+          if (courseData?.externalUrl) {
+            window.location.href = courseData.externalUrl;
+            return;
+          }
+          throw err;
         }
-        setMediaKind(kind);
       };
 
       let lastErr: any = null;
@@ -95,6 +122,7 @@ export default function LibraryViewerPage() {
         setLoadError(msg);
       }
     });
+
     return () => {
       unsub();
       if (objectUrl) URL.revokeObjectURL(objectUrl);
