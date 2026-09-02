@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -8,6 +8,7 @@ import { findLiveCourse } from "@/data/live-courses";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { trackViewContent, trackInitiateCheckout, trackPurchase, event } from "@/lib/fpixel";
 import {
   ArrowLeft, ArrowRight, Video, Award, X, Landmark, Loader2,
   ShieldCheck, CheckCircle, Calendar, Users, MessageSquare,
@@ -28,6 +29,18 @@ export default function LiveCourseDetailPage() {
   const [company, setCompany] = useState("");
   const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (course) {
+      trackViewContent({
+        content_name: course.title,
+        content_category: "Live Course",
+        content_ids: [course.slug],
+        value: livePrice,
+        currency: "EUR",
+      });
+    }
+  }, [course, livePrice]);
 
   if (!course) {
     return (
@@ -64,6 +77,18 @@ export default function LiveCourseDetailPage() {
         priceEur: livePrice,
         status: "awaiting_payment",
         createdAt: new Date().toISOString(),
+      });
+      trackPurchase({
+        content_name: course.title,
+        content_ids: [course.slug],
+        value: livePrice,
+        currency: "EUR",
+        num_items: 1,
+      });
+      event("Lead", {
+        content_name: course.title,
+        value: livePrice,
+        currency: "EUR",
       });
       setStatus("success");
     } catch (err: any) {
@@ -176,7 +201,18 @@ export default function LiveCourseDetailPage() {
 
                 {/* Buy Button */}
                 <button
-                  onClick={() => { setEnrollOpen(true); setStatus("idle"); setError(""); }}
+                  onClick={() => {
+                    setEnrollOpen(true);
+                    setStatus("idle");
+                    setError("");
+                    trackInitiateCheckout({
+                      content_name: course.title,
+                      content_ids: [course.slug],
+                      value: livePrice,
+                      currency: "EUR",
+                      num_items: 1,
+                    });
+                  }}
                   className="group/btn relative overflow-hidden w-full px-6 py-4 sm:py-5 bg-brand-gold hover:bg-white text-brand-dark font-black text-sm uppercase tracking-widest rounded-2xl shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] transition-all duration-500 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-brand-dark/10 to-transparent skew-x-12 pointer-events-none" />

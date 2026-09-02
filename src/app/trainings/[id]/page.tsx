@@ -12,6 +12,7 @@ import {
   ShieldCheck, BookOpen,
 } from "lucide-react";
 import PackagePurchaseModal from "@/components/PackagePurchaseModal";
+import { trackViewContent } from "@/lib/fpixel";
 
 /**
  * /trainings/[id] — detail page for a specialized training.
@@ -38,10 +39,30 @@ export default function TrainingDetailPage() {
         const q = query(collection(db, "trainings"), where("slug", "==", trainingId), limit(1));
         const bySlug = await getDocs(q);
         if (!bySlug.empty) {
-          setTraining(bySlug.docs[0].data() as Training);
+          const t = bySlug.docs[0].data() as Training;
+          setTraining(t);
+          trackViewContent({
+            content_name: t.title,
+            content_category: "Specialized Training",
+            content_ids: [t.slug || t.id],
+            value: t.priceEur,
+            currency: "EUR",
+          });
         } else {
           const snap = await getDoc(doc(db, "trainings", trainingId));
-          setTraining(snap.exists() ? (snap.data() as Training) : null);
+          if (snap.exists()) {
+            const t = snap.data() as Training;
+            setTraining(t);
+            trackViewContent({
+              content_name: t.title,
+              content_category: "Specialized Training",
+              content_ids: [t.slug || t.id],
+              value: t.priceEur,
+              currency: "EUR",
+            });
+          } else {
+            setTraining(null);
+          }
         }
       } catch (err) {
         console.error("Training load error:", err);

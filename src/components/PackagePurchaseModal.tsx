@@ -12,6 +12,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import BankTransferNotice from "@/components/BankTransferNotice";
+import { trackInitiateCheckout, trackPurchase } from "@/lib/fpixel";
 
 /**
  * Unified purchase + registration modal shared by the digital bookstore
@@ -70,6 +71,13 @@ export default function PackagePurchaseModal({
 
   useEffect(() => {
     if (!open) return;
+    trackInitiateCheckout({
+      content_name: packageTitle,
+      content_ids: [packageId],
+      value: priceEur,
+      currency: "EUR",
+      num_items: 1,
+    });
     const unsub = onAuthStateChanged(auth, async (u) => {
       if (u && u.email) {
         setIsLoggedIn(true);
@@ -218,6 +226,14 @@ export default function PackagePurchaseModal({
         priceEur,
         status: "awaiting_payment",
         createdAt: new Date().toISOString(),
+      });
+
+      trackPurchase({
+        content_name: packageTitle,
+        content_ids: [packageId],
+        value: priceEur,
+        currency: "EUR",
+        num_items: 1,
       });
 
       setStatus("success");

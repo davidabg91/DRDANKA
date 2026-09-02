@@ -4,6 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
+import MetaPixel from "@/components/MetaPixel";
 import { organizationSchema, personSchema, websiteSchema } from "@/lib/schema";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -116,6 +117,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-transparent text-brand-dark">
         <JsonLd data={[organizationSchema(), personSchema(), websiteSchema()]} />
+        <MetaPixel />
         <Header />
         <main className="flex-grow overflow-x-clip">{children}</main>
         <Footer />

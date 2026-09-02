@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { CheckCircle, XCircle, ArrowRight, Mail } from "lucide-react";
+import { trackPurchase } from "@/lib/fpixel";
 
 /**
  * Post-checkout landing page.
@@ -38,6 +39,12 @@ export default function SuccessPage() {
         if (data.paid) {
           setBuyerEmail(data.buyerEmail || "");
           setState("ok");
+          trackPurchase({
+            content_name: `Course ${courseId || ""}`,
+            content_ids: courseId ? [courseId] : [],
+            value: data.amount ? data.amount / 100 : 0,
+            currency: "EUR",
+          });
         } else {
           setState("pending");
         }

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { findLibraryMaterial } from "@/data/library";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
+import { trackViewContent } from "@/lib/fpixel";
 import {
   ArrowLeft, ArrowRight, BookOpen, Video, ShieldCheck, Sparkles,
 } from "lucide-react";
@@ -23,6 +24,18 @@ export default function LibraryMaterialPage() {
 
   // Hooks must be called unconditionally — declare them before any early return.
   const [buyOpen, setBuyOpen] = useState(false);
+
+  useEffect(() => {
+    if (material) {
+      trackViewContent({
+        content_name: material.title,
+        content_category: material.type === "video" ? "Video Training" : "PDF Guide",
+        content_ids: [material.slug],
+        value: livePrice,
+        currency: "EUR",
+      });
+    }
+  }, [material, livePrice]);
 
   if (!material) {
     return (

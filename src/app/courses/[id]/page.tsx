@@ -9,6 +9,7 @@ import { db } from "@/lib/firebase";
 import { Course } from "@/lib/courseTypes";
 import { BookOpen, ShieldCheck, ChevronRight, ArrowLeft } from "lucide-react";
 import PackagePurchaseModal from "@/components/PackagePurchaseModal";
+import { trackViewContent } from "@/lib/fpixel";
 
 export default function CourseDetailPage() {
   const params = useParams<{ id: string }>();
@@ -25,10 +26,30 @@ export default function CourseDetailPage() {
         const q = query(collection(db, "courses"), where("slug", "==", courseId), limit(1));
         const bySlug = await getDocs(q);
         if (!bySlug.empty) {
-          setCourse(bySlug.docs[0].data() as Course);
+          const c = bySlug.docs[0].data() as Course;
+          setCourse(c);
+          trackViewContent({
+            content_name: c.title,
+            content_category: c.type === "link" ? "External Course" : "PDF Course",
+            content_ids: [c.slug || c.id],
+            value: c.priceEur,
+            currency: "EUR",
+          });
         } else {
           const snap = await getDoc(doc(db, "courses", courseId));
-          setCourse(snap.exists() ? (snap.data() as Course) : null);
+          if (snap.exists()) {
+            const c = snap.data() as Course;
+            setCourse(c);
+            trackViewContent({
+              content_name: c.title,
+              content_category: c.type === "link" ? "External Course" : "PDF Course",
+              content_ids: [c.slug || c.id],
+              value: c.priceEur,
+              currency: "EUR",
+            });
+          } else {
+            setCourse(null);
+          }
         }
       } catch (err) {
         console.error("Course load error:", err);
