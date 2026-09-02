@@ -21,6 +21,7 @@ export interface MetaServerEventParams {
   eventName: "PageView" | "ViewContent" | "InitiateCheckout" | "Purchase" | "Lead" | string;
   eventId?: string;
   eventSourceUrl?: string;
+  testEventCode?: string;
   userData?: {
     email?: string;
     phone?: string;
@@ -38,6 +39,7 @@ export interface MetaServerEventParams {
     content_ids?: string[];
     content_type?: string;
     num_items?: number;
+    test_event_code?: string;
   };
 }
 
@@ -73,7 +75,20 @@ export async function sendMetaServerEvent(params: MetaServerEventParams) {
       formattedUserData.fbp = userData.fbp;
     }
 
-    const payload = {
+    // Extract test_event_code if present in customData or URL params
+    let testCode = params.testEventCode || customData?.test_event_code;
+    if (!testCode && eventSourceUrl) {
+      try {
+        const u = new URL(eventSourceUrl);
+        testCode =
+          u.searchParams.get("test_event_code") ||
+          u.searchParams.get("test_code") ||
+          u.searchParams.get("fb_test_events") ||
+          undefined;
+      } catch {}
+    }
+
+    const payload: Record<string, any> = {
       data: [
         {
           event_name: eventName,
@@ -86,6 +101,10 @@ export async function sendMetaServerEvent(params: MetaServerEventParams) {
         },
       ],
     };
+
+    if (testCode) {
+      payload.test_event_code = testCode;
+    }
 
     const results = await Promise.all(
       FB_PIXEL_IDS.map(async (pixelId) => {
