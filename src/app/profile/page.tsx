@@ -63,6 +63,7 @@ import {
   XCircle,
   X,
   Paperclip,
+  List,
   Landmark,
   HardDrive,
   Wifi,
@@ -4701,73 +4702,124 @@ export default function ProfilePage() {
                               const isEditingThis = editingCourseId === c.id;
 
                               return (
-                                <div key={c.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border rounded-2xl p-4 transition-all ${
+                                <div key={c.id} className={`bg-white border rounded-2xl p-4 transition-all ${
                                   isEditingThis ? "border-brand-gold ring-2 ring-brand-gold/20 shadow-md" : "border-brand-green/10 shadow-sm"
                                 }`}>
-                                  <div className="min-w-0 flex-1 space-y-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="font-bold text-brand-green text-sm">{c.title}</span>
-                                      <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${c.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
-                                        {c.published ? "Активен" : "Скрит"}
-                                      </span>
-                                      {c.items && c.items.length > 0 && (
-                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-brand-gold/15 text-brand-dark border border-brand-gold/30">
-                                          <Film className="h-3 w-3 text-brand-gold" />
-                                          {c.items.length} урока/файла
+                                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div className="min-w-0 flex-1 space-y-1">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-bold text-brand-green text-sm">{c.title}</span>
+                                        <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${c.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
+                                          {c.published ? "Активен" : "Скрит"}
                                         </span>
-                                      )}
+                                        {c.items && c.items.length > 0 && (
+                                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-brand-gold/15 text-brand-dark border border-brand-gold/30">
+                                            <Film className="h-3 w-3 text-brand-gold" />
+                                            {c.items.length} урока/файла
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="text-[11px] text-brand-dark/50 flex items-center gap-2 flex-wrap">
+                                        <span className="font-bold font-mono text-brand-dark/70">{c.priceEur.toFixed(2)} €</span>
+                                        <span>·</span>
+                                        <span>{itemsCount > 0 ? `${itemsCount} материала` : "без прикачени файлове"}</span>
+                                        <span>·</span>
+                                        <span>{buyers.length} купувачи</span>
+                                      </div>
                                     </div>
-                                    <div className="text-[11px] text-brand-dark/50 flex items-center gap-2 flex-wrap">
-                                      <span className="font-bold font-mono text-brand-dark/70">{c.priceEur.toFixed(2)} €</span>
-                                      <span>·</span>
-                                      <span>{itemsCount > 0 ? `${itemsCount} материала` : "без прикачени файлове"}</span>
-                                      <span>·</span>
-                                      <span>{buyers.length} купувачи</span>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                                      <Link
+                                        href={`/courses/${c.slug || c.id}/viewer`}
+                                        target="_blank"
+                                        className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer"
+                                        title="Отвори в Course Player"
+                                      >
+                                        <BookOpen className="h-3.5 w-3.5" /> Преглед (Player)
+                                      </Link>
+
+                                      <button
+                                        onClick={() => handleEditCourse(c)}
+                                        className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-gold text-brand-dark bg-brand-gold/10 hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer"
+                                        title="Редактирай курса и добави още видеа/файлове"
+                                      >
+                                        <Edit className="h-3.5 w-3.5" /> Редактирай / Уроци
+                                      </button>
+
+                                      <Link
+                                        href={`/courses/${c.slug || c.id}`}
+                                        target="_blank"
+                                        className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
+                                        title="Публична страница"
+                                      >
+                                        <Eye className="h-3.5 w-3.5" />
+                                      </Link>
+
+                                      <button
+                                        onClick={() => handleTogglePublished(c)}
+                                        className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer"
+                                      >
+                                        {c.published ? "Скрий" : "Покажи"}
+                                      </button>
+
+                                      <button
+                                        onClick={() => handleDeleteCourse(c)}
+                                        className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
                                     </div>
                                   </div>
 
-                                  {/* Action Buttons */}
-                                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
-                                    <Link
-                                      href={`/courses/${c.slug || c.id}/viewer`}
-                                      target="_blank"
-                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer"
-                                      title="Отвори в Course Player"
-                                    >
-                                      <BookOpen className="h-3.5 w-3.5" /> Преглед (Player)
-                                    </Link>
+                                  {/* Uploaded items / files list */}
+                                  {c.items && c.items.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-brand-green/10">
+                                      <p className="text-[10px] font-bold uppercase tracking-wider text-brand-green/70 mb-2 flex items-center gap-1">
+                                        <List className="h-3 w-3 text-brand-gold" /> Качени материали в курса ({c.items.length}):
+                                      </p>
+                                      <div className="flex flex-wrap gap-1.5">
+                                        {c.items.map((it, idx) => (
+                                          <span
+                                            key={it.id || idx}
+                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand-light/70 border border-brand-green/10 text-[11px] text-brand-dark/80"
+                                            title={it.filePath || it.externalUrl || it.title}
+                                          >
+                                            {it.type === "video" ? (
+                                              <Video className="h-3 w-3 text-amber-600 shrink-0" />
+                                            ) : it.type === "pdf" ? (
+                                              <FileText className="h-3 w-3 text-blue-600 shrink-0" />
+                                            ) : (
+                                              <ExternalLink className="h-3 w-3 text-brand-green shrink-0" />
+                                            )}
+                                            <span className="font-medium truncate max-w-[180px] sm:max-w-[240px]">{it.title}</span>
+                                            {it.fileSizeMb !== undefined && it.fileSizeMb > 0 && (
+                                              <span className="text-[9px] font-mono text-brand-dark/40">({it.fileSizeMb} MB)</span>
+                                            )}
+                                            {it.duration && (
+                                              <span className="text-[9px] font-mono text-brand-gold font-bold">{it.duration}</span>
+                                            )}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
 
-                                    <button
-                                      onClick={() => handleEditCourse(c)}
-                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-gold text-brand-dark bg-brand-gold/10 hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer"
-                                      title="Редактирай курса и добави още видеа/файлове"
-                                    >
-                                      <Edit className="h-3.5 w-3.5" /> Редактирай / Уроци
-                                    </button>
-
-                                    <Link
-                                      href={`/courses/${c.slug || c.id}`}
-                                      target="_blank"
-                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
-                                      title="Публична страница"
-                                    >
-                                      <Eye className="h-3.5 w-3.5" />
-                                    </Link>
-
-                                    <button
-                                      onClick={() => handleTogglePublished(c)}
-                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer"
-                                    >
-                                      {c.published ? "Скрий" : "Покажи"}
-                                    </button>
-
-                                    <button
-                                      onClick={() => handleDeleteCourse(c)}
-                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                  </div>
+                                  {(!c.items || c.items.length === 0) && c.filePath && (
+                                    <div className="mt-3 pt-3 border-t border-brand-green/10">
+                                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-brand-light/70 border border-brand-green/10 text-[11px] text-brand-dark/80">
+                                        {c.type === "video" || c.filePath.endsWith(".mp4") ? (
+                                          <Video className="h-3 w-3 text-amber-600 shrink-0" />
+                                        ) : (
+                                          <FileText className="h-3 w-3 text-blue-600 shrink-0" />
+                                        )}
+                                        <span className="font-medium">{c.filePath.split("/").pop() || c.title}</span>
+                                        {c.fileSizeMb !== undefined && c.fileSizeMb > 0 && (
+                                          <span className="text-[9px] font-mono text-brand-dark/40">({c.fileSizeMb} MB)</span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               );
                             })}
