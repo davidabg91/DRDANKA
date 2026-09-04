@@ -216,7 +216,7 @@ export default function PackagePurchaseModal({
         id,
         trainingId: packageId,
         trainingTitle: packageTitle,
-        trainingType: packageKind === "library" ? "library" : (contentType === "video" ? "video" : "zoom"),
+        trainingType: packageKind === "library" ? (contentType === "video" ? "video" : "library") : (contentType === "video" ? "video" : "zoom"),
         packageKind,
         contentType,
         fullName: fullName.trim(),

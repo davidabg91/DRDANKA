@@ -4816,6 +4816,7 @@ export default function ProfilePage() {
                                   <tbody>
                                     {filtered.map((enr) => {
                                       const isLiveMeeting = enr.trainingType === "zoom" || LIVE_COURSES.some(l => l.slug === enr.trainingId);
+                                      const isVideoTraining = enr.trainingType === "video" || enr.contentType === "video" || effectiveMaterialType(enr.trainingId) === "video";
                                       return (
                                         <tr key={enr.id} className="hover:bg-brand-light/30">
                                           <td className="border border-brand-green/10 p-3">
@@ -4830,7 +4831,7 @@ export default function ProfilePage() {
                                           <td className="border border-brand-green/10 p-3">
                                             <div className="font-bold">{enr.trainingTitle}</div>
                                             <div className="text-[10px] text-brand-dark/50">
-                                              {isLiveMeeting ? "📹 Live среща (Zoom)" : enr.trainingType === "video" ? "📹 Видео курс" : "📄 PDF Наръчник"}
+                                              {isLiveMeeting ? "📹 Live среща (Zoom)" : isVideoTraining ? "📹 Видео курс" : "📄 PDF Наръчник"}
                                             </div>
                                           </td>
                                           <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{enr.priceEur.toFixed(2)} €</td>
