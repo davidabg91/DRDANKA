@@ -87,6 +87,10 @@ export default function LibraryViewerPage() {
             const snap = await getDoc(doc(db, "courses", slug));
             if (snap.exists()) courseData = snap.data();
           }
+          if (courseData?.items && courseData.items.length > 0) {
+            window.location.replace(`/courses/${courseData.slug || slug}/viewer`);
+            return;
+          }
           if (courseData?.filePath) {
             const blob = await getBlob(storageRef(storage, courseData.filePath));
             setPdfFile(blob);

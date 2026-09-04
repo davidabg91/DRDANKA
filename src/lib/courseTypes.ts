@@ -14,7 +14,22 @@
  *   - 'link': external URL (YouTube, custom learning platform, etc.) — the
  *            buyer is redirected to it from their portal.
  */
-export type CourseType = "pdf" | "link";
+export type CourseType = "pdf" | "link" | "video" | "multi";
+
+export interface CourseMaterialItem {
+  id: string;
+  title: string;
+  type: "video" | "pdf" | "link";
+  /** Storage path in Firebase Storage, e.g. "courses/<id>/items/<itemId>.mp4" or ".pdf". */
+  filePath?: string;
+  /** File size in MB. */
+  fileSizeMb?: number;
+  /** External URL for YouTube/Vimeo/Drive or custom links. */
+  externalUrl?: string;
+  /** Optional duration or subtitle, e.g. "15:20 мин". */
+  duration?: string;
+  order: number;
+}
 
 export interface Course {
   id: string;
@@ -31,12 +46,14 @@ export interface Course {
   coverImageUrl?: string;
   /** Format of the course content. Missing on legacy docs → treat as 'pdf'. */
   type?: CourseType;
-  /** Storage path of the PDF, e.g. "courses/<id>/file.pdf". Required when type='pdf'. */
+  /** Storage path of the PDF, e.g. "courses/<id>/file.pdf". Legacy single-file support. */
   filePath?: string;
   /** Size in MB at upload time — informational, only for type='pdf'. */
   fileSizeMb?: number;
   /** External course URL. Required when type='link'. */
   externalUrl?: string;
+  /** Multiple lessons / videos / PDF handbooks belonging to this course. */
+  items?: CourseMaterialItem[];
   /** If false, hidden from the public catalog but existing buyers still keep access. */
   published: boolean;
   createdAt: string;

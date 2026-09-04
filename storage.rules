@@ -24,24 +24,20 @@ service firebase.storage {
         && courseId in firestore.get(userPath).data.purchasedCourseIds;
     }
 
-    match /courses/{courseId}/{fileName} {
-      // Public read for cover images. PDF/video read requires admin OR purchaser.
-      allow read: if fileName.matches('^cover\\..+')
-        || ((fileName == 'file.pdf' || fileName == 'file.mp4')
-             && (isAdmin() || hasPurchased(courseId)));
+    match /courses/{courseId}/{allPaths=**} {
+      // Public read for cover images. PDF/video/materials read requires admin OR purchaser.
+      allow read: if allPaths.matches('^cover\\..+')
+        || (isAdmin() || hasPurchased(courseId));
 
       // Admin uploads — separate size/type limits per file kind.
       allow write: if isAdmin() && (
-        (fileName == 'file.pdf'
-          && request.resource.size < 200 * 1024 * 1024
+        (request.resource.size < 200 * 1024 * 1024
           && request.resource.contentType == 'application/pdf')
         ||
-        (fileName == 'file.mp4'
-          && request.resource.size < 2048 * 1024 * 1024
+        (request.resource.size < 2048 * 1024 * 1024
           && request.resource.contentType.matches('video/.*'))
         ||
-        (fileName.matches('^cover\\..+')
-          && request.resource.size < 5 * 1024 * 1024
+        (request.resource.size < 5 * 1024 * 1024
           && request.resource.contentType.matches('image/.*'))
       );
     }
@@ -67,19 +63,18 @@ service firebase.storage {
         && slug in firestore.get(userPath).data.purchasedCourseIds;
     }
 
-    match /library/{slug}/file.pdf {
+    match /library/{slug}/{allPaths=**} {
       allow read: if isAdmin() || hasPurchasedSlug(slug);
-      allow write: if isAdmin()
-        && request.resource.size < 200 * 1024 * 1024
-        && request.resource.contentType == 'application/pdf';
-    }
-
-    // Video materials — same gate as the PDF, stored at library/<slug>/file.mp4.
-    match /library/{slug}/file.mp4 {
-      allow read: if isAdmin() || hasPurchasedSlug(slug);
-      allow write: if isAdmin()
-        && request.resource.size < 2048 * 1024 * 1024
-        && request.resource.contentType.matches('video/.*');
+      allow write: if isAdmin() && (
+        (request.resource.size < 200 * 1024 * 1024
+          && request.resource.contentType == 'application/pdf')
+        ||
+        (request.resource.size < 2048 * 1024 * 1024
+          && request.resource.contentType.matches('video/.*'))
+        ||
+        (request.resource.size < 5 * 1024 * 1024
+          && request.resource.contentType.matches('image/.*'))
+      );
     }
 
     // Documents assigned to users (shared by admin).

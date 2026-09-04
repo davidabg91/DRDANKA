@@ -8,7 +8,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } f
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
-import { Course } from "@/lib/courseTypes";
+import { Course, CourseMaterialItem } from "@/lib/courseTypes";
 import { Training, Enrollment } from "@/lib/trainingTypes";
 import { Booking, BookingStatus } from "@/lib/bookingTypes";
 import { slugify, uniqueSlug } from "@/lib/slugify";
@@ -66,7 +66,13 @@ import {
   Landmark,
   HardDrive,
   Wifi,
-  Database
+  Database,
+  Edit,
+  ArrowUp,
+  ArrowDown,
+  Layers,
+  Film,
+  FilePlus
 } from "lucide-react";
 
 export interface AssignedMaterial {
@@ -509,15 +515,30 @@ export default function ProfilePage() {
   const [enrollmentSearchQuery, setEnrollmentSearchQuery] = useState("");
 
   // Bookstore courses admin state
+  const [editingCourseId, setEditingCourseId] = useState<string | null>(null);
   const [courseDraftTitle, setCourseDraftTitle] = useState("");
   const [courseDraftDesc, setCourseDraftDesc] = useState("");
   const [courseDraftLongDesc, setCourseDraftLongDesc] = useState("");
   const [courseDraftPrice, setCourseDraftPrice] = useState("");
-  const [courseDraftType, setCourseDraftType] = useState<"pdf" | "link">("pdf");
+  const [courseDraftMode, setCourseDraftMode] = useState<"multi" | "single">("multi");
+  const [courseDraftType, setCourseDraftType] = useState<"pdf" | "video" | "link">("pdf");
   const [courseDraftPdf, setCourseDraftPdf] = useState<File | null>(null);
   const [courseDraftExternalUrl, setCourseDraftExternalUrl] = useState("");
   const [courseDraftCover, setCourseDraftCover] = useState<File | null>(null);
+  const [courseDraftCoverUrl, setCourseDraftCoverUrl] = useState("");
+  const [courseDraftItems, setCourseDraftItems] = useState<Array<{
+    id: string;
+    title: string;
+    type: "video" | "pdf" | "link";
+    file?: File | null;
+    filePath?: string;
+    fileSizeMb?: number;
+    externalUrl?: string;
+    duration?: string;
+    order: number;
+  }>>([]);
   const [courseUploadProgress, setCourseUploadProgress] = useState<number | null>(null);
+  const [courseUploadStatusText, setCourseUploadStatusText] = useState<string>("");
   const [courseGrantEmail, setCourseGrantEmail] = useState("");
   const [courseGrantTargetId, setCourseGrantTargetId] = useState("");
   const [expandedCourseBuyers, setExpandedCourseBuyers] = useState<string | null>(null);
@@ -1343,7 +1364,181 @@ export default function ProfilePage() {
   // Bookstore: admin upload / edit / delete / grant
   // ────────────────────────────────────────────────────────────────────────
 
-  const handleCreateCourse = async (e: React.FormEvent) => {
+  const resetCourseForm = () => {
+    setEditingCourseId(null);
+    setCourseDraftTitle("");
+    setCourseDraftDesc("");
+    setCourseDraftLongDesc("");
+    setCourseDraftPrice("");
+    setCourseDraftMode("multi");
+    setCourseDraftType("video");
+    setCourseDraftPdf(null);
+    setCourseDraftExternalUrl("");
+    setCourseDraftCover(null);
+    setCourseDraftCoverUrl("");
+    setCourseDraftItems([]);
+    setCourseUploadProgress(null);
+    setCourseUploadStatusText("");
+  };
+
+  const handleEditCourse = (c: Course) => {
+    setEditingCourseId(c.id);
+    setCourseDraftTitle(c.title || "");
+    setCourseDraftDesc(c.description || "");
+    setCourseDraftLongDesc(c.longDescription || "");
+    setCourseDraftPrice(c.priceEur !== undefined ? c.priceEur.toString() : "");
+    setCourseDraftCoverUrl(c.coverImageUrl || "");
+    setCourseDraftCover(null);
+
+    if (c.items && c.items.length > 0) {
+      setCourseDraftMode("multi");
+      setCourseDraftItems(
+        c.items.map((it, idx) => ({
+          id: it.id || `item_${Date.now()}_${idx}`,
+          title: it.title,
+          type: it.type,
+          filePath: it.filePath,
+          fileSizeMb: it.fileSizeMb,
+          externalUrl: it.externalUrl,
+          duration: it.duration || "",
+          order: it.order ?? idx + 1,
+        }))
+      );
+    } else if (c.filePath) {
+      const isVid = c.type === "video" || c.filePath.endsWith(".mp4");
+      setCourseDraftMode("multi");
+      setCourseDraftItems([
+        {
+          id: "item_1",
+          title: c.title || "Материал",
+          type: isVid ? "video" : "pdf",
+          filePath: c.filePath,
+          fileSizeMb: c.fileSizeMb,
+          order: 1,
+        }
+      ]);
+    } else if (c.externalUrl) {
+      setCourseDraftMode("multi");
+      setCourseDraftItems([
+        {
+          id: "item_link_1",
+          title: c.title || "Външно обучение",
+          type: "link",
+          externalUrl: c.externalUrl,
+          order: 1,
+        }
+      ]);
+    } else {
+      setCourseDraftMode("multi");
+      setCourseDraftItems([]);
+    }
+
+    // Scroll form into view
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  };
+
+  const handleAddDraftVideoItem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const newItems: Array<{
+      id: string;
+      title: string;
+      type: "video" | "pdf" | "link";
+      file?: File | null;
+      filePath?: string;
+      fileSizeMb?: number;
+      externalUrl?: string;
+      duration?: string;
+      order: number;
+    }> = Array.from(files).map((file, i) => {
+      const cleanName = file.name.replace(/\.[^/.]+$/, "");
+      return {
+        id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}_${i}`,
+        title: cleanName,
+        type: "video",
+        file,
+        duration: "",
+        order: courseDraftItems.length + i + 1,
+      };
+    });
+    setCourseDraftItems(prev => [...prev, ...newItems]);
+    e.target.value = "";
+  };
+
+  const handleAddDraftPdfItem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const newItems: Array<{
+      id: string;
+      title: string;
+      type: "video" | "pdf" | "link";
+      file?: File | null;
+      filePath?: string;
+      fileSizeMb?: number;
+      externalUrl?: string;
+      duration?: string;
+      order: number;
+    }> = Array.from(files).map((file, i) => {
+      const cleanName = file.name.replace(/\.[^/.]+$/, "");
+      return {
+        id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}_${i}`,
+        title: cleanName,
+        type: "pdf",
+        file,
+        order: courseDraftItems.length + i + 1,
+      };
+    });
+    setCourseDraftItems(prev => [...prev, ...newItems]);
+    e.target.value = "";
+  };
+
+  const handleAddDraftLinkItem = () => {
+    const newItem: {
+      id: string;
+      title: string;
+      type: "video" | "pdf" | "link";
+      file?: File | null;
+      filePath?: string;
+      fileSizeMb?: number;
+      externalUrl?: string;
+      duration?: string;
+      order: number;
+    } = {
+      id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      title: "Нов външен видео урок / линк",
+      type: "link",
+      externalUrl: "",
+      order: courseDraftItems.length + 1,
+    };
+    setCourseDraftItems(prev => [...prev, newItem]);
+  };
+
+  const handleMoveDraftItem = (index: number, direction: "up" | "down") => {
+    setCourseDraftItems(prev => {
+      const copy = [...prev];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= copy.length) return prev;
+      const temp = copy[index];
+      copy[index] = copy[targetIndex];
+      copy[targetIndex] = temp;
+      return copy.map((it, idx) => ({ ...it, order: idx + 1 }));
+    });
+  };
+
+  const handleRemoveDraftItem = (id: string) => {
+    setCourseDraftItems(prev => prev.filter(it => it.id !== id).map((it, idx) => ({ ...it, order: idx + 1 })));
+  };
+
+  const handleUpdateDraftItem = (id: string, updates: Partial<{
+    title: string;
+    type: "video" | "pdf" | "link";
+    externalUrl: string;
+    duration: string;
+  }>) => {
+    setCourseDraftItems(prev => prev.map(it => it.id === id ? { ...it, ...updates } : it));
+  };
+
+  const handleSaveCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!courseDraftTitle.trim() || !courseDraftDesc.trim()) {
       alert("Моля попълнете заглавие и кратко описание на курса.");
@@ -1351,106 +1546,176 @@ export default function ProfilePage() {
     }
     const priceNum = parseFloat(courseDraftPrice);
     if (Number.isNaN(priceNum) || priceNum < 0) {
-      alert("Моля въведете валидна цена (лева).");
+      alert("Моля въведете валидна цена (€).");
       return;
     }
-    if (courseDraftType === "pdf") {
-      if (!courseDraftPdf) {
+
+    const isMulti = courseDraftMode === "multi";
+
+    if (isMulti) {
+      if (courseDraftItems.length === 0) {
+        alert("Моля добавете поне 1 видео файл, PDF наръчник или линк към курса.");
+        return;
+      }
+      for (let i = 0; i < courseDraftItems.length; i++) {
+        const item = courseDraftItems[i];
+        if (!item.title.trim()) {
+          alert(`Моля въведете заглавие за урок #${i + 1}.`);
+          return;
+        }
+        if (item.type === "link" && !item.externalUrl?.trim()) {
+          alert(`Моля въведете URL линк за урок #${i + 1} (${item.title}).`);
+          return;
+        }
+        if ((item.type === "video" || item.type === "pdf") && !item.file && !item.filePath) {
+          alert(`Урок #${i + 1} (${item.title}) няма избран файл за качване.`);
+          return;
+        }
+      }
+    } else {
+      if (courseDraftType === "pdf" && !courseDraftPdf && !editingCourseId) {
         alert("Моля прикачете PDF файл за курса.");
         return;
       }
-      if (courseDraftPdf.type !== "application/pdf") {
-        alert("Файлът трябва да бъде във формат PDF.");
-        return;
-      }
-    } else {
-      // type === 'link'
-      if (!courseDraftExternalUrl.trim()) {
-        alert("Моля въведете линк към курса (URL).");
-        return;
-      }
-      try {
-        new URL(courseDraftExternalUrl.trim());
-      } catch {
-        alert("Линкът не е валиден URL. Започвайте с https://");
+      if (courseDraftType === "link" && !courseDraftExternalUrl.trim()) {
+        alert("Моля въведете линк към курса.");
         return;
       }
     }
 
-    const courseId = "course_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-    const pdfPath = `courses/${courseId}/file.pdf`;
+    const courseId = editingCourseId || ("course_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7));
     const coverPath = courseDraftCover ? `courses/${courseId}/cover.${(courseDraftCover.name.split(".").pop() || "jpg").toLowerCase()}` : "";
 
     try {
-      // PDF upload only for type='pdf'.
-      if (courseDraftType === "pdf" && courseDraftPdf) {
-        setCourseUploadProgress(0);
-        await new Promise<void>((resolve, reject) => {
-          const task = uploadBytesResumable(storageRef(storage, pdfPath), courseDraftPdf);
-          task.on(
-            "state_changed",
-            (snap) => setCourseUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-            (err) => reject(err),
-            () => resolve()
-          );
-        });
-      }
+      setCourseUploadProgress(0);
+      setCourseUploadStatusText("Подготовка на курса…");
 
       // Optional cover image upload.
-      let coverImageUrl = "";
+      let coverImageUrl = courseDraftCoverUrl;
       if (courseDraftCover) {
+        setCourseUploadStatusText("Качване на корицата…");
         const coverTask = await uploadBytesResumable(storageRef(storage, coverPath), courseDraftCover);
         coverImageUrl = await getDownloadURL(coverTask.ref);
       }
 
+      const finalItems: CourseMaterialItem[] = [];
+
+      if (isMulti) {
+        const totalItems = courseDraftItems.length;
+        for (let i = 0; i < totalItems; i++) {
+          const item = courseDraftItems[i];
+          if (item.file) {
+            const ext = (item.file.name.split(".").pop() || (item.type === "video" ? "mp4" : "pdf")).toLowerCase();
+            const filePath = `courses/${courseId}/items/${item.id}.${ext}`;
+            setCourseUploadStatusText(`Качване на файл ${i + 1} от ${totalItems}: ${item.title}…`);
+            
+            await new Promise<void>((resolve, reject) => {
+              const task = uploadBytesResumable(storageRef(storage, filePath), item.file!);
+              task.on(
+                "state_changed",
+                (snap) => {
+                  const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                  const overallPct = Math.round(((i + pct / 100) / totalItems) * 100);
+                  setCourseUploadProgress(overallPct);
+                },
+                (err) => reject(err),
+                () => resolve()
+              );
+            });
+
+            finalItems.push({
+              id: item.id,
+              title: item.title.trim(),
+              type: item.type,
+              filePath,
+              fileSizeMb: Math.round((item.file.size / (1024 * 1024)) * 100) / 100,
+              duration: item.duration?.trim() || "",
+              order: i + 1,
+            });
+          } else {
+            finalItems.push({
+              id: item.id,
+              title: item.title.trim(),
+              type: item.type,
+              filePath: item.filePath,
+              fileSizeMb: item.fileSizeMb,
+              externalUrl: item.externalUrl?.trim(),
+              duration: item.duration?.trim() || "",
+              order: i + 1,
+            });
+          }
+        }
+      } else {
+        if (courseDraftType === "pdf" && courseDraftPdf) {
+          const pdfPath = `courses/${courseId}/file.pdf`;
+          setCourseUploadStatusText("Качване на PDF файла…");
+          await new Promise<void>((resolve, reject) => {
+            const task = uploadBytesResumable(storageRef(storage, pdfPath), courseDraftPdf);
+            task.on(
+              "state_changed",
+              (snap) => setCourseUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+              (err) => reject(err),
+              () => resolve()
+            );
+          });
+          finalItems.push({
+            id: "file_1",
+            title: courseDraftTitle.trim(),
+            type: "pdf",
+            filePath: pdfPath,
+            fileSizeMb: Math.round((courseDraftPdf.size / (1024 * 1024)) * 100) / 100,
+            order: 1,
+          });
+        }
+      }
+
       const now = new Date().toISOString();
-      // SEO-friendly slug from the title, deduped against existing courses.
-      const slug = uniqueSlug(
+      const existingCourse = dbCourses.find(c => c.id === courseId);
+      const slug = existingCourse?.slug || uniqueSlug(
         slugify(courseDraftTitle),
         [...allCourses, ...dbCourses].map((x) => x.slug).filter((s): s is string => !!s)
       );
-      // Firestore rejects undefined values, so build the object without the
-      // optional fields and add them only when populated.
-      const newCourse: Course = {
+
+      const courseDoc: Course = {
         id: courseId,
         slug,
         title: courseDraftTitle.trim(),
         description: courseDraftDesc.trim(),
         priceEur: Math.round(priceNum * 100) / 100,
-        type: courseDraftType,
-        published: true,
-        createdAt: now,
+        type: isMulti ? "multi" : courseDraftType,
+        published: existingCourse ? existingCourse.published : true,
+        createdAt: existingCourse?.createdAt || now,
         updatedAt: now,
       };
-      if (courseDraftType === "pdf" && courseDraftPdf) {
-        newCourse.filePath = pdfPath;
-        newCourse.fileSizeMb = Math.round((courseDraftPdf.size / (1024 * 1024)) * 100) / 100;
-      }
-      if (courseDraftType === "link") {
-        newCourse.externalUrl = courseDraftExternalUrl.trim();
-      }
+
       if (courseDraftLongDesc.trim()) {
-        newCourse.longDescription = courseDraftLongDesc.trim();
+        courseDoc.longDescription = courseDraftLongDesc.trim();
       }
       if (coverImageUrl) {
-        newCourse.coverImageUrl = coverImageUrl;
+        courseDoc.coverImageUrl = coverImageUrl;
       }
-      await setDoc(doc(db, "courses", courseId), newCourse);
+      if (finalItems.length > 0) {
+        courseDoc.items = finalItems;
+        if (finalItems[0].filePath) {
+          courseDoc.filePath = finalItems[0].filePath;
+          courseDoc.fileSizeMb = finalItems[0].fileSizeMb;
+        }
+        if (finalItems[0].externalUrl) {
+          courseDoc.externalUrl = finalItems[0].externalUrl;
+        }
+      } else if (!isMulti && courseDraftType === "link") {
+        courseDoc.externalUrl = courseDraftExternalUrl.trim();
+      }
 
-      setCourseUploadProgress(null);
-      setCourseDraftTitle("");
-      setCourseDraftDesc("");
-      setCourseDraftLongDesc("");
-      setCourseDraftPrice("");
-      setCourseDraftType("pdf");
-      setCourseDraftPdf(null);
-      setCourseDraftExternalUrl("");
-      setCourseDraftCover(null);
-      alert("Курсът беше успешно качен!");
+      await setDoc(doc(db, "courses", courseId), courseDoc, { merge: true });
+
+      resetCourseForm();
+      alert(editingCourseId ? "Курсът беше успешно обновен!" : "Курсът беше успешно публикуван!");
     } catch (err: any) {
       setCourseUploadProgress(null);
-      console.error("Course upload error:", err);
-      alert(`Грешка при качване: ${err?.code || ""} ${err?.message || err}`);
+      setCourseUploadStatusText("");
+      console.error("Course save error:", err);
+      alert(`Грешка при запис: ${err?.code || ""} ${err?.message || err}`);
     }
   };
 
@@ -4046,136 +4311,442 @@ export default function ProfilePage() {
                         </div>
                       </div>
 
-                      {/* Create a new course — saved to Firestore and shown in the public catalog */}
-                      <form onSubmit={handleCreateCourse} className="bg-brand-light/30 p-4 sm:p-5 rounded-xl border border-brand-green/10 space-y-3">
-                        <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
-                          <Plus className="h-4 w-4 text-brand-gold" />
-                          Добави нов курс в книжарницата
-                        </h3>
-                        <p className="text-[11px] text-brand-dark/60">Попълни данните и качи PDF или посочи външен линк. Курсът се появява автоматично в каталога за всички посетители.</p>
+                      {/* Create or Edit a course — saved to Firestore and shown in the public catalog */}
+                      <form onSubmit={handleSaveCourse} className="bg-brand-light/30 p-5 sm:p-6 rounded-2xl border border-brand-green/10 space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-brand-green/10 pb-3">
+                          <div>
+                            <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider flex items-center gap-2">
+                              {editingCourseId ? <Edit className="h-4 w-4 text-brand-gold" /> : <Plus className="h-4 w-4 text-brand-gold" />}
+                              {editingCourseId ? `Редактиране на курс: ${courseDraftTitle || ""}` : "Добави нов курс в книжарницата"}
+                            </h3>
+                            <p className="text-[11px] text-brand-dark/60">
+                              {editingCourseId 
+                                ? "Добави нови видео уроци, PDF файлове или актуализирай информацията за курса."
+                                : "Качи обучение с едно или множество видеа (.mp4), PDF наръчници и бонуси."}
+                            </p>
+                          </div>
+                          {editingCourseId && (
+                            <button
+                              type="button"
+                              onClick={resetCourseForm}
+                              className="text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg border border-brand-dark/20 text-brand-dark/70 hover:bg-brand-dark/5 transition-colors cursor-pointer self-start sm:self-auto"
+                            >
+                              Отказ / Нов курс
+                            </button>
+                          )}
+                        </div>
 
+                        {/* Basic Info */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[10px] font-bold uppercase text-brand-dark/60 block mb-1">Заглавие на курса *</label>
+                            <input
+                              type="text"
+                              placeholder="напр. Пълен практичен курс по HACCP система"
+                              value={courseDraftTitle}
+                              onChange={(e) => setCourseDraftTitle(e.target.value)}
+                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold uppercase text-brand-dark/60 block mb-1">Цена в € *</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              placeholder="напр. 29.00"
+                              value={courseDraftPrice}
+                              onChange={(e) => setCourseDraftPrice(e.target.value)}
+                              className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                              required
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-bold uppercase text-brand-dark/60 block mb-1">Кратко описание (за каталога) *</label>
                           <input
                             type="text"
-                            placeholder="Заглавие на курса *"
-                            value={courseDraftTitle}
-                            onChange={(e) => setCourseDraftTitle(e.target.value)}
-                            className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
-                          />
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="Цена в € *"
-                            value={courseDraftPrice}
-                            onChange={(e) => setCourseDraftPrice(e.target.value)}
-                            className="text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
-                          />
-                        </div>
-
-                        <input
-                          type="text"
-                          placeholder="Кратко описание (показва се на картата) *"
-                          value={courseDraftDesc}
-                          onChange={(e) => setCourseDraftDesc(e.target.value)}
-                          className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
-                        />
-                        <textarea
-                          placeholder="Пълно описание (по избор — показва се на страницата на курса)"
-                          value={courseDraftLongDesc}
-                          onChange={(e) => setCourseDraftLongDesc(e.target.value)}
-                          rows={3}
-                          className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y"
-                        />
-
-                        <div className="flex flex-wrap items-center gap-3">
-                          <label className="flex items-center gap-1.5 text-[11px] font-bold text-brand-dark/70 cursor-pointer">
-                            <input type="radio" name="courseType" checked={courseDraftType === "pdf"} onChange={() => setCourseDraftType("pdf")} className="cursor-pointer" />
-                            PDF файл
-                          </label>
-                          <label className="flex items-center gap-1.5 text-[11px] font-bold text-brand-dark/70 cursor-pointer">
-                            <input type="radio" name="courseType" checked={courseDraftType === "link"} onChange={() => setCourseDraftType("link")} className="cursor-pointer" />
-                            Външен линк
-                          </label>
-                        </div>
-
-                        {courseDraftType === "pdf" ? (
-                          <label className="flex items-center gap-2 text-[11px] font-bold uppercase text-brand-gold border border-brand-gold/40 hover:bg-brand-gold hover:text-brand-dark transition-colors px-3 py-2 rounded-lg cursor-pointer w-fit">
-                            <Upload className="h-3.5 w-3.5" />
-                            {courseDraftPdf ? courseDraftPdf.name : "Избери PDF файл *"}
-                            <input type="file" accept="application/pdf" className="hidden" onChange={(e) => setCourseDraftPdf(e.target.files?.[0] ?? null)} />
-                          </label>
-                        ) : (
-                          <input
-                            type="url"
-                            placeholder="https://… линк към курса *"
-                            value={courseDraftExternalUrl}
-                            onChange={(e) => setCourseDraftExternalUrl(e.target.value)}
+                            placeholder="напр. 22 видео лекции с практически примери и документи за безопасност на храните"
+                            value={courseDraftDesc}
+                            onChange={(e) => setCourseDraftDesc(e.target.value)}
                             className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                            required
                           />
-                        )}
+                        </div>
 
-                        <label className="flex items-center gap-2 text-[11px] font-bold uppercase text-brand-green/80 border border-brand-green/20 hover:bg-brand-green/5 transition-colors px-3 py-2 rounded-lg cursor-pointer w-fit">
-                          <Upload className="h-3.5 w-3.5" />
-                          {courseDraftCover ? courseDraftCover.name : "Корица (по избор)"}
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => setCourseDraftCover(e.target.files?.[0] ?? null)} />
-                        </label>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase text-brand-dark/60 block mb-1">Пълно описание / Програма (по избор)</label>
+                          <textarea
+                            placeholder="Опишете какво включва курсът, за кого е предназначен, какви сертификати дава..."
+                            value={courseDraftLongDesc}
+                            onChange={(e) => setCourseDraftLongDesc(e.target.value)}
+                            rows={3}
+                            className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white resize-y"
+                          />
+                        </div>
 
-                        {courseUploadProgress !== null && (
-                          <div className="space-y-1">
-                            <div className="w-full bg-brand-green/10 rounded-full h-1.5 overflow-hidden">
-                              <div className="h-full bg-brand-gold transition-all" style={{ width: `${courseUploadProgress}%` }} />
+                        {/* Mode Selector */}
+                        <div className="bg-white p-3.5 rounded-xl border border-brand-green/10 space-y-2">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-brand-green block">Формат на материалите:</span>
+                          <div className="flex flex-wrap items-center gap-4">
+                            <label className="flex items-center gap-2 text-xs font-bold text-brand-dark cursor-pointer">
+                              <input
+                                type="radio"
+                                name="courseMode"
+                                checked={courseDraftMode === "multi"}
+                                onChange={() => setCourseDraftMode("multi")}
+                                className="cursor-pointer text-brand-green"
+                              />
+                              <span className="flex items-center gap-1.5">
+                                <Layers className="h-3.5 w-3.5 text-brand-gold" />
+                                Пакет с множество уроци / видеа / PDF-и ({courseDraftItems.length})
+                              </span>
+                            </label>
+                            <label className="flex items-center gap-2 text-xs font-bold text-brand-dark/70 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="courseMode"
+                                checked={courseDraftMode === "single"}
+                                onChange={() => setCourseDraftMode("single")}
+                                className="cursor-pointer"
+                              />
+                              <span>Единичен файл / линк (Опростен)</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Multi-Item Curriculum Builder */}
+                        {courseDraftMode === "multi" ? (
+                          <div className="space-y-3 bg-white p-4 rounded-xl border border-brand-green/10">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-brand-green/5 pb-2.5">
+                              <div>
+                                <h4 className="text-xs font-bold text-brand-green uppercase tracking-wider flex items-center gap-1.5">
+                                  <Film className="h-4 w-4 text-brand-gold" />
+                                  Уроци & Файлове към курса ({courseDraftItems.length})
+                                </h4>
+                                <p className="text-[10px] text-brand-dark/50">Добавете всички видео уроци, PDF документи и линкове за това обучение.</p>
+                              </div>
+
+                              {/* Upload Action Buttons */}
+                              <div className="flex flex-wrap items-center gap-2">
+                                <label className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg bg-brand-green text-white hover:bg-brand-green/90 transition-colors cursor-pointer shadow-sm">
+                                  <Video className="h-3.5 w-3.5 text-brand-gold" />
+                                  + Добави видео (.mp4)
+                                  <input
+                                    type="file"
+                                    multiple
+                                    accept="video/*"
+                                    className="hidden"
+                                    onChange={handleAddDraftVideoItem}
+                                  />
+                                </label>
+
+                                <label className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer">
+                                  <FilePlus className="h-3.5 w-3.5 text-brand-gold" />
+                                  + Добави PDF наръчник
+                                  <input
+                                    type="file"
+                                    multiple
+                                    accept="application/pdf"
+                                    className="hidden"
+                                    onChange={handleAddDraftPdfItem}
+                                  />
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={handleAddDraftLinkItem}
+                                  className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase px-3 py-1.5 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  + Добави линк
+                                </button>
+                              </div>
                             </div>
-                            <span className="text-[10px] text-brand-dark/60">Качване… {courseUploadProgress}%</span>
+
+                            {/* Items List */}
+                            {courseDraftItems.length === 0 ? (
+                              <div className="text-center py-8 border-2 border-dashed border-brand-green/15 rounded-xl space-y-2">
+                                <Video className="h-8 w-8 text-brand-dark/30 mx-auto" />
+                                <p className="text-xs text-brand-dark/60 font-medium">Все още няма добавени уроци към този курс.</p>
+                                <p className="text-[10px] text-brand-dark/40">Използвайте бутоните по-горе, за да изберете видео файлове (.mp4) или PDF документи (може да изберете множество файлове наведнъж!).</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                                {courseDraftItems.map((item, idx) => (
+                                  <div
+                                    key={item.id}
+                                    className="p-3 bg-brand-light/40 border border-brand-green/10 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
+                                  >
+                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                      <span className="font-mono text-[10px] font-bold text-brand-dark/40 w-5 text-center shrink-0">
+                                        #{idx + 1}
+                                      </span>
+                                      <span className={`p-1.5 rounded-lg shrink-0 ${
+                                        item.type === "video" ? "bg-amber-100 text-amber-800" : item.type === "pdf" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
+                                      }`}>
+                                        {item.type === "video" ? <Video className="h-3.5 w-3.5" /> : item.type === "pdf" ? <FileText className="h-3.5 w-3.5" /> : <ExternalLink className="h-3.5 w-3.5" />}
+                                      </span>
+
+                                      <div className="space-y-1 min-w-0 flex-1">
+                                        <input
+                                          type="text"
+                                          value={item.title}
+                                          onChange={(e) => handleUpdateDraftItem(item.id, { title: e.target.value })}
+                                          placeholder="Заглавие на урока *"
+                                          className="w-full text-xs font-bold px-2 py-1 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                                        />
+
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          {item.type === "link" ? (
+                                            <input
+                                              type="url"
+                                              value={item.externalUrl || ""}
+                                              onChange={(e) => handleUpdateDraftItem(item.id, { externalUrl: e.target.value })}
+                                              placeholder="https://… URL линк (YouTube/Drive)"
+                                              className="text-[10px] px-2 py-0.5 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white w-full sm:w-64 font-mono"
+                                            />
+                                          ) : item.file ? (
+                                            <span className="text-[10px] text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 font-mono">
+                                              Нов файл: {item.file.name} ({(item.file.size / (1024 * 1024)).toFixed(1)} MB)
+                                            </span>
+                                          ) : item.filePath ? (
+                                            <span className="text-[10px] text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-mono">
+                                              Качен: {item.filePath.split("/").pop()} {item.fileSizeMb ? `(${item.fileSizeMb} MB)` : ""}
+                                            </span>
+                                          ) : null}
+
+                                          <input
+                                            type="text"
+                                            value={item.duration || ""}
+                                            onChange={(e) => handleUpdateDraftItem(item.id, { duration: e.target.value })}
+                                            placeholder="Времетраене (напр. 15 мин)"
+                                            className="text-[10px] px-2 py-0.5 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white w-28"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Action Buttons: Up, Down, Delete */}
+                                    <div className="flex items-center gap-1 shrink-0 self-end sm:self-center">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleMoveDraftItem(idx, "up")}
+                                        disabled={idx === 0}
+                                        className="p-1.5 rounded hover:bg-white disabled:opacity-20 transition-colors cursor-pointer text-brand-dark/70"
+                                        title="Премести нагоре"
+                                      >
+                                        <ArrowUp className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleMoveDraftItem(idx, "down")}
+                                        disabled={idx === courseDraftItems.length - 1}
+                                        className="p-1.5 rounded hover:bg-white disabled:opacity-20 transition-colors cursor-pointer text-brand-dark/70"
+                                        title="Премести надолу"
+                                      >
+                                        <ArrowDown className="h-3.5 w-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveDraftItem(item.id)}
+                                        className="p-1.5 rounded text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors cursor-pointer"
+                                        title="Изтрий този урок"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          /* Single File Mode */
+                          <div className="space-y-3 bg-white p-4 rounded-xl border border-brand-green/10">
+                            <div className="flex flex-wrap items-center gap-4">
+                              <label className="flex items-center gap-1.5 text-xs font-bold text-brand-dark cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="singleCourseType"
+                                  checked={courseDraftType === "pdf"}
+                                  onChange={() => setCourseDraftType("pdf")}
+                                  className="cursor-pointer"
+                                />
+                                PDF файл
+                              </label>
+                              <label className="flex items-center gap-1.5 text-xs font-bold text-brand-dark cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name="singleCourseType"
+                                  checked={courseDraftType === "link"}
+                                  onChange={() => setCourseDraftType("link")}
+                                  className="cursor-pointer"
+                                />
+                                Външен линк
+                              </label>
+                            </div>
+
+                            {courseDraftType === "pdf" ? (
+                              <label className="flex items-center gap-2 text-xs font-bold uppercase text-brand-gold border border-brand-gold/40 hover:bg-brand-gold hover:text-brand-dark transition-colors px-3.5 py-2.5 rounded-lg cursor-pointer w-fit">
+                                <Upload className="h-3.5 w-3.5" />
+                                {courseDraftPdf ? courseDraftPdf.name : "Избери PDF файл *"}
+                                <input
+                                  type="file"
+                                  accept="application/pdf"
+                                  className="hidden"
+                                  onChange={(e) => setCourseDraftPdf(e.target.files?.[0] ?? null)}
+                                />
+                              </label>
+                            ) : (
+                              <input
+                                type="url"
+                                placeholder="https://… линк към курса *"
+                                value={courseDraftExternalUrl}
+                                onChange={(e) => setCourseDraftExternalUrl(e.target.value)}
+                                className="w-full text-xs px-3 py-2 rounded-lg border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white"
+                              />
+                            )}
                           </div>
                         )}
 
-                        <button
-                          type="submit"
-                          disabled={courseUploadProgress !== null}
-                          className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider px-5 py-2.5 rounded-lg bg-brand-green text-white hover:bg-brand-green/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                          {courseUploadProgress !== null ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                          Публикувай курса
-                        </button>
+                        {/* Cover Image Picker */}
+                        <div className="flex items-center gap-3">
+                          <label className="flex items-center gap-2 text-xs font-bold uppercase text-brand-green/80 border border-brand-green/20 hover:bg-brand-green/5 transition-colors px-3 py-2 rounded-lg cursor-pointer w-fit">
+                            <Upload className="h-3.5 w-3.5" />
+                            {courseDraftCover ? courseDraftCover.name : courseDraftCoverUrl ? "Смени корицата" : "Корица (по избор)"}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => setCourseDraftCover(e.target.files?.[0] ?? null)}
+                            />
+                          </label>
+                          {courseDraftCoverUrl && !courseDraftCover && (
+                            <span className="text-[10px] text-brand-dark/50">Има запазена корица</span>
+                          )}
+                        </div>
+
+                        {/* Upload Progress Bar */}
+                        {courseUploadProgress !== null && (
+                          <div className="space-y-1.5 bg-brand-gold/10 p-3 rounded-xl border border-brand-gold/30">
+                            <div className="flex items-center justify-between text-xs font-bold text-brand-green">
+                              <span>{courseUploadStatusText || "Качване на файлове…"}</span>
+                              <span className="font-mono">{courseUploadProgress}%</span>
+                            </div>
+                            <div className="w-full bg-brand-green/10 rounded-full h-2 overflow-hidden">
+                              <div className="h-full bg-brand-gold transition-all duration-300" style={{ width: `${courseUploadProgress}%` }} />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Submit Button */}
+                        <div className="flex items-center gap-3 pt-2">
+                          <button
+                            type="submit"
+                            disabled={courseUploadProgress !== null}
+                            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-xl bg-brand-green text-white hover:bg-brand-green/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-md"
+                          >
+                            {courseUploadProgress !== null ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-brand-gold" />
+                            ) : editingCourseId ? (
+                              <CheckCircle className="h-4 w-4 text-brand-gold" />
+                            ) : (
+                              <Plus className="h-4 w-4 text-brand-gold" />
+                            )}
+                            {editingCourseId ? "Запази промените по курса" : "Публикувай курса"}
+                          </button>
+
+                          {editingCourseId && (
+                            <button
+                              type="button"
+                              onClick={resetCourseForm}
+                              className="text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-xl text-brand-dark/60 hover:text-brand-dark transition-colors cursor-pointer"
+                            >
+                              Отказ
+                            </button>
+                          )}
+                        </div>
                       </form>
 
-                      {/* Admin-created courses (Firestore) with publish toggle + delete */}
+                      {/* Admin-created courses (Firestore) with Edit, publish toggle + delete */}
                       {dbCourses.length > 0 && (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Мои качени курсове ({dbCourses.length})</h3>
                           <div className="space-y-2">
                             {dbCourses.map((c) => {
                               const buyers = usersList.filter(u => (u.purchasedCourseIds || []).some(id => id === c.id || (c.slug && id === c.slug) || (c.title && id === c.title)));
+                              const itemsCount = c.items ? c.items.length : (c.filePath ? 1 : (c.externalUrl ? 1 : 0));
+                              const isEditingThis = editingCourseId === c.id;
+
                               return (
-                                <div key={c.id} className="flex items-center justify-between gap-3 bg-white border border-brand-green/10 rounded-xl px-4 py-3">
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-bold text-brand-green text-sm truncate">{c.title}</span>
+                                <div key={c.id} className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border rounded-2xl p-4 transition-all ${
+                                  isEditingThis ? "border-brand-gold ring-2 ring-brand-gold/20 shadow-md" : "border-brand-green/10 shadow-sm"
+                                }`}>
+                                  <div className="min-w-0 flex-1 space-y-1">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className="font-bold text-brand-green text-sm">{c.title}</span>
                                       <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${c.published ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
                                         {c.published ? "Активен" : "Скрит"}
                                       </span>
+                                      {c.items && c.items.length > 0 && (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-brand-gold/15 text-brand-dark border border-brand-gold/30">
+                                          <Film className="h-3 w-3 text-brand-gold" />
+                                          {c.items.length} урока/файла
+                                        </span>
+                                      )}
                                     </div>
-                                    <div className="text-[10px] text-brand-dark/50 truncate">{c.priceEur.toFixed(2)} € · {(c.type ?? "pdf") === "link" ? "външен линк" : "PDF"} · {buyers.length} купувачи</div>
+                                    <div className="text-[11px] text-brand-dark/50 flex items-center gap-2 flex-wrap">
+                                      <span className="font-bold font-mono text-brand-dark/70">{c.priceEur.toFixed(2)} €</span>
+                                      <span>·</span>
+                                      <span>{itemsCount > 0 ? `${itemsCount} материала` : "без прикачени файлове"}</span>
+                                      <span>·</span>
+                                      <span>{buyers.length} купувачи</span>
+                                    </div>
                                   </div>
+
+                                  {/* Action Buttons */}
                                   <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
-                                    {(c.type ?? "pdf") === "pdf" ? (
-                                      <Link href={`/courses/${c.slug || c.id}/viewer`} target="_blank" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer" title="Преглед на качения PDF файл">
-                                        <BookOpen className="h-3 w-3" /> Преглед PDF
-                                      </Link>
-                                    ) : c.externalUrl ? (
-                                      <a href={c.externalUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer" title="Отвори външния линк">
-                                        <ExternalLink className="h-3 w-3" /> Отвори линк
-                                      </a>
-                                    ) : null}
-                                    <Link href={`/courses/${c.slug || c.id}`} target="_blank" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer">
-                                      <Eye className="h-3 w-3" /> Страница
+                                    <Link
+                                      href={`/courses/${c.slug || c.id}/viewer`}
+                                      target="_blank"
+                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer"
+                                      title="Отвори в Course Player"
+                                    >
+                                      <BookOpen className="h-3.5 w-3.5" /> Преглед (Player)
                                     </Link>
-                                    <button onClick={() => handleTogglePublished(c)} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer">
+
+                                    <button
+                                      onClick={() => handleEditCourse(c)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-brand-gold text-brand-dark bg-brand-gold/10 hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer"
+                                      title="Редактирай курса и добави още видеа/файлове"
+                                    >
+                                      <Edit className="h-3.5 w-3.5" /> Редактирай / Уроци
+                                    </button>
+
+                                    <Link
+                                      href={`/courses/${c.slug || c.id}`}
+                                      target="_blank"
+                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
+                                      title="Публична страница"
+                                    >
+                                      <Eye className="h-3.5 w-3.5" />
+                                    </Link>
+
+                                    <button
+                                      onClick={() => handleTogglePublished(c)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-brand-gold/40 text-brand-gold hover:bg-brand-gold hover:text-brand-dark transition-colors cursor-pointer"
+                                    >
                                       {c.published ? "Скрий" : "Покажи"}
                                     </button>
-                                    <button onClick={() => handleDeleteCourse(c)} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer">
-                                      <Trash2 className="h-3 w-3" />
+
+                                    <button
+                                      onClick={() => handleDeleteCourse(c)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
                                     </button>
                                   </div>
                                 </div>
