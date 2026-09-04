@@ -527,15 +527,22 @@ export default function ProfilePage() {
   useEffect(() => {
     if (userRole !== "admin") return;
     LIBRARY_MATERIALS.forEach(async (m) => {
-      if (m.type !== "pdf") return;
+      const isVid = resolveType(m.slug, typeOverrides, (m.type === "video" ? "video" : "pdf") as MaterialType) === "video";
+      const primaryFile = isVid ? "file.mp4" : "file.pdf";
+      const secondaryFile = isVid ? "file.pdf" : "file.mp4";
       try {
-        await getMetadata(storageRef(storage, `library/${m.slug}/file.pdf`));
+        await getMetadata(storageRef(storage, `library/${m.slug}/${primaryFile}`));
         setLibraryPdfExists(prev => ({ ...prev, [m.slug]: true }));
       } catch {
-        setLibraryPdfExists(prev => ({ ...prev, [m.slug]: false }));
+        try {
+          await getMetadata(storageRef(storage, `library/${m.slug}/${secondaryFile}`));
+          setLibraryPdfExists(prev => ({ ...prev, [m.slug]: true }));
+        } catch {
+          setLibraryPdfExists(prev => ({ ...prev, [m.slug]: false }));
+        }
       }
     });
-  }, [userRole, storage]);
+  }, [userRole, storage, typeOverrides]);
 
   // Admin Materials form states
   const [materialType, setMaterialType] = useState<"document" | "test">("document");

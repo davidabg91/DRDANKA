@@ -37,7 +37,7 @@ service firebase.storage {
           && request.resource.contentType == 'application/pdf')
         ||
         (fileName == 'file.mp4'
-          && request.resource.size < 500 * 1024 * 1024
+          && request.resource.size < 2048 * 1024 * 1024
           && request.resource.contentType.matches('video/.*'))
         ||
         (fileName.matches('^cover\\..+')
@@ -78,7 +78,7 @@ service firebase.storage {
     match /library/{slug}/file.mp4 {
       allow read: if isAdmin() || hasPurchasedSlug(slug);
       allow write: if isAdmin()
-        && request.resource.size < 500 * 1024 * 1024
+        && request.resource.size < 2048 * 1024 * 1024
         && request.resource.contentType.matches('video/.*');
     }
 

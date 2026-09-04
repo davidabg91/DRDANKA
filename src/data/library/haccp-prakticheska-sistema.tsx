@@ -194,7 +194,7 @@ export const haccpPrakticheskaSistema: LibraryMaterial = {
     "Практическа система за реален контрол и спокойствие при проверки от ОДБХ. Включва 5 ценни бонуса.",
   priceEur: 29, // 56.73 lv
   originalPriceEur: 58,
-  type: "pdf",
+  type: "video",
   category: "training",
   contentUrl: "#", // Add the course link here when available
   card: {
