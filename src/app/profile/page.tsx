@@ -1594,7 +1594,8 @@ export default function ProfilePage() {
       let coverImageUrl = courseDraftCoverUrl;
       if (courseDraftCover) {
         setCourseUploadStatusText("Качване на корицата…");
-        const coverTask = await uploadBytesResumable(storageRef(storage, coverPath), courseDraftCover);
+        const coverMime = courseDraftCover.type || (coverPath.endsWith(".png") ? "image/png" : "image/jpeg");
+        const coverTask = await uploadBytesResumable(storageRef(storage, coverPath), courseDraftCover, { contentType: coverMime });
         coverImageUrl = await getDownloadURL(coverTask.ref);
       }
 
@@ -1607,10 +1608,16 @@ export default function ProfilePage() {
           if (item.file) {
             const ext = (item.file.name.split(".").pop() || (item.type === "video" ? "mp4" : "pdf")).toLowerCase();
             const filePath = `courses/${courseId}/items/${item.id}.${ext}`;
+            const mimeType = item.type === "video"
+              ? (item.file.type && item.file.type.startsWith("video/") ? item.file.type : "video/mp4")
+              : item.type === "pdf"
+                ? "application/pdf"
+                : (item.file.type || "application/octet-stream");
+
             setCourseUploadStatusText(`Качване на файл ${i + 1} от ${totalItems}: ${item.title}…`);
             
             await new Promise<void>((resolve, reject) => {
-              const task = uploadBytesResumable(storageRef(storage, filePath), item.file!);
+              const task = uploadBytesResumable(storageRef(storage, filePath), item.file!, { contentType: mimeType });
               task.on(
                 "state_changed",
                 (snap) => {
@@ -1650,7 +1657,7 @@ export default function ProfilePage() {
           const pdfPath = `courses/${courseId}/file.pdf`;
           setCourseUploadStatusText("Качване на PDF файла…");
           await new Promise<void>((resolve, reject) => {
-            const task = uploadBytesResumable(storageRef(storage, pdfPath), courseDraftPdf);
+            const task = uploadBytesResumable(storageRef(storage, pdfPath), courseDraftPdf, { contentType: "application/pdf" });
             task.on(
               "state_changed",
               (snap) => setCourseUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
@@ -1734,6 +1741,18 @@ export default function ProfilePage() {
    * resolves override ?? the code-defined type.
    */
   const effectiveMaterialType = (slug: string): MaterialType => {
+    const matchedDbCourse = dbCourses.find(c => c.id === slug || c.slug === slug || c.title === slug);
+    if (matchedDbCourse) {
+      if (matchedDbCourse.type === "video" || matchedDbCourse.type === "multi" || matchedDbCourse.items?.some(i => i.type === "video") || matchedDbCourse.filePath?.endsWith(".mp4")) {
+        return "video";
+      }
+    }
+    const matchedDbTraining = dbTrainings.find(t => t.id === slug || t.slug === slug || t.title === slug);
+    if (matchedDbTraining) {
+      if (matchedDbTraining.type === "video" || matchedDbTraining.videoUrl) {
+        return "video";
+      }
+    }
     const base = (LIBRARY_MATERIALS.find(m => m.slug === slug)?.type ?? "pdf") as MaterialType;
     return resolveType(slug, typeOverrides, base);
   };
@@ -5387,7 +5406,9 @@ export default function ProfilePage() {
                                   <tbody>
                                     {filtered.map((enr) => {
                                       const isLiveMeeting = enr.trainingType === "zoom" || LIVE_COURSES.some(l => l.slug === enr.trainingId);
-                                      const isVideoTraining = enr.trainingType === "video" || enr.contentType === "video" || effectiveMaterialType(enr.trainingId) === "video";
+                                      const matchedCourse = dbCourses.find(c => c.id === enr.trainingId || c.slug === enr.trainingId || c.title === enr.trainingTitle);
+                                      const isVideoTraining = enr.trainingType === "video" || enr.contentType === "video" || effectiveMaterialType(enr.trainingId) === "video" || !!(matchedCourse && (matchedCourse.type === "video" || matchedCourse.type === "multi" || matchedCourse.items?.some(i => i.type === "video") || matchedCourse.filePath?.endsWith(".mp4")));
+                                      const isMultiCourse = matchedCourse?.type === "multi" || (matchedCourse?.items && matchedCourse.items.length > 1);
                                       return (
                                         <tr key={enr.id} className="hover:bg-brand-light/30">
                                           <td className="border border-brand-green/10 p-3">
@@ -5402,7 +5423,13 @@ export default function ProfilePage() {
                                           <td className="border border-brand-green/10 p-3">
                                             <div className="font-bold">{enr.trainingTitle}</div>
                                             <div className="text-[10px] text-brand-dark/50">
-                                              {isLiveMeeting ? "📹 Live среща (Zoom)" : isVideoTraining ? "📹 Видео курс" : "📄 PDF Наръчник"}
+                                              {isLiveMeeting
+                                                ? "📹 Live среща (Zoom)"
+                                                : isMultiCourse
+                                                  ? `🎬 Курс (${matchedCourse?.items?.length} урока)`
+                                                  : isVideoTraining
+                                                    ? "📹 Видео курс"
+                                                    : "📄 PDF Наръчник"}
                                             </div>
                                           </td>
                                           <td className="border border-brand-green/10 p-3 text-center font-mono font-bold">{enr.priceEur.toFixed(2)} €</td>
@@ -6073,6 +6100,16 @@ export default function ProfilePage() {
                         {/* UNLOCKED DATABASE COURSES (GREEN) */}
                         {unlockedDbCourses.map(c => {
                           const isLink = (c.type ?? "pdf") === "link";
+                          const isMulti = c.type === "multi" || (c.items && c.items.length > 1);
+                          const hasVideo = c.type === "video" || c.items?.some(i => i.type === "video") || c.filePath?.endsWith(".mp4");
+                          const badgeText = isLink
+                            ? "🌐 Външен курс"
+                            : isMulti
+                              ? `🎬 Курс (${c.items?.length || 0} урока)`
+                              : hasVideo
+                                ? "📹 Видео курс"
+                                : "📄 PDF Наръчник";
+
                           return (
                             <div key={c.id} className="border border-brand-green/15 rounded-2xl p-5 flex flex-col justify-between hover:border-brand-gold/40 hover:shadow-md transition-all duration-300 bg-white">
                               <div className="space-y-3">
@@ -6081,7 +6118,7 @@ export default function ProfilePage() {
                                     <CheckCircle className="h-3 w-3 text-green-600" /> Отключен
                                   </span>
                                   <span className="text-[10px] text-brand-dark/40 font-mono">
-                                    {isLink ? "🌐 Външен курс" : "📄 PDF Наръчник"}
+                                    {badgeText}
                                   </span>
                                 </div>
                                 <h4 className="font-serif text-base font-bold text-brand-green">{c.title}</h4>
@@ -6102,11 +6139,12 @@ export default function ProfilePage() {
                                     href={`/courses/${c.slug || c.id}/viewer`}
                                     className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
                                   >
-                                    <BookOpen className="h-4 w-4" /> Чети в профила
+                                    {hasVideo || isMulti ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                                    {hasVideo || isMulti ? "Гледай / Чети в профила" : "Чети в профила"}
                                   </Link>
                                 )}
                                 <p className="pt-1 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">
-                                  <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Достъпен за четене онлайн
+                                  <ShieldCheck className="h-3 w-3 text-brand-gold/70" /> Достъпен за гледане и четене онлайн
                                 </p>
                               </div>
                             </div>

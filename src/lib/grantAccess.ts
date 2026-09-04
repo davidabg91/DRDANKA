@@ -68,12 +68,31 @@ export async function grantAccess(input: {
     }
   }
 
-  // Add courseId to user's purchasedCourseIds (create user doc if missing).
+  // Add courseId and its slug (if any) to user's purchasedCourseIds
+  const idsToGrant = [input.courseId];
+  try {
+    const courseDoc = await db.collection("courses").doc(input.courseId).get();
+    if (courseDoc.exists) {
+      const data = courseDoc.data();
+      if (data?.slug) idsToGrant.push(data.slug);
+      if (data?.id) idsToGrant.push(data.id);
+    } else {
+      const bySlug = await db.collection("courses").where("slug", "==", input.courseId).limit(1).get();
+      if (!bySlug.empty) {
+        const data = bySlug.docs[0].data();
+        if (data?.slug) idsToGrant.push(data.slug);
+        if (data?.id) idsToGrant.push(data.id);
+      }
+    }
+  } catch (e) {
+    console.warn("Could not lookup course slug in grantAccess:", e);
+  }
+
   const userRef = db.collection("users").doc(email);
   const userSnap = await userRef.get();
   if (userSnap.exists) {
     await userRef.update({
-      purchasedCourseIds: FieldValue.arrayUnion(input.courseId),
+      purchasedCourseIds: FieldValue.arrayUnion(...idsToGrant),
     });
   } else {
     // Minimal user doc — most business fields empty for bookstore-only buyers.
@@ -92,7 +111,7 @@ export async function grantAccess(input: {
       role: "user",
       assignedDocs: [],
       messages: [],
-      purchasedCourseIds: [input.courseId],
+      purchasedCourseIds: Array.from(new Set(idsToGrant)),
     });
   }
 
