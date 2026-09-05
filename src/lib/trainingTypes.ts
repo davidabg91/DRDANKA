@@ -36,6 +36,7 @@ export interface Training {
   hasCertificate: boolean;
   /** Hide from public catalog without losing existing enrollments. */
   published: boolean;
+  deleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }

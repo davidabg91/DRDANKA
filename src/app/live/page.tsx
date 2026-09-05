@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { LIVE_COURSES, type LiveCourse } from "@/data/live-courses";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
+import { useTrainings } from "@/lib/firebaseHooks";
 import PageHero from "@/components/PageHero";
 
 /**
@@ -18,6 +19,16 @@ import PageHero from "@/components/PageHero";
  */
 export default function LiveCoursesPage() {
   const { overrides } = usePriceOverrides();
+  const { trainings: dbTrainings } = useTrainings(false);
+
+  const visibleCourses = LIVE_COURSES.filter((c) => {
+    const dbMatch = dbTrainings.find((d) => d.slug === c.slug || d.id === c.slug);
+    if (dbMatch) {
+      if (dbMatch.deleted || dbMatch.published === false) return false;
+    }
+    return true;
+  });
+
   return (
     <div className="min-h-screen pb-24">
       <PageHero
@@ -28,14 +39,14 @@ export default function LiveCoursesPage() {
       />
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-        {LIVE_COURSES.length === 0 ? (
+        {visibleCourses.length === 0 ? (
           <div className="bg-white rounded-2xl shadow-md p-10 text-center space-y-2">
             <Video className="h-10 w-10 text-brand-gold/50 mx-auto" />
             <p className="text-brand-dark/60 text-sm">Скоро добавяме нови курсове.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7 items-stretch">
-            {LIVE_COURSES.map((c) =>
+            {visibleCourses.map((c) =>
               c.card.cover ? (
                 <PhotoCourseCard key={c.slug} course={c} price={resolvePrice(c.slug, overrides, c.priceEur)} />
               ) : (

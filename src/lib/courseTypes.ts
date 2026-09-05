@@ -56,6 +56,7 @@ export interface Course {
   items?: CourseMaterialItem[];
   /** If false, hidden from the public catalog but existing buyers still keep access. */
   published: boolean;
+  deleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, useMemo } from "react";
 import Link from "next/link";
 import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments, useMyEnrollments, useBookings, useMyBookings } from "@/lib/firebaseHooks";
 import { auth, db, storage } from "@/lib/firebase";
@@ -263,38 +263,6 @@ export default function ProfilePage() {
   // Authentication states
   const { user: firebaseUser, loading: authLoading } = useAuth();
   const { users: firebaseUsers, loading: usersLoading, setFullUser, updateUser, sendPasswordReset } = useDankaUsers();
-  // Catalogs are now curated in /src/data/ — admin sees them as read-only stats.
-  // The legacy 'Course' / 'Training' shape is kept here as an adapter so the
-  // existing list/buyer/expansion UI keeps working without rewriting it.
-  const allCourses: Course[] = LIBRARY_MATERIALS.map(m => ({
-    id: m.slug,
-    slug: m.slug,
-    title: m.title,
-    description: m.tagline,
-    priceEur: m.priceEur,
-    type: m.type === "pdf" ? "pdf" : "link",
-    coverImageUrl: m.card.cover,
-    fileSizeMb: 0,
-    filePath: "",
-    externalUrl: m.contentUrl,
-    published: true,
-    createdAt: "",
-    updatedAt: "",
-  }));
-  const allTrainings: Training[] = LIVE_COURSES.map(c => ({
-    id: c.slug,
-    slug: c.slug,
-    title: c.title,
-    shortDesc: c.tagline,
-    bullets: [],
-    priceEur: c.priceEur,
-    type: c.platform === "zoom" ? "zoom" : "zoom", // unify to closest legacy enum
-    coverImageUrl: c.card.cover,
-    hasCertificate: c.hasCertificate,
-    published: true,
-    createdAt: "",
-    updatedAt: "",
-  }));
   const { enrollments: allEnrollments } = useEnrollments();
   const { bookings: allBookings } = useBookings();
   const [bookingSearchQuery, setBookingSearchQuery] = useState("");
@@ -306,6 +274,71 @@ export default function ProfilePage() {
   const { overrides: priceOverrides } = usePriceOverrides();
   const { overrides: typeOverrides } = useTypeOverrides();
   const { links: videoLinks } = useVideoLinks();
+
+  // Catalogs are curated in /src/data/ and merged with Firestore overrides:
+  // Admin can hide or delete items, which persists in Firestore and updates in real-time.
+  const allCourses: Course[] = useMemo(() => {
+    const map = new Map<string, Course>();
+    LIBRARY_MATERIALS.forEach(m => {
+      map.set(m.slug, {
+        id: m.slug,
+        slug: m.slug,
+        title: m.title,
+        description: m.tagline,
+        priceEur: m.priceEur,
+        type: m.type === "pdf" ? "pdf" : "link",
+        coverImageUrl: m.card.cover,
+        fileSizeMb: 0,
+        filePath: "",
+        externalUrl: m.contentUrl,
+        published: true,
+        createdAt: "",
+        updatedAt: "",
+      });
+    });
+
+    dbCourses.forEach(dc => {
+      const key = dc.slug || dc.id;
+      const existing = map.get(key);
+      if (existing) {
+        map.set(key, { ...existing, ...dc });
+      }
+    });
+
+    return Array.from(map.values()).filter(c => !c.deleted);
+  }, [dbCourses]);
+
+  const allTrainings: Training[] = useMemo(() => {
+    const map = new Map<string, Training>();
+    LIVE_COURSES.forEach(c => {
+      map.set(c.slug, {
+        id: c.slug,
+        slug: c.slug,
+        title: c.title,
+        shortDesc: c.tagline,
+        bullets: [],
+        priceEur: c.priceEur,
+        type: c.platform === "zoom" ? "zoom" : "zoom", // unify to closest legacy enum
+        coverImageUrl: c.card.cover,
+        hasCertificate: c.hasCertificate,
+        published: true,
+        createdAt: "",
+        updatedAt: "",
+      });
+    });
+
+    dbTrainings.forEach(dt => {
+      const key = dt.slug || dt.id;
+      const existing = map.get(key);
+      if (existing) {
+        map.set(key, { ...existing, ...dt });
+      } else {
+        map.set(dt.id, dt);
+      }
+    });
+
+    return Array.from(map.values()).filter(t => !t.deleted);
+  }, [dbTrainings]);
   /** Local edit buffer per slug while admin types a new price (string for the input). */
   const [priceDraft, setPriceDraft] = useState<Record<string, string>>({});
   const ADMIN_EMAIL = "d.nikolova.haccp@gmail.com";
@@ -1904,7 +1937,11 @@ export default function ProfilePage() {
 
   const handleToggleTrainingPublished = async (t: Training) => {
     try {
-      await setDoc(doc(db, "trainings", t.id), { ...t, published: !t.published, updatedAt: new Date().toISOString() });
+      await setDoc(
+        doc(db, "trainings", t.id),
+        { ...t, published: !t.published, deleted: false, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
     } catch (err: any) {
       alert("Грешка: " + (err?.message || err));
     }
@@ -1917,13 +1954,43 @@ export default function ProfilePage() {
       : "";
     if (!confirm(`Изтриване на курс „${t.title}"?${cascadeMsg}`)) return;
     try {
-      await deleteDoc(doc(db, "trainings", t.id));
+      await setDoc(
+        doc(db, "trainings", t.id),
+        { ...t, deleted: true, published: false, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
       // Cascade-delete enrollments for this training so the badge doesn't
       // keep counting orphan records.
       await Promise.all(
         relatedEnrollments.map(e => deleteDoc(doc(db, "enrollments", e.id)).catch(() => undefined))
       );
       alert("Курсът беше изтрит.");
+    } catch (err: any) {
+      alert("Грешка при изтриване: " + (err?.message || err));
+    }
+  };
+
+  const handleToggleLibraryPublished = async (c: Course) => {
+    try {
+      await setDoc(
+        doc(db, "courses", c.id),
+        { ...c, published: !c.published, deleted: false, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+    } catch (err: any) {
+      alert("Грешка: " + (err?.message || err));
+    }
+  };
+
+  const handleDeleteLibraryCourse = async (c: Course) => {
+    if (!confirm(`Сигурни ли сте, че искате да изтриете „${c.title}" от каталога?`)) return;
+    try {
+      await setDoc(
+        doc(db, "courses", c.id),
+        { ...c, deleted: true, published: false, updatedAt: new Date().toISOString() },
+        { merge: true }
+      );
+      alert("Материалът беше изтрит от каталога.");
     } catch (err: any) {
       alert("Грешка при изтриване: " + (err?.message || err));
     }
@@ -4881,6 +4948,7 @@ export default function ProfilePage() {
                                   <th className="border border-brand-green/10 p-3 text-center">Купувачи</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Статус</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Файл</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Действия</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -5109,10 +5177,27 @@ export default function ProfilePage() {
                                           );
                                         })()}
                                       </td>
+                                      <td className="border border-brand-green/10 p-3 text-center space-x-1 whitespace-nowrap">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleToggleLibraryPublished(c)}
+                                          className="text-[9px] font-bold uppercase px-2 py-1 rounded border border-brand-green/20 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer"
+                                        >
+                                          {c.published ? "Скрий" : "Покажи"}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteLibraryCourse(c)}
+                                          className="text-red-500 hover:text-red-700 p-1 cursor-pointer"
+                                          title="Изтрий от каталога"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5 inline" />
+                                        </button>
+                                      </td>
                                     </tr>
                                     {isExpanded && buyers.length > 0 && (
                                       <tr>
-                                        <td colSpan={6} className="border border-brand-green/10 p-3 bg-brand-light/50">
+                                        <td colSpan={7} className="border border-brand-green/10 p-3 bg-brand-light/50">
                                           <div className="space-y-2">
                                             <p className="text-[10px] font-black uppercase tracking-wider text-brand-green">Купувачи ({buyers.length})</p>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
