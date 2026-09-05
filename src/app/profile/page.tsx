@@ -4859,9 +4859,15 @@ export default function ProfilePage() {
                       </div>
 
 
-                      {/* Course list */}
+                      {/* Course list (Catalog) */}
                       <div className="space-y-2">
-                        <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Качени курсове ({allCourses.length})</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                          <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Каталог основни курсове и наръчници ({allCourses.length})</h3>
+                          <span className="text-[10px] text-brand-dark/50">Включително „Етикетиране на храни“, „НАССР Наръчник“ и др.</span>
+                        </div>
+                        <p className="text-[11px] text-brand-dark/60">
+                          От тук можете да добавяте множество видеа и уроци към всяко основно обучение от каталога с бутона <strong>„Добави уроци / видеа“</strong>.
+                        </p>
                         {allCourses.length === 0 ? (
                           <p className="text-xs text-brand-dark/50 italic py-4 text-center">Все още няма качени курсове.</p>
                         ) : (
@@ -4870,7 +4876,7 @@ export default function ProfilePage() {
                               <thead>
                                 <tr className="bg-brand-green/5 text-[10px] font-bold text-brand-green uppercase">
                                   <th className="border border-brand-green/10 p-3 text-left">Курс</th>
-                                  <th className="border border-brand-green/10 p-3 text-center">Тип / Размер</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">Тип / Формат</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Цена</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Купувачи</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Статус</th>
@@ -4881,6 +4887,9 @@ export default function ProfilePage() {
                                 {allCourses.map(c => {
                                   const buyers = usersList.filter(u => (u.purchasedCourseIds || []).includes(c.id));
                                   const isExpanded = expandedCourseBuyers === c.id;
+                                  const dbMatch = dbCourses.find(dc => dc.slug === c.slug || dc.id === c.id);
+                                  const courseItems = dbMatch?.items;
+
                                   return (
                                     <Fragment key={c.id}>
                                     <tr className="hover:bg-brand-light/30">
@@ -4888,6 +4897,14 @@ export default function ProfilePage() {
                                         <div className="font-bold text-brand-green">{c.title}</div>
                                         <div className="text-[10px] text-brand-dark/50">{c.description}</div>
                                         <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleEditCourse(dbMatch || c)}
+                                            className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-gold/20 border border-brand-gold text-brand-dark hover:bg-brand-gold transition-colors cursor-pointer"
+                                            title="Добави видеа, PDF файлове и управлявай уроците"
+                                          >
+                                            <Edit className="h-3 w-3" /> {courseItems && courseItems.length > 0 ? `Уроци (${courseItems.length})` : "Добави видеа / уроци"}
+                                          </button>
                                           <Link
                                             href={`/library/${c.slug}/viewer`}
                                             target="_blank"
@@ -4905,6 +4922,23 @@ export default function ProfilePage() {
                                             <ExternalLink className="h-3 w-3" /> Страница
                                           </Link>
                                         </div>
+
+                                        {/* Uploaded items preview chips */}
+                                        {courseItems && courseItems.length > 0 && (
+                                          <div className="mt-2 pt-2 border-t border-brand-green/10 flex flex-wrap gap-1">
+                                            {courseItems.map((it, idx) => (
+                                              <span
+                                                key={it.id || idx}
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-brand-light border border-brand-green/10 text-[10px] text-brand-dark/80"
+                                                title={it.filePath || it.title}
+                                              >
+                                                {it.type === "video" ? <Video className="h-2.5 w-2.5 text-amber-600 shrink-0" /> : <FileText className="h-2.5 w-2.5 text-blue-600 shrink-0" />}
+                                                <span className="truncate max-w-[150px]">{it.title}</span>
+                                                {it.duration && <span className="text-[8px] font-mono text-brand-gold font-bold">{it.duration}</span>}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        )}
                                       </td>
                                       <td className="border border-brand-green/10 p-3 text-center text-[10px]">
                                         {(() => {
