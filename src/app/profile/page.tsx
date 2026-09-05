@@ -3998,7 +3998,11 @@ export default function ProfilePage() {
                                       <p className="text-brand-dark/60 font-mono">{u.email}</p>
                                     </td>
                                     <td className="border border-brand-green/10 p-3 text-center">
-                                      {u.subscriptionStatus === "awaiting_payment" ? (
+                                      {u.subscriptionStatus === "none" ? (
+                                        <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-gray-100 text-gray-700">
+                                          Без абонамент (Само курс)
+                                        </span>
+                                      ) : u.subscriptionStatus === "awaiting_payment" ? (
                                         <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
                                           Чака плащане ({u.subscriptionFeeEur} €)
                                         </span>
@@ -4014,8 +4018,8 @@ export default function ProfilePage() {
                                           </span>
                                         );
                                       })() : (
-                                        <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${u.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                                          {u.status === "approved" ? "Активен" : "Изтекъл"}
+                                        <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${u.status === "approved" && u.subscriptionStatus !== "expired" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                                          {u.status === "approved" && u.subscriptionStatus !== "expired" ? "Активен" : "Изтекъл"}
                                         </span>
                                       )}
                                     </td>
@@ -4036,7 +4040,8 @@ export default function ProfilePage() {
                                               className="text-[10px] font-mono px-2 py-1 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white cursor-pointer"
                                             />
                                             <span className={`text-[9px] ${colour}`}>
-                                              {d === null ? "— не е зададено —" :
+                                              {u.subscriptionStatus === "none" && !u.expiresAt ? "— само курс —" :
+                                               d === null ? "— не е зададено —" :
                                                d < 0 ? `Изтекъл преди ${-d} дни` :
                                                d === 0 ? "Изтича днес" :
                                                `След ${d} дни`}
@@ -4046,7 +4051,15 @@ export default function ProfilePage() {
                                       })()}
                                     </td>
                                     <td className="border border-brand-green/10 p-3 text-center">
-                                      {u.subscriptionStatus === "awaiting_payment" ? (
+                                      {u.subscriptionStatus === "none" ? (
+                                        <button
+                                          onClick={() => handleToggleUserStatus(u.email, "expired")}
+                                          className="px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                                          title="Активирай абонамент за БАБХ дневници и система"
+                                        >
+                                          Активирай абонамент
+                                        </button>
+                                      ) : u.subscriptionStatus === "awaiting_payment" ? (
                                         <button
                                           onClick={() => handleConfirmSubscriptionPayment(u.email)}
                                           className="px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 flex items-center justify-center gap-1 mx-auto"
@@ -4070,10 +4083,10 @@ export default function ProfilePage() {
                                         </div>
                                       ) : (
                                         <button
-                                          onClick={() => handleToggleUserStatus(u.email, u.status)}
-                                          className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border ${u.status === "approved" ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"}`}
+                                          onClick={() => handleToggleUserStatus(u.email, u.subscriptionStatus === "approved" ? "approved" : u.status)}
+                                          className={`px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border ${u.status === "approved" && u.subscriptionStatus === "approved" ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100" : "bg-green-50 text-green-600 border-green-200 hover:bg-green-100"}`}
                                         >
-                                          {u.status === "approved" ? "Спри абонамент" : "Активирай абонамент"}
+                                          {u.status === "approved" && u.subscriptionStatus === "approved" ? "Спри абонамент" : "Активирай абонамент"}
                                         </button>
                                       )}
                                     </td>
