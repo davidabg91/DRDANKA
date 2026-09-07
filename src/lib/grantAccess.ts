@@ -1,6 +1,7 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { adminAuth, adminDb } from "./firebaseAdmin";
 import { Purchase } from "./courseTypes";
+import { resolveBundleIds } from "@/data/library/bundles";
 
 /**
  * Idempotent: creates a Purchase doc, adds courseId to the buyer's
@@ -68,8 +69,9 @@ export async function grantAccess(input: {
     }
   }
 
-  // Add courseId and its slug (if any) to user's purchasedCourseIds
-  const idsToGrant = [input.courseId];
+  // Add courseId, bundle sub-items (if bundle), and its slug (if any) to user's purchasedCourseIds
+  const bundleSubSlugs = resolveBundleIds(input.courseId);
+  const idsToGrant = [input.courseId, ...bundleSubSlugs];
   try {
     const courseDoc = await db.collection("courses").doc(input.courseId).get();
     if (courseDoc.exists) {

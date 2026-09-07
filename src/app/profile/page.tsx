@@ -12,7 +12,7 @@ import { Course, CourseMaterialItem } from "@/lib/courseTypes";
 import { Training, Enrollment } from "@/lib/trainingTypes";
 import { Booking, BookingStatus } from "@/lib/bookingTypes";
 import { slugify, uniqueSlug } from "@/lib/slugify";
-import { LIBRARY_MATERIALS } from "@/data/library";
+import { LIBRARY_MATERIALS, resolveBundleIds, expandWithBundleItems } from "@/data/library";
 import { LIVE_COURSES } from "@/data/live-courses";
 import { usePriceOverrides, setPriceOverride, resolvePrice } from "@/lib/priceOverrides";
 import { useTypeOverrides, setTypeOverride, resolveType, MaterialType } from "@/lib/typeOverrides";
@@ -2041,9 +2041,14 @@ export default function ProfilePage() {
       const matchingLib = LIBRARY_MATERIALS.find(m => m.slug === enr.trainingId || m.title.toLowerCase() === enr.trainingTitle.toLowerCase());
       const matchingTr = dbTrainings.find(t => t.id === enr.trainingId || t.slug === enr.trainingId || t.title.toLowerCase() === enr.trainingTitle.toLowerCase());
       const matchingLive = LIVE_COURSES.find(l => l.slug === enr.trainingId || l.title.toLowerCase() === enr.trainingTitle.toLowerCase());
+      const bundleSubSlugs = Array.from(new Set([
+        ...resolveBundleIds(enr.trainingId),
+        ...resolveBundleIds(enr.trainingTitle),
+      ]));
 
       const newIds = [
         enr.trainingId,
+        ...bundleSubSlugs,
         matchingDbCourse?.id,
         matchingDbCourse?.slug,
         matchingLib?.slug,
@@ -2212,8 +2217,11 @@ export default function ProfilePage() {
     const matchingTr = dbTrainings.find(t => t.id === courseGrantTargetId || t.slug === courseGrantTargetId || t.title === courseGrantTargetId);
     const matchingLive = LIVE_COURSES.find(l => l.slug === courseGrantTargetId || l.title === courseGrantTargetId);
 
+    const bundleSubSlugs = resolveBundleIds(courseGrantTargetId);
+
     const newIds = [
       courseGrantTargetId,
+      ...bundleSubSlugs,
       matchingDbCourse?.id,
       matchingDbCourse?.slug,
       matchingLib?.slug,
@@ -6146,7 +6154,9 @@ export default function ProfilePage() {
                   .filter(e => e.status === "access_granted" || e.status === "paid")
                   .flatMap(e => [e.trainingId, e.trainingTitle].filter(Boolean));
 
-                const allMyUnlockedIds = Array.from(new Set([...myIds, ...grantedEnrollmentIds]));
+                const allMyUnlockedIds = expandWithBundleItems(
+                  Array.from(new Set([...myIds, ...grantedEnrollmentIds]))
+                );
 
                 // 1. Static Library Materials
                 const unlockedMaterials = LIBRARY_MATERIALS.filter(m => 
@@ -6251,44 +6261,90 @@ export default function ProfilePage() {
                                 <p className="text-xs text-brand-dark/60 leading-normal">{m.tagline}</p>
                               </div>
                               <div className="space-y-2 mt-6">
-                                {hasLink ? (
-                                  <button
-                                    onClick={() => setWatchLinkSlug(m.slug)}
-                                    className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow border-0"
-                                  >
-                                    <Video className="h-4 w-4" />
-                                    Гледай в профила
-                                  </button>
+                                {m.slug === "prakticheska-biblia-paket-vsichki-chasti" ? (
+                                  <div className="space-y-2.5">
+                                    <div className="p-3 bg-brand-gold/10 border border-brand-gold/30 rounded-xl space-y-1">
+                                      <span className="text-[10px] font-black uppercase text-brand-dark flex items-center gap-1.5">
+                                        <Sparkles className="h-3.5 w-3.5 text-brand-gold" />
+                                        Всички 3 части са отключени!
+                                      </span>
+                                      <p className="text-[11px] text-brand-dark/70 leading-snug">
+                                        Отворете всяка част директно от бутоните по-долу или разгледайте отделните им карти в профила:
+                                      </p>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                      <a
+                                        href="https://drive.google.com/file/d/1XWxTYDAYfG90kEh9ck1dttKV_ZErTcyP/view?usp=drive_link"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center justify-center gap-1 bg-brand-green/10 hover:bg-brand-green/20 text-brand-green font-bold text-[10px] uppercase py-2.5 px-2 rounded-xl transition-colors text-center border border-brand-green/25"
+                                      >
+                                        <Download className="h-3.5 w-3.5 text-brand-gold" /> Част I (Drive)
+                                      </a>
+                                      <Link
+                                        href="/library/prakticheska-biblia-chast-2/viewer"
+                                        className="inline-flex items-center justify-center gap-1 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-[10px] uppercase py-2.5 px-2 rounded-xl transition-colors text-center shadow"
+                                      >
+                                        <BookOpen className="h-3.5 w-3.5" /> Част II (Четец)
+                                      </Link>
+                                      <Link
+                                        href="/library/prakticheska-biblia-chast-3/viewer"
+                                        className="inline-flex items-center justify-center gap-1 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-[10px] uppercase py-2.5 px-2 rounded-xl transition-colors text-center shadow"
+                                      >
+                                        <BookOpen className="h-3.5 w-3.5" /> Част III (Четец)
+                                      </Link>
+                                    </div>
+                                    <a
+                                      href="https://drive.google.com/file/d/13xOUsJPL--w7gyRbsK8Bjyi_Qfl1e0-R/view?usp=drive_link"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center justify-center gap-1.5 bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-dark font-bold text-[11px] uppercase py-2 px-3 rounded-xl transition-colors w-full text-center border border-brand-gold/40"
+                                    >
+                                      <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> БОНУС: Грешки при воденето на записи (Drive)
+                                    </a>
+                                  </div>
                                 ) : (
-                                  <Link
-                                    href={`/library/${m.slug}/viewer`}
-                                    className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
-                                  >
-                                    {isVideo ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
-                                    {isVideo ? "Гледай в профила" : "Чети в профила"}
-                                  </Link>
-                                )}
+                                  <>
+                                    {hasLink ? (
+                                      <button
+                                        onClick={() => setWatchLinkSlug(m.slug)}
+                                        className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow border-0"
+                                      >
+                                        <Video className="h-4 w-4" />
+                                        Гледай в профила
+                                      </button>
+                                    ) : (
+                                      <Link
+                                        href={`/library/${m.slug}/viewer`}
+                                        className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
+                                      >
+                                        {isVideo ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}
+                                        {isVideo ? "Гледай в профила" : "Чети в профила"}
+                                      </Link>
+                                    )}
 
-                                {m.downloadUrl && (
-                                  <a
-                                    href={m.downloadUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center gap-1.5 bg-brand-gold/10 hover:bg-brand-gold/20 text-brand-dark font-bold text-xs uppercase py-2.5 px-3 rounded-xl transition-colors w-full cursor-pointer text-center border border-brand-gold/30"
-                                  >
-                                    <Download className="h-3.5 w-3.5 text-brand-gold" /> Изтегли файла (Drive)
-                                  </a>
-                                )}
+                                    {m.downloadUrl && (
+                                      <a
+                                        href={m.downloadUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center justify-center gap-1.5 bg-brand-gold/10 hover:bg-brand-gold/20 text-brand-dark font-bold text-xs uppercase py-2.5 px-3 rounded-xl transition-colors w-full cursor-pointer text-center border border-brand-gold/30"
+                                      >
+                                        <Download className="h-3.5 w-3.5 text-brand-gold" /> Изтегли файла (Drive)
+                                      </a>
+                                    )}
 
-                                {m.bonus && (
-                                  <a
-                                    href={m.bonus.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center gap-1.5 bg-brand-green/5 hover:bg-brand-green/10 text-brand-green font-bold text-[11px] uppercase py-2 px-3 rounded-xl transition-colors w-full cursor-pointer text-center border border-brand-green/15"
-                                  >
-                                    <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Бонус: {m.bonus.title}
-                                  </a>
+                                    {m.bonus && (
+                                      <a
+                                        href={m.bonus.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center justify-center gap-1.5 bg-brand-green/5 hover:bg-brand-green/10 text-brand-green font-bold text-[11px] uppercase py-2 px-3 rounded-xl transition-colors w-full cursor-pointer text-center border border-brand-green/15"
+                                      >
+                                        <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Бонус: {m.bonus.title}
+                                      </a>
+                                    )}
+                                  </>
                                 )}
 
                                 <p className="pt-1 text-[9px] text-center text-brand-dark/40 flex items-center justify-center gap-1">

@@ -14,11 +14,13 @@ import { videoEtiketirane } from "./video-etiketirane";
 import { mesoIMesniProdukti } from "./meso-i-mesni-produkti";
 import { etiketiraneKontrolZashtita } from "./etiketirane-kontrol-zashtita";
 import { haccpPrakticheskaSistema } from "./haccp-prakticheska-sistema";
+import { prakticheskaBibliaPaket } from "./prakticheska-biblia-paket";
 import { prakticheskaBibliaChast1 } from "./prakticheska-biblia-chast-1";
 import { prakticheskaBibliaChast2 } from "./prakticheska-biblia-chast-2";
 import { prakticheskaBibliaChast3 } from "./prakticheska-biblia-chast-3";
 
 export const LIBRARY_MATERIALS: ReadonlyArray<LibraryMaterial> = [
+  prakticheskaBibliaPaket,
   prakticheskaBibliaChast3,
   prakticheskaBibliaChast2,
   prakticheskaBibliaChast1,
@@ -34,4 +36,5 @@ export function findLibraryMaterial(slug: string): LibraryMaterial | undefined {
   return LIBRARY_MATERIALS.find((m) => m.slug === slug);
 }
 
+export * from "./bundles";
 export type { LibraryMaterial, LibraryMaterialType } from "./types";

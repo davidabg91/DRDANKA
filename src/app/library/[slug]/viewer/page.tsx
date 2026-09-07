@@ -10,9 +10,9 @@ import { auth, storage, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
 import { collection, query, where, getDocs, doc, getDoc, limit } from "firebase/firestore";
-import { findLibraryMaterial } from "@/data/library";
+import { findLibraryMaterial, isBundle } from "@/data/library";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock, Download, BookOpen, Sparkles } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -42,10 +42,12 @@ export default function LibraryViewerPage() {
   const [pageCount, setPageCount] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.2);
+  const [isBundleHub, setIsBundleHub] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!slug) return;
+
     // Effective type decides which file to try first; we still fall back to the
     // other kind so an override mismatch never blocks a real upload.
     const codeType = (material?.type === "video" ? "video" : "pdf") as "pdf" | "video";
@@ -60,6 +62,36 @@ export default function LibraryViewerPage() {
         return;
       }
       setEmail(user.email);
+
+      // Handle bundle packages (e.g. all 3 parts of the Bible)
+      if (isBundle(slug)) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.email.toLowerCase()));
+          const purchased: string[] = userDoc.data()?.purchasedCourseIds || [];
+          const isAdmin = user.email.toLowerCase() === "d.nikolova.haccp@gmail.com";
+          const hasAccess =
+            isAdmin ||
+            purchased.some(
+              (id) =>
+                id === slug ||
+                id === "prakticheska-biblia-chast-1" ||
+                id === "prakticheska-biblia-chast-2" ||
+                id === "prakticheska-biblia-chast-3"
+            );
+          if (hasAccess) {
+            setIsBundleHub(true);
+            return;
+          } else {
+            setLoadError(
+              "Нямате достъп до този пакет. Ако вече сте го заплатили, моля изчакайте потвърждение от администратора."
+            );
+            return;
+          }
+        } catch (e: any) {
+          setLoadError("Грешка при проверка на достъпа: " + (e?.message || e));
+          return;
+        }
+      }
 
       const tryLoad = async (kind: "pdf" | "video") => {
         const fileName = kind === "pdf" ? "file.pdf" : "file.mp4";
@@ -232,6 +264,117 @@ export default function LibraryViewerPage() {
       </div>
     );
   }
+
+  if (isBundleHub) {
+    return (
+      <div className="min-h-screen bg-brand-light pb-24">
+        {/* Header */}
+        <div className="bg-brand-green text-white py-4 px-4 sm:px-8 border-b border-brand-gold/20 flex items-center justify-between">
+          <Link
+            href="/profile"
+            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-white/80 hover:text-brand-gold transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Към профила
+          </Link>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold hidden sm:inline">
+            Пълен пакет
+          </span>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-8">
+          <div className="text-center space-y-3">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-dark text-[10px] font-black uppercase tracking-wider">
+              <Sparkles className="h-3.5 w-3.5 text-brand-gold" />
+              Всички 3 части са отключени
+            </span>
+            <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-green">
+              {material.title}
+            </h1>
+            <p className="text-sm text-brand-dark/70 max-w-2xl mx-auto leading-relaxed">
+              Изберете коя част желаете да четете или изтеглете работните материали от бутоните по-долу:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Part 1 */}
+            <div className="bg-white rounded-3xl border border-brand-green/15 p-6 shadow-md flex flex-col justify-between space-y-4 hover:shadow-xl transition-shadow">
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold block">Част I</span>
+                <h3 className="font-serif text-lg font-bold text-brand-green leading-snug">
+                  Основи и изграждане на системата за самоконтрол
+                </h3>
+                <p className="text-xs text-brand-dark/65 leading-relaxed">
+                  Откъде да започнете, кои ДПХП са приложими и как да организирате записите.
+                </p>
+              </div>
+              <div className="space-y-2 pt-2 border-t border-brand-green/5">
+                <a
+                  href="https://drive.google.com/file/d/1XWxTYDAYfG90kEh9ck1dttKV_ZErTcyP/view?usp=drive_link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 w-full py-3 px-4 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow text-center"
+                >
+                  <Download className="h-4 w-4 text-brand-gold" /> Изтегли Част I (Drive)
+                </a>
+                <a
+                  href="https://drive.google.com/file/d/13xOUsJPL--w7gyRbsK8Bjyi_Qfl1e0-R/view?usp=drive_link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-dark font-bold text-[10px] uppercase tracking-wider rounded-xl transition-colors border border-brand-gold/30 text-center"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Бонус: Грешки при записите
+                </a>
+              </div>
+            </div>
+
+            {/* Part 2 */}
+            <div className="bg-white rounded-3xl border border-brand-green/15 p-6 shadow-md flex flex-col justify-between space-y-4 hover:shadow-xl transition-shadow">
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold block">Част II</span>
+                <h3 className="font-serif text-lg font-bold text-brand-green leading-snug">
+                  Добри хигиенни и производствени практики и НАССР
+                </h3>
+                <p className="text-xs text-brand-dark/65 leading-relaxed">
+                  Продължение — от нормативните изисквания към практическото прилагане в обекта.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-brand-green/5">
+                <Link
+                  href="/library/prakticheska-biblia-chast-2/viewer"
+                  className="inline-flex items-center justify-center gap-1.5 w-full py-3 px-4 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow text-center"
+                >
+                  <BookOpen className="h-4 w-4" /> Чети Част II в четеца
+                </Link>
+              </div>
+            </div>
+
+            {/* Part 3 */}
+            <div className="bg-white rounded-3xl border border-brand-green/15 p-6 shadow-md flex flex-col justify-between space-y-4 hover:shadow-xl transition-shadow">
+              <div className="space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-gold block">Част III</span>
+                <h3 className="font-serif text-lg font-bold text-brand-green leading-snug">
+                  Приложения: заповеди, дневници и чек листи
+                </h3>
+                <p className="text-xs text-brand-dark/65 leading-relaxed">
+                  Готови работни образци и бланки, подредени по номерата на ДПХП.
+                </p>
+              </div>
+              <div className="pt-2 border-t border-brand-green/5">
+                <Link
+                  href="/library/prakticheska-biblia-chast-3/viewer"
+                  className="inline-flex items-center justify-center gap-1.5 w-full py-3 px-4 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow text-center"
+                >
+                  <BookOpen className="h-4 w-4" /> Чети Част III в четеца
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!pdfFile && !videoUrl) {
     return <div className="min-h-screen flex items-center justify-center text-brand-dark/50">Зареждане на материала…</div>;
   }
