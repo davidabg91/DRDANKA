@@ -8,7 +8,7 @@ import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { auth, storage, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { ref as storageRef, getBlob } from "firebase/storage";
+import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
 import { collection, query, where, getDocs, doc, getDoc, limit } from "firebase/firestore";
 import { findLibraryMaterial } from "@/data/library";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
@@ -52,8 +52,6 @@ export default function LibraryViewerPage() {
     const preferred = resolveType(slug, typeOverrides, codeType);
     const order: Array<"pdf" | "video"> = preferred === "video" ? ["video", "pdf"] : ["pdf", "video"];
 
-    let objectUrl: string | null = null;
-
     const unsub = onAuthStateChanged(auth, async (user) => {
       setAuthReady(true);
       if (!user || !user.email) {
@@ -66,12 +64,13 @@ export default function LibraryViewerPage() {
       const tryLoad = async (kind: "pdf" | "video") => {
         const fileName = kind === "pdf" ? "file.pdf" : "file.mp4";
         try {
-          const blob = await getBlob(storageRef(storage, `library/${slug}/${fileName}`));
+          const ref = storageRef(storage, `library/${slug}/${fileName}`);
           if (kind === "pdf") {
+            const blob = await getBlob(ref);
             setPdfFile(blob);
           } else {
-            objectUrl = URL.createObjectURL(blob);
-            setVideoUrl(objectUrl);
+            const streamUrl = await getDownloadURL(ref);
+            setVideoUrl(streamUrl);
           }
           setMediaKind(kind);
           return;
@@ -92,9 +91,17 @@ export default function LibraryViewerPage() {
             return;
           }
           if (courseData?.filePath) {
-            const blob = await getBlob(storageRef(storage, courseData.filePath));
-            setPdfFile(blob);
-            setMediaKind("pdf");
+            const isVid = courseData.filePath.endsWith(".mp4") || courseData.type === "video";
+            const ref = storageRef(storage, courseData.filePath);
+            if (isVid) {
+              const streamUrl = await getDownloadURL(ref);
+              setVideoUrl(streamUrl);
+              setMediaKind("video");
+            } else {
+              const blob = await getBlob(ref);
+              setPdfFile(blob);
+              setMediaKind("pdf");
+            }
             return;
           }
           if (courseData?.externalUrl) {
@@ -129,7 +136,6 @@ export default function LibraryViewerPage() {
 
     return () => {
       unsub();
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [slug, material, typeOverrides]);
 
@@ -296,6 +302,7 @@ export default function LibraryViewerPage() {
           {mediaKind === "video" && videoUrl && (
             <video
               src={videoUrl}
+              preload="metadata"
               controls
               controlsList="nodownload noplaybackrate"
               disablePictureInPicture

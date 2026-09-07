@@ -9,7 +9,7 @@ import "react-pdf/dist/Page/TextLayer.css";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
-import { ref as storageRef, getBlob } from "firebase/storage";
+import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
 import { Course, CourseMaterialItem } from "@/lib/courseTypes";
 import {
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock,
@@ -110,7 +110,6 @@ export default function CourseViewerPage() {
     const current = items[activeItemIndex] || items[0];
     if (!current) return;
 
-    let activeObjectUrl: string | null = null;
     let cancelled = false;
 
     const loadContent = async () => {
@@ -124,10 +123,10 @@ export default function CourseViewerPage() {
           const blob = await getBlob(storageRef(storage, current.filePath));
           if (!cancelled) setPdfFile(blob);
         } else if (current.type === "video" && current.filePath) {
-          const blob = await getBlob(storageRef(storage, current.filePath));
+          // Stream progressive video directly via range-request URL rather than downloading entire file into RAM
+          const streamUrl = await getDownloadURL(storageRef(storage, current.filePath));
           if (!cancelled) {
-            activeObjectUrl = URL.createObjectURL(blob);
-            setVideoBlobUrl(activeObjectUrl);
+            setVideoBlobUrl(streamUrl);
           }
         }
       } catch (err: any) {
@@ -146,7 +145,6 @@ export default function CourseViewerPage() {
 
     return () => {
       cancelled = true;
-      if (activeObjectUrl) URL.revokeObjectURL(activeObjectUrl);
     };
   }, [items, activeItemIndex]);
 
@@ -352,6 +350,7 @@ export default function CourseViewerPage() {
                 <div className="relative group">
                   <video
                     src={videoBlobUrl}
+                    preload="metadata"
                     controls
                     controlsList="nodownload noplaybackrate"
                     disablePictureInPicture
