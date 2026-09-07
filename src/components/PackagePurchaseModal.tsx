@@ -228,6 +228,26 @@ export default function PackagePurchaseModal({
         createdAt: new Date().toISOString(),
       });
 
+      // Dispatch instant Telegram notification to admin
+      fetch("/api/notify-telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: withTrial ? "trial" : "enrollment",
+          data: {
+            trainingTitle: packageTitle,
+            packageKind,
+            contentType,
+            fullName: fullName.trim(),
+            email: cleanEmail,
+            phone: phone.trim(),
+            company: withTrial ? firmName.trim() : company.trim(),
+            firmName: firmName.trim(),
+            priceEur,
+          },
+        }),
+      }).catch((e) => console.warn("Telegram notification warning:", e));
+
       trackPurchase({
         content_name: packageTitle,
         content_ids: [packageId],

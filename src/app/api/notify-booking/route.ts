@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
+import { sendTelegramNotification } from "@/lib/telegram";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -107,6 +108,34 @@ export async function POST(req: NextRequest) {
       }).catch((e) => console.error("FormSubmit email relay error:", e));
     } catch (emailErr) {
       console.error("Email notification dispatch error:", emailErr);
+    }
+
+    // 3. Dispatch instant Telegram notification
+    try {
+      const nowStr = new Date(nowIso).toLocaleString("bg-BG", {
+        timeZone: "Europe/Sofia",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      const telegramMsg =
+        `🔔 <b>НОВА РЕЗЕРВАЦИЯ ЗА КОНСУЛТАЦИЯ</b>\n\n` +
+        `📋 <b>Услуга:</b> ${bookingRecord.packageName} (${bookingRecord.duration})\n` +
+        `👤 <b>Име:</b> ${bookingRecord.name}\n` +
+        `📧 <b>Имейл:</b> ${bookingRecord.email}\n` +
+        `📞 <b>Телефон:</b> ${bookingRecord.phone}\n` +
+        (bookingRecord.date ? `📅 <b>Желана дата/час:</b> ${bookingRecord.date} в ${bookingRecord.time} ч.\n` : "") +
+        (bookingRecord.note ? `📝 <b>Бележка:</b> ${bookingRecord.note}\n` : "") +
+        `💰 <b>Сума:</b> ${bookingRecord.price}\n` +
+        `🕒 <b>Дата:</b> ${nowStr} ч.\n\n` +
+        `👉 <a href="https://drdanka.bg/profile">Отвори Админ Панела (Консултации)</a>`;
+
+      await sendTelegramNotification(telegramMsg);
+    } catch (teleErr) {
+      console.error("Telegram booking dispatch error:", teleErr);
     }
 
     return NextResponse.json({

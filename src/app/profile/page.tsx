@@ -2510,6 +2510,22 @@ export default function ProfilePage() {
     });
 
     saveUsers(updatedUsers);
+
+    // Dispatch Telegram alert to admin about new user chat message
+    const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+    fetch("/api/notify-telegram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "message",
+        data: {
+          senderEmail: currentUserEmail,
+          senderName: me?.contact || me?.firmName || currentUserEmail,
+          text: userChatMessageText.trim(),
+        },
+      }),
+    }).catch(err => console.warn("Telegram chat notification warning:", err));
+
     setUserChatMessageText("");
   };
 

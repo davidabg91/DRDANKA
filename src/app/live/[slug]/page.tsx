@@ -78,6 +78,25 @@ export default function LiveCourseDetailPage() {
         status: "awaiting_payment",
         createdAt: new Date().toISOString(),
       });
+
+      // Dispatch instant Telegram notification to admin
+      fetch("/api/notify-telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "enrollment",
+          data: {
+            trainingTitle: course.title,
+            trainingType: course.platform === "zoom" ? "zoom" : "video",
+            fullName: name.trim(),
+            email: email.trim().toLowerCase(),
+            phone: phone.trim(),
+            company: company.trim() || "",
+            priceEur: livePrice,
+          },
+        }),
+      }).catch((e) => console.warn("Telegram notification warning:", e));
+
       trackPurchase({
         content_name: course.title,
         content_ids: [course.slug],
