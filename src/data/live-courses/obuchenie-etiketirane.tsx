@@ -49,7 +49,7 @@ function EtiketiranePage() {
       {/* Формат */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { Icon: Calendar, title: "2 дни — 14–15 август", desc: "Ден 1 — законодателство и теория. Ден 2 — изцяло практическа работа." },
+          { Icon: Calendar, title: "2 дни — 14–15 октомври", desc: "Ден 1 — законодателство и теория. Ден 2 — изцяло практическа работа." },
           { Icon: Users, title: "Малка група", desc: "Ограничен брой места за практическа насоченост и лично внимание." },
           { Icon: Award, title: "Авторски сертификат", desc: "След практическо домашно и успешно положен финален тест." },
         ].map(({ Icon, title, desc }) => (
@@ -158,11 +158,11 @@ function EtiketiranePage() {
         <h2 className="font-serif text-xl font-bold text-brand-green">Цени и записване</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-2xl border-2 border-brand-gold bg-brand-gold/5 p-5 text-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold-dark">Ранно записване — до 10 август</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold-dark">Ранно записване — до 10 октомври</span>
             <div className="font-serif text-4xl font-black text-brand-green mt-1">199 €</div>
           </div>
           <div className="rounded-2xl border border-brand-green/10 bg-brand-light/40 p-5 text-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-brand-dark/50">След 10 август</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-dark/50">След 10 октомври</span>
             <div className="font-serif text-4xl font-black text-brand-dark/70 mt-1">235 €</div>
           </div>
         </div>
@@ -240,9 +240,9 @@ export const obuchenieEtiketirane: LiveCourse = {
   originalPriceEur: 235.0,
   platform: "zoom",
   hasCertificate: true,
-  format: "2 дни — теория + практика (14–15 август)",
+  format: "2 дни — теория + практика (14–15 октомври)",
   groupSize: "Малка група, ограничени места",
-  nextBatch: "Дати: 14–15 август · ранно записване 199 € до 10 август",
+  nextBatch: "Дати: 14–15 октомври · ранно записване 199 € до 10 октомври",
   highlights: [
     "Регламент (ЕС) № 1169/2011 и (ЕО) № 1924/2006",
     "Ден 2 изцяло практически — реални продукти и етикети",

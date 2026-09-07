@@ -157,7 +157,7 @@ export const etiketiraneKontrolZashtita: LibraryMaterial = {
   contentUrl: "https://firebasestorage.googleapis.com/v0/b/danka-3e858.firebasestorage.app/o/library%2Fetiketirane-kontrol-zashtita%2Ffile.pdf?alt=media",
   card: {
     cover: "/etiketirane-kontrol-cover.webp",
-    badge: "Промоция до 30.06.2026",
+    badge: "Промоция до 31.10.2026",
     accent: "gold",
   },
   page: EtiketiraneKontrolZashtitaPage,

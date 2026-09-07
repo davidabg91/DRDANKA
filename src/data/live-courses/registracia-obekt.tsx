@@ -86,7 +86,7 @@ function RegistraciaObektPage() {
       {/* Формат */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { Icon: Calendar, title: "Еднодневно обучение", desc: "Практически фокус — от избора на обект до първата проверка." },
+          { Icon: Calendar, title: "1 октомври (10:00 – 17:30 ч.)", desc: "Еднодневно онлайн обучение с практически фокус — от избора на обект до първата проверка." },
           { Icon: Users, title: "Малка група", desc: "Всеки участник задава въпроси за своя бъдещ обект." },
           { Icon: Award, title: "Авторски сертификат", desc: "След успешно положен финален тест." },
         ].map(({ Icon, title, desc }) => (
@@ -170,11 +170,11 @@ function RegistraciaObektPage() {
         <h2 className="font-serif text-xl font-bold text-brand-green">Цени и записване</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-2xl border-2 border-brand-gold bg-brand-gold/5 p-5 text-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold-dark">Ранно записване</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-gold-dark">Ранно записване — до 25 септември</span>
             <div className="font-serif text-4xl font-black text-brand-green mt-1">99 €</div>
           </div>
           <div className="rounded-2xl border border-brand-green/10 bg-brand-light/40 p-5 text-center">
-            <span className="text-[10px] font-black uppercase tracking-widest text-brand-dark/50">Редовна цена</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-brand-dark/50">След 25 септември</span>
             <div className="font-serif text-4xl font-black text-brand-dark/70 mt-1">129 €</div>
           </div>
         </div>
@@ -252,9 +252,9 @@ export const registraciaObekt: LiveCourse = {
   originalPriceEur: 129.0,
   platform: "zoom",
   hasCertificate: true,
-  format: "1 ден — практически модули",
+  format: "1 ден (1 октомври · 10:00 – 17:30 ч.)",
   groupSize: "Малка група, ограничени места",
-  nextBatch: "Дата: обявява се при сформиране на група · ранно записване 99 €",
+  nextBatch: "1 октомври · 10:00 – 17:30 ч. · ранно записване 99 €",
   highlights: [
     "6 модула — от избора на обект до проверката от ОДБХ",
     "Как да избегнете скъпоструващи ремонти и грешен избор на обект",
