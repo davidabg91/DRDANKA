@@ -78,6 +78,18 @@ export const TESTIMONIALS: Testimonial[] = [
     role: "Собственик на заведение",
     timeAgo: "Преди 1 седмица",
   },
+  {
+    id: "profesionalizum-ogromna-pomosht",
+    headline:
+      "Това, което споделяте, е огромна помощ за всички, които искаме да работим с професионализъм",
+    body: [
+      "Имате моето дълбоко уважение за огромния труд, който сте положили.",
+    ],
+    author: "Е. Георгиева",
+    initials: "ЕГ",
+    role: "Професионалист в хранителния бранш",
+    timeAgo: "Преди няколко дни",
+  },
 ];
 
 /** Pick specific testimonials by id, preserving the order requested. */
