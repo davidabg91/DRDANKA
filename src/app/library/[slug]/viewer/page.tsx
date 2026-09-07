@@ -41,7 +41,7 @@ export default function LibraryViewerPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.2);
+  const [scale, setScale] = useState(0.5);
   const [isBundleHub, setIsBundleHub] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -399,9 +399,9 @@ export default function LibraryViewerPage() {
         <div className="font-serif text-sm font-bold truncate flex-1 text-center px-3">{material.title}</div>
         {mediaKind === "pdf" ? (
           <div className="flex items-center gap-2">
-            <button onClick={() => setScale(s => Math.max(0.5, s - 0.2))} className="text-white/80 hover:text-brand-gold p-1 cursor-pointer" aria-label="Намали"><ZoomOut className="h-4 w-4" /></button>
+            <button onClick={() => setScale(s => Math.max(0.2, Math.round((s - 0.1) * 10) / 10))} className="text-white/80 hover:text-brand-gold p-1 cursor-pointer" aria-label="Намали"><ZoomOut className="h-4 w-4" /></button>
             <span className="text-[10px] font-mono">{Math.round(scale * 100)}%</span>
-            <button onClick={() => setScale(s => Math.min(2.5, s + 0.2))} className="text-white/80 hover:text-brand-gold p-1 cursor-pointer" aria-label="Увеличи"><ZoomIn className="h-4 w-4" /></button>
+            <button onClick={() => setScale(s => Math.min(2.5, Math.round((s + 0.1) * 10) / 10))} className="text-white/80 hover:text-brand-gold p-1 cursor-pointer" aria-label="Увеличи"><ZoomIn className="h-4 w-4" /></button>
             <div className="w-px h-4 bg-white/20 mx-1" />
             <button onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber <= 1} className="text-white/80 hover:text-brand-gold disabled:opacity-30 p-1 cursor-pointer" aria-label="Предишна"><ChevronLeft className="h-4 w-4" /></button>
             <span className="text-[10px] font-mono">{pageNumber} / {pageCount || "…"}</span>

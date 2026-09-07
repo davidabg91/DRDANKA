@@ -36,7 +36,7 @@ export default function CourseViewerPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(1.2);
+  const [scale, setScale] = useState(0.5);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -298,11 +298,11 @@ export default function CourseViewerPage() {
               </div>
 
               <div className="hidden md:flex items-center gap-1 text-xs bg-black/30 px-2 py-1 rounded-lg border border-white/10">
-                <button onClick={() => setScale(s => Math.max(0.6, s - 0.2))} className="p-1 hover:bg-white/10 rounded cursor-pointer">
+                <button onClick={() => setScale(s => Math.max(0.2, Math.round((s - 0.1) * 10) / 10))} className="p-1 hover:bg-white/10 rounded cursor-pointer" aria-label="Намали">
                   <ZoomOut className="h-3.5 w-3.5" />
                 </button>
                 <span className="font-mono text-[10px]">{Math.round(scale * 100)}%</span>
-                <button onClick={() => setScale(s => Math.min(3, s + 0.2))} className="p-1 hover:bg-white/10 rounded cursor-pointer">
+                <button onClick={() => setScale(s => Math.min(3, Math.round((s + 0.1) * 10) / 10))} className="p-1 hover:bg-white/10 rounded cursor-pointer" aria-label="Увеличи">
                   <ZoomIn className="h-3.5 w-3.5" />
                 </button>
               </div>
