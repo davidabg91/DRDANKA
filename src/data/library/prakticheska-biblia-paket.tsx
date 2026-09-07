@@ -239,7 +239,7 @@ export const prakticheskaBibliaPaket: LibraryMaterial = {
   category: "document",
   contentUrl: "#",
   card: {
-    cover: "/cover-prakticheska-biblia.webp",
+    cover: "/cover-prakticheska-biblia-paket.webp",
     badge: "ПРОМО -53%",
     accent: "gold",
   },

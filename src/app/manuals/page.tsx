@@ -52,9 +52,11 @@ export default function ManualsPage() {
                       className={`object-cover group-hover:scale-110 transition-transform duration-700 ${
                         m.slug === 'etiketirane-kontrol-zashtita' || m.slug === 'haccp-prakticheska-sistema'
                           ? 'object-top'
-                          : m.slug.startsWith('prakticheska-biblia')
-                            ? 'object-[center_38%]'
-                            : 'object-center'
+                          : m.slug === 'prakticheska-biblia-paket-vsichki-chasti'
+                            ? 'object-center'
+                            : m.slug.startsWith('prakticheska-biblia')
+                              ? 'object-[center_38%]'
+                              : 'object-center'
                       }`}
                     />
                   ) : (
