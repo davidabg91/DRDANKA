@@ -15,25 +15,34 @@ export async function sendTelegramNotification(htmlMessage: string): Promise<boo
   }
 
   try {
+    const chatIds = chatId
+      .split(",")
+      .map((id) => id.trim())
+      .filter(Boolean);
+
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: htmlMessage,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-      }),
+
+    const dispatches = chatIds.map(async (id) => {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: id,
+          text: htmlMessage,
+          parse_mode: "HTML",
+          disable_web_page_preview: true,
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error(`Telegram API error for chat_id ${id}:`, res.status, errText);
+        return false;
+      }
+      return true;
     });
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error("Telegram API error:", res.status, errText);
-      return false;
-    }
-
-    return true;
+    const results = await Promise.all(dispatches);
+    return results.some((ok) => ok);
   } catch (err) {
     console.error("Failed to dispatch Telegram message:", err);
     return false;
