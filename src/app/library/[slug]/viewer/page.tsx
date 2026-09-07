@@ -140,6 +140,10 @@ export default function LibraryViewerPage() {
             window.location.href = courseData.externalUrl;
             return;
           }
+          if (material?.downloadUrl && material.downloadUrl !== "#") {
+            window.location.href = material.downloadUrl;
+            return;
+          }
           throw err;
         }
       };
@@ -309,14 +313,12 @@ export default function LibraryViewerPage() {
                 </p>
               </div>
               <div className="space-y-2 pt-2 border-t border-brand-green/5">
-                <a
-                  href="https://drive.google.com/file/d/1XWxTYDAYfG90kEh9ck1dttKV_ZErTcyP/view?usp=drive_link"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/library/prakticheska-biblia-chast-1/viewer"
                   className="inline-flex items-center justify-center gap-1.5 w-full py-3 px-4 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors shadow text-center"
                 >
-                  <Download className="h-4 w-4 text-brand-gold" /> Изтегли Част I (Drive)
-                </a>
+                  <BookOpen className="h-4 w-4" /> Чети Част I в четеца
+                </Link>
                 <a
                   href="https://drive.google.com/file/d/13xOUsJPL--w7gyRbsK8Bjyi_Qfl1e0-R/view?usp=drive_link"
                   target="_blank"

@@ -6273,14 +6273,12 @@ export default function ProfilePage() {
                                       </p>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                      <a
-                                        href="https://drive.google.com/file/d/1XWxTYDAYfG90kEh9ck1dttKV_ZErTcyP/view?usp=drive_link"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex items-center justify-center gap-1 bg-brand-green/10 hover:bg-brand-green/20 text-brand-green font-bold text-[10px] uppercase py-2.5 px-2 rounded-xl transition-colors text-center border border-brand-green/25"
+                                      <Link
+                                        href="/library/prakticheska-biblia-chast-1/viewer"
+                                        className="inline-flex items-center justify-center gap-1 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-[10px] uppercase py-2.5 px-2 rounded-xl transition-colors text-center shadow"
                                       >
-                                        <Download className="h-3.5 w-3.5 text-brand-gold" /> Част I (Drive)
-                                      </a>
+                                        <BookOpen className="h-3.5 w-3.5" /> Част I (Четец)
+                                      </Link>
                                       <Link
                                         href="/library/prakticheska-biblia-chast-2/viewer"
                                         className="inline-flex items-center justify-center gap-1 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-[10px] uppercase py-2.5 px-2 rounded-xl transition-colors text-center shadow"
