@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
         (bookingRecord.note ? `📝 <b>Бележка:</b> ${bookingRecord.note}\n` : "") +
         `💰 <b>Сума:</b> ${bookingRecord.price}\n` +
         `🕒 <b>Дата:</b> ${nowStr} ч.\n\n` +
-        `👉 <a href="https://drdanka.bg/profile">Отвори Админ Панела (Консултации)</a>`;
+        `👉 <a href="https://www.haccpspokoystvie.bg/profile">Отвори Админ Панела (Консултации)</a>`;
 
       await sendTelegramNotification(telegramMsg);
     } catch (teleErr) {

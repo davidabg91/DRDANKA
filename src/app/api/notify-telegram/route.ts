@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         (data.company ? `🏢 <b>Фирма:</b> ${data.company}\n` : "") +
         `💰 <b>Цена:</b> ${(Number(data.priceEur) || 0).toFixed(2)} €\n` +
         `🕒 <b>Дата:</b> ${nowStr} ч.\n\n` +
-        `👉 <a href="https://drdanka.bg/profile">Отвори Админ Панела (Записани)</a>`;
+        `👉 <a href="https://www.haccpspokoystvie.bg/profile">Отвори Админ Панела (Записани)</a>`;
     } else if (type === "booking") {
       message =
         `🔔 <b>НОВА РЕЗЕРВАЦИЯ ЗА КОНСУЛТАЦИЯ</b>\n\n` +
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
         (data.note ? `📝 <b>Бележка:</b> ${data.note}\n` : "") +
         `💰 <b>Сума:</b> ${data.price || "0 €"}\n` +
         `🕒 <b>Дата:</b> ${nowStr} ч.\n\n` +
-        `👉 <a href="https://drdanka.bg/profile">Отвори Админ Панела (Консултации)</a>`;
+        `👉 <a href="https://www.haccpspokoystvie.bg/profile">Отвори Админ Панела (Консултации)</a>`;
     } else if (type === "message") {
       message =
         `💬 <b>НОВО СЪОБЩЕНИЕ В ЧАТА</b>\n\n` +
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         `📧 <b>Имейл:</b> ${data.senderEmail}\n` +
         `💬 <b>Съобщение:</b>\n<i>${data.text || ""}</i>\n\n` +
         `🕒 <b>Дата:</b> ${nowStr} ч.\n\n` +
-        `👉 <a href="https://drdanka.bg/profile">Отвори Чата в Админ Панела</a>`;
+        `👉 <a href="https://www.haccpspokoystvie.bg/profile">Отвори Чата в Админ Панела</a>`;
     } else if (type === "trial") {
       message =
         `🎁 <b>НОВА ЗАЯВКА ЗА ТЕСТ ПЕРИОД</b>\n\n` +
@@ -69,9 +69,9 @@ export async function POST(req: NextRequest) {
         `📞 <b>Телефон:</b> ${data.phone}\n` +
         `🏢 <b>Фирма:</b> ${data.firmName || data.company || "Няма"}\n` +
         `🕒 <b>Дата:</b> ${nowStr} ч.\n\n` +
-        `👉 <a href="https://drdanka.bg/profile">Отвори Админ Панела (Кандидати)</a>`;
+        `👉 <a href="https://www.haccpspokoystvie.bg/profile">Отвори Админ Панела (Кандидати)</a>`;
     } else {
-      message = data.text || `🔔 Ново събитие в сайта drdanka.bg (${nowStr})`;
+      message = data.text || `🔔 Ново събитие в сайта haccpspokoystvie.bg (${nowStr})`;
     }
 
     const sent = await sendTelegramNotification(message);
