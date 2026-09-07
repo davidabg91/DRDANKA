@@ -78,7 +78,11 @@ import {
   Users,
   AlertTriangle,
   GraduationCap,
-  Sparkles,
+  Calculator,
+  CheckCheck,
+  ScanLine,
+  Wand2,
+  UtensilsCrossed,
   X,
   Flame,
   Utensils,
@@ -174,7 +178,7 @@ const REGISTER_ICONS: Record<string, any> = {
   suppliers: Users,
   incoming: FileCheck,
   temps: Thermometer,
-  "cleaning-agents": Sparkles,
+  "cleaning-agents": Droplets,
   "hygiene-daily": ClipboardList,
   "hygiene-weekly": ClipboardList,
   "hygiene-monthly": ClipboardList,
@@ -1280,7 +1284,7 @@ function RowsEditor({
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Сканирай документ (ИИ)
+                      <ScanLine className="h-3.5 w-3.5 text-brand-green" /> Сканирай документ (ИИ)
                     </>
                   )}
                 </button>
@@ -1292,7 +1296,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично изпичанията на дюнер за всеки ден от месеца с нормални градуси и часове"
               >
-                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "prework-check" && (
@@ -1301,7 +1305,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично чек-листа за хигиена и техническо състояние за всеки ден от месеца"
               >
-                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "staff-hygiene" && employees.length > 0 && (
@@ -1312,14 +1316,14 @@ function RowsEditor({
                   className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors disabled:opacity-50"
                   title="Добавя ред за всеки служител с отметки „всичко наред“ — коригирайте само отклоненията"
                 >
-                  <Sparkles className="h-3.5 w-3.5" /> Всички служители {dayLbl} — наред
+                  <CheckCheck className="h-3.5 w-3.5" /> Всички служители {dayLbl} — наред
                 </button>
                 <button
                   onClick={autoFillStaffHygieneMonth}
                   className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                   title="Попълва автоматично личната хигиена на служителите за целия месец"
                 >
-                  <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                  <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
                 </button>
               </>
             )}
@@ -1338,7 +1342,7 @@ function RowsEditor({
                   className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02] disabled:opacity-50"
                   title="Отвори калкулатора за бързо пресмятане на алергени на ястия"
                 >
-                  <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Калкулатор за алергени
+                  <Calculator className="h-3.5 w-3.5 text-brand-green" /> Калкулатор за алергени
                 </button>
                 <button
                   onClick={handleMenuScanClick}
@@ -1352,7 +1356,7 @@ function RowsEditor({
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Сканирай меню (ИИ)
+                      <ScanLine className="h-3.5 w-3.5 text-brand-gold" /> Сканирай меню (ИИ)
                     </>
                   )}
                 </button>
@@ -1368,7 +1372,7 @@ function RowsEditor({
                     className="bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-gold/30 transition-colors disabled:opacity-50"
                     title="Зарежда 31-те примерни продукта от документа — после ги коригирайте според Вашето меню"
                   >
-                    <Sparkles className="h-3.5 w-3.5" /> Зареди примерно меню (31 продукта)
+                    <UtensilsCrossed className="h-3.5 w-3.5" /> Зареди примерно меню (31 продукта)
                   </button>
                 )}
               </>
@@ -1379,7 +1383,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично подмяната на олио на всеки 3 дни за целия месец"
               >
-                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "baking" && (
@@ -1388,7 +1392,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично изпичанията на тестени изделия за целия месец"
               >
-                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "cooked-meals" && (
@@ -1397,7 +1401,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично температурния контрол на готвените ястия за целия месец"
               >
-                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "disinfectant-residue" && (
@@ -1406,7 +1410,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично тестването на дезинфектанти на всеки 3 дни за целия месец"
               >
-                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "hygiene-monthly" && (
@@ -1415,7 +1419,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично месечния контрол на хигиената"
               >
-                <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {["duner", "prework-check", "staff-hygiene", "fryer-oil-destroy", "baking", "cooked-meals", "disinfectant-residue", "hygiene-monthly"].includes(def.id) && (
@@ -1878,7 +1882,7 @@ function GridEditor({
             className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
             title="Попълва автоматично целия месец с отметки ✓"
           >
-            <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+            <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
           </button>
           <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
             <input
@@ -2127,7 +2131,7 @@ function TempEditor({
               className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-brand-gold hover:bg-brand-gold-light text-brand-dark cursor-pointer flex items-center gap-1.5 border-0 shadow-sm transition-all hover:scale-[1.02]"
               title="Попълва автоматично целия месец с нормални градуси и часове"
             >
-              <Sparkles className="h-3.5 w-3.5 text-brand-green" /> Автоматично попълване за месеца
+              <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Автоматично попълване за месеца
             </button>
             <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
               <input

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  BookOpen, ShieldCheck, Video, Award, Sparkles, ArrowRight, Play,
+  BookOpen, ShieldCheck, Video, Award, ArrowRight, Play,
 } from "lucide-react";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";

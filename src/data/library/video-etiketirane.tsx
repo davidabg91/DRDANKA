@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { PlayCircle, CheckCircle, Award, BookOpen, Clock, Sparkles, ShieldCheck, HelpCircle } from "lucide-react";
+import { PlayCircle, CheckCircle, Award, BookOpen, Clock, FileCheck, ShieldCheck, HelpCircle } from "lucide-react";
 import type { LibraryMaterial } from "./types";
 
 function VideoEtiketiranePage() {
@@ -56,7 +56,7 @@ function VideoEtiketiranePage() {
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
           { icon: PlayCircle, label: "22 Видео урока", desc: "Подробни лекции с видео екрани" },
-          { icon: Sparkles, label: "Практически примери", desc: "Стъпка по стъпка реални етикети" },
+          { icon: FileCheck, label: "Практически примери", desc: "Стъпка по стъпка реални етикети" },
           { icon: Clock, label: "Достъп 24/7", desc: "Учете в удобно за Вас време" }
         ].map((stat, idx) => (
           <div key={idx} className="bg-white rounded-2xl border border-brand-green/5 p-6 shadow-md flex items-start gap-4">

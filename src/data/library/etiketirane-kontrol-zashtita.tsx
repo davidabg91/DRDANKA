@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle, BookOpen, AlertTriangle, ShieldCheck, FileText, Sparkles, Scale, ShieldAlert } from "lucide-react";
+import { CheckCircle, BookOpen, AlertTriangle, ShieldCheck, FileText, Award, Layers, Scale, ShieldAlert } from "lucide-react";
 import type { LibraryMaterial } from "./types";
 
 function EtiketiraneKontrolZashtitaPage() {
@@ -7,7 +7,7 @@ function EtiketiraneKontrolZashtitaPage() {
     <div className="space-y-12">
       {/* Quote-style intro */}
       <section className="relative bg-white border-l-4 border-brand-gold rounded-r-3xl p-6 sm:p-10 shadow-md">
-        <Sparkles className="absolute top-6 right-6 h-5 w-5 text-brand-gold/40" />
+        <Award className="absolute top-6 right-6 h-5 w-5 text-brand-gold/40" />
         <p className="font-serif italic text-lg sm:text-xl text-brand-green leading-relaxed">
           „Този наръчник е Вашата персонална защита при БАБХ проверки. Той събира не просто текстовете от закона, а практическия начин да организирате етикетирането си така, че да избегнете глоби, забавяния и изземване на стока.“
         </p>
@@ -81,7 +81,7 @@ function EtiketiraneKontrolZashtitaPage() {
       {/* Extra Module Info */}
       <section className="bg-amber-50 border border-brand-gold/25 rounded-3xl p-6 sm:p-8 space-y-4">
         <h3 className="font-serif text-base font-bold text-brand-green flex items-center gap-2">
-          <span className="p-1.5 bg-brand-gold/20 text-brand-gold rounded-lg"><Sparkles className="h-4 w-4" /></span>
+          <span className="p-1.5 bg-brand-gold/20 text-brand-gold rounded-lg"><Layers className="h-4 w-4" /></span>
           Допълнителен Модул: Приложение III
         </h3>
         <p className="text-xs text-brand-dark/75 leading-relaxed">

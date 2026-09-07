@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CheckCircle, BookOpen, AlertTriangle, ShieldCheck, FileText, Sparkles, AlertCircle } from "lucide-react";
+import { CheckCircle, BookOpen, AlertTriangle, ShieldCheck, FileText, Award, AlertCircle } from "lucide-react";
 import type { LibraryMaterial } from "./types";
 
 function MeatGuidePage() {
@@ -7,7 +7,7 @@ function MeatGuidePage() {
     <div className="space-y-10">
       {/* Quote-style intro */}
       <section className="relative bg-white border-l-4 border-brand-gold rounded-r-3xl p-6 sm:p-10 shadow-md">
-        <Sparkles className="absolute top-6 right-6 h-5 w-5 text-brand-gold/40" />
+        <Award className="absolute top-6 right-6 h-5 w-5 text-brand-gold/40" />
         <p className="font-serif italic text-lg sm:text-xl text-brand-green leading-relaxed">
           „Ако подготвяш обект за месо, има нещо важно, което трябва да знаеш: Повечето обекти не се бавят, защото не са готови... а защото има разминаване между проекта, реалното изпълнение и изискванията.“
         </p>

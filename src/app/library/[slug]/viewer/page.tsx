@@ -12,7 +12,7 @@ import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
 import { collection, query, where, getDocs, doc, getDoc, limit } from "firebase/firestore";
 import { findLibraryMaterial, isBundle } from "@/data/library";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock, Download, BookOpen, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock, Download, BookOpen, Gift, CheckCheck } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
@@ -285,7 +285,7 @@ export default function LibraryViewerPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 space-y-8">
           <div className="text-center space-y-3">
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-gold/15 border border-brand-gold/30 text-brand-dark text-[10px] font-black uppercase tracking-wider">
-              <Sparkles className="h-3.5 w-3.5 text-brand-gold" />
+              <CheckCheck className="h-3.5 w-3.5 text-brand-gold" />
               Всички 3 части са отключени
             </span>
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-brand-green">
@@ -323,7 +323,7 @@ export default function LibraryViewerPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-1.5 w-full py-2.5 px-3 bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-dark font-bold text-[10px] uppercase tracking-wider rounded-xl transition-colors border border-brand-gold/30 text-center"
                 >
-                  <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Бонус: Грешки при записите
+                  <Gift className="h-3.5 w-3.5 text-brand-gold" /> Бонус: Грешки при записите
                 </a>
               </div>
             </div>

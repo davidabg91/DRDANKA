@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import {
-  Video, Calendar, Users, Award, ArrowRight, Sparkles, BookOpen, Check,
+  Video, Calendar, Users, Award, ArrowRight, BookOpen, Check,
 } from "lucide-react";
 import { LIVE_COURSES, type LiveCourse } from "@/data/live-courses";
 import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";

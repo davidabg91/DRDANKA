@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { PlayCircle, CheckCircle, Award, BookOpen, Clock, Sparkles, ShieldCheck, HelpCircle, FileText, CheckSquare, Users } from "lucide-react";
+import { PlayCircle, CheckCircle, Award, BookOpen, Clock, CheckCircle2, ClipboardCheck, ShieldCheck, HelpCircle, FileText, CheckSquare, Users } from "lucide-react";
 import type { LibraryMaterial } from "./types";
 
 function HaccpPrakticheskaSistemaPage() {
@@ -12,7 +12,7 @@ function HaccpPrakticheskaSistemaPage() {
         <div className="space-y-4 max-w-4xl">
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-gold/10 text-brand-gold text-[10px] font-black uppercase tracking-wider">
-              <Sparkles className="h-3.5 w-3.5" />
+              <CheckCircle2 className="h-3.5 w-3.5" />
               Онлайн практическо обучение
             </div>
             <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-red-50 text-red-600 border border-red-200 text-[10px] font-black uppercase tracking-wider animate-pulse shadow-sm">
@@ -48,7 +48,7 @@ function HaccpPrakticheskaSistemaPage() {
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
           { icon: FileText, label: "Вечен достъп", desc: "Учете със собствено темпо" },
-          { icon: Sparkles, label: "Реални примери", desc: "От официалния контрол" },
+          { icon: ClipboardCheck, label: "Реални примери", desc: "От официалния контрол" },
           { icon: ShieldCheck, label: "Без хаос", desc: "Работеща система, без фиктивни записи" }
         ].map((stat, idx) => (
           <div key={idx} className="bg-white rounded-2xl border border-brand-green/5 p-6 shadow-md flex items-start gap-4">

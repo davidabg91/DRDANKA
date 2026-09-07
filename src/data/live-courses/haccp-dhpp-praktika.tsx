@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Calendar, Users, Award, CheckCircle, MessageSquare, Video, BookOpen, ShieldCheck, Shield, TrendingDown, Eye, Sparkles } from "lucide-react";
+import { Calendar, Users, Award, CheckCircle, MessageSquare, Video, BookOpen, ShieldCheck, Shield, TrendingDown, Eye, Layers } from "lucide-react";
 import type { LiveCourse } from "./types";
 
 function HaccpDhppPraktikaPage() {
@@ -31,7 +31,7 @@ function HaccpDhppPraktikaPage() {
         <div className="relative z-10 flex flex-col gap-6">
           <h2 className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold flex items-center gap-3">
             <span className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
-              <Sparkles className="h-5 w-5 text-brand-gold" />
+              <Layers className="h-5 w-5 text-brand-gold" />
             </span>
             Обучението комбинира
           </h2>

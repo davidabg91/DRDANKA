@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {
   GraduationCap, BookOpen, Award, ArrowRight, CheckCircle, Building,
-  Video, ShieldCheck, Play, Sparkles,
+  Video, ShieldCheck, Play,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 

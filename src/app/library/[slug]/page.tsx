@@ -9,7 +9,7 @@ import { usePriceOverrides, resolvePrice } from "@/lib/priceOverrides";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
 import { trackViewContent } from "@/lib/fpixel";
 import {
-  ArrowLeft, ArrowRight, BookOpen, Video, ShieldCheck, Sparkles,
+  ArrowLeft, ArrowRight, BookOpen, Video, ShieldCheck,
 } from "lucide-react";
 import PackagePurchaseModal from "@/components/PackagePurchaseModal";
 

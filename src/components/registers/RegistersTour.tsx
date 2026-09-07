@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { ChevronLeft, ChevronRight, X, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, CheckCircle2 } from "lucide-react";
 
 export interface TourStep {
   /** Стойност на data-tour атрибута на целевия елемент */
@@ -194,7 +194,7 @@ export default function RegistersTour({
             >
               {isLast ? (
                 <>
-                  <Sparkles className="h-3.5 w-3.5" /> Започвам!
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Започвам!
                 </>
               ) : (
                 <>

@@ -1,5 +1,4 @@
 import React, { ReactNode } from "react";
-import { Sparkles } from "lucide-react";
 
 interface PageHeroProps {
   badgeText?: string;

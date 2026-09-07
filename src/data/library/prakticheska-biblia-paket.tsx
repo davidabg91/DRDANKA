@@ -1,8 +1,9 @@
 import Link from "next/link";
 import {
   ShieldAlert, CheckCircle, FileText, CheckSquare, ShieldCheck,
-  Sparkles, Award, BookOpen, HelpCircle, ArrowRight,
+  Award, BookOpen, HelpCircle, ArrowRight,
   PackageCheck, Scale, Wrench, ClipboardCheck, Download, Check, AlertTriangle,
+  Compass, Layers,
 } from "lucide-react";
 import type { LibraryMaterial } from "./types";
 
@@ -19,7 +20,7 @@ function PrakticheskaBibliaPaketPage() {
               СПЕЦИАЛНА ПРОМОЦИЯ · ПЪЛЕН КОМПЛЕКТ
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-gold text-brand-dark text-[10px] font-black uppercase tracking-wider shadow-sm">
-              <Sparkles className="h-3.5 w-3.5" />
+              <Layers className="h-3.5 w-3.5" />
               Всички части + образци и чек листи
             </span>
           </div>
@@ -73,7 +74,7 @@ function PrakticheskaBibliaPaketPage() {
           {/* Core statement highlight */}
           <div className="p-4 sm:p-5 rounded-2xl bg-white/10 border border-brand-gold/30 backdrop-blur-sm text-center sm:text-left flex flex-col sm:flex-row items-center gap-4">
             <span className="p-3 bg-brand-gold text-brand-dark rounded-xl shrink-0 font-black shadow-md">
-              <Sparkles className="h-6 w-6" />
+              <Compass className="h-6 w-6" />
             </span>
             <div className="space-y-0.5">
               <p className="font-serif text-lg sm:text-xl font-bold text-brand-gold">

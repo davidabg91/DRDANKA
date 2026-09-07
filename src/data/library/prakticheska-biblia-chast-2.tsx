@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  ShieldAlert, CheckCircle, ShieldCheck, Sparkles, BookOpen, HelpCircle,
+  ShieldAlert, CheckCircle, ShieldCheck, Tag, CheckCheck, BookOpen, HelpCircle,
   Scale, Wrench, ClipboardCheck, Users, HeartHandshake, Info,
 } from "lucide-react";
 import type { LibraryMaterial } from "./types";
@@ -60,7 +60,7 @@ function PrakticheskaBibliaChast2Page() {
       <section className="space-y-6">
         <div className="border-b border-brand-green/5 pb-3">
           <h2 className="font-serif text-2xl font-bold text-brand-green flex items-center gap-2.5">
-            <span className="p-2 bg-brand-gold/10 text-brand-gold rounded-xl"><Sparkles className="h-5 w-5" /></span>
+            <span className="p-2 bg-brand-gold/10 text-brand-gold rounded-xl"><CheckCheck className="h-5 w-5" /></span>
             Какво Ви дава ръководството
           </h2>
         </div>
@@ -123,7 +123,7 @@ function PrakticheskaBibliaChast2Page() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div className="space-y-1">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-              <Sparkles className="h-3.5 w-3.5" /> Цена
+              <Tag className="h-3.5 w-3.5" /> Цена
             </span>
             <div className="flex items-end gap-3">
               <span className="font-serif text-4xl sm:text-5xl font-bold text-brand-gold leading-none">

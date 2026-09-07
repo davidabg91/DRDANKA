@@ -42,7 +42,7 @@ import {
   Check, 
   Activity, 
   FileCheck, 
-  Sparkles,
+  Gift,
   Award,
   Star,
   ChevronRight,
@@ -6265,7 +6265,7 @@ export default function ProfilePage() {
                                   <div className="space-y-2.5">
                                     <div className="p-3 bg-brand-gold/10 border border-brand-gold/30 rounded-xl space-y-1">
                                       <span className="text-[10px] font-black uppercase text-brand-dark flex items-center gap-1.5">
-                                        <Sparkles className="h-3.5 w-3.5 text-brand-gold" />
+                                        <Layers className="h-3.5 w-3.5 text-brand-gold" />
                                         Всички 3 части са отключени!
                                       </span>
                                       <p className="text-[11px] text-brand-dark/70 leading-snug">
@@ -6300,7 +6300,7 @@ export default function ProfilePage() {
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center justify-center gap-1.5 bg-brand-gold/15 hover:bg-brand-gold/25 text-brand-dark font-bold text-[11px] uppercase py-2 px-3 rounded-xl transition-colors w-full text-center border border-brand-gold/40"
                                     >
-                                      <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> БОНУС: Грешки при воденето на записи (Drive)
+                                      <Gift className="h-3.5 w-3.5 text-brand-gold" /> БОНУС: Грешки при воденето на записи (Drive)
                                     </a>
                                   </div>
                                 ) : (
@@ -6341,7 +6341,7 @@ export default function ProfilePage() {
                                         rel="noopener noreferrer"
                                         className="inline-flex items-center justify-center gap-1.5 bg-brand-green/5 hover:bg-brand-green/10 text-brand-green font-bold text-[11px] uppercase py-2 px-3 rounded-xl transition-colors w-full cursor-pointer text-center border border-brand-green/15"
                                       >
-                                        <Sparkles className="h-3.5 w-3.5 text-brand-gold" /> Бонус: {m.bonus.title}
+                                        <Gift className="h-3.5 w-3.5 text-brand-gold" /> Бонус: {m.bonus.title}
                                       </a>
                                     )}
                                   </>

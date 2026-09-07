@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  ShieldAlert, CheckCircle, ShieldCheck, Sparkles, BookOpen, HelpCircle,
+  ShieldAlert, CheckCircle, ShieldCheck, Tag, BookOpen, HelpCircle,
   FileText, ClipboardList, CalendarClock, FileSignature, Info, Copyright,
 } from "lucide-react";
 import type { LibraryMaterial } from "./types";
@@ -105,7 +105,7 @@ function PrakticheskaBibliaChast3Page() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
           <div className="space-y-1">
             <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-              <Sparkles className="h-3.5 w-3.5" /> Промоционална цена
+              <Tag className="h-3.5 w-3.5" /> Промоционална цена
             </span>
             <div className="flex items-end gap-3">
               <span className="font-serif text-2xl text-brand-dark/40 line-through decoration-red-500/60 decoration-2 leading-none">
