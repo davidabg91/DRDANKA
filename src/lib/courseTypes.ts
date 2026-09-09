@@ -75,3 +75,83 @@ export interface Purchase {
   paidAt?: string;
   createdAt: string;
 }
+
+/**
+ * Smart matcher between in-code materials/slugs/titles and Firestore courses.
+ * Resolves by exact id, exact slug, exact title, or semantic Bulgarian topic aliases.
+ */
+export function findMatchingCourse<T extends { id?: string; slug?: string; title?: string }>(
+  target: T | undefined | null,
+  courses: Course[] | undefined | null
+): Course | undefined {
+  if (!target || !courses || courses.length === 0) return undefined;
+  const tSlug = (target.slug || "").toLowerCase().trim();
+  const tId = (target.id || "").toLowerCase().trim();
+  const tTitle = (target.title || "").toLowerCase().trim();
+
+  // 1. Direct slug or id match
+  for (const c of courses) {
+    const cSlug = (c.slug || "").toLowerCase().trim();
+    const cId = (c.id || "").toLowerCase().trim();
+    if (tSlug && (cSlug === tSlug || cId === tSlug)) return c;
+    if (tId && (cId === tId || cSlug === tId)) return c;
+  }
+
+  // 2. Exact title match (case-insensitive)
+  if (tTitle) {
+    for (const c of courses) {
+      const cTitle = (c.title || "").toLowerCase().trim();
+      if (cTitle && cTitle === tTitle) return c;
+    }
+  }
+
+  // 3. Smart semantic match for HACCP / ДХПП / ДПХП / разработване
+  const isHaccp =
+    tSlug.includes("haccp") ||
+    tTitle.includes("дхпп") ||
+    tTitle.includes("дпхп") ||
+    tTitle.includes("разработване");
+  if (isHaccp) {
+    for (const c of courses) {
+      const cSlug = (c.slug || "").toLowerCase().trim();
+      const cTitle = (c.title || "").toLowerCase().trim();
+      if (
+        cSlug.includes("haccp") ||
+        cSlug.includes("razrabotvane") ||
+        cTitle.includes("дхпп") ||
+        cTitle.includes("дпхп") ||
+        cTitle.includes("разработване")
+      ) {
+        return c;
+      }
+    }
+  }
+
+  // 4. Smart semantic match for Registration (Регистрация на обект)
+  const isRegistracia = tSlug.includes("registracia") || tTitle.includes("регистрация");
+  if (isRegistracia) {
+    for (const c of courses) {
+      const cSlug = (c.slug || "").toLowerCase().trim();
+      const cTitle = (c.title || "").toLowerCase().trim();
+      if (cSlug.includes("registracia") || cTitle.includes("регистрация")) {
+        return c;
+      }
+    }
+  }
+
+  // 5. Smart semantic match for Bible parts
+  if (tTitle.includes("библия") || tSlug.includes("biblia")) {
+    for (const c of courses) {
+      const cSlug = (c.slug || "").toLowerCase().trim();
+      const cTitle = (c.title || "").toLowerCase().trim();
+      if (cTitle.includes("библия") || cSlug.includes("biblia")) {
+        if ((tTitle.includes("част 1") || tSlug.includes("chast-1")) && (cTitle.includes("част 1") || cSlug.includes("chast-1"))) return c;
+        if ((tTitle.includes("част 2") || tSlug.includes("chast-2")) && (cTitle.includes("част 2") || cSlug.includes("chast-2"))) return c;
+        if ((tTitle.includes("част 3") || tSlug.includes("chast-3")) && (cTitle.includes("част 3") || cSlug.includes("chast-3"))) return c;
+        if ((tTitle.includes("пакет") || tSlug.includes("paket")) && (cTitle.includes("пакет") || cSlug.includes("paket"))) return c;
+      }
+    }
+  }
+
+  return undefined;
+}

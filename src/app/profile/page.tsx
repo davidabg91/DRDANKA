@@ -8,7 +8,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } f
 import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
-import { Course, CourseMaterialItem } from "@/lib/courseTypes";
+import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
 import { Training, Enrollment } from "@/lib/trainingTypes";
 import { Booking, BookingStatus } from "@/lib/bookingTypes";
 import { slugify, uniqueSlug } from "@/lib/slugify";
@@ -299,10 +299,12 @@ export default function ProfilePage() {
     });
 
     dbCourses.forEach(dc => {
-      const key = dc.slug || dc.id;
-      const existing = map.get(key);
-      if (existing) {
-        map.set(key, { ...existing, ...dc });
+      const matchInMap = findMatchingCourse(dc, Array.from(map.values()));
+      if (matchInMap) {
+        const key = matchInMap.slug || matchInMap.id;
+        map.set(key, { ...matchInMap, ...dc, id: dc.id || matchInMap.id, slug: matchInMap.slug || dc.slug });
+      } else {
+        map.set(dc.slug || dc.id, dc);
       }
     });
 
@@ -1417,18 +1419,20 @@ export default function ProfilePage() {
   };
 
   const handleEditCourse = (c: Course) => {
-    setEditingCourseId(c.id);
-    setCourseDraftTitle(c.title || "");
-    setCourseDraftDesc(c.description || "");
-    setCourseDraftLongDesc(c.longDescription || "");
-    setCourseDraftPrice(c.priceEur !== undefined ? c.priceEur.toString() : "");
-    setCourseDraftCoverUrl(c.coverImageUrl || "");
+    const matched = findMatchingCourse(c, dbCourses) || c;
+    setEditingCourseId(matched.id || c.id);
+    setCourseDraftTitle(matched.title || c.title || "");
+    setCourseDraftDesc(matched.description || c.description || "");
+    setCourseDraftLongDesc(matched.longDescription || c.longDescription || "");
+    setCourseDraftPrice(matched.priceEur !== undefined ? matched.priceEur.toString() : (c.priceEur !== undefined ? c.priceEur.toString() : ""));
+    setCourseDraftCoverUrl(matched.coverImageUrl || c.coverImageUrl || "");
     setCourseDraftCover(null);
 
-    if (c.items && c.items.length > 0) {
+    const items = (matched.items && matched.items.length > 0) ? matched.items : c.items;
+    if (items && items.length > 0) {
       setCourseDraftMode("multi");
       setCourseDraftItems(
-        c.items.map((it, idx) => ({
+        items.map((it, idx) => ({
           id: it.id || `item_${Date.now()}_${idx}`,
           title: it.title,
           type: it.type,
@@ -1439,27 +1443,28 @@ export default function ProfilePage() {
           order: it.order ?? idx + 1,
         }))
       );
-    } else if (c.filePath) {
-      const isVid = c.type === "video" || c.filePath.endsWith(".mp4");
+    } else if (matched.filePath || c.filePath) {
+      const filePath = matched.filePath || c.filePath || "";
+      const isVid = (matched.type || c.type) === "video" || filePath.endsWith(".mp4");
       setCourseDraftMode("multi");
       setCourseDraftItems([
         {
           id: "item_1",
-          title: c.title || "Материал",
+          title: matched.title || c.title || "Материал",
           type: isVid ? "video" : "pdf",
-          filePath: c.filePath,
-          fileSizeMb: c.fileSizeMb,
+          filePath,
+          fileSizeMb: matched.fileSizeMb || c.fileSizeMb,
           order: 1,
         }
       ]);
-    } else if (c.externalUrl) {
+    } else if (matched.externalUrl || c.externalUrl) {
       setCourseDraftMode("multi");
       setCourseDraftItems([
         {
           id: "item_link_1",
-          title: c.title || "Външно обучение",
+          title: matched.title || c.title || "Външно обучение",
           type: "link",
-          externalUrl: c.externalUrl,
+          externalUrl: matched.externalUrl || c.externalUrl,
           order: 1,
         }
       ]);
@@ -1712,8 +1717,9 @@ export default function ProfilePage() {
       }
 
       const now = new Date().toISOString();
-      const existingCourse = dbCourses.find(c => c.id === courseId);
-      const slug = existingCourse?.slug || uniqueSlug(
+      const existingCourse = dbCourses.find(c => c.id === courseId) || findMatchingCourse({ id: courseId, title: courseDraftTitle }, dbCourses);
+      const matchedLibrary = LIBRARY_MATERIALS.find(m => m.slug === courseId || m.slug === existingCourse?.slug);
+      const slug = existingCourse?.slug || matchedLibrary?.slug || uniqueSlug(
         slugify(courseDraftTitle),
         [...allCourses, ...dbCourses].map((x) => x.slug).filter((s): s is string => !!s)
       );
@@ -5000,8 +5006,8 @@ export default function ProfilePage() {
                                 {allCourses.map(c => {
                                   const buyers = usersList.filter(u => (u.purchasedCourseIds || []).includes(c.id));
                                   const isExpanded = expandedCourseBuyers === c.id;
-                                  const dbMatch = dbCourses.find(dc => dc.slug === c.slug || dc.id === c.id);
-                                  const courseItems = dbMatch?.items;
+                                  const dbMatch = findMatchingCourse(c, dbCourses);
+                                  const courseItems = dbMatch?.items || c.items;
 
                                   return (
                                     <Fragment key={c.id}>
@@ -5019,7 +5025,7 @@ export default function ProfilePage() {
                                             <Edit className="h-3 w-3" /> {courseItems && courseItems.length > 0 ? `Уроци (${courseItems.length})` : "Добави видеа / уроци"}
                                           </button>
                                           <Link
-                                            href={`/library/${c.slug}/viewer`}
+                                            href={courseItems && courseItems.length > 0 ? `/courses/${dbMatch?.slug || dbMatch?.id || c.slug}/viewer` : `/library/${c.slug}/viewer`}
                                             target="_blank"
                                             className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer"
                                             title="Преглед на качения материал в четеца"
@@ -5146,7 +5152,7 @@ export default function ProfilePage() {
                                                 </div>
                                               );
                                             }
-                                            const exists = libraryPdfExists[c.slug || c.id];
+                                            const exists = libraryPdfExists[c.slug || c.id] || (courseItems && courseItems.length > 0) || !!c.filePath || !!dbMatch?.filePath;
                                             return (
                                               <div className="flex flex-col items-center gap-1.5 justify-center">
                                                 {exists ? (

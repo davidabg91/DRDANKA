@@ -10,7 +10,7 @@ import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
-import { Course, CourseMaterialItem } from "@/lib/courseTypes";
+import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
 import {
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock,
   Video, FileText, ExternalLink, PlayCircle, List
@@ -60,6 +60,14 @@ export default function CourseViewerPage() {
           const courseSnap = await getDoc(doc(db, "courses", courseId as string));
           if (courseSnap.exists()) {
             courseData = { id: courseSnap.id, ...courseSnap.data() } as Course;
+          } else {
+            // Fallback: search all courses using findMatchingCourse
+            const allSnap = await getDocs(collection(db, "courses"));
+            const allList = allSnap.docs.map(d => ({ id: d.id, ...d.data() } as Course));
+            const match = findMatchingCourse({ id: courseId as string, slug: courseId as string }, allList);
+            if (match) {
+              courseData = match;
+            }
           }
         }
         if (!courseData) {
@@ -354,6 +362,8 @@ export default function CourseViewerPage() {
                     controls
                     controlsList="nodownload noplaybackrate"
                     disablePictureInPicture
+                    crossOrigin="anonymous"
+                    playsInline
                     className="w-full aspect-video max-h-[75vh] object-contain bg-black"
                   />
                   {/* Subtle dynamic watermark */}

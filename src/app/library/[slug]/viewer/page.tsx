@@ -12,6 +12,7 @@ import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
 import { collection, query, where, getDocs, doc, getDoc, limit } from "firebase/firestore";
 import { findLibraryMaterial, isBundle } from "@/data/library";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
+import { findMatchingCourse } from "@/lib/courseTypes";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock, Download, BookOpen, Gift, CheckCheck } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -91,6 +92,19 @@ export default function LibraryViewerPage() {
           setLoadError("Грешка при проверка на достъпа: " + (e?.message || e));
           return;
         }
+      }
+
+      // Check if this material has multi-item lessons or was uploaded as a course with items
+      try {
+        const coursesSnap = await getDocs(collection(db, "courses"));
+        const allDb = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+        const matched = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
+        if (matched?.items && matched.items.length > 0) {
+          window.location.replace(`/courses/${matched.slug || matched.id || slug}/viewer`);
+          return;
+        }
+      } catch (e) {
+        console.warn("Could not check courses in Firestore:", e);
       }
 
 // Local IndexedDB caching helper to save bandwidth and load instantly
@@ -177,17 +191,17 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
           }
 
           // Fallback 2: Firestore dbCourses collection
-          const slugQ = query(collection(db, "courses"), where("slug", "==", slug), limit(1));
-          const bySlug = await getDocs(slugQ);
           let courseData: any = null;
-          if (!bySlug.empty) {
-            courseData = bySlug.docs[0].data();
-          } else {
-            const snap = await getDoc(doc(db, "courses", slug));
-            if (snap.exists()) courseData = snap.data();
+          try {
+            const coursesSnap = await getDocs(collection(db, "courses"));
+            const allDb = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+            courseData = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
+          } catch (e) {
+            console.warn("Fallback course search failed:", e);
           }
+
           if (courseData?.items && courseData.items.length > 0) {
-            window.location.replace(`/courses/${courseData.slug || slug}/viewer`);
+            window.location.replace(`/courses/${courseData.slug || courseData.id || slug}/viewer`);
             return;
           }
           if (courseData?.filePath && err?.code !== "storage/quota-exceeded") {
@@ -545,6 +559,8 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
               controls
               controlsList="nodownload noplaybackrate"
               disablePictureInPicture
+              crossOrigin="anonymous"
+              playsInline
               onContextMenu={(e) => e.preventDefault()}
               className={`block max-w-full max-h-[80vh] bg-black transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}
             />
