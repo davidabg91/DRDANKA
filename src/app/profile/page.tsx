@@ -311,6 +311,15 @@ export default function ProfilePage() {
     return Array.from(map.values()).filter(c => !c.deleted);
   }, [dbCourses]);
 
+  // Only standalone custom courses (not already part of the static LIBRARY_MATERIALS catalog)
+  const customCoursesOnly: Course[] = useMemo(() => {
+    return dbCourses.filter(dc => !LIBRARY_MATERIALS.some(m =>
+      m.slug === dc.slug ||
+      m.slug === dc.id ||
+      m.title.toLowerCase().trim() === (dc.title || "").toLowerCase().trim()
+    ));
+  }, [dbCourses]);
+
   const allTrainings: Training[] = useMemo(() => {
     const map = new Map<string, Training>();
     LIVE_COURSES.forEach(c => {
@@ -1837,12 +1846,21 @@ export default function ProfilePage() {
   };
 
   const handleDeleteCourse = async (c: Course) => {
-    if (!confirm(`Изтриване на курс „${c.title}"? Действието е необратимо. Купувачите ще загубят достъп.`)) return;
+    if (!confirm(`ВНИМАНИЕ: Изтриване на курс „${c.title}"?\n\nДействието е НЕОБРАТИМО! Това ще изтрие качените видео файлове и уроци от сървъра!`)) return;
     try {
       await deleteDoc(doc(db, "courses", c.id));
       // Storage cleanup — file & cover may or may not exist; ignore individual errors.
-      try { await deleteObject(storageRef(storage, c.filePath)); } catch { /* ignore */ }
-      alert("Курсът беше изтрит.");
+      if (c.filePath) {
+        try { await deleteObject(storageRef(storage, c.filePath)); } catch { /* ignore */ }
+      }
+      if (c.items && c.items.length > 0) {
+        for (const it of c.items) {
+          if (it.filePath) {
+            try { await deleteObject(storageRef(storage, it.filePath)); } catch { /* ignore */ }
+          }
+        }
+      }
+      alert("Курсът и файловете му бяха изтрити.");
     } catch (err: any) {
       alert("Грешка при изтриване: " + (err?.message || err));
     }
@@ -4810,11 +4828,11 @@ export default function ProfilePage() {
                       </form>
 
                       {/* Admin-created courses (Firestore) with Edit, publish toggle + delete */}
-                      {dbCourses.length > 0 && (
+                      {customCoursesOnly.length > 0 && (
                         <div className="space-y-3">
-                          <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Мои качени курсове ({dbCourses.length})</h3>
+                          <h3 className="font-bold text-brand-green text-sm uppercase tracking-wider">Допълнителни авторски курсове ({customCoursesOnly.length})</h3>
                           <div className="space-y-2">
-                            {dbCourses.map((c) => {
+                            {customCoursesOnly.map((c) => {
                               const buyers = usersList.filter(u => (u.purchasedCourseIds || []).some(id => id === c.id || (c.slug && id === c.slug) || (c.title && id === c.title)));
                               const itemsCount = c.items ? c.items.length : (c.filePath ? 1 : (c.externalUrl ? 1 : 0));
                               const isEditingThis = editingCourseId === c.id;
