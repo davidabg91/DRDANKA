@@ -137,12 +137,26 @@ export default function CourseViewerPage() {
           for (const p of candidatePaths) {
             try {
               const ref = storageRef(storage, p);
+              // 1. Try server-side proxy route with getDownloadURL (bypasses browser CORS & 206 error)
               try {
-                blob = await getBlob(ref);
-              } catch {
-                const url = await getDownloadURL(ref);
-                const res = await fetch(url);
-                if (res.ok) blob = await res.blob();
+                const streamUrl = await getDownloadURL(ref);
+                const proxyRes = await fetch(`/api/proxy-pdf?url=${encodeURIComponent(streamUrl)}`);
+                if (proxyRes.ok) {
+                  blob = await proxyRes.blob();
+                }
+              } catch {}
+
+              // 2. Direct getBlob as fallback
+              if (!blob) {
+                try {
+                  blob = await getBlob(ref);
+                } catch {
+                  try {
+                    const url = await getDownloadURL(ref);
+                    const res = await fetch(url);
+                    if (res.ok) blob = await res.blob();
+                  } catch {}
+                }
               }
               if (blob) break;
             } catch {}

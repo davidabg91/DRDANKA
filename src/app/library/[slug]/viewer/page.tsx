@@ -178,15 +178,30 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
             const ref = storageRef(storage, p);
             if (kind === "pdf") {
               let blob: Blob | null = null;
+              // 1. Try server-side proxy route with getDownloadURL (bypasses browser CORS & 206 Partial Content error)
               try {
-                blob = await getBlob(ref);
-              } catch {
-                try {
-                  const url = await getDownloadURL(ref);
-                  const res = await fetch(url);
-                  if (res.ok) blob = await res.blob();
-                } catch {}
+                const streamUrl = await getDownloadURL(ref);
+                const proxyRes = await fetch(`/api/proxy-pdf?url=${encodeURIComponent(streamUrl)}`);
+                if (proxyRes.ok) {
+                  blob = await proxyRes.blob();
+                }
+              } catch (proxyErr) {
+                console.warn("proxy fetch attempt failed:", proxyErr);
               }
+
+              // 2. Direct getBlob as fallback
+              if (!blob) {
+                try {
+                  blob = await getBlob(ref);
+                } catch {
+                  try {
+                    const url = await getDownloadURL(ref);
+                    const res = await fetch(url);
+                    if (res.ok) blob = await res.blob();
+                  } catch {}
+                }
+              }
+
               if (blob) {
                 setPdfFile(blob);
                 setCachedBlob(cacheKey, blob);
@@ -230,14 +245,23 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
           } else {
             let blob: Blob | null = null;
             try {
-              blob = await getBlob(ref);
-            } catch {
+              const streamUrl = await getDownloadURL(ref);
+              const proxyRes = await fetch(`/api/proxy-pdf?url=${encodeURIComponent(streamUrl)}`);
+              if (proxyRes.ok) blob = await proxyRes.blob();
+            } catch {}
+
+            if (!blob) {
               try {
-                const url = await getDownloadURL(ref);
-                const res = await fetch(url);
-                if (res.ok) blob = await res.blob();
-              } catch {}
+                blob = await getBlob(ref);
+              } catch {
+                try {
+                  const url = await getDownloadURL(ref);
+                  const res = await fetch(url);
+                  if (res.ok) blob = await res.blob();
+                } catch {}
+              }
             }
+
             if (blob) {
               setPdfFile(blob);
               setMediaKind("pdf");
