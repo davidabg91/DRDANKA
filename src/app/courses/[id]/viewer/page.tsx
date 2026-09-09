@@ -128,13 +128,47 @@ export default function CourseViewerPage() {
 
       try {
         if (current.type === "pdf" && current.filePath) {
-          const blob = await getBlob(storageRef(storage, current.filePath));
-          if (!cancelled) setPdfFile(blob);
+          const candidatePaths = [
+            current.filePath,
+            `library/${course?.slug || courseId}/file.pdf`,
+            `courses/${course?.slug || courseId}/file.pdf`,
+          ];
+          let blob: Blob | null = null;
+          for (const p of candidatePaths) {
+            try {
+              const ref = storageRef(storage, p);
+              try {
+                blob = await getBlob(ref);
+              } catch {
+                const url = await getDownloadURL(ref);
+                const res = await fetch(url);
+                if (res.ok) blob = await res.blob();
+              }
+              if (blob) break;
+            } catch {}
+          }
+          if (blob && !cancelled) {
+            setPdfFile(blob);
+          } else if (!cancelled) {
+            throw new Error("Файлът не може да бъде зареден от сървъра.");
+          }
         } else if (current.type === "video" && current.filePath) {
-          // Stream progressive video directly via range-request URL rather than downloading entire file into RAM
-          const streamUrl = await getDownloadURL(storageRef(storage, current.filePath));
-          if (!cancelled) {
+          const candidatePaths = [
+            current.filePath,
+            `courses/${course?.slug || courseId}/file.mp4`,
+            `library/${course?.slug || courseId}/file.mp4`,
+          ];
+          let streamUrl: string | null = null;
+          for (const p of candidatePaths) {
+            try {
+              streamUrl = await getDownloadURL(storageRef(storage, p));
+              if (streamUrl) break;
+            } catch {}
+          }
+          if (streamUrl && !cancelled) {
             setVideoBlobUrl(streamUrl);
+          } else if (!cancelled) {
+            throw new Error("Видеото не може да бъде намерено на сървъра.");
           }
         }
       } catch (err: any) {

@@ -5043,7 +5043,7 @@ export default function ProfilePage() {
                                             <Edit className="h-3 w-3" /> {courseItems && courseItems.length > 0 ? `Уроци (${courseItems.length})` : "Добави видеа / уроци"}
                                           </button>
                                           <Link
-                                            href={courseItems && courseItems.length > 0 ? `/courses/${dbMatch?.slug || dbMatch?.id || c.slug}/viewer` : `/library/${c.slug}/viewer`}
+                                            href={courseItems && courseItems.some(it => it.type === "video") && courseItems.length > 1 ? `/courses/${dbMatch?.slug || dbMatch?.id || c.slug}/viewer` : `/library/${c.slug}/viewer`}
                                             target="_blank"
                                             className="inline-flex items-center gap-1 text-[9px] font-bold uppercase px-2 py-1 rounded bg-brand-green/10 text-brand-green hover:bg-brand-green hover:text-white transition-colors cursor-pointer"
                                             title="Преглед на качения материал в четеца"

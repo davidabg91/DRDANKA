@@ -94,12 +94,13 @@ export default function LibraryViewerPage() {
         }
       }
 
-      // Check if this material has multi-item lessons or was uploaded as a course with items
+      // Only redirect to course viewer if this material is an explicit multi-video course
       try {
         const coursesSnap = await getDocs(collection(db, "courses"));
         const allDb = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
         const matched = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
-        if (matched?.items && matched.items.length > 0) {
+        const hasVideoLessons = !!(matched?.items && matched.items.some((it: any) => it.type === "video"));
+        if (hasVideoLessons && matched?.items && matched.items.length > 1) {
           window.location.replace(`/courses/${matched.slug || matched.id || slug}/viewer`);
           return;
         }
@@ -166,65 +167,92 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
           }
         }
 
-        try {
-          const ref = storageRef(storage, `library/${slug}/${fileName}`);
-          if (kind === "pdf") {
-            const blob = await getBlob(ref);
-            setPdfFile(blob);
-            setCachedBlob(cacheKey, blob);
-          } else {
-            const streamUrl = await getDownloadURL(ref);
-            setVideoUrl(streamUrl);
-          }
-          setMediaKind(kind);
-          return;
-        } catch (err: any) {
-          // If quota exceeded or object not found, check fallbacks!
-          if (err?.code !== "storage/object-not-found" && err?.code !== "storage/quota-exceeded") {
-            throw err;
-          }
+        // Candidates for where this file might be stored:
+        const candidatePaths = [
+          `library/${slug}/${fileName}`,
+          `courses/${slug}/${fileName}`,
+        ];
 
-          // Fallback 1: Google Drive link if available
-          if (material?.downloadUrl && material.downloadUrl !== "#") {
-            window.location.href = material.downloadUrl;
-            return;
-          }
-
-          // Fallback 2: Firestore dbCourses collection
-          let courseData: any = null;
+        for (const p of candidatePaths) {
           try {
-            const coursesSnap = await getDocs(collection(db, "courses"));
-            const allDb = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-            courseData = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
-          } catch (e) {
-            console.warn("Fallback course search failed:", e);
-          }
-
-          if (courseData?.items && courseData.items.length > 0) {
-            window.location.replace(`/courses/${courseData.slug || courseData.id || slug}/viewer`);
-            return;
-          }
-          if (courseData?.filePath && err?.code !== "storage/quota-exceeded") {
-            const isVid = courseData.filePath.endsWith(".mp4") || courseData.type === "video";
-            const ref = storageRef(storage, courseData.filePath);
-            if (isVid) {
+            const ref = storageRef(storage, p);
+            if (kind === "pdf") {
+              let blob: Blob | null = null;
+              try {
+                blob = await getBlob(ref);
+              } catch {
+                try {
+                  const url = await getDownloadURL(ref);
+                  const res = await fetch(url);
+                  if (res.ok) blob = await res.blob();
+                } catch {}
+              }
+              if (blob) {
+                setPdfFile(blob);
+                setCachedBlob(cacheKey, blob);
+                setMediaKind("pdf");
+                return;
+              }
+            } else {
               const streamUrl = await getDownloadURL(ref);
               setVideoUrl(streamUrl);
               setMediaKind("video");
-            } else {
-              const blob = await getBlob(ref);
+              return;
+            }
+          } catch {
+            // continue to next candidate
+          }
+        }
+
+        // Fallbacks if not found directly
+        if (material?.downloadUrl && material.downloadUrl !== "#") {
+          window.location.href = material.downloadUrl;
+          return;
+        }
+
+        let courseData: any = null;
+        try {
+          const coursesSnap = await getDocs(collection(db, "courses"));
+          const allDb = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+          courseData = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
+        } catch (e) {
+          console.warn("Fallback course search failed:", e);
+        }
+
+        if (courseData?.filePath) {
+          const isVid = courseData.filePath.endsWith(".mp4") || courseData.type === "video";
+          const ref = storageRef(storage, courseData.filePath);
+          if (isVid) {
+            const streamUrl = await getDownloadURL(ref);
+            setVideoUrl(streamUrl);
+            setMediaKind("video");
+            return;
+          } else {
+            let blob: Blob | null = null;
+            try {
+              blob = await getBlob(ref);
+            } catch {
+              try {
+                const url = await getDownloadURL(ref);
+                const res = await fetch(url);
+                if (res.ok) blob = await res.blob();
+              } catch {}
+            }
+            if (blob) {
               setPdfFile(blob);
               setMediaKind("pdf");
-              setCachedBlob(`library_${slug}_${courseData.filePath}`, blob);
+              setCachedBlob(cacheKey, blob);
+              return;
             }
-            return;
           }
-          if (courseData?.externalUrl) {
-            window.location.href = courseData.externalUrl;
-            return;
-          }
-          throw err;
         }
+
+        if (courseData?.externalUrl) {
+          window.location.href = courseData.externalUrl;
+          return;
+        }
+
+        throw new Error("Файлът не е намерен на сървъра.");
       };
 
       let lastErr: any = null;

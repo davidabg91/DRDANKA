@@ -21,7 +21,8 @@ service firebase.storage {
       let userPath = /databases/(default)/documents/users/$(email);
       return request.auth != null
         && firestore.exists(userPath)
-        && courseId in firestore.get(userPath).data.purchasedCourseIds;
+        && (courseId in firestore.get(userPath).data.purchasedCourseIds
+            || "prakticheska-biblia-paket-vsichki-chasti" in firestore.get(userPath).data.purchasedCourseIds);
     }
 
     match /courses/{courseId}/{allPaths=**} {
