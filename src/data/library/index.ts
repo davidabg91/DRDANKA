@@ -18,8 +18,10 @@ import { prakticheskaBibliaPaket } from "./prakticheska-biblia-paket";
 import { prakticheskaBibliaChast1 } from "./prakticheska-biblia-chast-1";
 import { prakticheskaBibliaChast2 } from "./prakticheska-biblia-chast-2";
 import { prakticheskaBibliaChast3 } from "./prakticheska-biblia-chast-3";
+import { registraciaProizvodstvoTargovia } from "./registracia-proizvodstvo-targovia";
 
 export const LIBRARY_MATERIALS: ReadonlyArray<LibraryMaterial> = [
+  registraciaProizvodstvoTargovia,
   prakticheskaBibliaPaket,
   prakticheskaBibliaChast3,
   prakticheskaBibliaChast2,
