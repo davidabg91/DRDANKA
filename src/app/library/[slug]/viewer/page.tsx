@@ -93,13 +93,71 @@ export default function LibraryViewerPage() {
         }
       }
 
+// Local IndexedDB caching helper to save bandwidth and load instantly
+async function getCachedBlob(key: string): Promise<Blob | null> {
+  if (typeof window === "undefined" || !window.indexedDB) return null;
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open("danka_viewer_cache", 1);
+      req.onupgradeneeded = () => {
+        req.result.createObjectStore("blobs");
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        try {
+          const tx = db.transaction("blobs", "readonly");
+          const store = tx.objectStore("blobs");
+          const getReq = store.get(key);
+          getReq.onsuccess = () => resolve(getReq.result || null);
+          getReq.onerror = () => resolve(null);
+        } catch {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function setCachedBlob(key: string, blob: Blob): Promise<void> {
+  if (typeof window === "undefined" || !window.indexedDB) return;
+  try {
+    const req = indexedDB.open("danka_viewer_cache", 1);
+    req.onupgradeneeded = () => {
+      req.result.createObjectStore("blobs");
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      try {
+        const tx = db.transaction("blobs", "readwrite");
+        tx.objectStore("blobs").put(blob, key);
+      } catch {}
+    };
+  } catch {}
+}
+
       const tryLoad = async (kind: "pdf" | "video") => {
         const fileName = kind === "pdf" ? "file.pdf" : "file.mp4";
+        const cacheKey = `library_${slug}_${fileName}`;
+
+        // 1. Try local cache first for PDF
+        if (kind === "pdf") {
+          const cached = await getCachedBlob(cacheKey);
+          if (cached) {
+            setPdfFile(cached);
+            setMediaKind("pdf");
+            return;
+          }
+        }
+
         try {
           const ref = storageRef(storage, `library/${slug}/${fileName}`);
           if (kind === "pdf") {
             const blob = await getBlob(ref);
             setPdfFile(blob);
+            setCachedBlob(cacheKey, blob);
           } else {
             const streamUrl = await getDownloadURL(ref);
             setVideoUrl(streamUrl);
@@ -107,8 +165,18 @@ export default function LibraryViewerPage() {
           setMediaKind(kind);
           return;
         } catch (err: any) {
-          if (err?.code !== "storage/object-not-found") throw err;
-          // Fallback to Firestore dbCourses collection
+          // If quota exceeded or object not found, check fallbacks!
+          if (err?.code !== "storage/object-not-found" && err?.code !== "storage/quota-exceeded") {
+            throw err;
+          }
+
+          // Fallback 1: Google Drive link if available
+          if (material?.downloadUrl && material.downloadUrl !== "#") {
+            window.location.href = material.downloadUrl;
+            return;
+          }
+
+          // Fallback 2: Firestore dbCourses collection
           const slugQ = query(collection(db, "courses"), where("slug", "==", slug), limit(1));
           const bySlug = await getDocs(slugQ);
           let courseData: any = null;
@@ -122,7 +190,7 @@ export default function LibraryViewerPage() {
             window.location.replace(`/courses/${courseData.slug || slug}/viewer`);
             return;
           }
-          if (courseData?.filePath) {
+          if (courseData?.filePath && err?.code !== "storage/quota-exceeded") {
             const isVid = courseData.filePath.endsWith(".mp4") || courseData.type === "video";
             const ref = storageRef(storage, courseData.filePath);
             if (isVid) {
@@ -133,15 +201,12 @@ export default function LibraryViewerPage() {
               const blob = await getBlob(ref);
               setPdfFile(blob);
               setMediaKind("pdf");
+              setCachedBlob(`library_${slug}_${courseData.filePath}`, blob);
             }
             return;
           }
           if (courseData?.externalUrl) {
             window.location.href = courseData.externalUrl;
-            return;
-          }
-          if (material?.downloadUrl && material.downloadUrl !== "#") {
-            window.location.href = material.downloadUrl;
             return;
           }
           throw err;
@@ -156,16 +221,22 @@ export default function LibraryViewerPage() {
           break;
         } catch (err: any) {
           lastErr = err;
-          // object-not-found → try the other kind; anything else → stop.
-          if (err?.code !== "storage/object-not-found") break;
+          // object-not-found or quota-exceeded → try the other kind; anything else → stop.
+          if (err?.code !== "storage/object-not-found" && err?.code !== "storage/quota-exceeded") break;
         }
       }
       if (lastErr) {
+        if (material?.downloadUrl && material.downloadUrl !== "#") {
+          window.location.href = material.downloadUrl;
+          return;
+        }
         const msg = lastErr?.code === "storage/unauthorized"
           ? "Нямате достъп до този материал. Ако сте го закупили, моля излезте и влезте отново."
           : lastErr?.code === "storage/object-not-found"
             ? "Материалът все още не е качен. Свържете се с д-р Николова."
-            : lastErr?.message || "Грешка при зареждане";
+            : lastErr?.code === "storage/quota-exceeded"
+              ? "Файловият сървър временно надвиши лимита на трафика за деня. Моля, свържете се с д-р Николова за директен алтернативен достъп или опитайте отново."
+              : lastErr?.message || "Грешка при зареждане";
         setLoadError(msg);
       }
     });
@@ -261,10 +332,33 @@ export default function LibraryViewerPage() {
   }
   if (loadError) {
     return (
-      <div className="min-h-screen bg-brand-light flex flex-col items-center justify-center gap-3 p-8 text-center max-w-md mx-auto">
-        <Lock className="h-10 w-10 text-brand-gold/40" />
-        <p className="text-brand-dark/70 text-sm">{loadError}</p>
-        <Link href="/profile" className="text-xs font-bold uppercase tracking-wider text-brand-gold hover:underline cursor-pointer">← Към профила</Link>
+      <div className="min-h-screen bg-brand-light flex flex-col items-center justify-center gap-4 p-8 text-center max-w-md mx-auto">
+        <div className="w-14 h-14 rounded-2xl bg-brand-gold/10 text-brand-gold flex items-center justify-center">
+          <Lock className="h-7 w-7" />
+        </div>
+        <p className="text-brand-dark/80 text-sm leading-relaxed">{loadError}</p>
+        <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          {material?.downloadUrl && material.downloadUrl !== "#" && (
+            <a
+              href={material.downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-gold text-brand-dark font-bold text-xs uppercase tracking-wider hover:bg-brand-gold-dark hover:text-white transition-all shadow-md"
+            >
+              <Download className="h-4 w-4" />
+              Отвори през Google Drive
+            </a>
+          )}
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-all shadow-md"
+          >
+            Свържи се с д-р Николова
+          </Link>
+        </div>
+        <Link href="/profile" className="text-xs font-bold uppercase tracking-wider text-brand-dark/50 hover:text-brand-gold hover:underline mt-2">
+          ← Към профила
+        </Link>
       </div>
     );
   }
