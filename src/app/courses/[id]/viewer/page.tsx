@@ -87,6 +87,8 @@ export default function CourseViewerPage() {
             description: libMat.tagline,
             priceEur: libMat.priceEur,
             published: true,
+            type: libMat.type,
+            externalUrl: libMat.contentUrl,
             items: libMat.items || [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -152,11 +154,12 @@ export default function CourseViewerPage() {
             },
           ]);
         } else if (courseData.externalUrl) {
+          const isVid = isVideoEmbed(courseData.externalUrl) || courseData.type === "video";
           setItems([
             {
               id: "legacy_link",
-              title: courseData.title || "Външно обучение",
-              type: "link",
+              title: courseData.title || "Обучение",
+              type: isVid ? "video" : "link",
               externalUrl: courseData.externalUrl,
               order: 1,
             },

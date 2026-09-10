@@ -296,7 +296,7 @@ export const haccpPrakticheskaSistema: LibraryMaterial = {
   originalPriceEur: 58,
   type: "video",
   category: "training",
-  contentUrl: "#", // Add the course stream link here when available
+  contentUrl: "https://iframe.mediadelivery.net/embed/748739/88b5e2fa-3c45-4960-b29c-d627a85e2c2f",
   card: {
     cover: "/cover-haccp-praktichesko-obuchenie.jpg",
     badge: "Запис от Zoom · Промо",
