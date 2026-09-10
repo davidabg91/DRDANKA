@@ -1616,8 +1616,8 @@ export default function ProfilePage() {
           alert(`Моля въведете URL линк за урок #${i + 1} (${item.title}).`);
           return;
         }
-        if ((item.type === "video" || item.type === "pdf") && !item.file && !item.filePath) {
-          alert(`Урок #${i + 1} (${item.title}) няма избран файл за качване.`);
+        if ((item.type === "video" || item.type === "pdf") && !item.file && !item.filePath && !item.externalUrl?.trim()) {
+          alert(`Урок #${i + 1} (${item.title}) няма избран файл или видео линк за качване.`);
           return;
         }
       }
@@ -4659,15 +4659,16 @@ export default function ProfilePage() {
                                         />
 
                                         <div className="flex items-center gap-2 flex-wrap">
-                                          {item.type === "link" ? (
+                                          {(item.type === "link" || item.type === "video") && (
                                             <input
                                               type="url"
                                               value={item.externalUrl || ""}
                                               onChange={(e) => handleUpdateDraftItem(item.id, { externalUrl: e.target.value })}
-                                              placeholder="https://… URL линк (YouTube/Drive)"
+                                              placeholder={item.type === "video" ? "Bunny.net Stream / Видео URL линк" : "https://… URL линк"}
                                               className="text-[10px] px-2 py-0.5 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white w-full sm:w-64 font-mono"
                                             />
-                                          ) : item.file ? (
+                                          )}
+                                          {item.file ? (
                                             <span className="text-[10px] text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 font-mono">
                                               Нов файл: {item.file.name} ({(item.file.size / (1024 * 1024)).toFixed(1)} MB)
                                             </span>
