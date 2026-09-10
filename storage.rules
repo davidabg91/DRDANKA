@@ -12,7 +12,13 @@ service firebase.storage {
 
     function isAdmin() {
       return request.auth != null
-        && request.auth.token.email.lower() == "d.nikolova.haccp@gmail.com";
+        && (
+          request.auth.token.email.lower() == "d.nikolova.haccp@gmail.com"
+          || request.auth.token.email.lower() == "davida1991@gmail.com"
+          || request.auth.token.email.lower() == "davidabg91@gmail.com"
+          || (firestore.exists(/databases/(default)/documents/users/$(request.auth.token.email.lower()))
+              && firestore.get(/databases/(default)/documents/users/$(request.auth.token.email.lower())).data.role == "admin")
+        );
     }
 
     // Check the buyer's /users/{email}.purchasedCourseIds for the courseId.

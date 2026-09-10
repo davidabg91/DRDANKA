@@ -26,7 +26,13 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && authEmail() == "d.nikolova.haccp@gmail.com";
+      return isSignedIn() && (
+        authEmail() == "d.nikolova.haccp@gmail.com" ||
+        authEmail() == "davida1991@gmail.com" ||
+        authEmail() == "davidabg91@gmail.com" ||
+        (exists(/databases/$(database)/documents/users/$(authEmail())) &&
+         get(/databases/$(database)/documents/users/$(authEmail())).data.role == "admin")
+      );
     }
 
     // True when the post-update value of `field` is unchanged.
