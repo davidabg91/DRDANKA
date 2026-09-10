@@ -410,7 +410,7 @@ export const registraciaProizvodstvoTargovia: LibraryMaterial = {
   originalPriceEur: 54,
   type: "video",
   category: "training",
-  contentUrl: "#", // admin streams or uploads via library/registracia-proizvodstvo-targovia/file.mp4
+  contentUrl: "https://iframe.mediadelivery.net/embed/748739/88b5e2fa-3c45-4960-b29c-d627a85e2c2f",
   card: {
     cover: "/cover-registracia-proizvodstvo-targovia.jpg",
     badge: "Запис · Промо 27 €",

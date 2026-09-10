@@ -13,6 +13,7 @@ import { collection, query, where, getDocs, doc, getDoc, limit } from "firebase/
 import { findLibraryMaterial, isBundle } from "@/data/library";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
 import { findMatchingCourse } from "@/lib/courseTypes";
+import { isVideoEmbed, formatVideoEmbedUrl } from "@/lib/videoUtils";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock, Download, BookOpen, Gift, CheckCheck } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -170,6 +171,28 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
             setPdfFile(cached);
             setMediaKind("pdf");
             return;
+          }
+        }
+
+        // Direct embed URL (Bunny.net Stream, YouTube, Vimeo) for video materials
+        if (kind === "video") {
+          if (material?.contentUrl && material.contentUrl !== "#") {
+            setVideoUrl(material.contentUrl);
+            setMediaKind("video");
+            return;
+          }
+          if (courseData?.externalUrl) {
+            setVideoUrl(courseData.externalUrl);
+            setMediaKind("video");
+            return;
+          }
+          if (courseData?.items && Array.isArray(courseData.items)) {
+            const extVid = courseData.items.find((it: any) => it.type === "video" && it.externalUrl);
+            if (extVid?.externalUrl) {
+              setVideoUrl(extVid.externalUrl);
+              setMediaKind("video");
+              return;
+            }
           }
         }
 
@@ -571,16 +594,28 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
           )}
 
           {mediaKind === "video" && videoUrl && (
-            <video
-              src={videoUrl}
-              preload="metadata"
-              controls
-              controlsList="nodownload noplaybackrate"
-              disablePictureInPicture
-              playsInline
-              onContextMenu={(e) => e.preventDefault()}
-              className={`block max-w-full max-h-[80vh] bg-black transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}
-            />
+            isVideoEmbed(videoUrl) ? (
+              <div className={`relative w-full aspect-video min-w-[320px] sm:min-w-[640px] md:min-w-[850px] max-w-5xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}>
+                <iframe
+                  src={formatVideoEmbedUrl(videoUrl)}
+                  loading="lazy"
+                  className="w-full h-full border-0 absolute inset-0"
+                  allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <video
+                src={videoUrl}
+                preload="metadata"
+                controls
+                controlsList="nodownload noplaybackrate"
+                disablePictureInPicture
+                playsInline
+                onContextMenu={(e) => e.preventDefault()}
+                className={`block max-w-full max-h-[80vh] bg-black transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}
+              />
+            )
           )}
 
           {/* Watermark grid overlay */}

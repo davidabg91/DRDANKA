@@ -11,6 +11,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
 import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
+import { isVideoEmbed, formatVideoEmbedUrl } from "@/lib/videoUtils";
 import {
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock,
   Video, FileText, ExternalLink, PlayCircle, List
@@ -155,23 +156,29 @@ export default function CourseViewerPage() {
           } else if (!cancelled) {
             throw new Error("Файлът не може да бъде зареден от сървъра.");
           }
-        } else if (current.type === "video" && current.filePath) {
-          const candidatePaths = [
-            current.filePath,
-            `courses/${course?.slug || courseId}/file.mp4`,
-            `library/${course?.slug || courseId}/file.mp4`,
-          ];
-          let streamUrl: string | null = null;
-          for (const p of candidatePaths) {
-            try {
-              streamUrl = await getDownloadURL(storageRef(storage, p));
-              if (streamUrl) break;
-            } catch {}
+        } else if (current.type === "video") {
+          if (current.externalUrl) {
+            setVideoBlobUrl(current.externalUrl);
+            return;
           }
-          if (streamUrl && !cancelled) {
-            setVideoBlobUrl(streamUrl);
-          } else if (!cancelled) {
-            throw new Error("Видеото не може да бъде намерено на сървъра.");
+          if (current.filePath) {
+            const candidatePaths = [
+              current.filePath,
+              `courses/${course?.slug || courseId}/file.mp4`,
+              `library/${course?.slug || courseId}/file.mp4`,
+            ];
+            let streamUrl: string | null = null;
+            for (const p of candidatePaths) {
+              try {
+                streamUrl = await getDownloadURL(storageRef(storage, p));
+                if (streamUrl) break;
+              } catch {}
+            }
+            if (streamUrl && !cancelled) {
+              setVideoBlobUrl(streamUrl);
+            } else if (!cancelled) {
+              throw new Error("Видеото не може да бъде намерено на сървъра.");
+            }
           }
         }
       } catch (err: any) {
@@ -391,7 +398,21 @@ export default function CourseViewerPage() {
           ) : activeItem?.type === "video" ? (
             /* Video Player with Protection Watermark */
             <div className="w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 relative">
-              {videoBlobUrl ? (
+              {isVideoEmbed(videoBlobUrl || activeItem.externalUrl) ? (
+                <div className="relative w-full aspect-video bg-black">
+                  <iframe
+                    src={formatVideoEmbedUrl(videoBlobUrl || activeItem.externalUrl)}
+                    loading="lazy"
+                    className="w-full h-full border-0 absolute inset-0"
+                    allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"
+                    allowFullScreen
+                  />
+                  {/* Subtle dynamic watermark */}
+                  <div className="pointer-events-none absolute bottom-4 right-4 z-20 bg-black/60 text-white/50 text-[10px] font-mono px-2.5 py-1 rounded backdrop-blur-sm border border-white/10">
+                    Лично копие: {email}
+                  </div>
+                </div>
+              ) : videoBlobUrl ? (
                 <div className="relative group">
                   <video
                     src={videoBlobUrl}
