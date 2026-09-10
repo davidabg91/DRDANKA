@@ -6341,7 +6341,7 @@ export default function ProfilePage() {
                                       </button>
                                     ) : (
                                       <Link
-                                        href={`/library/${m.slug}/viewer`}
+                                        href={((m.items && m.items.length > 1) || m.slug === "video-etiketirane") ? `/courses/${m.slug}/viewer` : `/library/${m.slug}/viewer`}
                                         className="inline-flex items-center justify-center gap-2 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase py-3 rounded-xl transition-colors w-full cursor-pointer text-center shadow"
                                       >
                                         {isVideo ? <Video className="h-4 w-4" /> : <BookOpen className="h-4 w-4" />}

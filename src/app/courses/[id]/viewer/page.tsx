@@ -11,6 +11,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
 import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
+import { findLibraryMaterial } from "@/data/library";
 import { isVideoEmbed, formatVideoEmbedUrl } from "@/lib/videoUtils";
 import {
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock,
@@ -76,10 +77,63 @@ export default function CourseViewerPage() {
             }
           }
         }
+        // If not in Firestore or courseData has no items, check in-code library materials!
+        const libMat = findLibraryMaterial(courseId as string) || (courseData?.slug ? findLibraryMaterial(courseData.slug) : undefined);
+        if (!courseData && libMat) {
+          courseData = {
+            id: libMat.slug,
+            slug: libMat.slug,
+            title: libMat.title,
+            description: libMat.tagline,
+            priceEur: libMat.priceEur,
+            published: true,
+            items: libMat.items || [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        } else if (courseData && (!courseData.items || courseData.items.length === 0) && libMat?.items && libMat.items.length > 0) {
+          courseData = {
+            ...courseData,
+            items: libMat.items,
+          };
+        }
+
         if (!courseData) {
           throw new Error("Курсът не съществува");
         }
         setCourse(courseData);
+
+        // Verify purchase access
+        const userEmail = user.email.toLowerCase();
+        const isAdmin = userEmail === "d.nikolova.haccp@gmail.com";
+        if (!isAdmin) {
+          try {
+            const userDoc = await getDoc(doc(db, "users", userEmail));
+            const purchased: string[] = userDoc.data()?.purchasedCourseIds || [];
+            const cSlug = (courseData.slug || "").toLowerCase();
+            const cId = (courseData.id || "").toLowerCase();
+            const paramId = (courseId as string).toLowerCase();
+
+            const hasAccess = purchased.some((id) => {
+              const lower = id.toLowerCase();
+              return (
+                lower === paramId ||
+                lower === cId ||
+                lower === cSlug ||
+                (paramId.includes("etiketirane") && lower.includes("etiketirane")) ||
+                (paramId.includes("registracia") && lower.includes("registracia")) ||
+                (paramId.includes("haccp") && lower.includes("haccp"))
+              );
+            });
+
+            if (!hasAccess) {
+              setLoadError("Нямате достъп до този курс. Ако вече сте го заплатили, моля свържете се с д-р Николова за потвърждение на плащането.");
+              return;
+            }
+          } catch (e) {
+            console.warn("Could not verify course purchase in viewer:", e);
+          }
+        }
 
         // Build list of items: if course.items exists, use it; else convert legacy single-file course
         if (courseData.items && courseData.items.length > 0) {

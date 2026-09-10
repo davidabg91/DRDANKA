@@ -106,9 +106,14 @@ export default function LibraryViewerPage() {
         const coursesSnap = await getDocs(collection(db, "courses"));
         const allDb = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
         courseData = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
-        const hasVideoLessons = !!(courseData?.items && courseData.items.some((it: any) => it.type === "video"));
-        if (hasVideoLessons && courseData?.items && courseData.items.length > 1) {
-          window.location.replace(`/courses/${courseData.slug || courseData.id || slug}/viewer`);
+        const hasVideoLessons = !!(
+          (courseData?.items && courseData.items.some((it: any) => it.type === "video")) ||
+          (material?.items && material.items.some((it: any) => it.type === "video")) ||
+          slug === "video-etiketirane"
+        );
+        const hasMultiple = (courseData?.items && courseData.items.length > 1) || (material?.items && material.items.length > 1) || slug === "video-etiketirane";
+        if (hasVideoLessons && hasMultiple) {
+          window.location.replace(`/courses/${courseData?.slug || courseData?.id || slug}/viewer`);
           return;
         }
       } catch (e) {

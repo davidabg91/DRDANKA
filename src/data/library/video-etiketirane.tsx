@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PlayCircle, CheckCircle, Award, BookOpen, Clock, FileCheck, ShieldCheck, HelpCircle } from "lucide-react";
 import type { LibraryMaterial } from "./types";
+import type { CourseMaterialItem } from "@/lib/courseTypes";
 
 function VideoEtiketiranePage() {
   return (
@@ -179,6 +180,163 @@ function VideoEtiketiranePage() {
   );
 }
 
+export const videoEtiketiraneLessons: CourseMaterialItem[] = [
+  {
+    id: "lesson_1",
+    title: "Урок 1: Въведение в Регламент (ЕС) № 1169/2011 и основни изисквания",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/ef5fee01-7157-4f62-9194-e398ba2d1de5",
+    order: 1,
+  },
+  {
+    id: "lesson_2",
+    title: "Урок 2: Списък на задължителните данни върху етикета на храните",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/e801ee65-0f01-49fe-b864-4fcf3c83e060",
+    order: 2,
+  },
+  {
+    id: "lesson_3",
+    title: "Урок 3: Наименование на храната – законово, обичайно и описателно",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/95c38d14-10f2-4a9b-a5b2-76000a428cc9",
+    order: 3,
+  },
+  {
+    id: "lesson_4",
+    title: "Урок 4: Списък на съставките и низходящ ред на влагане",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/62b76d6d-2ee9-4dc7-b43a-680cdc1d7f18",
+    order: 4,
+  },
+  {
+    id: "lesson_5",
+    title: "Урок 5: Обозначаване и графично подчертаване на алергени",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/53e06e59-b2cb-430e-b378-da7528ac9f1e",
+    order: 5,
+  },
+  {
+    id: "lesson_6",
+    title: "Урок 6: Количествено изразяване на съставките (QUID изчисления)",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/5b946c24-221d-4d39-abab-f49d27724b7b",
+    order: 6,
+  },
+  {
+    id: "lesson_7",
+    title: "Урок 7: Нетно количество, отцедено тегло и глазура",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/78bec605-acb8-45a6-80d6-d60220d48611",
+    order: 7,
+  },
+  {
+    id: "lesson_8",
+    title: "Урок 8: Срок на трайност: „Най-добър до“ срещу „Използвай до“",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/a399d614-5e60-4c02-99d5-e5173038d0b9",
+    order: 8,
+  },
+  {
+    id: "lesson_9",
+    title: "Урок 9: Специфични условия за съхранение и указания за употреба",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/56afb8fc-6cf5-487e-9cc8-4313b5a2e2b2",
+    order: 9,
+  },
+  {
+    id: "lesson_10",
+    title: "Урок 10: Име, търговско наименование и адрес на стопанския субект",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/dd849045-e80f-4948-9ef5-fc076fcf7f9c",
+    order: 10,
+  },
+  {
+    id: "lesson_11",
+    title: "Урок 11: Страна на произход и място на произход на основната съставка",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/e4ba0d72-ca63-4885-9d23-5202b976d7ae",
+    order: 11,
+  },
+  {
+    id: "lesson_12",
+    title: "Урок 12: Маркировка за идентифициране на партидата (L-партида)",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/6db33a10-ac51-4aa1-a0f7-a1a4ec046888",
+    order: 12,
+  },
+  {
+    id: "lesson_13",
+    title: "Урок 13: Инструкции за употреба при необходимост",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/52cc0f6d-660c-4c71-adaf-9ccc73c1751e",
+    order: 13,
+  },
+  {
+    id: "lesson_14",
+    title: "Урок 14: Действително алкохолно съдържание при напитки над 1.2 обемни %",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/63373ee7-74e8-4905-ad2e-d5605e782c28",
+    order: 14,
+  },
+  {
+    id: "lesson_15",
+    title: "Урок 15: Задължителна таблица с хранителна декларация (Big 7)",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/fd36aaad-23de-4ea9-abae-5aae8caaf19c",
+    order: 15,
+  },
+  {
+    id: "lesson_16",
+    title: "Урок 16: Изчисляване на хранителните стойности – лабораторни анализи vs калкулация",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/2aa8f6fc-1433-4316-a3a3-1672dfa31794",
+    order: 16,
+  },
+  {
+    id: "lesson_17",
+    title: "Урок 17: Допълнителни форми на изразяване (на порция, РКП / RI)",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/6c247e92-7552-40aa-8a35-9fa7765d1824",
+    order: 17,
+  },
+  {
+    id: "lesson_18",
+    title: "Урок 18: Изключения от изискването за хранителна декларация (Приложение V)",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/fdf2f666-9eed-45e8-8c37-a4a3a8b1dfc4",
+    order: 18,
+  },
+  {
+    id: "lesson_19",
+    title: "Урок 19: Езикови изисквания и минимална височина на шрифта (1.2 mm / 0.9 mm)",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/f95095fe-8533-4144-9c6c-539e62200610",
+    order: 19,
+  },
+  {
+    id: "lesson_20",
+    title: "Урок 20: Доброволна информация, хранителни и здравни претенции",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/2f96bb28-322c-48d7-a002-e5dd25e7b283",
+    order: 20,
+  },
+  {
+    id: "lesson_21",
+    title: "Урок 21: Чести грешки при етикетирането и санкции от БАБХ при проверки",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/20178302-80d6-4f57-b27b-2575565229af",
+    order: 21,
+  },
+  {
+    id: "lesson_22",
+    title: "Урок 22: Практически пример за цялостен етикет, чек-лист и тест за сертификат",
+    type: "video",
+    externalUrl: "https://iframe.mediadelivery.net/embed/748739/9bdd128b-c7fe-4143-8ebc-0301a07d4811",
+    order: 22,
+  },
+];
+
 export const videoEtiketirane: LibraryMaterial = {
   slug: "video-etiketirane",
   title: "Практическо видео обучение по етикетиране на храните",
@@ -186,13 +344,16 @@ export const videoEtiketirane: LibraryMaterial = {
     "22 детайлни видео лекции с практически примери за производители и търговци на храни. Включва сертификат от д-р Николова след решаване на теста.",
   priceEur: 99.9,
   type: "video",
-  contentUrl: "https://drive.google.com/drive/folders/1oZ-0OaHEbLF1YTH3Q45MTsOm0xbv0hUd",
+  category: "training",
+  contentUrl: "https://iframe.mediadelivery.net/embed/748739/ef5fee01-7157-4f62-9194-e398ba2d1de5",
+  items: videoEtiketiraneLessons,
   card: {
     cover: "/cover-video-etiketirane.webp",
-    badge: "Сертификат",
+    badge: "22 видео урока · Сертификат",
     accent: "gold",
   },
   page: VideoEtiketiranePage,
   metaDescription:
     "Практическо видео обучение по етикетиране на храни от д-р Данка Николова. 22 лекции, примери и издаване на сертификат от д-р Николова след тест.",
+  seoTitle: "Практическо видео обучение по етикетиране на храните — 22 видео урока",
 };

@@ -25,8 +25,9 @@ export interface LibraryMaterial {
   type: LibraryMaterialType;
   /** Logical category for the UI separation (trainings vs documents). */
   category?: "training" | "document";
-  /** External URL the buyer receives after payment (Google Drive PDF, Vimeo, etc.). */
   contentUrl: string;
+  /** Multi-lesson items for structured video courses or modules */
+  items?: import("@/lib/courseTypes").CourseMaterialItem[];
   /**
    * Optional direct download link (e.g. Google Drive) delivered to the buyer
    * AFTER payment, shown only inside the protected profile. Use this for PDF
