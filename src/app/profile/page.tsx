@@ -1657,11 +1657,14 @@ export default function ProfilePage() {
           if (item.file) {
             const ext = (item.file.name.split(".").pop() || (item.type === "video" ? "mp4" : "pdf")).toLowerCase();
             const filePath = `courses/${courseId}/items/${item.id}.${ext}`;
-            const mimeType = item.type === "video"
-              ? (item.file.type && item.file.type.startsWith("video/") ? item.file.type : "video/mp4")
-              : item.type === "pdf"
-                ? "application/pdf"
+            const isPdfFile = ext === "pdf" || item.file.type === "application/pdf";
+            const isVideoFile = ext === "mp4" || ext === "mov" || ext === "webm" || (item.file.type && item.file.type.startsWith("video/"));
+            const mimeType = isPdfFile
+              ? "application/pdf"
+              : isVideoFile
+                ? (item.file.type || "video/mp4")
                 : (item.file.type || "application/octet-stream");
+            const resolvedType: "video" | "pdf" | "link" = isPdfFile ? "pdf" : (isVideoFile ? "video" : item.type);
 
             setCourseUploadStatusText(`Качване на файл ${i + 1} от ${totalItems}: ${item.title}…`);
             
@@ -1682,7 +1685,7 @@ export default function ProfilePage() {
             finalItems.push({
               id: item.id,
               title: item.title.trim(),
-              type: item.type,
+              type: resolvedType,
               filePath,
               fileSizeMb: Math.round((item.file.size / (1024 * 1024)) * 100) / 100,
               duration: item.duration?.trim() || "",
