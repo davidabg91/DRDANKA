@@ -94,14 +94,15 @@ export default function LibraryViewerPage() {
         }
       }
 
-      // Only redirect to course viewer if this material is an explicit multi-video course
+      // Pre-load course data to resolve modern dynamic items paths
+      let courseData: any = null;
       try {
         const coursesSnap = await getDocs(collection(db, "courses"));
         const allDb = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-        const matched = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
-        const hasVideoLessons = !!(matched?.items && matched.items.some((it: any) => it.type === "video"));
-        if (hasVideoLessons && matched?.items && matched.items.length > 1) {
-          window.location.replace(`/courses/${matched.slug || matched.id || slug}/viewer`);
+        courseData = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
+        const hasVideoLessons = !!(courseData?.items && courseData.items.some((it: any) => it.type === "video"));
+        if (hasVideoLessons && courseData?.items && courseData.items.length > 1) {
+          window.location.replace(`/courses/${courseData.slug || courseData.id || slug}/viewer`);
           return;
         }
       } catch (e) {
@@ -168,12 +169,43 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
         }
 
         // Candidates for where this file might be stored:
-        const candidatePaths = [
-          `library/${slug}/${fileName}`,
-          `courses/${slug}/${fileName}`,
-        ];
+        const candidatePaths: string[] = [];
 
-        for (const p of candidatePaths) {
+        // Dynamic items uploaded via course editor (e.g. courses/slug/items/item_....pdf)
+        if (courseData?.items && Array.isArray(courseData.items)) {
+          for (const it of courseData.items) {
+            if (it.filePath) {
+              const lower = it.filePath.toLowerCase();
+              const isPdf = lower.endsWith(".pdf") || it.type === "pdf";
+              const isVid = lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".webm") || it.type === "video";
+              if ((kind === "pdf" && isPdf) || (kind === "video" && isVid)) {
+                candidatePaths.push(it.filePath);
+              }
+            }
+          }
+        }
+
+        // Legacy course single filePath
+        if (courseData?.filePath) {
+          const lower = courseData.filePath.toLowerCase();
+          const isPdf = lower.endsWith(".pdf") || courseData.type === "pdf";
+          const isVid = lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".webm") || courseData.type === "video";
+          if ((kind === "pdf" && isPdf) || (kind === "video" && isVid)) {
+            candidatePaths.push(courseData.filePath);
+          }
+        }
+
+        // Standard conventions
+        candidatePaths.push(`courses/${slug}/${fileName}`);
+        candidatePaths.push(`library/${slug}/${fileName}`);
+        if (courseData?.id && courseData.id !== slug) {
+          candidatePaths.push(`courses/${courseData.id}/${fileName}`);
+          candidatePaths.push(`library/${courseData.id}/${fileName}`);
+        }
+
+        const uniqueCandidates = Array.from(new Set(candidatePaths));
+
+        for (const p of uniqueCandidates) {
           try {
             const ref = storageRef(storage, p);
             if (kind === "pdf") {
@@ -202,7 +234,7 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
                 }
               }
 
-              if (blob) {
+              if (blob && blob.size > 100) {
                 setPdfFile(blob);
                 setCachedBlob(cacheKey, blob);
                 setMediaKind("pdf");
@@ -223,52 +255,6 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
         if (material?.downloadUrl && material.downloadUrl !== "#") {
           window.location.href = material.downloadUrl;
           return;
-        }
-
-        let courseData: any = null;
-        try {
-          const coursesSnap = await getDocs(collection(db, "courses"));
-          const allDb = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
-          courseData = findMatchingCourse({ slug, id: slug, title: material?.title }, allDb);
-        } catch (e) {
-          console.warn("Fallback course search failed:", e);
-        }
-
-        if (courseData?.filePath) {
-          const isVid = courseData.filePath.endsWith(".mp4") || courseData.type === "video";
-          const ref = storageRef(storage, courseData.filePath);
-          if (isVid) {
-            const streamUrl = await getDownloadURL(ref);
-            setVideoUrl(streamUrl);
-            setMediaKind("video");
-            return;
-          } else {
-            let blob: Blob | null = null;
-            try {
-              const streamUrl = await getDownloadURL(ref);
-              const proxyRes = await fetch(`/api/proxy-pdf?url=${encodeURIComponent(streamUrl)}`);
-              if (proxyRes.ok) blob = await proxyRes.blob();
-            } catch {}
-
-            if (!blob) {
-              try {
-                blob = await getBlob(ref);
-              } catch {
-                try {
-                  const url = await getDownloadURL(ref);
-                  const res = await fetch(url);
-                  if (res.ok) blob = await res.blob();
-                } catch {}
-              }
-            }
-
-            if (blob) {
-              setPdfFile(blob);
-              setMediaKind("pdf");
-              setCachedBlob(cacheKey, blob);
-              return;
-            }
-          }
         }
 
         if (courseData?.externalUrl) {
@@ -611,7 +597,6 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
               controls
               controlsList="nodownload noplaybackrate"
               disablePictureInPicture
-              crossOrigin="anonymous"
               playsInline
               onContextMenu={(e) => e.preventDefault()}
               className={`block max-w-full max-h-[80vh] bg-black transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}

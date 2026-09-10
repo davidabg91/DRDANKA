@@ -410,7 +410,6 @@ export default function CourseViewerPage() {
                     controls
                     controlsList="nodownload noplaybackrate"
                     disablePictureInPicture
-                    crossOrigin="anonymous"
                     playsInline
                     className="w-full aspect-video max-h-[75vh] object-contain bg-black"
                   />
