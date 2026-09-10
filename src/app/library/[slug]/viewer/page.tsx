@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -34,7 +34,7 @@ export default function LibraryViewerPage() {
   const material = slug ? findLibraryMaterial(slug) : undefined;
   const { overrides: typeOverrides } = useTypeOverrides();
 
-  const [pdfFile, setPdfFile] = useState<Blob | null>(null);
+  const [pdfFile, setPdfFile] = useState<string | Blob | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [mediaKind, setMediaKind] = useState<"pdf" | "video" | null>(null);
   const [email, setEmail] = useState<string>("");
@@ -45,6 +45,11 @@ export default function LibraryViewerPage() {
   const [scale, setScale] = useState(0.5);
   const [isBundleHub, setIsBundleHub] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const pdfOptions = useMemo(() => ({
+    disableAutoFetch: true,
+    disableStream: false,
+  }), []);
 
   useEffect(() => {
     if (!slug) return;
@@ -208,43 +213,17 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
         for (const p of uniqueCandidates) {
           try {
             const ref = storageRef(storage, p);
-            if (kind === "pdf") {
-              let blob: Blob | null = null;
-              // 1. Try server-side proxy route with getDownloadURL (bypasses browser CORS & 206 Partial Content error)
-              try {
-                const streamUrl = await getDownloadURL(ref);
-                const proxyRes = await fetch(`/api/proxy-pdf?url=${encodeURIComponent(streamUrl)}`);
-                if (proxyRes.ok) {
-                  blob = await proxyRes.blob();
-                }
-              } catch (proxyErr) {
-                console.warn("proxy fetch attempt failed:", proxyErr);
-              }
-
-              // 2. Direct getBlob as fallback
-              if (!blob) {
-                try {
-                  blob = await getBlob(ref);
-                } catch {
-                  try {
-                    const url = await getDownloadURL(ref);
-                    const res = await fetch(url);
-                    if (res.ok) blob = await res.blob();
-                  } catch {}
-                }
-              }
-
-              if (blob && blob.size > 100) {
-                setPdfFile(blob);
-                setCachedBlob(cacheKey, blob);
+            const streamUrl = await getDownloadURL(ref);
+            if (streamUrl) {
+              if (kind === "pdf") {
+                setPdfFile(streamUrl);
                 setMediaKind("pdf");
                 return;
+              } else {
+                setVideoUrl(streamUrl);
+                setMediaKind("video");
+                return;
               }
-            } else {
-              const streamUrl = await getDownloadURL(ref);
-              setVideoUrl(streamUrl);
-              setMediaKind("video");
-              return;
             }
           } catch {
             // continue to next candidate
@@ -582,6 +561,7 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
             <div className={`pointer-events-none select-none transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}>
               <Document
                 file={pdfFile}
+                options={pdfOptions}
                 onLoadSuccess={({ numPages }) => setPageCount(numPages)}
                 onLoadError={(err) => setLoadError(err.message)}
               >

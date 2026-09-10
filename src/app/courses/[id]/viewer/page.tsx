@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -27,7 +27,7 @@ export default function CourseViewerPage() {
   const [activeItemIndex, setActiveItemIndex] = useState<number>(0);
 
   // Active item state
-  const [pdfFile, setPdfFile] = useState<Blob | null>(null);
+  const [pdfFile, setPdfFile] = useState<string | Blob | null>(null);
   const [videoBlobUrl, setVideoBlobUrl] = useState<string | null>(null);
   const [loadingItem, setLoadingItem] = useState(false);
 
@@ -40,6 +40,11 @@ export default function CourseViewerPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const pdfOptions = useMemo(() => ({
+    disableAutoFetch: true,
+    disableStream: false,
+  }), []);
 
   // Load course doc from Firestore
   useEffect(() => {
@@ -130,39 +135,23 @@ export default function CourseViewerPage() {
         if (current.type === "pdf" && current.filePath) {
           const candidatePaths = [
             current.filePath,
-            `library/${course?.slug || courseId}/file.pdf`,
             `courses/${course?.slug || courseId}/file.pdf`,
+            `library/${course?.slug || courseId}/file.pdf`,
           ];
-          let blob: Blob | null = null;
+          if (course?.id && course.id !== courseId) {
+            candidatePaths.push(`courses/${course.id}/file.pdf`);
+            candidatePaths.push(`library/${course.id}/file.pdf`);
+          }
+          let streamUrl: string | null = null;
           for (const p of candidatePaths) {
             try {
               const ref = storageRef(storage, p);
-              // 1. Try server-side proxy route with getDownloadURL (bypasses browser CORS & 206 error)
-              try {
-                const streamUrl = await getDownloadURL(ref);
-                const proxyRes = await fetch(`/api/proxy-pdf?url=${encodeURIComponent(streamUrl)}`);
-                if (proxyRes.ok) {
-                  blob = await proxyRes.blob();
-                }
-              } catch {}
-
-              // 2. Direct getBlob as fallback
-              if (!blob) {
-                try {
-                  blob = await getBlob(ref);
-                } catch {
-                  try {
-                    const url = await getDownloadURL(ref);
-                    const res = await fetch(url);
-                    if (res.ok) blob = await res.blob();
-                  } catch {}
-                }
-              }
-              if (blob) break;
+              streamUrl = await getDownloadURL(ref);
+              if (streamUrl) break;
             } catch {}
           }
-          if (blob && !cancelled) {
-            setPdfFile(blob);
+          if (streamUrl && !cancelled) {
+            setPdfFile(streamUrl);
           } else if (!cancelled) {
             throw new Error("Файлът не може да бъде зареден от сървъра.");
           }
@@ -443,6 +432,7 @@ export default function CourseViewerPage() {
                 {pdfFile && (
                   <Document
                     file={pdfFile}
+                    options={pdfOptions}
                     onLoadSuccess={onLoadSuccess}
                     onLoadError={(err) => setLoadError(err.message)}
                     loading={<div className="text-white/60 text-xs py-12">Зареждане на PDF наръчника…</div>}
