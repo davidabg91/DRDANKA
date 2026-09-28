@@ -22,9 +22,10 @@ import AdminReminderComposer from "@/components/registers/AdminReminderComposer"
 import PlanExtrasEditor from "@/components/registers/PlanExtrasEditor";
 import PlanHelpButton from "@/components/PlanHelpButton";
 import type { HygieneRoom } from "@/components/registers/weeklyHygiene";
+import type { CleaningTemplate } from "@/components/registers/cleaningChecklist";
 import BankTransferNotice from "@/components/BankTransferNotice";
 import { defaultHotPointForSector, isMeatShopNiche, STORE_REGISTER_IDS, REGISTER_BY_ID, registersForMeat, registersFor } from "@/data/storeRegisters";
-import { PLANS, PLAN_BY_ID, PLAN_RANK, PlanId, effectivePlan, planHasChat, planHasExtras, isExtraRegister, addMonthsISO, LEGACY_PLAN } from "@/lib/plans";
+import { PLANS, PLAN_BY_ID, PLAN_RANK, PlanId, effectivePlan, planHasChat, planHasExtras, isExtraRegister, addMonthsISO, LEGACY_PLAN, planDelta } from "@/lib/plans";
 
 import { 
   User, 
@@ -182,6 +183,11 @@ export interface DankaUser {
   autoHygieneMonthly?: boolean;
   /** Помещенията и оборудването за седмичния чек-лист „Хигиена на обекта" (№34). */
   hygieneLayout?: HygieneRoom[];
+  /** Помещенията и обектите за чек-листа „Почистване, измиване и дезинфекция" (№48). */
+  cleaningLayout?: HygieneRoom[];
+  /** Образец за автоматично попълване на №48 (препарат/извършил/подпис по обект). */
+  cleaningTemplate?: CleaningTemplate;
+  autoCleaningChecklist?: boolean;
   /** Нарисуван електронен подпис (PNG data URL) за автоматично попълване в картите/документите. */
   signature?: string;
   /** Как да се подписва обектът: "draw" — с електронния подпис; "manual" — на ръка след печат. */
@@ -6041,6 +6047,8 @@ export default function ProfilePage() {
                               plan={effectivePlan(auditTarget)}
                               extraRegisters={auditTarget.extraRegisters}
                               hygieneLayout={auditTarget.hygieneLayout}
+                              cleaningLayout={auditTarget.cleaningLayout}
+                              cleaningTemplate={auditTarget.cleaningTemplate}
                               readOnly
                             />
                           </div>
@@ -6158,6 +6166,9 @@ export default function ProfilePage() {
                   plan={effectivePlan(currentUser)}
                   extraRegisters={currentUser?.extraRegisters}
                   hygieneLayout={currentUser?.hygieneLayout}
+                  cleaningLayout={currentUser?.cleaningLayout}
+                  cleaningTemplate={currentUser?.cleaningTemplate}
+                  autoCleaningChecklist={currentUser?.autoCleaningChecklist ?? false}
                    autoDuner={currentUser?.autoDuner ?? false}
                   autoPrework={currentUser?.autoPrework ?? false}
                   autoTemps={currentUser?.autoTemps ?? false}
@@ -7021,6 +7032,7 @@ export default function ProfilePage() {
                           const isRequested = requested === p.id;
                           const isLower = hasActivePlan && PLAN_RANK[p.id] < PLAN_RANK[curPlan];
                           const dark = !!p.featured;
+                          const delta = planDelta(p.id);
                           return (
                             <div
                               key={p.id}
@@ -7048,18 +7060,22 @@ export default function ProfilePage() {
                                 <span className={`text-xs font-medium mb-1.5 ${dark ? "text-white/50" : "text-brand-dark/45"}`}>/ месец</span>
                               </div>
                               <div className={`h-px my-5 ${dark ? "bg-white/10" : "bg-brand-green/10"}`} />
-                              <p className={`text-[10px] font-black uppercase tracking-wider mb-2 ${dark ? "text-brand-gold" : "text-brand-gold-dark"}`}>Дигитално водене на</p>
+                              <p className={`text-[10px] font-black uppercase tracking-wider mb-2 ${dark ? "text-brand-gold" : "text-brand-gold-dark"}`}>
+                                {delta.base ? `Всичко от „${delta.base.name}“, плюс:` : "Дигитално водене на"}
+                              </p>
                               <ul className={`space-y-2 text-xs ${dark ? "text-white/85" : "text-brand-dark/80"}`}>
-                                {p.records.map((r, i) => (
+                                {delta.records.map((r, i) => (
                                   <li key={i} className="flex items-start gap-2 leading-snug">
                                     <Check className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${dark ? "text-brand-gold" : "text-brand-green"}`} strokeWidth={3} />
                                     <span>{r}</span>
                                   </li>
                                 ))}
                               </ul>
-                              <p className={`text-[10px] font-black uppercase tracking-wider mt-5 mb-2 ${dark ? "text-brand-gold" : "text-brand-gold-dark"}`}>Услуги към пакета</p>
+                              <p className={`text-[10px] font-black uppercase tracking-wider mt-5 mb-2 ${dark ? "text-brand-gold" : "text-brand-gold-dark"}`}>
+                                {delta.base ? "Допълнителни услуги" : "Услуги към пакета"}
+                              </p>
                               <ul className={`space-y-2 text-xs flex-grow ${dark ? "text-white/85" : "text-brand-dark/80"}`}>
-                                {p.services.map((r, i) => (
+                                {delta.services.map((r, i) => (
                                   <li key={i} className="flex items-start gap-2 leading-snug">
                                     <span className={`mt-0.5 shrink-0 grid place-items-center h-3.5 w-3.5 rounded-full ${dark ? "bg-brand-gold text-brand-dark" : "bg-brand-gold/15 text-brand-gold-dark"}`}><Check className="h-2.5 w-2.5" strokeWidth={3} /></span>
                                     <span>{r}</span>

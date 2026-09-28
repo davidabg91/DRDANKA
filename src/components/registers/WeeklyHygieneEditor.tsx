@@ -9,7 +9,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { CheckCheck, ChevronLeft, ChevronRight, History, Plus, Settings, Wand2, X } from "lucide-react";
+import { CheckCheck, ChevronLeft, ChevronRight, History, Settings, Wand2 } from "lucide-react";
+import RoomLayoutEditor from "./RoomLayoutEditor";
 import type { RegisterDocData } from "./registerPrint";
 import { PREWORK_ZONE_COLS, registerDocKey } from "@/data/storeRegisters";
 import { getLocalDateISO } from "@/lib/dateUtils";
@@ -118,30 +119,7 @@ export default function WeeklyHygieneEditor({
     updateRow((r) => fillHygieneDays(r, rooms, dates, restDays));
   };
 
-  /* ------------------ Редакция на помещения и оборудване ------------------ */
   const [editLayout, setEditLayout] = useState(false);
-  const [draft, setDraft] = useState<HygieneRoom[]>(currentLayout);
-  const [newItem, setNewItem] = useState<Record<number, string>>({});
-  const [newRoom, setNewRoom] = useState("");
-  const [savingLayout, setSavingLayout] = useState(false);
-
-  const openLayoutEditor = () => {
-    setDraft(currentLayout.map((r) => ({ room: r.room, items: [...r.items] })));
-    setEditLayout(true);
-  };
-
-  const saveLayout = async () => {
-    const clean = draft
-      .map((r) => ({ room: r.room.trim(), items: r.items.map((i) => i.trim()).filter(Boolean) }))
-      .filter((r) => r.room);
-    setSavingLayout(true);
-    try {
-      await onSaveLayout?.(clean);
-      setEditLayout(false);
-    } finally {
-      setSavingLayout(false);
-    }
-  };
 
   const nDays = days.length;
 
@@ -236,7 +214,7 @@ export default function WeeklyHygieneEditor({
           )}
           <button
             type="button"
-            onClick={openLayoutEditor}
+            onClick={() => setEditLayout(true)}
             className="ml-auto bg-white hover:bg-brand-light text-brand-green text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border border-brand-green/20"
           >
             <Settings className="h-3.5 w-3.5" /> Помещения и оборудване
@@ -246,128 +224,19 @@ export default function WeeklyHygieneEditor({
 
       {/* Редактор на помещенията */}
       {editLayout && !readOnly && (
-        <div className="rounded-2xl border border-brand-gold/40 bg-brand-gold/5 p-4 space-y-4">
-          <div>
-            <p className="text-sm font-bold text-brand-green">Помещения и оборудване на обекта</p>
-            <p className="text-[11px] text-brand-dark/60">
-              Впишете Вашите помещения и оборудване (хладилници, фризери, витрини, машини…). Промяната важи от текущата седмица нататък — старите седмици пазят оборудването, с което са попълнени.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {draft.map((r, ri) => (
-              <div key={ri} className="bg-white rounded-xl border border-brand-green/10 p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    className={`${inputCls} font-bold`}
-                    value={r.room}
-                    onChange={(e) => setDraft(draft.map((x, j) => (j === ri ? { ...x, room: e.target.value } : x)))}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setDraft(draft.filter((_, j) => j !== ri))}
-                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 cursor-pointer border-0 bg-transparent"
-                    title="Премахни помещението"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {r.items.map((it, ii) => (
-                    <span key={ii} className="inline-flex items-center gap-1 text-[11px] bg-brand-light/60 border border-brand-green/10 rounded-full pl-2.5 pr-1 py-0.5">
-                      {it}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setDraft(draft.map((x, j) => (j === ri ? { ...x, items: x.items.filter((_, k) => k !== ii) } : x)))
-                        }
-                        className="p-0.5 rounded-full hover:bg-red-100 text-brand-dark/40 hover:text-red-600 cursor-pointer border-0 bg-transparent"
-                        aria-label={`Премахни ${it}`}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                <div className="flex gap-1.5">
-                  <input
-                    className={inputCls}
-                    placeholder="напр. Хладилна витрина №2"
-                    value={newItem[ri] || ""}
-                    onChange={(e) => setNewItem({ ...newItem, [ri]: e.target.value })}
-                    onKeyDown={(e) => {
-                      if (e.key !== "Enter") return;
-                      const v = (newItem[ri] || "").trim();
-                      if (!v) return;
-                      setDraft(draft.map((x, j) => (j === ri ? { ...x, items: [...x.items, v] } : x)));
-                      setNewItem({ ...newItem, [ri]: "" });
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const v = (newItem[ri] || "").trim();
-                      if (!v) return;
-                      setDraft(draft.map((x, j) => (j === ri ? { ...x, items: [...x.items, v] } : x)));
-                      setNewItem({ ...newItem, [ri]: "" });
-                    }}
-                    className="shrink-0 bg-brand-gold text-brand-dark rounded-lg px-2.5 cursor-pointer border-0"
-                    aria-label="Добави"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-            <div className="bg-white/60 rounded-xl border border-dashed border-brand-green/20 p-3 flex flex-col justify-center gap-2">
-              <p className="text-[11px] font-bold text-brand-green">Ново помещение</p>
-              <div className="flex gap-1.5">
-                <input
-                  className={inputCls}
-                  placeholder="напр. Кухня, Съблекалня"
-                  value={newRoom}
-                  onChange={(e) => setNewRoom(e.target.value)}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const v = newRoom.trim();
-                    if (!v) return;
-                    setDraft([...draft, { room: v, items: ["Под", "Стени", "Таван", "Врати", "Осветителни тела"] }]);
-                    setNewRoom("");
-                  }}
-                  className="shrink-0 bg-brand-gold text-brand-dark rounded-lg px-2.5 cursor-pointer border-0"
-                  aria-label="Добави помещение"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2 justify-end">
-            <button
-              type="button"
-              onClick={() => setDraft(defaultHygieneLayout(fridges, freezers))}
-              className="text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green bg-white cursor-pointer"
-            >
-              По подразбиране
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditLayout(false)}
-              className="text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green bg-white cursor-pointer"
-            >
-              Отказ
-            </button>
-            <button
-              type="button"
-              onClick={saveLayout}
-              disabled={savingLayout}
-              className="text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-lg bg-brand-green text-white cursor-pointer border-0 disabled:opacity-50"
-            >
-              Запиши
-            </button>
-          </div>
-        </div>
+        <RoomLayoutEditor
+          initial={currentLayout}
+          defaults={defaultHygieneLayout(fridges, freezers)}
+          title="Помещения и оборудване на обекта"
+          hint="Впишете Вашите помещения и оборудване (хладилници, фризери, витрини, машини…). Промяната важи от текущата седмица нататък — старите седмици пазят оборудването, с което са попълнени."
+          itemPlaceholder="напр. Хладилна витрина №2"
+          newRoomItems={["Под", "Стени", "Таван", "Врати", "Осветителни тела"]}
+          onSave={async (l) => {
+            await onSaveLayout?.(l);
+            setEditLayout(false);
+          }}
+          onCancel={() => setEditLayout(false)}
+        />
       )}
 
       {/* Таблица */}

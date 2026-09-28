@@ -20,6 +20,7 @@ import {
   weekdayLetter,
   weeksForMonth,
 } from "./weeklyHygiene";
+import { cleaningKey, isCleaningDayFilled } from "./cleaningChecklist";
 
 export interface PrintFirmInfo {
   name: string;
@@ -332,6 +333,38 @@ function buildWeeklyHygieneSection(data: RegisterDocData, month: string): string
   return tables.length > 0 ? tables.join("") : `<p class="empty">Няма записани данни.</p>`;
 }
 
+/** Чек-лист за почистване, измиване и дезинфекция — попълнените обекти по дни. */
+function buildCleaningChecklistSection(data: RegisterDocData): string {
+  const rows = data.rows || {};
+  const dates = Object.keys(rows)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && isCleaningDayFilled(rows, d))
+    .sort();
+  const body = dates
+    .map((d) => {
+      const row = rows[d];
+      const rooms = parseLayout(row.__layout) || [];
+      const lines: string[] = [];
+      rooms.forEach((r) =>
+        r.items.forEach((item) => {
+          const ik = hygieneItemKey(r.room, item);
+          const agent = row[cleaningKey(ik, "agent")];
+          const by = row[cleaningKey(ik, "by")];
+          const sign = row[cleaningKey(ik, "sign")];
+          if (!agent && !by && !sign) return;
+          lines.push(`<td>${esc(r.room)}</td><td>${esc(item)}</td><td>${esc(agent)}</td><td>${esc(by)}</td><td>${esc(sign)}</td>`);
+        })
+      );
+      return lines
+        .map((l, i) => (i === 0 ? `<tr><td class="c" rowspan="${lines.length}"><b>${esc(fmtDM(d))}</b></td>${l}</tr>` : `<tr>${l}</tr>`))
+        .join("");
+    })
+    .join("");
+  return simpleTable(
+    ["Дата", "Помещение", "Обект за почистване, измиване и дезинфекция", "Използван препарат", "Извършил — име", "Подпис"],
+    body || `<tr><td colspan="6" class="empty">Няма записани данни.</td></tr>`
+  );
+}
+
 /* ------------------------------------------------------------------ */
 
 const ROMAN_WEEKS = ["I", "II", "III", "IV", "V"];
@@ -373,6 +406,9 @@ export function buildRegisterSection(
       break;
     case "survey":
       body = buildSurveySection(data);
+      break;
+    case "cleaning-checklist":
+      body = buildCleaningChecklistSection(data);
       break;
     case "weekly-hygiene":
       body = buildWeeklyHygieneSection(data, month);

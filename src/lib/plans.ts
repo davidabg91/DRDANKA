@@ -26,6 +26,7 @@ export interface PlanDef {
 const BASE_RECORDS = [
   "Дневник за входящ контрол и списък на доставчиците",
   "Чек-лист за хигиена преди започване на работа",
+  "Чек-лист за почистване, измиване и дезинфекция",
   "Температурни дневници за хладилните съоръжения",
   "Лична хигиена на персонала — списък на персонала и личните здравни книжки",
   "Дневник за обучение на персонала",
@@ -152,6 +153,7 @@ const BASIC_IDS = [
   "suppliers",
   "incoming",
   "prework-check",
+  "cleaning-checklist",
   "temps",
   "staff-hygiene",
   "health-books",
@@ -212,4 +214,20 @@ export function addMonthsISO(months: number, from?: string): string {
   // 31 януари + 1 месец → последния ден на февруари, не 3 март
   if (d.getDate() < day) d.setDate(0);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Какво добавя планът спрямо предходния — за кратките карти с пакети
+ * („Всичко от „Старт", плюс: …"). За първия план връща пълните списъци.
+ */
+export function planDelta(plan: PlanId): { base: PlanDef | null; records: string[]; services: string[] } {
+  const idx = PLANS.findIndex((p) => p.id === plan);
+  const cur = PLANS[idx];
+  const prev = idx > 0 ? PLANS[idx - 1] : null;
+  if (!prev) return { base: null, records: cur.records, services: cur.services };
+  return {
+    base: prev,
+    records: cur.records.filter((r) => !prev.records.includes(r)),
+    services: cur.services.filter((s) => !prev.services.includes(s) && !s.startsWith("Всичко от пакет")),
+  };
 }

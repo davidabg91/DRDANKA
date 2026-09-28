@@ -32,7 +32,8 @@ export type RegisterKind =
   | "training"    // протоколи за обучение
   | "survey"      // въпросник (Ликъртова скала 1–5)
   | "checklist3"    // чек-лист със скала 1–3 по служител
-  | "weekly-hygiene"; // седмичен чек-лист „Хигиена на обекта" по помещения (техническо състояние + хигиена)
+  | "weekly-hygiene"  // седмичен чек-лист „Хигиена на обекта" по помещения (техническо състояние + хигиена)
+  | "cleaning-checklist"; // дневен чек-лист за почистване, измиване и дезинфекция по помещения
 
 export type RegisterFrequency =
   | "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "delivery" | "event" | "permanent" | "3days";
@@ -496,6 +497,21 @@ export const STORE_REGISTERS: RegisterDef[] = [
       { key: "sign", label: "Подпис", type: "text", narrow: true },
     ],
     legend: CHECK_LEGEND,
+  },
+  {
+    id: "cleaning-checklist",
+    num: 48,
+    title: "Чек-лист за почистване, измиване и дезинфекция",
+    shortTitle: "Почистване и дезинфекция",
+    fillWhen:
+      "Попълва се ежедневно след почистването, измиването и дезинфекцията на обекта — за всеки обект: използван препарат, кой е извършил почистването и подпис.",
+    frequency: "daily",
+    period: "month",
+    kind: "cleaning-checklist",
+    remind: true,
+    instructions: [
+      "Почистването, измиването и дезинфекцията се извършват съгласно утвърдения план и инструкциите за употреба на използваните препарати, разписани в НАССР процедурите.",
+    ],
   },
   {
     id: "staff-hygiene",

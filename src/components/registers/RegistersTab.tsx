@@ -59,6 +59,14 @@ import {
 import RegistersTour, { TourStep } from "./RegistersTour";
 import SignaturePad, { SignaturePadHandle } from "./SignaturePad";
 import WeeklyHygieneEditor from "./WeeklyHygieneEditor";
+import CleaningChecklistEditor from "./CleaningChecklistEditor";
+import {
+  CleaningTemplate,
+  applyCleaningTemplate,
+  defaultCleaningLayout,
+  hasTemplate,
+  isCleaningDayFilled,
+} from "./cleaningChecklist";
 import {
   HygieneRoom,
   defaultHygieneLayout,
@@ -203,6 +211,7 @@ const REGISTER_ICONS: Record<string, any> = {
   "safety-survey": FileText,
   "safety-checklist": ClipboardList,
   "pest-control": Bug,
+  "cleaning-checklist": Droplets,
   contracts: CalendarClock,
   // Топла точка
   "fryer-oil-temp": Flame,
@@ -3146,6 +3155,9 @@ interface RegistersTabProps {
     autoHygieneWeekly?: boolean;
     autoHygieneMonthly?: boolean;
     hygieneLayout?: HygieneRoom[];
+    cleaningLayout?: HygieneRoom[];
+    cleaningTemplate?: CleaningTemplate;
+    autoCleaningChecklist?: boolean;
   }) => void | Promise<void>;
   /** Абонаментният план — ограничава кои дневници се виждат (по подразбиране VIP = всички приложими). */
   plan?: PlanId;
@@ -3153,6 +3165,11 @@ interface RegistersTabProps {
   extraRegisters?: string[];
   /** Помещения и оборудване за чек-листа „Хигиена на обекта" (№34). Липсва → по подразбиране. */
   hygieneLayout?: HygieneRoom[];
+  /** Помещения и обекти за чек-листа „Почистване, измиване и дезинфекция" (№48). */
+  cleaningLayout?: HygieneRoom[];
+  /** Образец (препарат/извършил/подпис по обект) за автоматичното попълване на №48. */
+  cleaningTemplate?: CleaningTemplate;
+  autoCleaningChecklist?: boolean;
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
   /** Потребителят вече е виждал обиколката (пази се в профила) */
@@ -3191,6 +3208,9 @@ export default function RegistersTab({
   plan = "vip",
   extraRegisters,
   hygieneLayout,
+  cleaningLayout,
+  cleaningTemplate,
+  autoCleaningChecklist = false,
   readOnly = false,
   tourSeen = false,
   onTourDone,
@@ -3218,7 +3238,8 @@ export default function RegistersTab({
     "cooked-meals": autoCookedMeals,
     "disinfectant-residue": autoResidue,
     "hygiene-weekly": autoHygieneWeekly,
-    "hygiene-monthly": autoHygieneMonthly
+    "hygiene-monthly": autoHygieneMonthly,
+    "cleaning-checklist": autoCleaningChecklist
   };
 
   const toggleAutoFillSetting = async (registerId: string, checked: boolean) => {
@@ -3233,7 +3254,8 @@ export default function RegistersTab({
       "cooked-meals": "autoCookedMeals",
       "disinfectant-residue": "autoResidue",
       "hygiene-weekly": "autoHygieneWeekly",
-      "hygiene-monthly": "autoHygieneMonthly"
+      "hygiene-monthly": "autoHygieneMonthly",
+      "cleaning-checklist": "autoCleaningChecklist"
     };
     const patchKey = patchKeyMap[registerId];
     if (patchKey) {
@@ -3581,6 +3603,28 @@ export default function RegistersTab({
       }
 
       // 3. Преди работа (prework-check) — ежедневно
+      if (autoCleaningChecklist && hasTemplate(cleaningTemplate) && docs["cleaning-checklist"]) {
+        // Почистване и дезинфекция: празните работни дни до днес → по образеца на обекта.
+        const docData = docs["cleaning-checklist"];
+        const layoutNow = cleaningLayout ?? defaultCleaningLayout();
+        const rows = { ...(docData.rows || {}) };
+        let changed = false;
+        for (let d = 1; d <= maxDay; d++) {
+          const dateStr = `${month}-${String(d).padStart(2, "0")}`;
+          if (restDays.includes(weekdayOfISO(dateStr)) || isCleaningDayFilled(rows, dateStr)) continue;
+          rows[dateStr] = applyCleaningTemplate(rows[dateStr] || {}, layoutNow, cleaningTemplate);
+          changed = true;
+        }
+        if (changed) {
+          const updatedDoc = { ...docData, rows, updatedAt: new Date().toISOString() };
+          updatedDocs["cleaning-checklist"] = updatedDoc;
+          stateChanged = true;
+          await setDoc(doc(db, "logs", registerDocKey(email, "cleaning-checklist", month)), updatedDoc).catch((err) => {
+            console.error("Auto fill background error for cleaning-checklist:", err);
+          });
+        }
+      }
+
       if (autoPrework && docs["prework-check"]) {
         // Седмичният чек-лист: празните клетки до днес → „-“, почивните дни → „П“.
         const docData = docs["prework-check"];
@@ -3716,7 +3760,7 @@ export default function RegistersTab({
         setDocs((prev) => ({ ...prev, ...updatedDocs }));
       }
     })();
-  }, [loading, readOnly, email, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoHygieneWeekly, autoHygieneMonthly, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees, hygieneLayout, fridges, freezers, restDays]);
+  }, [loading, readOnly, email, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoHygieneWeekly, autoHygieneMonthly, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees, hygieneLayout, fridges, freezers, restDays, autoCleaningChecklist, cleaningTemplate, cleaningLayout]);
 
   const isRefToday = refDate === todayISO();
   const refDay = String(parseInt(refDate.slice(8, 10), 10));
@@ -3969,6 +4013,14 @@ export default function RegistersTab({
         }
       }
 
+      // Почистване и дезинфекция — всеки работен ден.
+      if (!restDays.includes(weekdayOfISO(dateISO)) && !isCleaningDayFilled(docs["cleaning-checklist"]?.rows, dateISO)) {
+        missing.push({
+          registerId: "cleaning-checklist",
+          text: "Чек-листът за почистване, измиване и дезинфекция не е попълнен (попълва се след почистването).",
+        });
+      }
+
       if (!isHygieneDayFilled(docs["prework-check"]?.rows, dateISO)) {
         missing.push({
           registerId: "prework-check",
@@ -3998,7 +4050,7 @@ export default function RegistersTab({
 
       return missing.filter((m) => allowedIds.has(m.registerId));
     },
-    [docs, units, employees, hotPoint, dailyTriggers, allowedIds]
+    [docs, units, employees, hotPoint, dailyTriggers, allowedIds, restDays]
   );
 
   /* ------------------ Напомняния ------------------ */
@@ -4265,6 +4317,12 @@ export default function RegistersTab({
           return (d.entries || []).length > 0
             ? { label: "Този месец: ✓", tone: "ok" }
             : { label: "Този месец: предстои", tone: "due" };
+        case "cleaning-checklist": {
+          if (!dayMode) break;
+          return isCleaningDayFilled(d.rows, refDate)
+            ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
+            : { label: `${dLbl}: непопълнено`, tone: "due" };
+        }
         case "prework-check": {
           if (!dayMode) break;
           return isHygieneDayFilled(d.rows, refDate)
@@ -4806,6 +4864,25 @@ export default function RegistersTab({
               canTick={refDate.startsWith(month) && refDate <= todayISO()}
               autoFillActive={autoFillSettings[openDef.id] ?? false}
               onToggleAutoFill={(checked) => toggleAutoFillSetting(openDef.id, checked)}
+            />
+          )}
+          {openDef.kind === "cleaning-checklist" && (
+            <CleaningChecklistEditor
+              key={`${openDef.id}-${month}`}
+              data={docs[openDef.id] || {}}
+              month={month}
+              refDate={refDate}
+              layout={cleaningLayout}
+              template={cleaningTemplate}
+              employees={employees.map((e) => e.name)}
+              agentOptions={dynamicOptions.cleaningAgents}
+              restDays={restDays}
+              readOnly={readOnly}
+              onUpdate={makeUpdater(openDef.id)}
+              onSaveLayout={onSaveEquipment ? async (l) => { await onSaveEquipment({ cleaningLayout: l }); } : undefined}
+              onSaveTemplate={onSaveEquipment ? async (t) => { await onSaveEquipment({ cleaningTemplate: t }); } : undefined}
+              autoFillActive={autoFillSettings[openDef.id] ?? false}
+              onToggleAutoFill={readOnly ? undefined : (checked) => toggleAutoFillSetting(openDef.id, checked)}
             />
           )}
           {openDef.kind === "weekly-hygiene" && (
