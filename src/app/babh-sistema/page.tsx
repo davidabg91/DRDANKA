@@ -6,6 +6,7 @@ import {
   webApplicationSchema,
   webPageSchema,
 } from "@/lib/schema";
+import { PLANS } from "@/lib/plans";
 
 export const metadata: Metadata = {
   title: "Автоматична Система за БАБХ Дневници & HACCP — Електронни Регистри",
@@ -53,6 +54,7 @@ export default function BabhSistemaPage() {
               "Дигитални тестове и сертификати за персонала",
               "24/7 чат поддръжка от д-р Данка Николова",
             ],
+            offers: PLANS.map((p) => ({ name: `Пакет „${p.name}“ (${p.tierLabel})`, priceEur: p.priceEur, description: p.tagline })),
           }),
           webPageSchema({
             name: "Автоматична система за БАБХ дневници",

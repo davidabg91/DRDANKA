@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments, useMyEnrollments, useBookings, useMyBookings } from "@/lib/firebaseHooks";
 import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, setDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, updateDoc, deleteField } from "firebase/firestore";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
@@ -19,8 +19,12 @@ import { useTypeOverrides, setTypeOverride, resolveType, MaterialType } from "@/
 import { useVideoLinks, setVideoLink, toEmbedUrl } from "@/lib/videoLinks";
 import RegistersTab from "@/components/registers/RegistersTab";
 import AdminReminderComposer from "@/components/registers/AdminReminderComposer";
+import PlanExtrasEditor from "@/components/registers/PlanExtrasEditor";
+import PlanHelpButton from "@/components/PlanHelpButton";
+import type { HygieneRoom } from "@/components/registers/weeklyHygiene";
 import BankTransferNotice from "@/components/BankTransferNotice";
-import { defaultHotPointForSector, isMeatShopNiche } from "@/data/storeRegisters";
+import { defaultHotPointForSector, isMeatShopNiche, STORE_REGISTER_IDS, REGISTER_BY_ID, registersForMeat, registersFor } from "@/data/storeRegisters";
+import { PLANS, PLAN_BY_ID, PLAN_RANK, PlanId, effectivePlan, planHasChat, planHasExtras, isExtraRegister, addMonthsISO, LEGACY_PLAN } from "@/lib/plans";
 
 import { 
   User, 
@@ -138,6 +142,14 @@ export interface DankaUser {
   subscriptionPaidAt?: string;
   /** ISO date (YYYY-MM-DD) when the subscription expires. Admin-managed. */
   expiresAt?: string;
+  /** Активният абонаментен план (само админ го сменя). Липсва при стари клиенти → VIP. */
+  plan?: PlanId;
+  /** План, заявен от клиента и чакащ потвърждение на плащането. */
+  requestedPlan?: PlanId;
+  /** ISO timestamp на заявката за план. */
+  planRequestedAt?: string;
+  /** Допълнителни записи („Професионал"/VIP), избрани ръчно от д-р Николова. Липсва → всички приложими. */
+  extraRegisters?: string[];
   role: 'user' | 'admin';
   /** Course ids the user has paid for and may read. */
   purchasedCourseIds?: string[];
@@ -168,6 +180,8 @@ export interface DankaUser {
   autoResidue?: boolean;
   autoHygieneWeekly?: boolean;
   autoHygieneMonthly?: boolean;
+  /** Помещенията и оборудването за седмичния чек-лист „Хигиена на обекта" (№34). */
+  hygieneLayout?: HygieneRoom[];
   /** Нарисуван електронен подпис (PNG data URL) за автоматично попълване в картите/документите. */
   signature?: string;
   /** Как да се подписва обектът: "draw" — с електронния подпис; "manual" — на ръка след печат. */
@@ -663,9 +677,10 @@ export default function ProfilePage() {
   // Admin: "set fee" modal that opens when approving a candidate
   const [feeModalEmail, setFeeModalEmail] = useState<string | null>(null);
   const [feeModalAmount, setFeeModalAmount] = useState("");
+  const [feeModalPlan, setFeeModalPlan] = useState<PlanId>("standard");
 
   // Client: package selection confirm + success modals
-  const [pkgConfirmModal, setPkgConfirmModal] = useState<{ name: string; fee: number } | null>(null);
+  const [pkgConfirmModal, setPkgConfirmModal] = useState<{ planId: PlanId; name: string; fee: number } | null>(null);
   const [pkgSuccessModal, setPkgSuccessModal] = useState<{ name: string; fee: number } | null>(null);
 
   // Client: subscription payment test-checkout modal
@@ -1083,8 +1098,11 @@ export default function ProfilePage() {
    * state until they pay online.
    */
   const handleApproveCandidate = (email: string) => {
+    const u = usersList.find(x => x.email.toLowerCase() === email.toLowerCase());
+    const p: PlanId = u?.requestedPlan ?? (u?.plan && u.plan in PLAN_BY_ID ? u.plan : "standard");
     setFeeModalEmail(email);
-    setFeeModalAmount("");
+    setFeeModalPlan(p);
+    setFeeModalAmount(String(PLAN_BY_ID[p].priceEur));
   };
 
   /**
@@ -1105,12 +1123,11 @@ export default function ProfilePage() {
 
     let updates: Partial<DankaUser>;
     if (fee === 0) {
-      const oneYear = new Date();
-      oneYear.setFullYear(oneYear.getFullYear() + 1);
-      const expiresAt = oneYear.toISOString().split("T")[0]; // YYYY-MM-DD
+      const expiresAt = addMonthsISO(1);
 
       updates = {
         status: "approved",
+        plan: feeModalPlan,
         subscriptionStatus: "approved",
         subscriptionFeeEur: 0,
         subscriptionPaidAt: new Date().toISOString(),
@@ -1119,6 +1136,7 @@ export default function ProfilePage() {
     } else {
       updates = {
         status: "approved",
+        requestedPlan: feeModalPlan,
         subscriptionStatus: "awaiting_payment",
         subscriptionFeeEur: Math.round(fee * 100) / 100,
       };
@@ -1142,24 +1160,34 @@ export default function ProfilePage() {
    * This updates their subscriptionStatus to 'awaiting_payment' and sets their fee.
    * The user then does a bank transfer, and the admin approves it from the admin panel.
    */
-  const handleSelectPackage = (packageName: string, fee: number) => {
+  const handleSelectPackage = (planId: PlanId) => {
     if (!currentUserEmail) return;
-    setPkgConfirmModal({ name: packageName, fee });
+    const p = PLAN_BY_ID[planId];
+    setPkgConfirmModal({ planId, name: p.name, fee: p.priceEur });
   };
 
   const handleConfirmSelectPackage = async () => {
     if (!pkgConfirmModal || !currentUserEmail) return;
-    const { name, fee } = pkgConfirmModal;
+    const { planId, name, fee } = pkgConfirmModal;
     setPkgConfirmModal(null);
     try {
-      const updates = {
-        subscriptionStatus: "awaiting_payment" as const,
-        subscriptionFeeEur: fee
+      const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+      // Активен абонат / пробен период: достъпът остава, докато админът потвърди
+      // плащането за новия план. Иначе профилът минава в „чака плащане".
+      const sub = me?.subscriptionStatus ?? "approved";
+      const activeNow = me?.status === "approved" && (
+        (sub === "approved" && (me?.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true)) ||
+        (sub === "trial" && trialDaysLeft(me?.trialStartedAt) >= 0)
+      );
+      const updates: Partial<DankaUser> = {
+        requestedPlan: planId,
+        planRequestedAt: new Date().toISOString(),
+        subscriptionFeeEur: fee,
+        ...(activeNow ? {} : { subscriptionStatus: "awaiting_payment" as const }),
       };
       const ok = await updateUser(currentUserEmail, updates);
       if (ok) {
         setPkgSuccessModal({ name, fee });
-        const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
         const isFirmIncomplete = !me?.firmName || me.firmName.trim() === "" || !me?.address || me.address.trim() === "";
         if (isFirmIncomplete) {
           setApplyFirmName(me?.firmName || "");
@@ -1191,13 +1219,11 @@ export default function ProfilePage() {
       if (u.email.toLowerCase() === email.toLowerCase()) {
         const nextStatus = activating ? "approved" as const : "expired" as const;
         const next = { ...u, status: nextStatus, subscriptionStatus: nextStatus };
-        // При активиране: ако срокът е изтекъл или липсва, задаваме нов (+1 година).
+        // При активиране: ако срокът е изтекъл или липсва, задаваме нов (+1 месец — абонаментът е месечен).
         // Иначе auto-expire ефектът веднага ще върне статуса на "изтекъл" при
         // следващото зареждане и бутонът пак ще показва "Активирай абонамент".
         if (activating && (!u.expiresAt || (daysUntilExpiry(u.expiresAt) ?? -1) < 0)) {
-          const d = new Date();
-          d.setFullYear(d.getFullYear() + 1);
-          next.expiresAt = d.toISOString().split("T")[0];
+          next.expiresAt = addMonthsISO(1);
           newExpiryForAlert = next.expiresAt;
         }
         return next;
@@ -1211,34 +1237,56 @@ export default function ProfilePage() {
   };
 
   // Admin approves payment for subscription (bank transfer)
-  const handleConfirmSubscriptionPayment = (email: string) => {
-    if (!confirm(`Сигурни ли сте, че искате да потвърдите плащането по банкова сметка за ${email} и да активирате абонамента?`)) return;
-    const oneYear = new Date();
-    oneYear.setFullYear(oneYear.getFullYear() + 1);
-    const expiresAt = oneYear.toISOString().split("T")[0]; // YYYY-MM-DD
+  const handleConfirmSubscriptionPayment = async (email: string) => {
+    const target = usersList.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!target) return;
+    const newPlan: PlanId = target.requestedPlan ?? effectivePlan(target);
+    const planName = PLAN_BY_ID[newPlan].name;
+    if (!confirm(`Потвърждавате ли получения банков превод от ${email} и активиране на план „${planName}“ за 1 месец?`)) return;
+    // Удължаваме от текущия срок, ако абонаментът още е активен (подновяване/надграждане);
+    // иначе — от днес.
+    const today = new Date().toISOString().split("T")[0];
+    const stillActive = target.subscriptionStatus === "approved" && target.expiresAt && target.expiresAt >= today;
+    const expiresAt = addMonthsISO(1, stillActive ? target.expiresAt : undefined);
 
-    const updatedUsers = usersList.map(u => {
-      if (u.email.toLowerCase() === email.toLowerCase()) {
-        const oldMessages = u.messages || [];
-        const newMsg: Message = {
-          id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          sender: 'admin',
-          text: "Здравейте! Годишният Ви абонамент за БАБХ Спокойствие е активиран успешно, тъй като банковият Ви превод е получен. Всички функции на портала (дневници, НАССР документи и т.н.) са напълно отключени за период от 1 година. Благодарим Ви!",
-          sentAt: new Date().toISOString()
-        };
-        return {
-          ...u,
-          subscriptionStatus: "approved" as const,
-          subscriptionPaidAt: new Date().toISOString(),
-          expiresAt,
-          messages: [...oldMessages, newMsg]
-        };
-      }
-      return u;
+    const newMsg: Message = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      sender: 'admin',
+      text: `Здравейте! Банковият Ви превод е получен и абонаментът „${planName}“ е активен до ${expiresAt}. Благодарим Ви!`,
+      sentAt: new Date().toISOString()
+    };
+    const ok = await updateUser(email, {
+      status: "approved",
+      plan: newPlan,
+      subscriptionStatus: "approved",
+      subscriptionPaidAt: new Date().toISOString(),
+      expiresAt,
+      messages: [...(target.messages || []), newMsg],
+      // Заявката е изпълнена — чистим я от документа.
+      requestedPlan: deleteField() as unknown as PlanId,
+      planRequestedAt: deleteField() as unknown as string,
     });
+    if (!ok) return;
+    alert(`Плащането за ${email} е потвърдено — план „${planName}“ до ${expiresAt}.`);
+  };
 
-    saveUsers(updatedUsers);
-    alert(`Плащането за ${email} е потвърдено и абонаментът е активиран!`);
+  // Admin changes a client's plan directly (without payment flow).
+  const handleSetPlan = (email: string, plan: PlanId) => {
+    updateUser(email, { plan });
+  };
+
+  // One-off migration: clients from before the plans existed → VIP for 1 month.
+  const legacyPlanClients = usersList.filter(u =>
+    u.role === "user" && !u.plan && u.status === "approved" && (u.subscriptionStatus ?? "approved") === "approved"
+  );
+  const handleMigrateLegacyClients = async () => {
+    if (legacyPlanClients.length === 0) return;
+    const expiresAt = addMonthsISO(1);
+    if (!confirm(`${legacyPlanClients.length} активни клиента нямат план. Прехвърляне на „${PLAN_BY_ID[LEGACY_PLAN].name}“ със срок до ${expiresAt}?`)) return;
+    for (const u of legacyPlanClients) {
+      await updateUser(u.email, { plan: LEGACY_PLAN, subscriptionStatus: "approved", expiresAt });
+    }
+    alert(`Готово — ${legacyPlanClients.length} клиента са на „${PLAN_BY_ID[LEGACY_PLAN].name}“ до ${expiresAt}.`);
   };
 
   // Admin deletes user
@@ -1307,7 +1355,7 @@ export default function ProfilePage() {
 
   // Admin export of all clients to CSV (downloads in browser).
   const handleExportClientsCsv = () => {
-    const cols = ["email", "firmName", "eik", "contact", "phone", "niche", "address", "status", "expiresAt", "assignedCount", "completedCount"];
+    const cols = ["email", "firmName", "eik", "contact", "phone", "niche", "address", "status", "plan", "expiresAt", "assignedCount", "completedCount"];
     const csvEscape = (raw: any) => {
       const s = String(raw ?? "");
       return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -1323,6 +1371,7 @@ export default function ProfilePage() {
         u.niche,
         u.address,
         u.status,
+        u.plan || "",
         u.expiresAt || "",
         (u.assignedDocs || []).length,
         (u.assignedDocs || []).filter(d => d.status === "completed").length
@@ -3282,17 +3331,18 @@ export default function ProfilePage() {
               Shown on every tab so the buyer always sees the call to pay. */}
           {userRole === "user" && (() => {
             const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
-            if (me?.subscriptionStatus !== "awaiting_payment") return null;
+            if (me?.subscriptionStatus !== "awaiting_payment" && !me?.requestedPlan) return null;
             const fee = me?.subscriptionFeeEur ?? 0;
+            const reqName = me?.requestedPlan ? PLAN_BY_ID[me.requestedPlan].name : null;
             return (
               <div className="mb-6 rounded-2xl border bg-gradient-to-r from-brand-gold/20 to-brand-gold/10 border-brand-gold/40 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <Building className="h-6 w-6 text-brand-gold shrink-0" />
                 <div className="flex-1 text-sm">
                   <p className="font-bold text-brand-green mb-0.5">
-                    Заявлението Ви за абонамент е одобрено!
+                    {reqName ? `Заявихте план „${reqName}“` : "Заявлението Ви за абонамент е одобрено!"}
                   </p>
                   <p className="text-xs text-brand-dark/70">
-                    За да активирате пълния достъп до портала, моля направете банков превод на стойност <strong className="text-brand-green">{fee.toFixed(2)} €</strong>.
+                    За да активирате плана, моля направете банков превод на стойност <strong className="text-brand-green">{fee.toFixed(2)} €</strong> (1 месец). Достъпът се активира след получаване на превода.
                   </p>
                 </div>
                 <button
@@ -3566,7 +3616,7 @@ export default function ProfilePage() {
                           Абонаментни Пакети
                         </button>
 
-                        {/* Premium tab: Чат */}
+                        {/* Premium tab: Чат — писане само за „Професионал" и VIP; останалите четат съобщенията от админа */}
                         {isSubscribed ? (
                           <button onClick={handleOpenUserChat} className={`relative ${activeStyle(activeTab === "chat")}`}>
                             <MessageSquare className={`h-4 w-4 ${activeTab === "chat" ? "text-brand-gold" : "text-brand-dark/50"}`} />
@@ -4002,6 +4052,17 @@ export default function ProfilePage() {
                               <Download className="h-3.5 w-3.5" />
                               Експорт CSV
                             </button>
+                            {legacyPlanClients.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={handleMigrateLegacyClients}
+                                className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg bg-brand-gold/15 text-brand-gold-dark border border-brand-gold/40 hover:bg-brand-gold/25 transition-colors cursor-pointer"
+                                title="Клиенти от преди пакетите нямат план — прехвърля ги на VIP за 1 месец"
+                              >
+                                <Layers className="h-3.5 w-3.5" />
+                                Стари клиенти → VIP 1 месец ({legacyPlanClients.length})
+                              </button>
+                            )}
                           </div>
                         </div>
 
@@ -4038,6 +4099,7 @@ export default function ProfilePage() {
                                   <th className="border border-brand-green/10 p-3">Фирма / Обект</th>
                                   <th className="border border-brand-green/10 p-3">Контакти</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Статус Абонамент</th>
+                                  <th className="border border-brand-green/10 p-3 text-center">План</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Изтича на</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Промяна Абонамент</th>
                                   <th className="border border-brand-green/10 p-3 text-center">Изтриване</th>
@@ -4083,6 +4145,25 @@ export default function ProfilePage() {
                                       )}
                                     </td>
                                     <td className="border border-brand-green/10 p-3 text-center">
+                                      <div className="flex flex-col items-center gap-1">
+                                        <select
+                                          value={u.plan ?? ""}
+                                          onChange={(e) => e.target.value && handleSetPlan(u.email, e.target.value as PlanId)}
+                                          className="text-[10px] font-bold px-2 py-1 rounded border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white text-brand-green cursor-pointer"
+                                        >
+                                          {!u.plan && <option value="">{u.subscriptionStatus === "trial" ? `Проба (${PLAN_BY_ID.standard.name})` : `— (${PLAN_BY_ID[LEGACY_PLAN].name})`}</option>}
+                                          {PLANS.map(p => (
+                                            <option key={p.id} value={p.id}>{p.name} · {p.priceEur} €</option>
+                                          ))}
+                                        </select>
+                                        {u.requestedPlan && (
+                                          <span className="text-[9px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full" title={u.planRequestedAt ? `Заявен на ${u.planRequestedAt.slice(0, 10)}` : undefined}>
+                                            Заявен: {PLAN_BY_ID[u.requestedPlan]?.name ?? u.requestedPlan}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                    <td className="border border-brand-green/10 p-3 text-center">
                                       {(() => {
                                         const d = daysUntilExpiry(u.expiresAt);
                                         const colour =
@@ -4118,7 +4199,7 @@ export default function ProfilePage() {
                                         >
                                           Активирай абонамент
                                         </button>
-                                      ) : u.subscriptionStatus === "awaiting_payment" ? (
+                                      ) : u.subscriptionStatus === "awaiting_payment" || u.requestedPlan ? (
                                         <button
                                           onClick={() => handleConfirmSubscriptionPayment(u.email)}
                                           className="px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide transition-colors cursor-pointer border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 flex items-center justify-center gap-1 mx-auto"
@@ -5929,6 +6010,16 @@ export default function ProfilePage() {
                           </div>
                         ) : (
                           <div className="space-y-6">
+                            <PlanExtrasEditor
+                              key={`plan-${auditTarget.email}`}
+                              plan={effectivePlan(auditTarget)}
+                              planIsDefault={!auditTarget.plan && auditTarget.subscriptionStatus !== "trial"}
+                              extraRegisters={auditTarget.extraRegisters}
+                              onSavePlan={(p) => handleSetPlan(auditTarget.email, p)}
+                              onSaveExtras={(ids) => updateUser(auditTarget.email, {
+                                extraRegisters: ids === null ? (deleteField() as unknown as string[]) : ids,
+                              })}
+                            />
                             <AdminReminderComposer
                               key={`composer-${auditTarget.email}`}
                               email={auditTarget.email}
@@ -5947,6 +6038,9 @@ export default function ProfilePage() {
                               restDays={auditTarget.restDays ?? []}
                               signature={auditTarget.signature}
                               signatureMode={auditTarget.signatureMode ?? "manual"}
+                              plan={effectivePlan(auditTarget)}
+                              extraRegisters={auditTarget.extraRegisters}
+                              hygieneLayout={auditTarget.hygieneLayout}
                               readOnly
                             />
                           </div>
@@ -5980,7 +6074,7 @@ export default function ProfilePage() {
                             </h2>
                             <p className="text-sm text-brand-dark/70 leading-relaxed">
                               {subStatus === "pending" && `Вашето заявление за абонамент е получено и се преглежда от д-р Николова. След одобрение и заплащане на абонамента, всички функции на портала се отключват.`}
-                              {subStatus === "awaiting_payment" && `Заявлението Ви е одобрено! За да активирате пълния достъп до портала, моля заплатете годишния абонамент по-долу.`}
+                              {subStatus === "awaiting_payment" && `Заявлението Ви е одобрено! За да активирате пълния достъп до портала, моля заплатете месечния абонамент по-долу.`}
                               {(status === "expired" || subStatus === "expired") && `Вашият абонамент „БАБХ Спокойствие" е изтекъл. За да възстановите достъпа си до електронните дневници и НАССР документи, моля свържете се с д-р Николова.`}
                               {status !== "expired" && subStatus !== "expired" && subStatus !== "pending" && subStatus !== "awaiting_payment" && `Тази секция е достъпна само за клиенти с активен абонамент „БАБХ Спокойствие". Закупените от Вас курсове можете да четете в таб „Моите Обучения".`}
                             </p>
@@ -6003,7 +6097,7 @@ export default function ProfilePage() {
                           {subStatus === "awaiting_payment" && (
                             <div className="space-y-3">
                               <div className="bg-brand-green/5 border border-brand-green/15 rounded-xl px-4 py-4 flex items-center justify-between">
-                                <span className="text-sm font-bold text-brand-green">Годишен абонамент</span>
+                                <span className="text-sm font-bold text-brand-green">{currentUser?.requestedPlan ? `План „${PLAN_BY_ID[currentUser.requestedPlan].name}“ — 1 месец` : "Месечен абонамент"}</span>
                                 <span className="font-serif text-2xl font-bold text-brand-gold">{feeEur.toFixed(2)} €</span>
                               </div>
                               <button
@@ -6061,6 +6155,9 @@ export default function ProfilePage() {
                   signature={currentUser?.signature}
                   signatureMode={currentUser?.signatureMode ?? "manual"}
                   tourSeen={currentUser?.registersTourSeen ?? false}
+                  plan={effectivePlan(currentUser)}
+                  extraRegisters={currentUser?.extraRegisters}
+                  hygieneLayout={currentUser?.hygieneLayout}
                    autoDuner={currentUser?.autoDuner ?? false}
                   autoPrework={currentUser?.autoPrework ?? false}
                   autoTemps={currentUser?.autoTemps ?? false}
@@ -6629,7 +6726,22 @@ export default function ProfilePage() {
                       )}
                     </div>
 
-                    {/* Footer Form */}
+                    {/* Footer Form — директната връзка с д-р Николова е в „Професионал" и VIP */}
+                    {!planHasChat(effectivePlan(currentUser)) ? (
+                      <div className="bg-brand-gold/10 p-4 border-t border-brand-gold/25 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <Lock className="h-4 w-4 text-brand-gold-dark shrink-0" />
+                        <p className="flex-1 text-xs text-brand-dark/75 leading-relaxed">
+                          Тук получавате съобщенията от администратора. <strong className="text-brand-green">Директна връзка с д-р Николова</strong> за консултации е включена в пакет „{PLAN_BY_ID.pro.name}“ и „{PLAN_BY_ID.vip.name}“.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("packages")}
+                          className="text-[10px] font-bold uppercase tracking-wider px-4 py-2 rounded-full bg-brand-green text-white hover:bg-brand-green/90 cursor-pointer border-0 whitespace-nowrap"
+                        >
+                          Виж пакетите
+                        </button>
+                      </div>
+                    ) : (
                     <form onSubmit={handleSendUserMessage} className="bg-white p-3 border-t border-brand-green/10 flex gap-2.5 items-center">
                       <input 
                         type="text" 
@@ -6645,6 +6757,7 @@ export default function ProfilePage() {
                         <Send className="h-4 w-4" />
                       </button>
                     </form>
+                    )}
                   </div>
                 );
               })()}
@@ -6867,7 +6980,7 @@ export default function ProfilePage() {
                       <div className="space-y-1 text-sm font-sans text-left">
                         <p className="font-bold text-base">Вие сте в безплатен пробен период!</p>
                         <p className="text-xs text-emerald-900/80 leading-relaxed">
-                          Остават Ви още <strong className="text-emerald-700 font-black">{trialDaysLeft(currentUser?.trialStartedAt)} дни</strong> безплатен пробен достъп. За да си осигурите дългосрочно съответствие и сигурност, можете да изберете абонаментен пакет от предложените по-долу по всяко време.
+                          Остават Ви още <strong className="text-emerald-700 font-black">{trialDaysLeft(currentUser?.trialStartedAt)} дни</strong> безплатен пробен достъп с възможностите на план „{PLAN_BY_ID.standard.name}“. За да си осигурите дългосрочно съответствие и сигурност, можете да изберете абонаментен пакет от предложените по-долу по всяко време.
                         </p>
                       </div>
                     </div>
@@ -6877,9 +6990,9 @@ export default function ProfilePage() {
                     <div className="bg-brand-green/5 border border-brand-green/15 text-brand-green rounded-2xl p-5 flex items-start gap-4">
                       <ShieldCheck className="h-6 w-6 text-brand-gold shrink-0 mt-0.5" />
                       <div className="space-y-1 text-sm font-sans text-left">
-                        <p className="font-bold text-base">Имате активен абонамент!</p>
+                        <p className="font-bold text-base">Активен план „{PLAN_BY_ID[effectivePlan(currentUser)].name}“</p>
                         <p className="text-xs text-brand-dark/70 leading-relaxed">
-                          Вашият акаунт е напълно отключен и защитен. Абонаментът Ви изтича на: <strong className="font-mono text-brand-gold-dark font-bold">{currentUser?.expiresAt}</strong>.
+                          Абонаментът Ви е платен до: <strong className="font-mono text-brand-gold-dark font-bold">{currentUser?.expiresAt || "—"}</strong>. За подновяване направете нов превод преди тази дата.
                         </p>
                       </div>
                     </div>
@@ -6887,217 +7000,100 @@ export default function ProfilePage() {
 
                   {/* Program intro */}
                   <div className="bg-brand-green/[0.04] border border-brand-green/10 rounded-3xl p-6 sm:p-7 text-left font-sans">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold-dark mb-2">Абонаментна програма</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold-dark mb-2">Пакети за дигитално водене на записи</p>
                     <h3 className="font-serif text-xl sm:text-2xl font-bold text-brand-green leading-snug">
-                      Подкрепа, внедряване и поддържане на системи за безопасност на храните
+                      Всички дневници по самоконтрол — онлайн, с напомняния и готови за проверка от БАБХ
                     </h3>
                     <p className="text-sm text-brand-dark/75 leading-relaxed mt-3 max-w-3xl">
-                      Това не е поредното обучение, което ще изгледате и ще забравите. Това е <strong className="text-brand-green">жива професионална общност</strong>, в която всяка седмица работите заедно с д-р Данка Николова, за да изградите система по безопасност на храните, която работи ежедневно и Ви дава спокойствие при всяка проверка от БАБХ.
+                      Изберете пакет според дейността на обекта. Плащането е <strong className="text-brand-green">месечно, по банков път</strong> — достъпът се активира след получаване на превода. Можете да надградите пакета по всяко време.
                     </p>
                   </div>
 
-                  {/* Packages Grid — premium subscription cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6 font-sans text-left items-stretch">
-                    {/* ─── Търговски обекти ─── */}
-                    <div className="group relative flex flex-col rounded-[1.75rem] bg-white ring-1 ring-brand-green/10 p-7 shadow-sm hover:shadow-xl hover:ring-brand-gold/40 hover:-translate-y-1 transition-all duration-300">
-                      <div className="space-y-1">
-                        <h3 className="font-serif text-lg font-bold text-brand-green">Търговски обекти</h3>
-                        <p className="text-[11px] text-brand-dark/50 leading-relaxed">За магазини, складове, заведения, кетъринг и онлайн търговци на храни</p>
+                  {/* Packages Grid */}
+                  {(() => {
+                    const curPlan = effectivePlan(currentUser);
+                    const hasActivePlan = status === "approved" && subStatus === "approved";
+                    const requested = currentUser?.requestedPlan;
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 font-sans text-left items-stretch">
+                        {PLANS.map(p => {
+                          const isCurrent = hasActivePlan && curPlan === p.id;
+                          const isRequested = requested === p.id;
+                          const isLower = hasActivePlan && PLAN_RANK[p.id] < PLAN_RANK[curPlan];
+                          const dark = !!p.featured;
+                          return (
+                            <div
+                              key={p.id}
+                              className={`relative flex flex-col rounded-[1.75rem] p-6 transition-all duration-300 hover:-translate-y-1 ${
+                                dark
+                                  ? "bg-gradient-to-br from-[#0D2B1C] via-brand-green to-[#0A2318] text-white shadow-2xl shadow-brand-green/25 ring-1 ring-brand-gold/30"
+                                  : p.id === "vip"
+                                    ? "bg-gradient-to-b from-brand-gold/[0.08] to-white ring-1 ring-brand-gold/30 shadow-sm hover:shadow-xl"
+                                    : "bg-white ring-1 ring-brand-green/10 shadow-sm hover:shadow-xl hover:ring-brand-gold/40"
+                              } ${isCurrent ? "ring-2 ring-brand-gold" : ""}`}
+                            >
+                              <div className="flex items-center justify-between gap-2 min-h-[26px]">
+                                <span className={`text-[10px] font-black uppercase tracking-[0.15em] ${dark ? "text-white/50" : "text-brand-dark/40"}`}>{p.tierLabel}</span>
+                                {isCurrent ? (
+                                  <span className="text-[9px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-2.5 py-1 rounded-full">Вашият план</span>
+                                ) : dark ? (
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-2.5 py-1 rounded-full"><Star className="h-3 w-3" fill="currentColor" /> Препоръчан</span>
+                                ) : null}
+                              </div>
+                              <h3 className={`font-serif text-xl font-bold mt-2 ${dark ? "text-white" : "text-brand-green"}`}>{p.name}</h3>
+                              <p className={`text-[11px] leading-relaxed mt-1 ${dark ? "text-white/60" : "text-brand-dark/55"}`}>{p.tagline}</p>
+                              <div className="mt-5 flex items-end gap-1.5">
+                                <span className={`font-serif text-5xl font-black tabular-nums leading-none ${dark ? "text-white" : "text-brand-dark"}`}>{p.priceEur}</span>
+                                <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
+                                <span className={`text-xs font-medium mb-1.5 ${dark ? "text-white/50" : "text-brand-dark/45"}`}>/ месец</span>
+                              </div>
+                              <div className={`h-px my-5 ${dark ? "bg-white/10" : "bg-brand-green/10"}`} />
+                              <p className={`text-[10px] font-black uppercase tracking-wider mb-2 ${dark ? "text-brand-gold" : "text-brand-gold-dark"}`}>Дигитално водене на</p>
+                              <ul className={`space-y-2 text-xs ${dark ? "text-white/85" : "text-brand-dark/80"}`}>
+                                {p.records.map((r, i) => (
+                                  <li key={i} className="flex items-start gap-2 leading-snug">
+                                    <Check className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${dark ? "text-brand-gold" : "text-brand-green"}`} strokeWidth={3} />
+                                    <span>{r}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              <p className={`text-[10px] font-black uppercase tracking-wider mt-5 mb-2 ${dark ? "text-brand-gold" : "text-brand-gold-dark"}`}>Услуги към пакета</p>
+                              <ul className={`space-y-2 text-xs flex-grow ${dark ? "text-white/85" : "text-brand-dark/80"}`}>
+                                {p.services.map((r, i) => (
+                                  <li key={i} className="flex items-start gap-2 leading-snug">
+                                    <span className={`mt-0.5 shrink-0 grid place-items-center h-3.5 w-3.5 rounded-full ${dark ? "bg-brand-gold text-brand-dark" : "bg-brand-gold/15 text-brand-gold-dark"}`}><Check className="h-2.5 w-2.5" strokeWidth={3} /></span>
+                                    <span>{r}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                              {isCurrent ? (
+                                <div className={`w-full mt-6 py-3.5 text-center font-bold text-xs uppercase tracking-widest rounded-xl ${dark ? "bg-white/10 text-white" : "bg-brand-green/5 text-brand-green"}`}>
+                                  Активен до {currentUser?.expiresAt || "—"}
+                                </div>
+                              ) : isRequested ? (
+                                <div className="w-full mt-6 py-3.5 text-center font-bold text-xs uppercase tracking-widest rounded-xl bg-amber-100 text-amber-800">
+                                  Заявен — чака плащане
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleSelectPackage(p.id)}
+                                  className={`w-full mt-6 py-3.5 font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 cursor-pointer border-0 ${
+                                    dark
+                                      ? "bg-brand-gold hover:bg-brand-gold-light text-brand-dark shadow-lg shadow-brand-gold/25"
+                                      : "bg-brand-green/[0.06] hover:bg-brand-green text-brand-green hover:text-white ring-1 ring-brand-green/15"
+                                  }`}
+                                >
+                                  {hasActivePlan ? (isLower ? "Премини към този план" : "Надгради") : "Избери план"}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="mt-6 flex items-end gap-1.5">
-                        <span className="font-serif text-5xl font-black text-brand-dark tabular-nums leading-none">79</span>
-                        <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
-                        <span className="text-xs text-brand-dark/45 font-medium mb-1.5">/ месец</span>
-                      </div>
-                      <div className="h-px bg-brand-green/8 my-6" />
-                      <ul className="space-y-3 text-xs text-brand-dark/80 flex-grow">
-                        {[
-                          <><strong className="text-brand-green">Една среща на живо</strong> всяка седмица (онлайн)</>,
-                          <>Решаване на реални казуси и отговори на въпросите Ви</>,
-                          <>Авторски шаблони, чек-листи и образци на документи</>,
-                          <>Достъп до записите от всички срещи</>,
-                          <>Затворена <strong className="text-brand-green">Viber група</strong> за въпроси между срещите</>,
-                        ].map((f, i) => (
-                          <li key={i} className="flex items-start gap-2.5 leading-relaxed">
-                            <span className="mt-0.5 shrink-0 grid place-items-center h-4 w-4 rounded-full bg-brand-gold/15 text-brand-gold"><Check className="h-3 w-3" strokeWidth={3} /></span>
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <button
-                        onClick={() => handleSelectPackage("Търговски обекти", 79)}
-                        className="w-full mt-7 py-3.5 bg-brand-green/[0.06] hover:bg-brand-green text-brand-green hover:text-white ring-1 ring-brand-green/15 hover:ring-brand-green font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 cursor-pointer"
-                      >
-                        Избери план
-                      </button>
-                    </div>
+                    );
+                  })()}
 
-                    {/* ─── Производители на храни (featured) ─── */}
-                    <div className="group relative flex flex-col rounded-[1.75rem] p-7 md:-my-2 md:py-9 bg-gradient-to-br from-[#0D2B1C] via-brand-green to-[#0A2318] text-white shadow-2xl shadow-brand-green/25 ring-1 ring-brand-gold/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
-                      <div className="absolute top-0 right-0 w-56 h-56 bg-brand-gold/15 rounded-full blur-[70px] pointer-events-none" />
-                      <div className="relative flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.15em] bg-brand-gold text-brand-dark px-3 py-1.5 rounded-full shadow-lg shadow-brand-gold/20">
-                          <Star className="h-3 w-3" fill="currentColor" /> Най-популярен
-                        </span>
-                      </div>
-                      <div className="relative mt-5 space-y-1">
-                        <h3 className="font-serif text-lg font-bold text-white">Производители на храни</h3>
-                        <p className="text-[11px] text-white/55 leading-relaxed">За производители, мандри, месо- и рибопреработка, хлебни, сладкарски и готови храни</p>
-                      </div>
-                      <div className="relative mt-6 flex items-end gap-1.5">
-                        <span className="font-serif text-5xl font-black text-white tabular-nums leading-none">119</span>
-                        <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
-                        <span className="text-xs text-white/50 font-medium mb-1.5">/ месец</span>
-                      </div>
-                      <div className="relative h-px bg-white/10 my-6" />
-                      <ul className="relative space-y-3 text-xs text-white/85 flex-grow">
-                        {[
-                          <><strong className="text-brand-gold">Всичко за „Търговски обекти“</strong></>,
-                          <>Практически теми по <strong className="text-white">НАССР, ДПХП и технологична документация</strong></>,
-                          <>Проследимост, етикетиране и добри производствени практики</>,
-                          <>Подготовка за проверки и вътрешен контрол</>,
-                          <>Актуална информация при промени в законодателството</>,
-                        ].map((f, i) => (
-                          <li key={i} className="flex items-start gap-2.5 leading-relaxed">
-                            <span className="mt-0.5 shrink-0 grid place-items-center h-4 w-4 rounded-full bg-brand-gold text-brand-dark"><Check className="h-3 w-3" strokeWidth={3} /></span>
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <button
-                        onClick={() => handleSelectPackage("Производители на храни", 119)}
-                        className="relative w-full mt-7 py-3.5 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-black text-xs uppercase tracking-widest rounded-xl shadow-lg shadow-brand-gold/25 hover:shadow-xl transition-all duration-300 cursor-pointer"
-                      >
-                        Избери план
-                      </button>
-                    </div>
-
-                    {/* ─── VIP ─── */}
-                    <div className="group relative flex flex-col rounded-[1.75rem] bg-gradient-to-b from-brand-gold/[0.07] to-white ring-1 ring-brand-gold/25 p-7 shadow-sm hover:shadow-xl hover:ring-brand-gold/50 hover:-translate-y-1 transition-all duration-300">
-                      <div className="flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.15em] text-brand-gold-dark border border-brand-gold/40 bg-brand-gold/10 px-3 py-1.5 rounded-full">
-                          Premium
-                        </span>
-                      </div>
-                      <div className="mt-5 space-y-1">
-                        <h3 className="font-serif text-lg font-bold text-brand-green">Спокойствие VIP одит</h3>
-                        <p className="text-[11px] text-brand-dark/50 leading-relaxed">Пълна професионална защита с персонално внимание</p>
-                      </div>
-                      <div className="mt-6 flex items-end gap-1.5">
-                        <span className="font-serif text-5xl font-black text-brand-dark tabular-nums leading-none">199</span>
-                        <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
-                        <span className="text-xs text-brand-dark/45 font-medium mb-1.5">/ месец</span>
-                      </div>
-                      <div className="h-px bg-brand-gold/15 my-6" />
-                      <ul className="space-y-3 text-xs text-brand-dark/80 flex-grow">
-                        {[
-                          <><strong className="text-brand-green">Всичко за „Производители на храни“</strong></>,
-                          <><strong className="text-brand-green">Месечен одит</strong> с д-р Данка Николова</>,
-                          <>Изготвяне на технологична документация</>,
-                          <><strong className="text-brand-green">Директна телефонна връзка</strong> при проверки</>,
-                          <>100% защита при казуси с БАБХ</>,
-                        ].map((f, i) => (
-                          <li key={i} className="flex items-start gap-2.5 leading-relaxed">
-                            <span className="mt-0.5 shrink-0 grid place-items-center h-4 w-4 rounded-full bg-brand-gold/15 text-brand-gold"><Check className="h-3 w-3" strokeWidth={3} /></span>
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      <button
-                        onClick={() => handleSelectPackage("VIP одит", 199)}
-                        className="w-full mt-7 py-3.5 bg-brand-green/[0.06] hover:bg-brand-green text-brand-green hover:text-white ring-1 ring-brand-green/15 hover:ring-brand-green font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 cursor-pointer"
-                      >
-                        Избери план
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* What you get */}
-                  <div className="text-left font-sans">
-                    <div className="flex items-center gap-3 mb-5">
-                      <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-xl"><Check className="h-5 w-5" /></div>
-                      <h3 className="font-serif text-lg font-bold text-brand-green">Какво получавате</h3>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {[
-                        { icon: Video, t: "Седмични срещи на живо", d: "Една онлайн среща всяка седмица с практически теми и демонстрации." },
-                        { icon: FileText, t: "Практически теми", d: "ДПХП, НАССР, технологична документация, проследимост, етикетиране и законодателство." },
-                        { icon: ShieldCheck, t: "Реални казуси", d: "Решаване на реални казуси и отговори на Вашите конкретни въпроси." },
-                        { icon: Download, t: "Достъп до записите", d: "Гледайте записите от всички срещи, ако не можете да присъствате на живо." },
-                        { icon: FileCheck, t: "Готови материали", d: "Авторски шаблони, чек-листи, образци на документи и практически материали." },
-                        { icon: MessageSquare, t: "Затворена Viber група", d: "Задавайте въпроси между срещите и получавайте професионални насоки." },
-                      ].map(({ icon: Icon, t, d }, i) => (
-                        <div key={i} className="bg-white border border-brand-green/10 rounded-2xl p-4 hover:border-brand-gold/40 transition-colors">
-                          <Icon className="h-5 w-5 text-brand-gold mb-2" />
-                          <p className="font-bold text-sm text-brand-green">{t}</p>
-                          <p className="text-xs text-brand-dark/65 leading-relaxed mt-1">{d}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* For whom / When it fits */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left font-sans">
-                    <div className="bg-brand-light/30 border border-brand-green/10 rounded-3xl p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-brand-green/10 text-brand-green rounded-xl"><Users className="h-5 w-5" /></div>
-                        <h3 className="font-serif text-lg font-bold text-brand-green">За кого е подходяща</h3>
-                      </div>
-                      <ul className="text-xs text-brand-dark/80 space-y-2 leading-relaxed columns-1 sm:columns-2 gap-x-6">
-                        {[
-                          "Производители на храни",
-                          "Малки и средни предприятия",
-                          "Мандри и месопреработка",
-                          "Производство на рибни продукти",
-                          "Хлебни и сладкарски изделия",
-                          "Производители на готови храни",
-                          "Плодове и зеленчуци",
-                          "Магазини и складове за храни",
-                          "Заведения за обществено хранене",
-                          "Кетъринг и онлайн търговци",
-                          "Ферми по Наредба № 26",
-                          "Стартиращи хранителни предприятия",
-                          "Отговорници по качеството и технолози",
-                          "Управители и собственици на обекти",
-                        ].map((x, i) => (
-                          <li key={i} className="flex items-start gap-2 break-inside-avoid mb-2"><Check className="h-3.5 w-3.5 text-brand-gold shrink-0 mt-0.5" /><span>{x}</span></li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="bg-brand-light/30 border border-brand-green/10 rounded-3xl p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 bg-brand-green/10 text-brand-green rounded-xl"><Check className="h-5 w-5" /></div>
-                        <h3 className="font-serif text-lg font-bold text-brand-green">Подходяща е и ако...</h3>
-                      </div>
-                      <ul className="text-xs text-brand-dark/80 space-y-2.5 leading-relaxed">
-                        {[
-                          "Искате сами да поддържате документацията си, без постоянно да разчитате на външни консултанти.",
-                          "Предстои Ви регистрация на нов хранителен обект.",
-                          "Очаквате проверка от БАБХ.",
-                          "Искате да актуализирате НАССР системата и ДПХП.",
-                          "Срещате затруднения при воденето на документацията.",
-                          "Искате да сте информирани за всяка промяна в законодателството.",
-                          "Искате да обменяте опит и добри практики с други оператори.",
-                        ].map((x, i) => (
-                          <li key={i} className="flex items-start gap-2"><Check className="h-3.5 w-3.5 text-brand-gold shrink-0 mt-0.5" /><span>{x}</span></li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Important */}
-                  <div className="bg-amber-50/60 border border-amber-200/70 rounded-3xl p-6 text-left font-sans">
-                    <div className="flex items-center gap-3 mb-3">
-                      <AlertTriangle className="h-5 w-5 text-amber-600" />
-                      <h3 className="font-serif text-lg font-bold text-amber-900">Важно</h3>
-                    </div>
-                    <ul className="text-xs text-amber-900/85 space-y-2 leading-relaxed">
-                      <li className="flex items-start gap-2">✓ <span>Работя с <strong>ограничен брой участници</strong>, за да отделя лично внимание на всеки.</span></li>
-                      <li className="flex items-start gap-2">✓ <span>Програмата е изцяло практическа и базирана на реални казуси.</span></li>
-                      <li className="flex items-start gap-2">✓ <span>Нови теми се добавят всеки месец според промените в законодателството и въпросите на участниците.</span></li>
-                    </ul>
-                  </div>
+                  <PlanHelpButton />
 
                   {/* My promise */}
                   <div className="bg-brand-green text-white rounded-3xl p-6 sm:p-8 text-left font-sans relative overflow-hidden">
@@ -7440,7 +7436,7 @@ export default function ProfilePage() {
                   min="0"
                   value={feeModalAmount}
                   onChange={(e) => setFeeModalAmount(e.target.value)}
-                  placeholder="напр. 120.00"
+                  placeholder="напр. 29.00"
                   className="w-full text-lg font-mono px-4 py-3 rounded-xl border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-white"
                   autoFocus
                 />
@@ -7449,20 +7445,26 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">План</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PLANS.map(p => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => { setFeeModalPlan(p.id); setFeeModalAmount(String(p.priceEur)); }}
+                      className={`text-[11px] font-bold px-3 py-2 rounded-lg border transition-colors cursor-pointer ${feeModalPlan === p.id ? "bg-brand-green text-white border-brand-green" : "border-brand-green/20 text-brand-green hover:bg-brand-green/5"}`}
+                    >
+                      {p.name} · {p.priceEur} €
+                    </button>
+                  ))}
+                </div>
                 <button
                   type="button"
                   onClick={() => setFeeModalAmount("0")}
-                  className="text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
+                  className="w-full text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
                 >
-                  0 € (кеш)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFeeModalAmount("120")}
-                  className="text-[11px] font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-brand-green/20 text-brand-green hover:bg-brand-green/5 transition-colors cursor-pointer"
-                >
-                  120 € (стандартен)
+                  0 € — платено (активира веднага за 1 месец)
                 </button>
               </div>
 
@@ -7516,7 +7518,7 @@ export default function ProfilePage() {
 
               <div className="p-6 space-y-5">
                 <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
-                  <span className="text-sm font-bold text-brand-green">Годишен абонамент</span>
+                  <span className="text-sm font-bold text-brand-green">{me?.requestedPlan ? `План „${PLAN_BY_ID[me.requestedPlan].name}“ — 1 месец` : "Месечен абонамент"}</span>
                   <span className="font-serif text-2xl font-bold text-brand-gold">{fee.toFixed(2)} €</span>
                 </div>
 

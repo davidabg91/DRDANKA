@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { PLANS, PLAN_BY_ID, TRIAL_PLAN } from "@/lib/plans";
+import PlanHelpButton from "@/components/PlanHelpButton";
 import {
   ShieldCheck,
   Zap,
@@ -174,6 +176,12 @@ export default function BabhSistemaClient() {
                   className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ClipboardList className="h-4 w-4 text-brand-gold" /> Разгледай 10-те БАБХ Дневника
+                </a>
+                <a
+                  href="#paketi"
+                  className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Layers className="h-4 w-4 text-brand-gold" /> Пакети и цени
                 </a>
               </div>
             </div>
@@ -589,6 +597,81 @@ export default function BabhSistemaClient() {
             </div>
 
           </div>
+        </div>
+      </section>
+
+      {/* ═══════════════ PACKAGES / PRICING ═══════════════ */}
+      <section id="paketi" className="py-12 border-b border-white/10 scroll-mt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="text-center space-y-2 max-w-2xl mx-auto">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-brand-gold/20 text-brand-gold border border-brand-gold/40 px-3 py-1 rounded-md inline-block">
+              ПАКЕТИ И ЦЕНИ
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white">
+              Пакети за дигитално водене на записи
+            </h2>
+            <p className="text-xs text-white/70 leading-relaxed">
+              Месечен абонамент с плащане по банков път. Започнете с 14 дни безплатно — с възможностите на пакет „{PLAN_BY_ID[TRIAL_PLAN].name}“.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch text-left">
+            {PLANS.map((p) => (
+              <div
+                key={p.id}
+                className={`flex flex-col rounded-2xl p-5 ${
+                  p.featured
+                    ? "bg-gradient-to-br from-brand-gold/25 via-brand-gold/10 to-transparent border-2 border-brand-gold shadow-2xl"
+                    : "bg-white/[0.04] border border-white/15"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2 min-h-[24px]">
+                  <span className="text-[10px] font-black uppercase tracking-[0.15em] text-white/45">{p.tierLabel}</span>
+                  {p.featured && (
+                    <span className="text-[9px] font-black uppercase tracking-wider bg-brand-gold text-brand-dark px-2.5 py-1 rounded-full">Препоръчан</span>
+                  )}
+                </div>
+                <h3 className="font-serif text-xl font-bold text-white mt-1.5">{p.name}</h3>
+                <p className="text-[11px] text-white/60 leading-relaxed mt-1">{p.tagline}</p>
+                <div className="mt-4 flex items-end gap-1.5">
+                  <span className="font-serif text-4xl font-black text-white tabular-nums leading-none">{p.priceEur}</span>
+                  <span className="font-serif text-xl font-bold text-brand-gold leading-none mb-0.5">€</span>
+                  <span className="text-xs text-white/50 mb-1">/ месец</span>
+                </div>
+                <div className="h-px bg-white/10 my-4" />
+                <p className="text-[10px] font-black uppercase tracking-wider text-brand-gold mb-2">Дигитално водене на</p>
+                <ul className="space-y-1.5 text-[11px] text-white/85">
+                  {p.records.map((r, i) => (
+                    <li key={i} className="flex items-start gap-2 leading-snug">
+                      <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                      <span>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[10px] font-black uppercase tracking-wider text-brand-gold mt-4 mb-2">Услуги към пакета</p>
+                <ul className="space-y-1.5 text-[11px] text-white/85 flex-grow">
+                  {p.services.map((r, i) => (
+                    <li key={i} className="flex items-start gap-2 leading-snug">
+                      <CheckCircle className="h-3.5 w-3.5 text-brand-gold shrink-0 mt-0.5" />
+                      <span>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="/profile"
+                  className={`mt-5 w-full py-3 text-center font-black text-[11px] uppercase tracking-widest rounded-xl transition-all cursor-pointer ${
+                    p.featured
+                      ? "bg-brand-gold hover:bg-brand-gold-light text-brand-dark shadow-lg"
+                      : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+                  }`}
+                >
+                  Започни 14 дни безплатно
+                </Link>
+              </div>
+            ))}
+          </div>
+
+          <PlanHelpButton tone="dark" />
         </div>
       </section>
 

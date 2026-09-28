@@ -51,7 +51,14 @@ service cloud.firestore {
       allow create: if isAdmin() || (
         isSignedIn() &&
         authEmail() == email.lower() &&
-        request.resource.data.role == "user"
+        request.resource.data.role == "user" &&
+        // Нов профил не може сам да си даде платен план/срок.
+        // Липсващ subscriptionStatus се чете като „approved" (стари клиенти) — затова е задължителен.
+        request.resource.data.subscriptionStatus in ["none", "pending", "trial"] &&
+        request.resource.data.get("plan", null) == null &&
+        request.resource.data.get("extraRegisters", null) == null &&
+        request.resource.data.get("expiresAt", null) == null &&
+        request.resource.data.get("purchasedCourseIds", []).size() == 0
       );
 
       allow update: if isAdmin() || (
@@ -61,7 +68,14 @@ service cloud.firestore {
         unchanged("status") &&
         (unchanged("subscriptionFeeEur") || (request.resource.data.subscriptionFeeEur is number && request.resource.data.subscriptionFeeEur >= 0)) &&
         (unchanged("subscriptionStatus") || request.resource.data.subscriptionStatus in ["none", "pending", "awaiting_payment", "trial"]) &&
-        unchanged("purchasedCourseIds")
+        unchanged("purchasedCourseIds") &&
+        // Абонаментните планове: активният план, срокът и допълнителните записи
+        // се сменят само от админа. Клиентът може само да заяви план.
+        unchanged("plan") &&
+        unchanged("extraRegisters") &&
+        unchanged("expiresAt") &&
+        unchanged("subscriptionPaidAt") &&
+        (unchanged("requestedPlan") || request.resource.data.requestedPlan in ["basic", "standard", "pro", "vip"])
       );
 
       allow delete: if isAdmin();

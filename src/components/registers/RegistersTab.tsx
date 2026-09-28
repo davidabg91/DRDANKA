@@ -14,6 +14,8 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   STORE_REGISTERS,
+  STORE_REGISTER_IDS,
+  CORE_REGISTER_IDS,
   REGISTER_BY_ID,
   registersFor,
   RegisterDef,
@@ -29,7 +31,6 @@ import {
   CLEANING_SCOPE,
   SAMPLE_ALLERGEN_MENU,
   ALLERGEN_LIST,
-  PREWORK_ZONE_COLS,
   RESIDUE_SURFACES,
   SurveyGroup,
   HOT_APPLIANCES,
@@ -57,6 +58,14 @@ import {
 } from "./registerPrint";
 import RegistersTour, { TourStep } from "./RegistersTour";
 import SignaturePad, { SignaturePadHandle } from "./SignaturePad";
+import WeeklyHygieneEditor from "./WeeklyHygieneEditor";
+import {
+  HygieneRoom,
+  defaultHygieneLayout,
+  fillHygieneDays,
+  isHygieneDayFilled,
+  weekKeyFor,
+} from "./weeklyHygiene";
 import {
   Bell,
   Check,
@@ -94,6 +103,8 @@ import {
   HelpCircle,
   PenLine,
   Tag,
+  Bug,
+  CalendarClock,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -132,6 +143,7 @@ function grillMatchesIncomingFood(item: string, food: string): boolean {
 }
 
 import { getLocalDateISO } from "@/lib/dateUtils";
+import { PlanId, planAllowsRegister, planHasExtras } from "@/lib/plans";
 
 type Updater = (updater: (prev: RegisterDocData) => RegisterDocData) => void;
 
@@ -190,6 +202,8 @@ const REGISTER_ICONS: Record<string, any> = {
   training: GraduationCap,
   "safety-survey": FileText,
   "safety-checklist": ClipboardList,
+  "pest-control": Bug,
+  contracts: CalendarClock,
   // Топла точка
   "fryer-oil-temp": Flame,
   "fryer-oil-destroy": Droplets,
@@ -813,20 +827,6 @@ function RowsEditor({
     onUpdate((prev) => ({ ...prev, entries: newEntries }));
   };
 
-  const autoFillPreworkMonth = () => {
-    if (!confirm(`Сигурни ли сте, че искате да попълните автоматично чек-листа за хигиена и техническо състояние за целия месец?`)) return;
-    const maxDay = getMaxFillDay(refDate.slice(0, 7));
-    const newEntries: any[] = [];
-    for (let i = 1; i <= maxDay; i++) {
-      const dayNum = String(i).padStart(2, "0");
-      const dateStr = `${refDate.slice(0, 7)}-${dayNum}`;
-      const entry: any = { date: dateStr, actions: "", result: "Норма", sign: "✓" };
-      PREWORK_ZONE_COLS.forEach((c) => { entry[c.key] = "✓"; });
-      newEntries.push(entry);
-    }
-    onUpdate((prev) => ({ ...prev, entries: newEntries }));
-  };
-
   const autoFillStaffHygieneMonth = () => {
     if (!confirm(`Сигурни ли сте, че искате да попълните автоматично личната хигиена за всички служители за целия месец?`)) return;
     const maxDay = getMaxFillDay(refDate.slice(0, 7));
@@ -1299,15 +1299,6 @@ function RowsEditor({
                 <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
-            {def.id === "prework-check" && (
-              <button
-                onClick={autoFillPreworkMonth}
-                className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
-                title="Попълва автоматично чек-листа за хигиена и техническо състояние за всеки ден от месеца"
-              >
-                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
-              </button>
-            )}
             {def.id === "staff-hygiene" && employees.length > 0 && (
               <>
                 <button
@@ -1422,7 +1413,7 @@ function RowsEditor({
                 <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
-            {["duner", "prework-check", "staff-hygiene", "fryer-oil-destroy", "baking", "cooked-meals", "disinfectant-residue", "hygiene-monthly"].includes(def.id) && (
+            {["duner", "staff-hygiene", "fryer-oil-destroy", "baking", "cooked-meals", "disinfectant-residue", "hygiene-monthly"].includes(def.id) && (
               <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
                 <input
                   type="checkbox"
@@ -1432,7 +1423,6 @@ function RowsEditor({
                     onToggleAutoFill?.(checked);
                     if (checked && (!entries || entries.length === 0)) {
                       if (def.id === "duner") autoFillDunerMonth();
-                      if (def.id === "prework-check") autoFillPreworkMonth();
                       if (def.id === "staff-hygiene") autoFillStaffHygieneMonth();
                       if (def.id === "fryer-oil-destroy") autoFillFryerOilDestroyMonth();
                       if (def.id === "baking") autoFillBakingMonth();
@@ -2907,7 +2897,7 @@ function EquipmentModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Хладилни */}
             <div className="rounded-2xl border border-white/8 bg-white/2 p-4 space-y-3">
-              {sectionTitle(<Thermometer className="h-4 w-4" />, "Хладилни (0…+4°C)")}
+              {sectionTitle(<Thermometer className="h-4 w-4" />, "Хладилни уреди и студени витрини (0…+4°C)")}
               <div className="space-y-1.5 min-h-[40px]">
                 {localFridges.length === 0 && (
                   <p className="text-xs text-white/25 italic px-1">Няма добавени хладилни</p>
@@ -2919,7 +2909,7 @@ function EquipmentModal({
               <div className="flex gap-2 pt-1">
                 <input
                   className={inputStyle}
-                  placeholder="напр. Хладилна витрина №1"
+                  placeholder="напр. Хладилник №1, Студена витрина, Хладилна камера"
                   value={newFridge}
                   onChange={(e) => setNewFridge(e.target.value)}
                   onKeyDown={(e) => {
@@ -3155,7 +3145,14 @@ interface RegistersTabProps {
     autoResidue?: boolean;
     autoHygieneWeekly?: boolean;
     autoHygieneMonthly?: boolean;
+    hygieneLayout?: HygieneRoom[];
   }) => void | Promise<void>;
+  /** Абонаментният план — ограничава кои дневници се виждат (по подразбиране VIP = всички приложими). */
+  plan?: PlanId;
+  /** Допълнителни записи, избрани ръчно от д-р Николова („Професионал"/VIP). undefined = всички приложими. */
+  extraRegisters?: string[];
+  /** Помещения и оборудване за чек-листа „Хигиена на обекта" (№34). Липсва → по подразбиране. */
+  hygieneLayout?: HygieneRoom[];
   /** Режим само за преглед (админ одит) */
   readOnly?: boolean;
   /** Потребителят вече е виждал обиколката (пази се в профила) */
@@ -3191,6 +3188,9 @@ export default function RegistersTab({
   autoHygieneWeekly = false,
   autoHygieneMonthly = false,
   onSaveEquipment,
+  plan = "vip",
+  extraRegisters,
+  hygieneLayout,
   readOnly = false,
   tourSeen = false,
   onTourDone,
@@ -3283,14 +3283,33 @@ export default function RegistersTab({
   }, [openId]);
 
   /** Всички регистри за зареждане на данни (пълният комплект при топла точка / месо). */
-  const activeRegisters = useMemo(
-    () => (meat ? registersForMeat(hotPoint) : registersFor(hotPoint)),
-    [hotPoint, meat]
+  const planFilter = useCallback(
+    (defs: RegisterDef[]) => {
+      // Ръчно избраните от д-р Николова записи се добавят дори ако не следват
+      // от вида на обекта (напр. месна карта за заведение).
+      let all = defs;
+      if (extraRegisters && planHasExtras(plan)) {
+        const have = new Set(defs.map((d) => d.id));
+        const added = extraRegisters
+          .filter((id) => !have.has(id))
+          .map((id) => REGISTER_BY_ID[id])
+          .filter(Boolean);
+        all = [...defs, ...added];
+      }
+      return all.filter((d) => planAllowsRegister(plan, d.id, STORE_REGISTER_IDS, extraRegisters));
+    },
+    [plan, extraRegisters]
   );
-  /** Видимите карти — филтрирани по притежаваните уреди. */
+  const activeRegisters = useMemo(
+    () => planFilter(meat ? registersForMeat(hotPoint) : registersFor(hotPoint)),
+    [hotPoint, meat, planFilter]
+  );
+  /** Id-тата на регистрите, включени в плана (за филтриране на напомняния и тригери). */
+  const allowedIds = useMemo(() => new Set(activeRegisters.map((d) => d.id)), [activeRegisters]);
+  /** Видимите карти — филтрирани по притежаваните уреди и по плана. */
   const visibleRegisters = useMemo(
-    () => (meat ? registersForMeat(hotPoint) : visibleRegistersFor(hotPoint, hotAppliances)),
-    [hotPoint, hotAppliances, meat]
+    () => planFilter(meat ? registersForMeat(hotPoint) : visibleRegistersFor(hotPoint, hotAppliances)),
+    [hotPoint, hotAppliances, meat, planFilter]
   );
 
   /** Групиране на картите за списъка: базови + (месо) + (топла точка). */
@@ -3300,19 +3319,25 @@ export default function RegistersTab({
       ...MEAT_SHARED_HOT_IDS,
     ]);
     const groups: { title: string; defs: RegisterDef[] }[] = [
-      { title: "Основни дневници по самоконтрол", defs: visibleRegisters.filter((d) => d.num <= 15) },
+      { title: "Основни дневници по самоконтрол", defs: visibleRegisters.filter((d) => CORE_REGISTER_IDS.has(d.id)) },
     ];
     if (meat) {
       groups.push({
         title: "Магазин за месо — производствени и технологични карти",
-        defs: visibleRegisters.filter((d) => d.num > 15 && meatIdSet.has(d.id)),
+        defs: visibleRegisters.filter((d) => !CORE_REGISTER_IDS.has(d.id) && meatIdSet.has(d.id)),
       });
     }
     if (hotPoint) {
       groups.push({
         title: "Топла точка — контролни и партидни карти",
-        defs: visibleRegisters.filter((d) => d.num > 15 && !(meat && meatIdSet.has(d.id))),
+        defs: visibleRegisters.filter((d) => !CORE_REGISTER_IDS.has(d.id) && !(meat && meatIdSet.has(d.id))),
       });
+    }
+    // Всичко видимо, което не попада в горните групи (ръчно добавени записи).
+    const placed = new Set(groups.flatMap((g) => g.defs.map((d) => d.id)));
+    const rest = visibleRegisters.filter((d) => !placed.has(d.id));
+    if (rest.length > 0) {
+      groups.push({ title: "Допълнителни записи за Вашия обект", defs: rest });
     }
     return groups.filter((g) => g.defs.length > 0);
   }, [visibleRegisters, meat, hotPoint]);
@@ -3327,12 +3352,16 @@ export default function RegistersTab({
 
   /** Всички ежедневни тригери: дейности (винаги) + месо + уреди (при топла точка). */
   const dailyTriggers = useMemo(
-    () => [
-      ...DAILY_ACTIVITIES,
-      ...(meat ? MEAT_ACTIVITIES : []),
-      ...(hotPoint ? ownedAppliances : []),
-    ],
-    [hotPoint, ownedAppliances, meat]
+    () =>
+      [
+        ...DAILY_ACTIVITIES,
+        ...(meat ? MEAT_ACTIVITIES : []),
+        ...(hotPoint ? ownedAppliances : []),
+      ]
+        // Тригерът има смисъл само ако планът включва поне една от картите му.
+        .map((t) => ({ ...t, registers: t.registers.filter((r) => allowedIds.has(r)) }))
+        .filter((t) => t.registers.length > 0),
+    [hotPoint, ownedAppliances, meat, allowedIds]
   );
 
   const units = useMemo(
@@ -3552,12 +3581,28 @@ export default function RegistersTab({
       }
 
       // 3. Преди работа (prework-check) — ежедневно
-      if (autoPrework) {
-        await autoPopulateDoc("prework-check", (dateStr) => {
-          const entry: any = { date: dateStr, actions: "", result: "Норма", sign: "✓" };
-          PREWORK_ZONE_COLS.forEach((c) => { entry[c.key] = "✓"; });
-          return [entry];
-        });
+      if (autoPrework && docs["prework-check"]) {
+        // Седмичният чек-лист: празните клетки до днес → „-“, почивните дни → „П“.
+        const docData = docs["prework-check"];
+        const layoutNow = hygieneLayout ?? defaultHygieneLayout(fridges, freezers);
+        const rows = { ...(docData.rows || {}) };
+        let changed = false;
+        for (let d = 1; d <= maxDay; d++) {
+          const dateStr = `${month}-${String(d).padStart(2, "0")}`;
+          if (isHygieneDayFilled(rows, dateStr)) continue;
+          const wk = weekKeyFor(dateStr);
+          rows[wk] = fillHygieneDays(rows[wk] || {}, layoutNow, [dateStr], restDays);
+          changed = true;
+        }
+        if (changed) {
+          const updatedDoc = { ...docData, rows, updatedAt: new Date().toISOString() };
+          updatedDocs["prework-check"] = updatedDoc;
+          stateChanged = true;
+          const def34 = REGISTER_BY_ID["prework-check"];
+          await setDoc(doc(db, "logs", registerDocKey(email, "prework-check", periodFor(def34, month))), updatedDoc).catch((err) => {
+            console.error("Auto fill background error for prework-check:", err);
+          });
+        }
       }
 
       // 4. Хигиена персонал (staff-hygiene) — ежедневно, по един запис на служител
@@ -3671,7 +3716,7 @@ export default function RegistersTab({
         setDocs((prev) => ({ ...prev, ...updatedDocs }));
       }
     })();
-  }, [loading, readOnly, email, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoHygieneWeekly, autoHygieneMonthly, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees]);
+  }, [loading, readOnly, email, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoHygieneWeekly, autoHygieneMonthly, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees, hygieneLayout, fridges, freezers, restDays]);
 
   const isRefToday = refDate === todayISO();
   const refDay = String(parseInt(refDate.slice(8, 10), 10));
@@ -3924,13 +3969,11 @@ export default function RegistersTab({
         }
       }
 
-      if (hotPoint) {
-        if (!(docs["prework-check"]?.entries || []).some((e) => e.date === dateISO)) {
-          missing.push({
-            registerId: "prework-check",
-            text: "Чек-листът „Хигиена и техническо състояние“ не е попълнен (попълва се преди започване на работа).",
-          });
-        }
+      if (!isHygieneDayFilled(docs["prework-check"]?.rows, dateISO)) {
+        missing.push({
+          registerId: "prework-check",
+          text: "Чек-листът „Хигиена на обекта“ (техническо състояние и хигиена) не е попълнен — попълва се преди започване на работа.",
+        });
       }
 
       // Отбелязани дейности/уреди за деня → изискват своите карти.
@@ -3953,9 +3996,9 @@ export default function RegistersTab({
         });
       });
 
-      return missing;
+      return missing.filter((m) => allowedIds.has(m.registerId));
     },
-    [docs, units, employees, hotPoint, dailyTriggers]
+    [docs, units, employees, hotPoint, dailyTriggers, allowedIds]
   );
 
   /* ------------------ Напомняния ------------------ */
@@ -4020,6 +4063,33 @@ export default function RegistersTab({
         });
       }
     });
+
+    // Договори (ДДД, отпадъци, лаборатория…) — изтекли или изтичащи до 30 дни.
+    (docs["contracts"]?.entries || []).forEach((e) => {
+      const v = String(e.validUntil || "");
+      if (!v) return;
+      const what = `${e.kind || "Договор"}${e.firm ? ` с ${e.firm}` : ""}`;
+      if (v < today) {
+        list.push({
+          level: "urgent",
+          registerId: "contracts",
+          text: `Договорът „${what}“ е ИЗТЕКЪЛ (${v})! Подновете го и въведете новия срок.`,
+        });
+      } else if (v <= soonISO) {
+        list.push({
+          level: "warn",
+          registerId: "contracts",
+          text: `Договорът „${what}“ изтича на ${v} — погрижете се за подновяването.`,
+        });
+      }
+    });
+    if (!(docs["contracts"]?.entries || []).some((e) => String(e.kind || "").startsWith("ДДД"))) {
+      list.push({
+        level: "info",
+        registerId: "contracts",
+        text: "Не е въведен договор с фирма за ДДД обработки. Добавете го в „Договори и срокове“, за да следим срока му.",
+      });
+    }
 
     if ((docs["training"]?.entries || []).length === 0) {
       list.push({
@@ -4146,8 +4216,8 @@ export default function RegistersTab({
       }
     }
 
-    return list;
-  }, [docs, loading, month, refDate, refDay, isRefToday, dayObligations, employees, hotPoint, hotAppliances]);
+    return list.filter((r) => r.level === "admin" || !r.registerId || allowedIds.has(r.registerId));
+  }, [docs, loading, month, refDate, refDay, isRefToday, dayObligations, employees, hotPoint, hotAppliances, allowedIds]);
 
   /* ------------------ Статус на регистър за картите ------------------ */
   const registerStatus = useCallback(
@@ -4197,7 +4267,7 @@ export default function RegistersTab({
             : { label: "Този месец: предстои", tone: "due" };
         case "prework-check": {
           if (!dayMode) break;
-          return (d.entries || []).some((e) => e.date === refDate)
+          return isHygieneDayFilled(d.rows, refDate)
             ? { label: `${dLbl}: попълнено ✓`, tone: "ok" }
             : { label: `${dLbl}: непопълнено`, tone: "due" };
         }
@@ -4736,6 +4806,24 @@ export default function RegistersTab({
               canTick={refDate.startsWith(month) && refDate <= todayISO()}
               autoFillActive={autoFillSettings[openDef.id] ?? false}
               onToggleAutoFill={(checked) => toggleAutoFillSetting(openDef.id, checked)}
+            />
+          )}
+          {openDef.kind === "weekly-hygiene" && (
+            <WeeklyHygieneEditor
+              key={`${openDef.id}-${month}`}
+              email={email}
+              data={docs[openDef.id] || {}}
+              month={month}
+              refDate={refDate}
+              layout={hygieneLayout}
+              fridges={fridges}
+              freezers={freezers}
+              restDays={restDays}
+              readOnly={readOnly}
+              onUpdate={makeUpdater(openDef.id)}
+              onSaveLayout={onSaveEquipment ? async (l) => { await onSaveEquipment({ hygieneLayout: l }); } : undefined}
+              autoFillActive={autoFillSettings[openDef.id] ?? false}
+              onToggleAutoFill={readOnly ? undefined : (checked) => toggleAutoFillSetting(openDef.id, checked)}
             />
           )}
           {openDef.kind === "temp-units" && (

@@ -299,16 +299,17 @@ export function breadcrumbSchema(items: Array<{ name: string; path: string }>) {
  * meaningfully use.
  *
  * Deliberately no `offers` with price 0. A 14-day trial does not make the
- * product free, and a zero-price Offer states exactly that. Until the real
- * subscription price is published, no Offer is the honest option — a wrong
- * price in structured data is treated as a spam signal, and it would also
- * contradict the paid subscription the page sells.
+ * product free, and a zero-price Offer states exactly that. Offers are only
+ * emitted for the real, published monthly plans (src/lib/plans.ts) — each
+ * must match the price visible on the page.
  */
 export function webApplicationSchema(input: {
   name: string;
   description: string;
   path: string;
   featureList: readonly string[];
+  /** Real monthly subscription plans shown on the page. */
+  offers?: readonly { name: string; priceEur: number; description?: string }[];
 }) {
   return {
     "@context": "https://schema.org",
@@ -321,6 +322,27 @@ export function webApplicationSchema(input: {
     browserRequirements: "Requires JavaScript. Chrome, Firefox, Safari, Edge.",
     inLanguage: "bg-BG",
     featureList: [...input.featureList],
+    ...(input.offers && input.offers.length > 0
+      ? {
+          offers: input.offers.map((o) => ({
+            "@type": "Offer",
+            name: o.name,
+            ...(o.description ? { description: o.description } : {}),
+            price: o.priceEur.toFixed(2),
+            priceCurrency: "EUR",
+            availability: "https://schema.org/InStock",
+            url: absoluteUrl(`${input.path}#paketi`),
+            priceSpecification: {
+              "@type": "UnitPriceSpecification",
+              price: o.priceEur.toFixed(2),
+              priceCurrency: "EUR",
+              unitCode: "MON",
+              referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitCode: "MON" },
+            },
+            seller: { "@id": ORG_ID },
+          })),
+        }
+      : {}),
     provider: { "@id": ORG_ID },
     publisher: { "@id": ORG_ID },
   };

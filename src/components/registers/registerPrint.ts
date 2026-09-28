@@ -11,6 +11,15 @@ import {
   TRAINING_COVERED,
   TRAINING_EVAL_CRITERIA,
 } from "@/data/storeRegisters";
+import {
+  cellKey,
+  fmtDM,
+  hygieneItemKey,
+  parseLayout,
+  weekDays,
+  weekdayLetter,
+  weeksForMonth,
+} from "./weeklyHygiene";
 
 export interface PrintFirmInfo {
   name: string;
@@ -279,6 +288,50 @@ function buildChecklist3Section(data: RegisterDocData): string {
     .join("");
 }
 
+/** Седмичният чек-лист „Хигиена на обекта" — по една таблица за всяка седмица от месеца. */
+function buildWeeklyHygieneSection(data: RegisterDocData, month: string): string {
+  const rows = data.rows || {};
+  const tables = weeksForMonth(month)
+    .map((wk) => {
+      const row = rows[wk];
+      const rooms = parseLayout(row?.__layout);
+      if (!row || !rooms) return "";
+      const days = weekDays(wk);
+      const n = days.length;
+      const dayHead = days
+        .map((d) => `<th class="c">${esc(d.slice(8, 10))}<br/>${esc(weekdayLetter(d))}</th>`)
+        .join("");
+      const body = rooms
+        .map((r) => {
+          const head = `<tr><td colspan="${n * 2 + 4}" style="background:#eee"><b>${esc(r.room)}</b></td></tr>`;
+          const items = r.items
+            .map((item) => {
+              const ik = hygieneItemKey(r.room, item);
+              const cells = (["t", "h"] as const)
+                .map((p) => days.map((d) => `<td class="c">${esc(row[cellKey(d, ik, p)])}</td>`).join(""))
+                .join("");
+              return `<tr><td>${esc(item)}</td>${cells}<td>${esc(row[`c|${ik}`])}</td><td>${esc(row[`a|${ik}`])}</td><td>${esc(row[`s|${ik}`])}</td></tr>`;
+            })
+            .join("");
+          return head + items;
+        })
+        .join("");
+      const time = row.timeFrom || row.timeTo ? ` &nbsp; Час: от ${esc(row.timeFrom || "....")} до ${esc(row.timeTo || "....")}` : "";
+      return `
+        <div class="period" style="margin-top:8px">Седмица: от ${esc(fmtDM(days[0]))} до ${esc(fmtDM(days[n - 1]))}.${esc(days[n - 1].slice(0, 4))}${time}</div>
+        <table class="data-tbl" style="font-size:8.5px">
+          <thead>
+            <tr><th rowspan="2">Помещение</th><th colspan="${n}">Техническо състояние</th><th colspan="${n}">Хигиена на обекта</th>
+                <th rowspan="2">Корективни действия</th><th rowspan="2">Резултат след корективни д-я</th><th rowspan="2">Подпис</th></tr>
+            <tr>${dayHead}${dayHead}</tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>`;
+    })
+    .filter(Boolean);
+  return tables.length > 0 ? tables.join("") : `<p class="empty">Няма записани данни.</p>`;
+}
+
 /* ------------------------------------------------------------------ */
 
 const ROMAN_WEEKS = ["I", "II", "III", "IV", "V"];
@@ -291,7 +344,9 @@ export function buildRegisterSection(
   month: string
 ): string {
   const periodLabel =
-    def.period === "all"
+    def.kind === "weekly-hygiene"
+      ? `Месец: ${monthLabelBg(month)}`
+      : def.period === "all"
       ? "Постоянен списък"
       : def.period === "year"
         ? `Година: ${month.slice(0, 4)} г.`
@@ -318,6 +373,9 @@ export function buildRegisterSection(
       break;
     case "survey":
       body = buildSurveySection(data);
+      break;
+    case "weekly-hygiene":
+      body = buildWeeklyHygieneSection(data, month);
       break;
     case "checklist3":
       body = buildChecklist3Section(data);

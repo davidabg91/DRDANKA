@@ -31,7 +31,8 @@ export type RegisterKind =
   | "temp-units"  // температурни чек-листове по съоръжения
   | "training"    // протоколи за обучение
   | "survey"      // въпросник (Ликъртова скала 1–5)
-  | "checklist3"; // чек-лист със скала 1–3 по служител
+  | "checklist3"    // чек-лист със скала 1–3 по служител
+  | "weekly-hygiene"; // седмичен чек-лист „Хигиена на обекта" по помещения (техническо състояние + хигиена)
 
 export type RegisterFrequency =
   | "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "delivery" | "event" | "permanent" | "3days";
@@ -644,7 +645,67 @@ export const STORE_REGISTERS: RegisterDef[] = [
     period: "year",
     kind: "checklist3",
   },
+  {
+    id: "pest-control",
+    num: 38,
+    title: "Дневник за извършени ДДД обработки (дезинфекция, дезинсекция, дератизация)",
+    shortTitle: "ДДД обработки",
+    fillWhen:
+      "Попълва се след всяка обработка въз основа на протокола/документа, издаден от фирмата изпълнител. Протоколите се съхраняват в обекта заедно с дневника.",
+    frequency: "event",
+    period: "year",
+    kind: "rows",
+    columns: [
+      { key: "date", label: "Дата на обработката", type: "date", narrow: true },
+      { key: "firm", label: "Фирма изпълнител", type: "text" },
+      { key: "type", label: "Вид обработка", type: "select", options: ["Дезинсекция", "Дератизация", "Дезинфекция", "Комбинирана (ДДД)"] },
+      { key: "agent", label: "Използван препарат", type: "text" },
+      { key: "areas", label: "Обработени помещения / зони", type: "text" },
+      { key: "docNo", label: "№ на протокол / документ", type: "text", narrow: true },
+      { key: "sign", label: "Подпис на отговорника", type: "text", narrow: true },
+    ],
+    instructions: [
+      "Преди обработката храните се прибират или покриват; след обработката повърхностите, контактуващи с храни, се почистват и измиват.",
+      "Данните се преписват от протокола на фирмата изпълнител — дата, вид обработка, препарат и обработени зони.",
+    ],
+  },
+  {
+    id: "contracts",
+    num: 39,
+    title: "Регистър на договорите и сроковете (ДДД, отпадъци, лаборатория и др.)",
+    shortTitle: "Договори и срокове",
+    fillWhen:
+      "Попълва се при сключване или подновяване на договор, свързан с дейността на обекта и изискванията на БАБХ. Системата напомня 30 дни преди изтичане на срока.",
+    frequency: "permanent",
+    period: "all",
+    kind: "rows",
+    columns: [
+      {
+        key: "kind",
+        label: "Вид договор",
+        type: "select",
+        options: [
+          "ДДД обработки",
+          "Извозване на отпадъци",
+          "Изкупуване на отпадна мазнина",
+          "Лабораторни изследвания",
+          "Трудова медицина",
+          "Сервиз на оборудване",
+          "Наем на обекта",
+          "Друг",
+        ],
+      },
+      { key: "firm", label: "Фирма / контрагент", type: "text" },
+      { key: "number", label: "№ на договора", type: "text", narrow: true },
+      { key: "from", label: "Валиден от", type: "date", narrow: true },
+      { key: "validUntil", label: "Валиден до", type: "date", narrow: true },
+      { key: "note", label: "Бележка", type: "text" },
+    ],
+  },
 ];
+
+/** Регистрите от основния комплект (показват се в групата „Основни дневници"). */
+export const STORE_REGISTER_IDS = new Set(STORE_REGISTERS.map((r) => r.id));
 
 /* ================================================================== */
 /*  ТОПЛА ТОЧКА — допълнителни контролни карти                         */
@@ -1172,24 +1233,19 @@ export const HOT_POINT_REGISTERS: RegisterDef[] = [
   {
     id: "prework-check",
     num: 34,
-    title: "Чек-лист — хигиена и техническо състояние на обекта (преди работа)",
-    shortTitle: "Преди работа",
+    title: "Чек-лист „Хигиена на обекта“ — техническо състояние и хигиена (преди работа)",
+    shortTitle: "Хигиена преди работа",
     fillWhen:
-      "Попълва се ежедневно преди започване на работа — по един ред на ден с колона за всяка зона/оборудване. Проверяват се техническото състояние и хигиената.",
+      "Попълва се всеки ден преди започване на работа, в определения час. За всяко помещение и съоръжение се оценяват техническото състояние и хигиената. Една таблица обхваща цялата седмица.",
     frequency: "daily",
-    period: "month",
-    kind: "rows",
+    period: "year",
+    kind: "weekly-hygiene",
     remind: true,
-    columns: [
-      { key: "date", label: "Дата", type: "date", narrow: true },
-      ...PREWORK_ZONE_COLS,
-      ...CRS_COLS,
-    ],
-    infoPanels: [{ title: "Обхванати зони и оборудване", items: PREWORK_ZONES }],
     legend: [
-      "✓ — изправно / чисто",
-      "✗ — неизправно / замърсено (вписва се корективно действие)",
-      "НП — не се прилага",
+      "„-“ — добър",
+      "„+“ — незадоволителен",
+      "„П“ — почивен ден",
+      "При незадоволителен резултат се попълват извършените корективни мерки в графа „Корективни действия“ и резултатът след тях в графа „Резултат след корективни действия“.",
     ],
   },
   {
@@ -1574,7 +1630,7 @@ export const UNIVERSAL_HOT_REGISTERS = [
  * се показват всички карти от топлата точка.
  */
 export function visibleRegistersFor(hotPoint: boolean, ownedAppliances: string[]): RegisterDef[] {
-  if (!hotPoint) return STORE_REGISTERS;
+  if (!hotPoint) return [...STORE_REGISTERS, ...preworkOnly()];
   if (ownedAppliances.length === 0) return [...STORE_REGISTERS, ...HOT_POINT_REGISTERS];
   const allowed = new Set<string>(UNIVERSAL_HOT_REGISTERS);
   ownedAppliances.forEach((id) => HOT_APPLIANCE_BY_ID[id]?.registers.forEach((r) => allowed.add(r)));
@@ -1589,15 +1645,23 @@ export const REGISTER_BY_ID: Record<string, RegisterDef> = Object.fromEntries(
 
 /** Пълният списък регистри според това дали обектът има топла точка. */
 export function registersFor(hotPoint: boolean): RegisterDef[] {
-  return hotPoint ? [...STORE_REGISTERS, ...HOT_POINT_REGISTERS] : STORE_REGISTERS;
+  return hotPoint ? [...STORE_REGISTERS, ...HOT_POINT_REGISTERS] : [...STORE_REGISTERS, ...preworkOnly()];
 }
+
+/** Чек-листът „Хигиена преди работа" важи за всеки обект (и без топла точка). */
+function preworkOnly(): RegisterDef[] {
+  return HOT_POINT_REGISTERS.filter((r) => r.id === "prework-check");
+}
+
+/** Картите в групата „Основни дневници" — основният комплект + чек-листа преди работа. */
+export const CORE_REGISTER_IDS = new Set<string>([...STORE_REGISTERS.map((r) => r.id), "prework-check"]);
 
 /* ------------------------------------------------------------------ */
 /*  Магазин за месо                                                    */
 /* ------------------------------------------------------------------ */
 
 /** Карти от топлата точка, които важат и за магазин за месо. */
-export const MEAT_SHARED_HOT_IDS = ["disinfectant-residue", "supplier-eval", "allergen-menu"];
+export const MEAT_SHARED_HOT_IDS = ["prework-check", "disinfectant-residue", "supplier-eval", "allergen-menu"];
 
 /** Дали нишата/обектът е свързан с месо (магазин, цех, кланица, разфасовка, дивеч). */
 export function isMeatShopNiche(niche: string): boolean {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { PLANS } from "@/lib/plans";
 import {
   FileText,
   ShieldCheck,
@@ -336,7 +337,7 @@ export default function ServicesClient() {
                 <div className="flex items-start justify-between gap-3 border-b border-brand-green/15 pb-4">
                   <div className="space-y-1">
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest bg-brand-green text-brand-gold px-2.5 py-1 rounded-md shadow">
-                      <Zap className="h-3 w-3" fill="currentColor" /> ВИП Абонамент
+                      <Zap className="h-3 w-3" fill="currentColor" /> Месечен абонамент
                     </span>
                     <h3 className="font-serif text-xl sm:text-2xl font-bold text-brand-green leading-tight">
                       Система „Дигитално Спокойствие“
@@ -349,8 +350,18 @@ export default function ServicesClient() {
                 </div>
 
                 <p className="text-xs text-brand-dark/90 leading-relaxed font-medium">
-                  Пълна дигитализация на HACCP & ДПХП документацията — без разхвърляни папки, с автоматични дневници и 24/7 поддръжка.
+                  Пълна дигитализация на HACCP & ДПХП документацията — без разхвърляни папки, с автоматични дневници и напомняния за сроковете.
                 </p>
+
+                {/* Plans strip */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {PLANS.map((p) => (
+                    <div key={p.id} className={`rounded-lg px-2 py-1.5 text-center border ${p.featured ? "bg-brand-green text-white border-brand-green" : "bg-white/70 border-brand-green/20 text-brand-green"}`}>
+                      <span className="block text-[10px] font-bold leading-tight">{p.name}</span>
+                      <span className="block font-serif text-sm font-black leading-tight">{p.priceEur} €<span className="text-[9px] font-sans font-medium opacity-70"> / мес.</span></span>
+                    </div>
+                  ))}
+                </div>
 
                 {/* Core Advantages List */}
                 <div className="space-y-2 pt-1">
@@ -358,7 +369,7 @@ export default function ServicesClient() {
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-brand-dark/90 font-medium">
                     <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-brand-green shrink-0" /> Автоматични БАБХ дневници (1 клик)</li>
                     <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-brand-green shrink-0" /> Генератор на етикети за проследимост</li>
-                    <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-brand-green shrink-0" /> 24/7 Чат с д-р Николова при проверки</li>
+                    <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-brand-green shrink-0" /> Напомняния за ЛЗК и договори (ДДД и др.)</li>
                     <li className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-brand-green shrink-0" /> Дигитални тестове и сертификати</li>
                   </ul>
                 </div>
@@ -380,10 +391,10 @@ export default function ServicesClient() {
               <div className="relative z-10 pt-5 border-t border-brand-green/15 flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                   <Link
-                    href="/babh-sistema"
+                    href="/babh-sistema#paketi"
                     className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl bg-white/80 border border-brand-green/30 text-brand-green hover:bg-brand-green hover:text-white transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                   >
-                    <Search className="h-3.5 w-3.5" /> Виж повече
+                    <Search className="h-3.5 w-3.5" /> Пакети и цени
                   </Link>
                 </div>
                 <Link
