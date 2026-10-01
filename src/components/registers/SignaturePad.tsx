@@ -134,7 +134,7 @@ const SignaturePad = forwardRef<SignaturePadHandle, {
         <button
           type="button"
           onClick={clear}
-          className="text-[10px] font-black uppercase px-3.5 py-2 rounded-xl border border-brand-green/15 text-brand-dark/60 hover:border-brand-gold cursor-pointer flex items-center gap-1.5"
+          className="text-[10px] font-black uppercase px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white border-0 cursor-pointer flex items-center gap-1.5 shadow-md"
         >
           <Eraser className="h-3.5 w-3.5" /> Изчисти
         </button>
