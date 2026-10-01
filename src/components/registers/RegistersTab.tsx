@@ -60,6 +60,7 @@ import RegistersTour, { TourStep } from "./RegistersTour";
 import SignaturePad, { SignaturePadHandle } from "./SignaturePad";
 import WeeklyHygieneEditor from "./WeeklyHygieneEditor";
 import CleaningChecklistEditor from "./CleaningChecklistEditor";
+import SignatureCell, { SignatureContext, isOwnerSignatureCol, rowHasData } from "./SignatureCell";
 import {
   CleaningTemplate,
   applyCleaningTemplate,
@@ -356,13 +357,18 @@ function CellInput({
   onChange,
   readOnly,
   dynamicOptions,
+  filled = false,
 }: {
   col: RegisterColumn;
   value: string;
   onChange: (v: string) => void;
   readOnly: boolean;
   dynamicOptions: DynamicOptions;
+  /** Редът има въведени данни — за автоматичния електронен подпис. */
+  filled?: boolean;
 }) {
+  if (isOwnerSignatureCol(col))
+    return <SignatureCell value={value} onChange={onChange} readOnly={readOnly} filled={filled} className={col.narrow ? "min-w-[76px]" : "min-w-[110px]"} />;
   if (col.type === "check") return <CheckCellBtn value={value} onChange={onChange} readOnly={readOnly} />;
   if (col.type === "text" && col.optionsFrom) {
     const listId = `datalist-${col.key}-${col.optionsFrom}`;
@@ -1716,6 +1722,7 @@ function RowsEditor({
                         onChange={(v) => updateCell(idx, c.key, v)}
                         readOnly={readOnly}
                         dynamicOptions={dynamicOptions}
+                        filled={rowHasData(row)}
                       />
                     </td>
                   ))}
@@ -1933,6 +1940,7 @@ function GridEditor({
                         onChange={(v) => updateCell(rk, c.key, v)}
                         readOnly={readOnly}
                         dynamicOptions={dynamicOptions}
+                        filled={rowHasData(row)}
                       />
                     </td>
                   ))}
@@ -2227,7 +2235,13 @@ function TempEditor({
                     )}
                   </td>
                   <td className="p-1">
-                    <input type="text" className={`${inputCls} min-w-[64px]`} value={row.sign || ""} disabled={readOnly} onChange={(e) => updateCell(d, "sign", e.target.value)} />
+                    <SignatureCell
+                      value={row.sign || ""}
+                      readOnly={readOnly}
+                      filled={!!(row.t1 || row.t2 || row.t1h || row.t2h)}
+                      className="min-w-[64px]"
+                      onChange={(v) => updateCell(d, "sign", v)}
+                    />
                   </td>
                 </tr>
               );
@@ -3062,7 +3076,12 @@ function EquipmentModal({
               </button>
             </div>
             {localSigMode === "draw" && (
-              <SignaturePad ref={signaturePadRef} initial={localSignature} onSave={(url) => setLocalSignature(url || undefined)} />
+              <SignaturePad
+                ref={signaturePadRef}
+                initial={localSignature}
+                onSave={(url) => setLocalSignature(url || undefined)}
+                onClear={() => setLocalSignature(undefined)}
+              />
             )}
             {localSigMode === "draw" && localSignature && (
               <p className="text-xs text-green-400 font-bold flex items-center gap-1.5">
@@ -4404,6 +4423,7 @@ export default function RegistersTab({
   const urgentCount = reminders.filter((r) => r.level === "urgent").length;
 
   return (
+    <SignatureContext.Provider value={signatureMode === "draw" ? signature : undefined}>
     <div className="space-y-6">
       {/* Заглавна лента */}
       <div data-tour="header" className="bg-white border border-brand-green/10 p-5 rounded-3xl shadow-xl flex flex-wrap gap-4 items-center justify-between">
@@ -5114,5 +5134,6 @@ export default function RegistersTab({
         />
       )}
     </div>
+    </SignatureContext.Provider>
   );
 }

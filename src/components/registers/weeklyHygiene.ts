@@ -143,6 +143,13 @@ export function fillHygieneDays(
   return next;
 }
 
+/** Има ли попълнени отметки или корективни действия за даден обект през седмицата. */
+export function isHygieneItemFilled(row: Record<string, string> | undefined, days: string[], itemKey: string): boolean {
+  if (!row) return false;
+  if (row[`c|${itemKey}`] || row[`a|${itemKey}`]) return true;
+  return days.some((d) => row[cellKey(d, itemKey, "t")] || row[cellKey(d, itemKey, "h")]);
+}
+
 export function fmtDM(iso: string): string {
   return `${iso.slice(8, 10)}.${iso.slice(5, 7)}`;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Fragment, useMemo } from "react";
+import { useState, useEffect, Fragment, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments, useMyEnrollments, useBookings, useMyBookings } from "@/lib/firebaseHooks";
 import { auth, db, storage } from "@/lib/firebase";
@@ -710,6 +710,42 @@ export default function ProfilePage() {
 
   // Navigation tabs in profile
   const [activeTab, setActiveTab] = useState("logs"); // logs, haccp, assigned, courses, chat, tools, settings
+
+  // Мобилно меню: сгъната лента горе; при избор на раздел се затваря и
+  // страницата отива на отвореното съдържание (иначе то е под менюто и
+  // изглежда, че нищо не се е случило).
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mainContentRef = useRef<HTMLElement | null>(null);
+  const mobileBarRef = useRef<HTMLDivElement | null>(null);
+  // Височината на лепкавия хедър на сайта (свива се при скрол) — лентата стои точно под него.
+  const [siteHeaderH, setSiteHeaderH] = useState(64);
+  useEffect(() => {
+    const measure = () => {
+      const h = document.querySelector("header")?.getBoundingClientRect().height;
+      if (h) setSiteHeaderH(Math.round(h));
+    };
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  const goToContentOnMobile = () => {
+    setMobileNavOpen(false);
+    if (typeof window === "undefined" || window.innerWidth >= 1024) return;
+    // Изчакваме новото съдържание да се покаже, после скролваме до него.
+    window.setTimeout(() => {
+      const main = mainContentRef.current;
+      if (!main) return;
+      const headerH = document.querySelector("header")?.getBoundingClientRect().height ?? 64;
+      const barH = mobileBarRef.current?.getBoundingClientRect().height ?? 56;
+      const top = main.getBoundingClientRect().top + window.scrollY - headerH - barH - 12;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    }, 60);
+  };
 
   // Daily logs are handled entirely by <RegistersTab /> (src/components/registers).
 
@@ -2746,6 +2782,33 @@ export default function ProfilePage() {
   // Unread Messages Calculation
   const currentUserObj = usersList.find(u => u.email === currentUserEmail);
   const hasUnreadUserMessages = currentUserObj?.messages?.some((m: any) => m.sender === "admin" && !m.isRead) || false;
+
+  const USER_TAB_LABELS: Record<string, string> = {
+    logs: "БАБХ Дневници",
+    assigned: "Документи & Тестове",
+    courses: "Моите Обучения",
+    packages: "Абонаментни Пакети",
+    chat: "Чат с Администратор",
+    tools: "Инструменти",
+    settings: "Фирма и Профил",
+  };
+  const ADMIN_TAB_LABELS: Record<string, string> = {
+    candidates: "Кандидати",
+    bookings: "Консултации & Срещи",
+    users: "Потребители",
+    materials: "Материали & Тестове",
+    courses: "Курсове (Книжарница)",
+    trainings: "Курсове на живо",
+    enrollments: "Записани",
+    messages: "Чат с Клиенти",
+    logs: "Одит на Дневници",
+  };
+  const currentSectionLabel =
+    userRole === "admin" ? ADMIN_TAB_LABELS[activeAdminTab] || "Меню" : USER_TAB_LABELS[activeTab] || "Меню";
+  const mobileMenuAlert =
+    userRole === "admin"
+      ? pendingCandidatesCount + pendingBookingsCount + pendingEnrollmentsCount > 0
+      : hasUnreadUserMessages;
   const hasUnreadAdminMessages = usersList.some(u => u.messages?.some((m: any) => m.sender === "user" && !m.isRead));
   
   const handleOpenUserChat = () => {
@@ -3296,7 +3359,7 @@ export default function ProfilePage() {
         </div>
       )}                        {/* 3. LOGGED-IN DASHBOARD */}
       {isLoggedIn && (
-        <div className="max-w-7xl mx-auto mt-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1800px] mx-auto mt-8 px-4 sm:px-6 lg:px-8">
 
           {/* Missing Firm Data banner — shown when user has a subscription or trial but missing firm/object details */}
           {userRole === "user" && (() => {
@@ -3443,10 +3506,37 @@ export default function ProfilePage() {
           })()}
 
           {/* Main Layout Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[250px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
             
             {/* Left Sidebar Menu - Hidden on print */}
-            <aside className="lg:col-span-3 bg-white/90 backdrop-blur-sm border border-brand-green/10 rounded-3xl p-6 shadow-xl space-y-6 print:hidden">
+            <aside
+              style={{ top: siteHeaderH + 8 }}
+              className="sticky z-30 lg:static lg:z-auto bg-white/95 backdrop-blur-sm border border-brand-green/10 rounded-2xl lg:rounded-3xl p-2 lg:p-6 shadow-xl print:hidden">
+              {/* Мобилна лента: текущ раздел + бутон „Меню" */}
+              <div ref={mobileBarRef} className="lg:hidden flex items-center gap-3 pl-3">
+                <div className="flex-1 min-w-0">
+                  <span className="block text-[9px] font-black uppercase tracking-[0.15em] text-brand-dark/45">Раздел</span>
+                  <span className="block text-sm font-bold text-brand-green truncate">{currentSectionLabel}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileNavOpen((o) => !o)}
+                  aria-expanded={mobileNavOpen}
+                  aria-controls="profile-mobile-nav"
+                  className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider border-0 cursor-pointer transition-colors ${mobileNavOpen ? "bg-brand-gold text-brand-dark" : "bg-brand-green text-white"}`}
+                >
+                  {mobileNavOpen ? <X className="h-4 w-4" /> : <List className="h-4 w-4" />}
+                  {mobileNavOpen ? "Затвори" : "Меню"}
+                  {!mobileNavOpen && mobileMenuAlert && (
+                    <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-white animate-pulse" />
+                  )}
+                </button>
+              </div>
+
+              <div
+                id="profile-mobile-nav"
+                className={`${mobileNavOpen ? "block" : "hidden"} lg:block mt-2 lg:mt-0 max-h-[70vh] overflow-y-auto lg:max-h-none lg:overflow-visible px-2 pb-2 lg:p-0 space-y-6`}
+              >
               <div className="space-y-3">
                 <div className="flex items-center gap-2.5 pb-2 border-b border-brand-green/5">
                   <div className="w-8 h-8 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green font-bold text-sm">
@@ -3465,7 +3555,12 @@ export default function ProfilePage() {
                 <span className="text-[9px] font-black uppercase text-brand-dark/45 tracking-[0.15em] block pt-2 pl-1">
                   Навигация
                 </span>
-                <nav className="flex flex-col gap-1.5 font-sans">
+                <nav
+                  className="flex flex-col gap-1.5 font-sans"
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest("button")) goToContentOnMobile();
+                  }}
+                >
                   {userRole === "admin" ? (
                     <>
                       <button
@@ -3681,10 +3776,11 @@ export default function ProfilePage() {
                   Излизане
                 </button>
               </div>
+              </div>
             </aside>
 
             {/* Right Main Content Area */}
-            <main className="lg:col-span-9 space-y-8">
+            <main ref={mainContentRef} className="min-w-0 space-y-8 scroll-mt-32">
               {userRole === "admin" ? (
                 // ==================== ADMIN PANELS ====================
                 <>

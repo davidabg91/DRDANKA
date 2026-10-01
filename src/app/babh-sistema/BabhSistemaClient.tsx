@@ -12,18 +12,17 @@ import {
   Printer,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   Store,
   Tag,
   Thermometer,
   Users,
-  Wand2,
   XCircle,
   Zap,
 } from "lucide-react";
 import { PLANS, PLAN_BY_ID, TRIAL_PLAN, planDelta } from "@/lib/plans";
 import { AUTHOR } from "@/lib/siteConfig";
 import PlanHelpButton from "@/components/PlanHelpButton";
+import { DailyTicksIcon, ShopRegisterIcon } from "./icons";
 import { BABH_FAQ } from "./babhFaq";
 
 /* ------------------------------------------------------------------ */
@@ -65,7 +64,7 @@ const STEPS = [
 
 const AUTOMATIONS = [
   {
-    icon: Sparkles,
+    icon: ShopRegisterIcon,
     title: "Подбира Вашите дневници",
     text: "Показва само това, което се отнася за Вашия обект. Не се лутате между ненужни бланки.",
   },
@@ -75,7 +74,7 @@ const AUTOMATIONS = [
     text: "Ясен списък всяка сутрин. Ако нещо липсва — системата Ви го показва и Ви отвежда там с едно натискане.",
   },
   {
-    icon: Wand2,
+    icon: DailyTicksIcon,
     title: "Попълва рутинното автоматично",
     text: "Температури, хигиена, чек-листи — сложете отметка и се попълват сами всеки работен ден.",
   },

@@ -16,7 +16,9 @@ export interface SignaturePadHandle {
 const SignaturePad = forwardRef<SignaturePadHandle, {
   initial?: string;
   onSave: (dataUrl: string | null) => void | Promise<void>;
-}>(function SignaturePad({ initial, onSave }, ref) {
+  /** Извиква се при „Изчисти" — старият подпис се премахва, за да се нарисува нов. */
+  onClear?: () => void;
+}>(function SignaturePad({ initial, onSave, onClear }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -92,8 +94,11 @@ const SignaturePad = forwardRef<SignaturePadHandle, {
     if (!canvas || !ctx) return;
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    drawing.current = false;
+    last.current = null;
     setHasInk(false);
-  }, []);
+    onClear?.();
+  }, [onClear]);
 
   const save = async () => {
     const canvas = canvasRef.current;
@@ -127,12 +132,14 @@ const SignaturePad = forwardRef<SignaturePadHandle, {
       </div>
       <div className="flex items-center gap-2">
         <button
+          type="button"
           onClick={clear}
           className="text-[10px] font-black uppercase px-3.5 py-2 rounded-xl border border-brand-green/15 text-brand-dark/60 hover:border-brand-gold cursor-pointer flex items-center gap-1.5"
         >
           <Eraser className="h-3.5 w-3.5" /> Изчисти
         </button>
         <button
+          type="button"
           onClick={save}
           disabled={saving}
           className="text-[10px] font-black uppercase px-4 py-2 rounded-xl bg-brand-green text-white border-0 cursor-pointer flex items-center gap-1.5 shadow-md disabled:opacity-60"

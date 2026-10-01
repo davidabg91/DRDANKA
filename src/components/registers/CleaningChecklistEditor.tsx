@@ -10,6 +10,7 @@ import { BookmarkCheck, ChevronLeft, ChevronRight, Copy, Settings, Wand2 } from 
 import type { RegisterDocData } from "./registerPrint";
 import { getLocalDateISO } from "@/lib/dateUtils";
 import RoomLayoutEditor from "./RoomLayoutEditor";
+import SignatureCell from "./SignatureCell";
 import { HygieneRoom, fmtDM, hygieneItemKey, parseLayout } from "./weeklyHygiene";
 import {
   CleaningTemplate,
@@ -338,11 +339,11 @@ function RoomBlock({
               />
             </td>
             <td className="p-0.5">
-              <input
-                className={inputCls}
+              <SignatureCell
                 value={row[cleaningKey(ik, "sign")] || ""}
-                disabled={readOnly}
-                onChange={(e) => onSet(cleaningKey(ik, "sign"), e.target.value)}
+                readOnly={readOnly}
+                filled={!!(row[cleaningKey(ik, "agent")] || row[cleaningKey(ik, "by")])}
+                onChange={(v) => onSet(cleaningKey(ik, "sign"), v)}
               />
             </td>
           </tr>

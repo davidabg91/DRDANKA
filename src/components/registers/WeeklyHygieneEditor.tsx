@@ -11,6 +11,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CheckCheck, ChevronLeft, ChevronRight, History, Settings, Wand2 } from "lucide-react";
 import RoomLayoutEditor from "./RoomLayoutEditor";
+import SignatureCell from "./SignatureCell";
 import type { RegisterDocData } from "./registerPrint";
 import { PREWORK_ZONE_COLS, registerDocKey } from "@/data/storeRegisters";
 import { getLocalDateISO } from "@/lib/dateUtils";
@@ -23,6 +24,7 @@ import {
   fillHygieneDays,
   fmtDM,
   hygieneItemKey,
+  isHygieneItemFilled,
   parseLayout,
   weekDays,
   weekKeyFor,
@@ -339,16 +341,25 @@ function RoomRows({
                 );
               })
             )}
-            {(["c", "a", "s"] as const).map((p) => (
+            {(["c", "a"] as const).map((p) => (
               <td key={p} className="p-0.5 border-l border-brand-green/10">
                 <input
-                  className={`${inputCls} ${p === "s" ? "min-w-[80px]" : "min-w-[120px]"}`}
+                  className={`${inputCls} min-w-[120px]`}
                   value={row[`${p}|${ik}`] || ""}
                   disabled={readOnly}
                   onChange={(e) => onText(`${p}|${ik}`, e.target.value)}
                 />
               </td>
             ))}
+            <td className="p-0.5 border-l border-brand-green/10">
+              <SignatureCell
+                value={row[`s|${ik}`] || ""}
+                readOnly={readOnly}
+                filled={isHygieneItemFilled(row, days, ik)}
+                className="min-w-[80px]"
+                onChange={(v) => onText(`s|${ik}`, v)}
+              />
+            </td>
           </tr>
         );
       })}

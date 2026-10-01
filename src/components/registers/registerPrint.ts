@@ -15,12 +15,14 @@ import {
   cellKey,
   fmtDM,
   hygieneItemKey,
+  isHygieneItemFilled,
   parseLayout,
   weekDays,
   weekdayLetter,
   weeksForMonth,
 } from "./weeklyHygiene";
 import { cleaningKey, isCleaningDayFilled } from "./cleaningChecklist";
+import { isOwnerSignatureCol, rowHasData } from "./SignatureCell";
 
 export interface PrintFirmInfo {
   name: string;
@@ -35,6 +37,13 @@ export interface PrintFirmInfo {
 function signatureImg(sig?: string): string {
   if (!sig) return `..............................`;
   return `<img src="${sig}" alt="подпис" style="height:34px;max-width:150px;object-fit:contain;display:inline-block;vertical-align:middle" />`;
+}
+
+/** Клетка „Подпис" в таблица: електронният подпис в попълнените редове, иначе въведеният текст. */
+function signCell(value: unknown, filled: boolean, sig?: string): string {
+  if (sig && filled)
+    return `<img src="${sig}" alt="подпис" style="height:20px;max-width:80px;object-fit:contain;display:block;margin:0 auto" />`;
+  return esc(value);
 }
 
 export interface TempUnitData {
@@ -110,7 +119,7 @@ function simpleTable(headers: string[], rowsHtml: string): string {
 
 /* ------------------------------------------------------------------ */
 
-function buildRowsSection(def: RegisterDef, data: RegisterDocData): string {
+function buildRowsSection(def: RegisterDef, data: RegisterDocData, sig?: string): string {
   const cols = def.columns || [];
   const entries = data.entries || [];
   const headers = ["№", ...cols.map((c) => c.label)];
@@ -121,14 +130,14 @@ function buildRowsSection(def: RegisterDef, data: RegisterDocData): string {
           .map(
             (e, i) =>
               `<tr><td class="c">${i + 1}</td>${cols
-                .map((c) => `<td${c.type === "check" || c.narrow ? ' class="c"' : ""}>${esc(e[c.key])}</td>`)
+                .map((c) => `<td${c.type === "check" || c.narrow ? ' class="c"' : ""}>${isOwnerSignatureCol(c) ? signCell(e[c.key], rowHasData(e), sig) : esc(e[c.key])}</td>`)
                 .join("")}</tr>`
           )
           .join("");
   return simpleTable(headers, body);
 }
 
-function buildGridSection(def: RegisterDef, data: RegisterDocData, rowKeys: string[], rowHeader: string): string {
+function buildGridSection(def: RegisterDef, data: RegisterDocData, rowKeys: string[], rowHeader: string, sig?: string): string {
   const cols = def.columns || [];
   const rows = data.rows || {};
   const headers = [rowHeader, ...cols.map((c) => c.label)];
@@ -136,7 +145,7 @@ function buildGridSection(def: RegisterDef, data: RegisterDocData, rowKeys: stri
     .map((rk) => {
       const r = rows[rk] || {};
       return `<tr><td class="c"><b>${esc(rk)}</b></td>${cols
-        .map((c) => `<td${c.type === "check" ? ' class="c"' : ""}>${esc(r[c.key])}</td>`)
+        .map((c) => `<td${c.type === "check" ? ' class="c"' : ""}>${isOwnerSignatureCol(c) ? signCell(r[c.key], rowHasData(r), sig) : esc(r[c.key])}</td>`)
         .join("")}</tr>`;
     })
     .join("");
@@ -148,7 +157,7 @@ function daysInMonth(month: string): number {
   return new Date(y, m, 0).getDate();
 }
 
-function buildTempSection(data: RegisterDocData, month: string): string {
+function buildTempSection(data: RegisterDocData, month: string, sig?: string): string {
   const units = data.units || {};
   const names = Object.keys(units);
   if (names.length === 0) return `<p class="empty">Няма записани данни.</p>`;
@@ -160,7 +169,7 @@ function buildTempSection(data: RegisterDocData, month: string): string {
       const body = Array.from({ length: days }, (_, i) => {
         const d = String(i + 1);
         const r = (u.rows || {})[d] || {};
-        return `<tr><td class="c"><b>${d}</b></td><td class="c">${esc(r.t1h)}</td><td class="c">${esc(r.t1)}</td><td class="c">${esc(r.t2h)}</td><td class="c">${esc(r.t2)}</td><td>${esc(r.action)}</td><td class="c">${esc(r.result)}</td><td class="c">${esc(r.sign)}</td></tr>`;
+        return `<tr><td class="c"><b>${d}</b></td><td class="c">${esc(r.t1h)}</td><td class="c">${esc(r.t1)}</td><td class="c">${esc(r.t2h)}</td><td class="c">${esc(r.t2)}</td><td>${esc(r.action)}</td><td class="c">${esc(r.result)}</td><td class="c">${signCell(r.sign, !!(r.t1 || r.t2 || r.t1h || r.t2h), sig)}</td></tr>`;
       }).join("");
       return `
         ${idx > 0 ? '<div class="page-break"></div>' : ""}
@@ -290,7 +299,7 @@ function buildChecklist3Section(data: RegisterDocData): string {
 }
 
 /** Седмичният чек-лист „Хигиена на обекта" — по една таблица за всяка седмица от месеца. */
-function buildWeeklyHygieneSection(data: RegisterDocData, month: string): string {
+function buildWeeklyHygieneSection(data: RegisterDocData, month: string, sig?: string): string {
   const rows = data.rows || {};
   const tables = weeksForMonth(month)
     .map((wk) => {
@@ -311,7 +320,7 @@ function buildWeeklyHygieneSection(data: RegisterDocData, month: string): string
               const cells = (["t", "h"] as const)
                 .map((p) => days.map((d) => `<td class="c">${esc(row[cellKey(d, ik, p)])}</td>`).join(""))
                 .join("");
-              return `<tr><td>${esc(item)}</td>${cells}<td>${esc(row[`c|${ik}`])}</td><td>${esc(row[`a|${ik}`])}</td><td>${esc(row[`s|${ik}`])}</td></tr>`;
+              return `<tr><td>${esc(item)}</td>${cells}<td>${esc(row[`c|${ik}`])}</td><td>${esc(row[`a|${ik}`])}</td><td class="c">${signCell(row[`s|${ik}`], isHygieneItemFilled(row, days, ik), sig)}</td></tr>`;
             })
             .join("");
           return head + items;
@@ -334,7 +343,7 @@ function buildWeeklyHygieneSection(data: RegisterDocData, month: string): string
 }
 
 /** Чек-лист за почистване, измиване и дезинфекция — попълнените обекти по дни. */
-function buildCleaningChecklistSection(data: RegisterDocData): string {
+function buildCleaningChecklistSection(data: RegisterDocData, sig?: string): string {
   const rows = data.rows || {};
   const dates = Object.keys(rows)
     .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && isCleaningDayFilled(rows, d))
@@ -351,7 +360,7 @@ function buildCleaningChecklistSection(data: RegisterDocData): string {
           const by = row[cleaningKey(ik, "by")];
           const sign = row[cleaningKey(ik, "sign")];
           if (!agent && !by && !sign) return;
-          lines.push(`<td>${esc(r.room)}</td><td>${esc(item)}</td><td>${esc(agent)}</td><td>${esc(by)}</td><td>${esc(sign)}</td>`);
+          lines.push(`<td>${esc(r.room)}</td><td>${esc(item)}</td><td>${esc(agent)}</td><td>${esc(by)}</td><td class="c">${signCell(sign, !!(agent || by), sig)}</td>`);
         })
       );
       return lines
@@ -388,18 +397,18 @@ export function buildRegisterSection(
   let body = "";
   switch (def.kind) {
     case "rows":
-      body = buildRowsSection(def, data);
+      body = buildRowsSection(def, data, firm.signature);
       break;
     case "grid-days": {
       const days = Array.from({ length: daysInMonth(month) }, (_, i) => String(i + 1));
-      body = buildGridSection(def, data, days, "Дата");
+      body = buildGridSection(def, data, days, "Дата", firm.signature);
       break;
     }
     case "grid-weeks":
-      body = buildGridSection(def, data, ROMAN_WEEKS, "Седмица");
+      body = buildGridSection(def, data, ROMAN_WEEKS, "Седмица", firm.signature);
       break;
     case "temp-units":
-      body = buildTempSection(data, month);
+      body = buildTempSection(data, month, firm.signature);
       break;
     case "training":
       body = buildTrainingSection(data, firm);
@@ -408,10 +417,10 @@ export function buildRegisterSection(
       body = buildSurveySection(data);
       break;
     case "cleaning-checklist":
-      body = buildCleaningChecklistSection(data);
+      body = buildCleaningChecklistSection(data, firm.signature);
       break;
     case "weekly-hygiene":
-      body = buildWeeklyHygieneSection(data, month);
+      body = buildWeeklyHygieneSection(data, month, firm.signature);
       break;
     case "checklist3":
       body = buildChecklist3Section(data);
