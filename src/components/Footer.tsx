@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CookieSettingsLink from "@/components/CookieSettingsLink";
 import { ShieldCheck, Mail, Clock, MapPin, Phone } from "lucide-react";
 
 
@@ -152,6 +153,7 @@ export default function Footer() {
             <Link href="/terms" className="hover:text-brand-gold transition-colors">
               Условия за ползване
             </Link>
+            <CookieSettingsLink className="hover:text-brand-gold transition-colors" />
             <a
               href="https://transitflow.org/"
               target="_blank"

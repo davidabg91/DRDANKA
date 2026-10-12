@@ -1,3 +1,5 @@
+import { hasMarketingConsent } from "@/lib/consent";
+
 export const FB_PIXEL_ID = "2170194070520793";
 export const FB_PIXEL_IDS = ["2170194070520793"];
 
@@ -7,7 +9,7 @@ export const generateEventId = (prefix = "evt") => {
 
 const sendCapi = async (payload: any) => {
   try {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !hasMarketingConsent()) return;
     fetch("/api/meta-capi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -18,7 +20,7 @@ const sendCapi = async (payload: any) => {
 
 export const pageview = () => {
   const eventId = generateEventId("pv");
-  if (typeof window !== "undefined" && (window as any).fbq) {
+  if (typeof window !== "undefined" && hasMarketingConsent() && (window as any).fbq) {
     (window as any).fbq("track", "PageView", {}, { eventID: eventId });
   }
   sendCapi({
@@ -30,7 +32,7 @@ export const pageview = () => {
 
 export const event = (name: string, options: Record<string, any> = {}, customEventId?: string) => {
   const eventId = customEventId || generateEventId(name.toLowerCase().slice(0, 3));
-  if (typeof window !== "undefined" && (window as any).fbq) {
+  if (typeof window !== "undefined" && hasMarketingConsent() && (window as any).fbq) {
     (window as any).fbq("track", name, options, { eventID: eventId });
   }
   sendCapi({
@@ -62,7 +64,7 @@ export const trackViewContent = ({
     value,
     currency,
   };
-  if (typeof window !== "undefined" && (window as any).fbq) {
+  if (typeof window !== "undefined" && hasMarketingConsent() && (window as any).fbq) {
     (window as any).fbq("track", "ViewContent", data, { eventID: eventId });
   }
   sendCapi({
@@ -100,7 +102,7 @@ export const trackInitiateCheckout = ({
     currency,
     num_items,
   };
-  if (typeof window !== "undefined" && (window as any).fbq) {
+  if (typeof window !== "undefined" && hasMarketingConsent() && (window as any).fbq) {
     (window as any).fbq("track", "InitiateCheckout", data, { eventID: eventId });
   }
   sendCapi({
@@ -139,7 +141,7 @@ export const trackPurchase = ({
     currency,
     num_items,
   };
-  if (typeof window !== "undefined" && (window as any).fbq) {
+  if (typeof window !== "undefined" && hasMarketingConsent() && (window as any).fbq) {
     (window as any).fbq("track", "Purchase", data, { eventID: eventId });
   }
   sendCapi({
