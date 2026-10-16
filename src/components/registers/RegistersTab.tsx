@@ -3118,6 +3118,8 @@ function EquipmentModal({
 
 interface RegistersTabProps {
   email: string;
+  /** Обектът на фирмата, чиито дневници се показват ("main" / липсва = основният). */
+  siteId?: string;
   firm: PrintFirmInfo;
   fridges: string[];
   freezers: string[];
@@ -3194,6 +3196,7 @@ const DAILY_USAGE_ID = "daily-usage";
 
 export default function RegistersTab({
   email,
+  siteId,
   firm,
   fridges,
   freezers,
@@ -3285,6 +3288,10 @@ export default function RegistersTab({
 
   // Обиколка при първо влизане: пази се в профила + localStorage (за мигновена защита от повторно показване)
   const tourStorageKey = `danka_registers_tour_${email.toLowerCase()}`;
+  /** Ключ на документ за регистър на текущия обект. */
+  // Напомнянията от д-р Николова са общи за фирмата — не зависят от обекта.
+  const siteKey = (registerId: string, period: string) =>
+    registerDocKey(email, registerId, period, registerId === ADMIN_REMINDERS_ID ? undefined : siteId);
   useEffect(() => {
     if (loading || readOnly || tourSeen || !email) return;
     if (typeof window !== "undefined" && localStorage.getItem(tourStorageKey)) return;
@@ -3460,7 +3467,7 @@ export default function RegistersTab({
       updatedDocs[registerId] = updatedDoc;
       stateChanged = true;
 
-      const docKey = registerDocKey(email, registerId, def ? periodFor(def, month) : month);
+      const docKey = siteKey(registerId, def ? periodFor(def, month) : month);
       await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
         console.error(`Auto fill background error for ${registerId}:`, err);
       });
@@ -3494,7 +3501,7 @@ export default function RegistersTab({
       updatedDocs[registerId] = updatedDoc;
       stateChanged = true;
 
-      const docKey = registerDocKey(email, registerId, def ? periodFor(def, month) : month);
+      const docKey = siteKey(registerId, def ? periodFor(def, month) : month);
       await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
         console.error(`Auto fill grid background error for ${registerId}:`, err);
       });
@@ -3529,7 +3536,7 @@ export default function RegistersTab({
       updatedDocs[registerId] = updatedDoc;
       stateChanged = true;
 
-      const docKey = registerDocKey(email, registerId, def ? periodFor(def, month) : month);
+      const docKey = siteKey(registerId, def ? periodFor(def, month) : month);
       await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
         console.error(`Auto fill weekly grid background error for ${registerId}:`, err);
       });
@@ -3583,7 +3590,7 @@ export default function RegistersTab({
         const updatedDoc = { ...tempDoc, units: updatedUnits, updatedAt: new Date().toISOString() };
         updatedDocs["temps"] = updatedDoc;
         stateChanged = true;
-        const docKey = registerDocKey(email, "temps", periodFor(REGISTER_BY_ID["temps"], month));
+        const docKey = siteKey("temps", periodFor(REGISTER_BY_ID["temps"], month));
         await setDoc(doc(db, "logs", docKey), updatedDoc).catch((err) => {
           console.error("Auto fill temps background error:", err);
         });
@@ -3630,7 +3637,7 @@ export default function RegistersTab({
           const updatedDoc = { ...docData, rows, updatedAt: new Date().toISOString() };
           updatedDocs["cleaning-checklist"] = updatedDoc;
           stateChanged = true;
-          await setDoc(doc(db, "logs", registerDocKey(email, "cleaning-checklist", month)), updatedDoc).catch((err) => {
+          await setDoc(doc(db, "logs", siteKey("cleaning-checklist", month)), updatedDoc).catch((err) => {
             console.error("Auto fill background error for cleaning-checklist:", err);
           });
         }
@@ -3654,7 +3661,7 @@ export default function RegistersTab({
           updatedDocs["prework-check"] = updatedDoc;
           stateChanged = true;
           const def34 = REGISTER_BY_ID["prework-check"];
-          await setDoc(doc(db, "logs", registerDocKey(email, "prework-check", periodFor(def34, month))), updatedDoc).catch((err) => {
+          await setDoc(doc(db, "logs", siteKey("prework-check", periodFor(def34, month))), updatedDoc).catch((err) => {
             console.error("Auto fill background error for prework-check:", err);
           });
         }
@@ -3771,7 +3778,7 @@ export default function RegistersTab({
         setDocs((prev) => ({ ...prev, ...updatedDocs }));
       }
     })();
-  }, [loading, readOnly, email, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoHygieneWeekly, autoHygieneMonthly, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees, hygieneLayout, fridges, freezers, restDays, autoCleaningChecklist, cleaningTemplate, cleaningLayout]);
+  }, [loading, readOnly, email, siteId, month, autoTemps, autoDuner, autoPrework, autoStaffHygiene, autoCleaning, autoHygieneWeekly, autoHygieneMonthly, autoFryerOil, autoBaking, autoCookedMeals, autoResidue, docs, db, units, employees, hygieneLayout, fridges, freezers, restDays, autoCleaningChecklist, cleaningTemplate, cleaningLayout]);
 
   const isRefToday = refDate === todayISO();
   const refDay = String(parseInt(refDate.slice(8, 10), 10));
@@ -3795,7 +3802,7 @@ export default function RegistersTab({
       await Promise.all(
         toLoad.map(async ({ id, period }) => {
           try {
-            const key = registerDocKey(email, id, period);
+            const key = siteKey(id, period);
             const snap = await getDoc(doc(db, "logs", key));
             results[id] = snap.exists() ? (snap.data() as RegisterDocData) : {};
           } catch (err) {
@@ -3813,7 +3820,7 @@ export default function RegistersTab({
     return () => {
       cancelled = true;
     };
-  }, [email, month, activeRegisters, hotPoint]);
+  }, [email, siteId, month, activeRegisters, hotPoint]);
 
   /* ------------------ Запис (автоматичен, с дебаунс) ------------------ */
   const persistRegister = useCallback(
@@ -3823,7 +3830,7 @@ export default function RegistersTab({
       setSaveState((s) => ({ ...s, [registerId]: "saving" }));
       try {
         const period = def ? periodFor(def, month) : registerId === ADMIN_REMINDERS_ID ? "all" : month;
-        const key = registerDocKey(email, registerId, period);
+        const key = siteKey(registerId, period);
         const data = { ...(docsRef.current[registerId] || {}), updatedAt: new Date().toISOString() };
         await setDoc(doc(db, "logs", key), data);
 
@@ -3931,7 +3938,7 @@ export default function RegistersTab({
                 updatedAt: new Date().toISOString(),
               };
               setDocs((prev) => ({ ...prev, suppliers: updatedDoc }));
-              const suppliersKey = registerDocKey(email, "suppliers", "all");
+              const suppliersKey = siteKey("suppliers", "all");
               await setDoc(doc(db, "logs", suppliersKey), updatedDoc);
             }
           }
@@ -3944,7 +3951,7 @@ export default function RegistersTab({
         setSaveState((s) => ({ ...s, [registerId]: "dirty" }));
       }
     },
-    [email, month]
+    [email, siteId, month]
   );
 
   const makeUpdater = useCallback(
@@ -4900,7 +4907,7 @@ export default function RegistersTab({
           {openDef.kind === "weekly-hygiene" && (
             <WeeklyHygieneEditor
               key={`${openDef.id}-${month}`}
-              email={email}
+              email={!siteId || siteId === "main" ? email : ""}
               data={docs[openDef.id] || {}}
               month={month}
               refDate={refDate}

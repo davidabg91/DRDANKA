@@ -285,7 +285,8 @@ export default function WeeklyHygieneEditor({
         </table>
       </div>
 
-      <LegacyPreworkEntries email={email} month={month} />
+      {/* Старият месечен формат съществува само за основния обект (празен email = друг обект). */}
+      {email && <LegacyPreworkEntries email={email} month={month} />}
     </div>
   );
 }

@@ -1739,10 +1739,16 @@ export function defaultHotPointForSector(sector: string): boolean {
 /** Стойности, през които преминава „check" клетка при кликване */
 export const CHECK_CYCLE = ["", "✓", "✗", "НП"] as const;
 
-/** Ключ на Firestore документ за регистър */
-export function registerDocKey(email: string, registerId: string, period: string) {
+/**
+ * Ключ на Firestore документ за регистър.
+ * Основният обект пази стария формат; всеки допълнителен обект на фирмата
+ * получава представка след `_reg_` (`..._reg_<siteId>--<registerId>_<period>`),
+ * така че частта преди `_reg_` остава имейлът и правилата не се променят.
+ */
+export function registerDocKey(email: string, registerId: string, period: string, siteId?: string) {
   const sanitized = email.toLowerCase().replace(/@/g, "_").replace(/\./g, "_");
-  return `danka_logs_${sanitized}_reg_${registerId}_${period}`;
+  const reg = siteId && siteId !== "main" ? `${siteId}--${registerId}` : registerId;
+  return `danka_logs_${sanitized}_reg_${reg}_${period}`;
 }
 
 /** Периодът (частта от ключа) за даден регистър и месец YYYY-MM */

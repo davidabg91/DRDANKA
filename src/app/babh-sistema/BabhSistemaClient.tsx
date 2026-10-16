@@ -19,7 +19,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
-import { PLANS, PLAN_BY_ID, TRIAL_PLAN, planDelta } from "@/lib/plans";
+import { PLANS, PLAN_BY_ID, TRIAL_PLAN, planDelta, extraSitePriceEur, formatEur } from "@/lib/plans";
 import { AUTHOR } from "@/lib/siteConfig";
 import PlanHelpButton from "@/components/PlanHelpButton";
 import { DailyTicksIcon, ShopRegisterIcon } from "./icons";
@@ -474,6 +474,9 @@ export default function BabhSistemaClient() {
                   <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
                   <span className={`text-xs mb-1.5 ${p.featured ? "text-white/50" : "text-brand-dark/45"}`}>/ месец</span>
                 </div>
+                <p className={`text-[11px] mt-2 ${p.featured ? "text-white/60" : "text-brand-dark/55"}`}>
+                  Всеки следващ обект: {formatEur(extraSitePriceEur(p.id))} / месец
+                </p>
                 <div className={`h-px my-5 ${p.featured ? "bg-white/10" : "bg-brand-green/10"}`} />
                 {delta.base && (
                   <p className={`text-sm font-bold mb-2 ${p.featured ? "text-brand-gold" : "text-brand-green"}`}>

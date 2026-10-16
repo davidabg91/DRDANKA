@@ -22,11 +22,13 @@ import RegistersTab from "@/components/registers/RegistersTab";
 import AdminReminderComposer from "@/components/registers/AdminReminderComposer";
 import PlanExtrasEditor from "@/components/registers/PlanExtrasEditor";
 import PlanHelpButton from "@/components/PlanHelpButton";
+import SitesBar, { type SiteFormData } from "@/components/registers/SitesBar";
+import { MAIN_SITE_ID, sitesOf, siteCountOf, siteProfilePatch, newSiteId, withoutUndefined, type ExtraSite } from "@/lib/sites";
 import type { HygieneRoom } from "@/components/registers/weeklyHygiene";
 import type { CleaningTemplate } from "@/components/registers/cleaningChecklist";
 import BankTransferNotice from "@/components/BankTransferNotice";
 import { defaultHotPointForSector, isMeatShopNiche, STORE_REGISTER_IDS, REGISTER_BY_ID, registersForMeat, registersFor } from "@/data/storeRegisters";
-import { PLANS, PLAN_BY_ID, PLAN_RANK, PlanId, effectivePlan, planHasChat, planHasExtras, isExtraRegister, addMonthsISO, LEGACY_PLAN, planDelta } from "@/lib/plans";
+import { PLANS, PLAN_BY_ID, PLAN_RANK, PlanId, effectivePlan, planFeeEur, formatEur, EXTRA_SITE_DISCOUNT, planHasChat, planHasExtras, isExtraRegister, addMonthsISO, LEGACY_PLAN, planDelta } from "@/lib/plans";
 
 import { 
   User, 
@@ -195,6 +197,10 @@ export interface DankaUser {
   signature?: string;
   /** Как да се подписва обектът: "draw" — с електронния подпис; "manual" — на ръка след печат. */
   signatureMode?: "draw" | "manual";
+  /** Име на основния обект, когато фирмата има няколко (по подразбиране „Основен обект"). */
+  siteName?: string;
+  /** Допълнителните обекти на фирмата — всеки със свои дневници (вж. src/lib/sites.ts). */
+  sites?: ExtraSite[];
 }
 
 // Mock templates for HACCP/DHP document generator
@@ -713,6 +719,9 @@ export default function ProfilePage() {
 
   // Navigation tabs in profile
   const [activeTab, setActiveTab] = useState("logs"); // logs, haccp, assigned, courses, chat, tools, settings
+  // Избраният обект в „Дневници" (за фирми с няколко обекта). Помни се за браузъра.
+  const [activeSiteId, setActiveSiteIdState] = useState<string>(MAIN_SITE_ID);
+  const [auditSiteId, setAuditSiteId] = useState<string>(MAIN_SITE_ID);
 
   // Мобилно меню: сгъната лента горе; при избор на раздел се затваря и
   // страницата отива на отвореното съдържание (иначе то е под менюто и
@@ -1179,7 +1188,7 @@ export default function ProfilePage() {
     const p: PlanId = u?.requestedPlan ?? (u?.plan && u.plan in PLAN_BY_ID ? u.plan : "standard");
     setFeeModalEmail(email);
     setFeeModalPlan(p);
-    setFeeModalAmount(String(PLAN_BY_ID[p].priceEur));
+    setFeeModalAmount(String(planFeeEur(p, siteCountOf(u))));
   };
 
   /**
@@ -1232,6 +1241,93 @@ export default function ProfilePage() {
     }
   };
 
+  /* ------------------ Няколко обекта на една фирма ------------------ */
+  const setActiveSiteId = (id: string) => {
+    setActiveSiteIdState(id);
+    try { localStorage.setItem(`danka_active_site_${currentUserEmail.toLowerCase()}`, id); } catch {}
+  };
+
+  useEffect(() => {
+    if (!currentUserEmail) return;
+    try {
+      const saved = localStorage.getItem(`danka_active_site_${currentUserEmail.toLowerCase()}`);
+      setActiveSiteIdState(saved || MAIN_SITE_ID);
+    } catch {
+      setActiveSiteIdState(MAIN_SITE_ID);
+    }
+  }, [currentUserEmail]);
+
+  /** Планът, по който се смята таксата (заявеният, ако има такъв). */
+  const feePlanOf = (u: DankaUser): PlanId => u.requestedPlan ?? effectivePlan(u);
+
+  /** При промяна на броя обекти обновяваме и месечната такса, ако клиентът плаща. */
+  const feePatchFor = (u: DankaUser, siteCount: number): Partial<DankaUser> =>
+    u.requestedPlan || u.subscriptionStatus === "approved" || u.subscriptionStatus === "awaiting_payment"
+      ? { subscriptionFeeEur: planFeeEur(feePlanOf(u), siteCount) }
+      : {};
+
+  const meForSites = () => usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+
+  const handleAddSite = async (data: SiteFormData): Promise<boolean> => {
+    const me = meForSites();
+    if (!me) return false;
+    const site: ExtraSite = withoutUndefined({
+      id: newSiteId(),
+      name: data.name,
+      niche: data.niche,
+      address: data.address || undefined,
+      manager: data.manager || undefined,
+      createdAt: new Date().toISOString(),
+    });
+    const sites = [...(me.sites ?? []), site];
+    const ok = await updateUser(me.email, { sites, ...feePatchFor(me, sites.length + 1) });
+    if (!ok) return false;
+    setActiveSiteId(site.id);
+    const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    fetch("/api/notify-telegram", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "site",
+        data: {
+          text:
+            `🏪 <b>НОВ ОБЕКТ КЪМ АБОНАМЕНТ</b>
+
+` +
+            `🏢 <b>Фирма:</b> ${esc(me.firmName || me.email)}
+` +
+            `📧 <b>Имейл:</b> ${esc(me.email)}
+` +
+            `📍 <b>Обект:</b> ${esc(site.name)} (${esc(site.niche || "")})
+` +
+            `🔢 <b>Обекти общо:</b> ${sites.length + 1}
+` +
+            `💰 <b>Нова такса:</b> ${formatEur(planFeeEur(feePlanOf(me), sites.length + 1))} / месец`,
+        },
+      }),
+    }).catch(() => {});
+    return true;
+  };
+
+  const handleEditSite = async (id: string, data: SiteFormData): Promise<boolean> => {
+    const me = meForSites();
+    if (!me) return false;
+    if (id === MAIN_SITE_ID) return updateUser(me.email, { siteName: data.name });
+    const sites = withoutUndefined((me.sites ?? []).map(s => s.id === id
+      ? { ...s, name: data.name, niche: data.niche, address: data.address || undefined, manager: data.manager || undefined }
+      : s));
+    return updateUser(me.email, { sites });
+  };
+
+  const handleRemoveSite = async (id: string): Promise<boolean> => {
+    const me = meForSites();
+    if (!me || id === MAIN_SITE_ID) return false;
+    const sites = (me.sites ?? []).filter(s => s.id !== id);
+    const ok = await updateUser(me.email, { sites, ...feePatchFor(me, sites.length + 1) });
+    if (ok && activeSiteId === id) setActiveSiteId(MAIN_SITE_ID);
+    return ok;
+  };
+
   /**
    * Client selects a subscription package from the packages tab.
    * This updates their subscriptionStatus to 'awaiting_payment' and sets their fee.
@@ -1240,7 +1336,7 @@ export default function ProfilePage() {
   const handleSelectPackage = (planId: PlanId) => {
     if (!currentUserEmail) return;
     const p = PLAN_BY_ID[planId];
-    setPkgConfirmModal({ planId, name: p.name, fee: p.priceEur });
+    setPkgConfirmModal({ planId, name: p.name, fee: planFeeEur(planId, siteCountOf(meForSites())) });
   };
 
   const handleConfirmSelectPackage = async () => {
@@ -4296,6 +4392,11 @@ export default function ProfilePage() {
                                             <option key={p.id} value={p.id}>{p.name} · {p.priceEur} €</option>
                                           ))}
                                         </select>
+                                        {siteCountOf(u) > 1 && (
+                                          <span className="text-[9px] font-bold text-brand-green bg-brand-green/10 px-2 py-0.5 rounded-full" title={sitesOf(u).map(x => x.name).join(", ")}>
+                                            {siteCountOf(u)} обекта · {formatEur(planFeeEur(feePlanOf(u), siteCountOf(u)))}
+                                          </span>
+                                        )}
                                         {u.requestedPlan && (
                                           <span className="text-[9px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full" title={u.planRequestedAt ? `Заявен на ${u.planRequestedAt.slice(0, 10)}` : undefined}>
                                             Заявен: {PLAN_BY_ID[u.requestedPlan]?.name ?? u.requestedPlan}
@@ -6113,6 +6214,11 @@ export default function ProfilePage() {
                   {activeAdminTab === "logs" && (() => {
                     const auditClients = usersList.filter(u => u.role === "user" && u.status === "approved");
                     const auditTarget = auditClients.find(u => u.email.toLowerCase() === auditUserEmail.toLowerCase());
+                    const auditSites = sitesOf(auditTarget);
+                    const auditSite = auditSites.find(s => s.id === auditSiteId) ?? auditSites[0];
+                    const auditSv = auditSite ?? auditTarget;
+                    const auditIsMain = !auditSite || auditSite.id === MAIN_SITE_ID;
+                    const auditNiche = auditSv?.niche || auditTarget?.niche || "";
                     return (
                       <div className="bg-white border border-brand-green/5 p-6 sm:p-8 rounded-2xl shadow-md space-y-6 animate-fade-in">
                         {/* Selection header */}
@@ -6131,16 +6237,26 @@ export default function ProfilePage() {
                             <label className="text-[11px] font-bold text-brand-dark/70 uppercase">Обект:</label>
                             <select
                               value={auditUserEmail}
-                              onChange={(e) => setAuditUserEmail(e.target.value)}
+                              onChange={(e) => { setAuditUserEmail(e.target.value); setAuditSiteId(MAIN_SITE_ID); }}
                               className="text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-brand-light font-medium text-brand-dark"
                             >
                               <option value="">-- Изберете обект --</option>
                               {auditClients.map((user) => (
                                 <option key={user.email} value={user.email}>
-                                  {user.firmName} ({user.email})
+                                  {user.firmName} ({user.email}){siteCountOf(user) > 1 ? ` · ${siteCountOf(user)} обекта` : ""}
                                 </option>
                               ))}
                             </select>
+                            {auditSites.length > 1 && (
+                              <select
+                                value={auditSite?.id ?? MAIN_SITE_ID}
+                                onChange={(e) => setAuditSiteId(e.target.value)}
+                                className="text-xs border border-brand-green/20 rounded px-2.5 py-1.5 focus:outline-none focus:border-brand-gold bg-brand-light font-medium text-brand-dark"
+                                aria-label="Обект на фирмата"
+                              >
+                                {auditSites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                              </select>
+                            )}
                           </div>
                         </div>
 
@@ -6166,23 +6282,29 @@ export default function ProfilePage() {
                               firmName={auditTarget.firmName}
                             />
                             <RegistersTab
-                              key={auditTarget.email}
+                              key={`${auditTarget.email}-${auditSite?.id ?? MAIN_SITE_ID}`}
                               email={auditTarget.email}
-                              firm={{ name: auditTarget.firmName, eik: auditTarget.eik, address: auditTarget.address, manager: auditTarget.manager || auditTarget.contact }}
-                              fridges={auditTarget.customFridges ?? []}
-                              freezers={auditTarget.customFreezers ?? []}
-                              employees={auditTarget.customEmployees ?? []}
-                              meat={isMeatShopNiche(auditTarget.niche)}
-                              hotPoint={auditTarget.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditTarget.niche))}
-                              hotAppliances={auditTarget.hotAppliances ?? []}
-                              restDays={auditTarget.restDays ?? []}
+                              siteId={auditSite?.id ?? MAIN_SITE_ID}
+                              firm={{
+                                name: auditSites.length > 1 ? `${auditTarget.firmName} — ${auditSite?.name ?? ""}` : auditTarget.firmName,
+                                eik: auditTarget.eik,
+                                address: auditIsMain ? auditTarget.address : (auditSv?.address || auditTarget.address),
+                                manager: auditIsMain ? (auditTarget.manager || auditTarget.contact) : (auditSv?.manager || auditTarget.manager || auditTarget.contact),
+                              }}
+                              fridges={auditSv?.customFridges ?? []}
+                              freezers={auditSv?.customFreezers ?? []}
+                              employees={auditSv?.customEmployees ?? []}
+                              meat={isMeatShopNiche(auditNiche)}
+                              hotPoint={auditSv?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditNiche))}
+                              hotAppliances={auditSv?.hotAppliances ?? []}
+                              restDays={auditSv?.restDays ?? []}
                               signature={auditTarget.signature}
                               signatureMode={auditTarget.signatureMode ?? "manual"}
                               plan={effectivePlan(auditTarget)}
                               extraRegisters={auditTarget.extraRegisters}
-                              hygieneLayout={auditTarget.hygieneLayout}
-                              cleaningLayout={auditTarget.cleaningLayout}
-                              cleaningTemplate={auditTarget.cleaningTemplate}
+                              hygieneLayout={auditSv?.hygieneLayout}
+                              cleaningLayout={auditSv?.cleaningLayout}
+                              cleaningTemplate={auditSv?.cleaningTemplate}
                               readOnly
                             />
                           </div>
@@ -6283,41 +6405,74 @@ export default function ProfilePage() {
                     return (
                       <>
                         {/* TAB 1: ДНЕВНИЦИ ПО САМОКОНТРОЛ (нова система) */}
-              {activeTab === "logs" && (
+              {activeTab === "logs" && (() => {
+                const sites = sitesOf(currentUser);
+                const site = sites.find(s => s.id === activeSiteId) ?? sites[0];
+                const siteId = site?.id ?? MAIN_SITE_ID;
+                const sv = site ?? currentUser;
+                const niche = sv?.niche || currentUser?.niche || firmInfo.niche;
+                const isMain = siteId === MAIN_SITE_ID;
+                return (
+                  <>
+                    {currentUser && (
+                      <SitesBar
+                        sites={sites}
+                        activeId={siteId}
+                        plan={currentUser.requestedPlan ?? effectivePlan(currentUser)}
+                        defaultNiche={currentUser.niche || firmInfo.niche}
+                        onSelect={setActiveSiteId}
+                        onAdd={handleAddSite}
+                        onEdit={handleEditSite}
+                        onRemove={handleRemoveSite}
+                      />
+                    )}
                 <RegistersTab
+                  key={siteId}
                   email={currentUserEmail}
-                  firm={{ name: firmInfo.name, eik: firmInfo.eik, address: firmInfo.address, manager: firmInfo.manager }}
-                  fridges={currentUser?.customFridges ?? ["Хладилна витрина №1"]}
-                  freezers={currentUser?.customFreezers ?? ["Фризер №1"]}
-                  employees={currentUser?.customEmployees ?? []}
-                  meat={isMeatShopNiche(currentUser?.niche || firmInfo.niche)}
-                  hotPoint={currentUser?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(currentUser?.niche || firmInfo.niche))}
-                  hotAppliances={currentUser?.hotAppliances ?? []}
-                  restDays={currentUser?.restDays ?? []}
+                  siteId={siteId}
+                  firm={{
+                    name: sites.length > 1 ? `${firmInfo.name} — ${site?.name ?? ""}` : firmInfo.name,
+                    eik: firmInfo.eik,
+                    address: isMain ? firmInfo.address : (sv?.address || firmInfo.address),
+                    manager: isMain ? firmInfo.manager : (sv?.manager || firmInfo.manager),
+                  }}
+                  fridges={sv?.customFridges ?? ["Хладилна витрина №1"]}
+                  freezers={sv?.customFreezers ?? ["Фризер №1"]}
+                  employees={sv?.customEmployees ?? []}
+                  meat={isMeatShopNiche(niche)}
+                  hotPoint={sv?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(niche))}
+                  hotAppliances={sv?.hotAppliances ?? []}
+                  restDays={sv?.restDays ?? []}
                   signature={currentUser?.signature}
                   signatureMode={currentUser?.signatureMode ?? "manual"}
                   tourSeen={currentUser?.registersTourSeen ?? false}
                   plan={effectivePlan(currentUser)}
                   extraRegisters={currentUser?.extraRegisters}
-                  hygieneLayout={currentUser?.hygieneLayout}
-                  cleaningLayout={currentUser?.cleaningLayout}
-                  cleaningTemplate={currentUser?.cleaningTemplate}
-                  autoCleaningChecklist={currentUser?.autoCleaningChecklist ?? false}
-                   autoDuner={currentUser?.autoDuner ?? false}
-                  autoPrework={currentUser?.autoPrework ?? false}
-                  autoTemps={currentUser?.autoTemps ?? false}
-                  autoStaffHygiene={currentUser?.autoStaffHygiene ?? false}
-                  autoCleaning={currentUser?.autoCleaning ?? false}
-                  autoFryerOil={currentUser?.autoFryerOil ?? false}
-                  autoBaking={currentUser?.autoBaking ?? false}
-                  autoCookedMeals={currentUser?.autoCookedMeals ?? false}
-                  autoResidue={currentUser?.autoResidue ?? false}
-                  autoHygieneWeekly={currentUser?.autoHygieneWeekly ?? false}
-                  autoHygieneMonthly={currentUser?.autoHygieneMonthly ?? false}
+                  hygieneLayout={sv?.hygieneLayout}
+                  cleaningLayout={sv?.cleaningLayout}
+                  cleaningTemplate={sv?.cleaningTemplate}
+                  autoCleaningChecklist={sv?.autoCleaningChecklist ?? false}
+                  autoDuner={sv?.autoDuner ?? false}
+                  autoPrework={sv?.autoPrework ?? false}
+                  autoTemps={sv?.autoTemps ?? false}
+                  autoStaffHygiene={sv?.autoStaffHygiene ?? false}
+                  autoCleaning={sv?.autoCleaning ?? false}
+                  autoFryerOil={sv?.autoFryerOil ?? false}
+                  autoBaking={sv?.autoBaking ?? false}
+                  autoCookedMeals={sv?.autoCookedMeals ?? false}
+                  autoResidue={sv?.autoResidue ?? false}
+                  autoHygieneWeekly={sv?.autoHygieneWeekly ?? false}
+                  autoHygieneMonthly={sv?.autoHygieneMonthly ?? false}
                   onTourDone={async () => { await updateUser(currentUserEmail, { registersTourSeen: true }); }}
-                  onSaveEquipment={async (patch) => { await updateUser(currentUserEmail, patch); }}
+                  onSaveEquipment={async (patch) => {
+                    const me = meForSites();
+                    if (!me) return;
+                    await updateUser(currentUserEmail, siteProfilePatch(me, siteId, patch) as Partial<DankaUser>);
+                  }}
                 />
-              )}
+                  </>
+                );
+              })()}
 
 
 
@@ -7193,6 +7348,16 @@ export default function ProfilePage() {
                                 <span className="font-serif text-2xl font-bold text-brand-gold leading-none mb-0.5">€</span>
                                 <span className={`text-xs font-medium mb-1.5 ${dark ? "text-white/50" : "text-brand-dark/45"}`}>/ месец</span>
                               </div>
+                              {(() => {
+                                const n = siteCountOf(usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase()));
+                                return (
+                                  <p className={`text-[11px] mt-2 ${dark ? "text-white/60" : "text-brand-dark/55"}`}>
+                                    {n > 1
+                                      ? <>За Вашите {n} обекта: <strong className={dark ? "text-brand-gold" : "text-brand-green"}>{formatEur(planFeeEur(p.id, n))}</strong> / месец</>
+                                      : <>Всеки следващ обект: −{Math.round(EXTRA_SITE_DISCOUNT * 100)}%</>}
+                                  </p>
+                                );
+                              })()}
                               <div className={`h-px my-5 ${dark ? "bg-white/10" : "bg-brand-green/10"}`} />
                               <p className={`text-[10px] font-black uppercase tracking-wider mb-2 ${dark ? "text-brand-gold" : "text-brand-gold-dark"}`}>
                                 {delta.base ? `Всичко от „${delta.base.name}“, плюс:` : "Дигитално водене на"}
@@ -7602,7 +7767,7 @@ export default function ProfilePage() {
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => { setFeeModalPlan(p.id); setFeeModalAmount(String(p.priceEur)); }}
+                      onClick={() => { setFeeModalPlan(p.id); setFeeModalAmount(String(planFeeEur(p.id, siteCountOf(usersList.find(x => x.email.toLowerCase() === (feeModalEmail || "").toLowerCase()))))); }}
                       className={`text-[11px] font-bold px-3 py-2 rounded-lg border transition-colors cursor-pointer ${feeModalPlan === p.id ? "bg-brand-green text-white border-brand-green" : "border-brand-green/20 text-brand-green hover:bg-brand-green/5"}`}
                     >
                       {p.name} · {p.priceEur} €

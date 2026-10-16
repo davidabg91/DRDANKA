@@ -121,6 +121,29 @@ export function isPlanId(v: unknown): v is PlanId {
   return v === "basic" || v === "standard" || v === "pro" || v === "vip";
 }
 
+/* ------------------------------------------------------------------ */
+/*  Няколко обекта на една фирма                                       */
+/* ------------------------------------------------------------------ */
+
+/** Отстъпка за всеки обект след първия (по решение на собственика: 30%). */
+export const EXTRA_SITE_DISCOUNT = 0.3;
+
+/** Месечна цена на един допълнителен обект по даден план. */
+export function extraSitePriceEur(plan: PlanId): number {
+  return Math.round(PLAN_BY_ID[plan].priceEur * (1 - EXTRA_SITE_DISCOUNT) * 100) / 100;
+}
+
+/** Месечната такса за плана при `siteCount` обекта: 1-вият на пълна цена, всеки следващ с отстъпка. */
+export function planFeeEur(plan: PlanId, siteCount = 1): number {
+  const extra = Math.max(0, Math.floor(siteCount) - 1);
+  return Math.round((PLAN_BY_ID[plan].priceEur + extra * extraSitePriceEur(plan)) * 100) / 100;
+}
+
+/** Сума в евро за показване: „69,60 €", „29 €". */
+export function formatEur(v: number): string {
+  return `${Number.isInteger(v) ? v : v.toFixed(2).replace(".", ",")} €`;
+}
+
 /** Пробният период от 14 дни дава достъп като план „Оптимум". */
 export const TRIAL_PLAN: PlanId = "standard";
 
