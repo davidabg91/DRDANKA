@@ -3,6 +3,7 @@
  * Използва се от RegistersTab — печат на един дневник или на всички попълнени.
  */
 
+import { normLabel, storedNorm, type TempNorm, type TempUnitType } from "./tempUnits";
 import {
   RegisterDef,
   SAFETY_CULTURE_SURVEY,
@@ -47,7 +48,9 @@ function signCell(value: unknown, filled: boolean, sig?: string): string {
 }
 
 export interface TempUnitData {
-  type: "fridge" | "freezer";
+  type: TempUnitType;
+  /** Нормата, валидна при попълването (липсва в старите записи → по вида). */
+  norm?: TempNorm;
   rows: Record<string, Record<string, string>>;
 }
 
@@ -165,7 +168,7 @@ function buildTempSection(data: RegisterDocData, month: string, sig?: string): s
   return names
     .map((name, idx) => {
       const u = units[name];
-      const norm = u.type === "freezer" ? "Норма: ≤ −18°C" : "Норма: от 0 до +4°C";
+      const norm = `Норма: ${normLabel(storedNorm(u))}`;
       const body = Array.from({ length: days }, (_, i) => {
         const d = String(i + 1);
         const r = (u.rows || {})[d] || {};
@@ -173,7 +176,7 @@ function buildTempSection(data: RegisterDocData, month: string, sig?: string): s
       }).join("");
       return `
         ${idx > 0 ? '<div class="page-break"></div>' : ""}
-        <h3 class="unit-title">Чек-лист за отчитане на температурата — ${esc(name)} <span class="norm">(${norm})</span></h3>
+        <h3 class="unit-title">${u.type === "storage" ? "Контролна карта за температурата в складово помещение" : "Чек-лист за отчитане на температурата"} — ${esc(name)} <span class="norm">(${norm})</span></h3>
         <table class="data-tbl">
           <thead>
             <tr><th rowspan="2">Дата</th><th colspan="2">Измерване 1</th><th colspan="2">Измерване 2</th><th rowspan="2">Корективни мерки</th><th rowspan="2">Резултат</th><th rowspan="2">Подпис</th></tr>

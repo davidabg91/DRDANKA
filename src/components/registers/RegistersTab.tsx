@@ -75,6 +75,7 @@ import {
   isHygieneDayFilled,
   weekKeyFor,
 } from "./weeklyHygiene";
+import { DEFAULT_TEMP_NORMS, TEMP_UNIT_LABELS, isValidNorm, normLabel, sampleTempInNorm, tempOutOfNorm, normsByName, type TempNorm, type TempNormEntry, type TempUnit, type TempUnitType } from "./tempUnits";
 import {
   Bell,
   Check,
@@ -300,18 +301,16 @@ const TOUR_STEPS: TourStep[] = [
   },
 ];
 
-/* Норми за температурните съоръжения */
-const tempNorm = (type: "fridge" | "freezer") =>
-  type === "freezer" ? { max: -18 } : { min: 0, max: 4 };
-
-const tempOutOfNorm = (val: string, type: "fridge" | "freezer") => {
-  const n = parseFloat(String(val).replace(",", "."));
-  if (isNaN(n)) return false;
-  const norm = tempNorm(type);
-  if (norm.min !== undefined && n < norm.min) return true;
-  if (norm.max !== undefined && n > norm.max) return true;
-  return false;
-};
+/* Икона „склад" (рафтове под покрив) за складовите помещения. */
+function StorageIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <path d="M3 21V9l9-5 9 5v12" />
+      <path d="M7 21v-8h10v8" />
+      <path d="M7 17h10" />
+    </svg>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /*  Клетки                                                             */
@@ -1967,7 +1966,7 @@ function TempEditor({
 }: {
   data: RegisterDocData;
   month: string;
-  units: { name: string; type: "fridge" | "freezer" }[];
+  units: TempUnit[];
   activeUnit: string;
   setActiveUnit: (n: string) => void;
   onUpdate: Updater;
@@ -1988,7 +1987,7 @@ function TempEditor({
       <div className="text-center py-10 space-y-3 border border-dashed border-brand-green/15 rounded-xl">
         <Thermometer className="h-8 w-8 text-brand-dark/20 mx-auto" />
         <p className="text-xs text-brand-dark/50">
-          Няма добавени хладилни съоръжения.{" "}
+          Няма добавени хладилни съоръжения или складови помещения.{" "}
           {!readOnly && "Добавете ги от бутона „Оборудване и персонал“ горе."}
         </p>
       </div>
@@ -1997,7 +1996,7 @@ function TempEditor({
   if (!unit) return null;
 
   const rows = data.units?.[unit.name]?.rows || {};
-  const normLabel = unit.type === "freezer" ? "≤ −18°C" : "0 до +4°C";
+  const unitNormLabel = normLabel(unit.norm);
 
   const updateCell = (day: string, key: string, v: string) =>
     onUpdate((prev) => {
@@ -2005,14 +2004,14 @@ function TempEditor({
       const u = prevUnits[unit.name] || { type: unit.type, rows: {} };
       const newRow: Record<string, string> = { ...(u.rows[day] || {}), [key]: v };
       // Автоматичен резултат според нормата
-      const t1bad = tempOutOfNorm(newRow.t1 || "", unit.type);
-      const t2bad = tempOutOfNorm(newRow.t2 || "", unit.type);
+      const t1bad = tempOutOfNorm(newRow.t1 || "", unit.norm);
+      const t2bad = tempOutOfNorm(newRow.t2 || "", unit.norm);
       if ((newRow.t1 || "").trim() !== "" || (newRow.t2 || "").trim() !== "") {
         newRow.result = t1bad || t2bad ? "Несъответствие" : "Норма";
       }
       return {
         ...prev,
-        units: { ...prevUnits, [unit.name]: { type: unit.type, rows: { ...u.rows, [day]: newRow } } },
+        units: { ...prevUnits, [unit.name]: { type: unit.type, norm: unit.norm, rows: { ...u.rows, [day]: newRow } } },
       };
     });
 
@@ -2039,22 +2038,9 @@ function TempEditor({
         const t2h_h = Math.random() > 0.5 ? "18" : "17";
         const t2h = `${t2h_h}:${t2h_h === "18" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t2h_m}`;
 
-        // Generate random temps in range
-        let t1 = "";
-        let t2 = "";
-        if (unit.type === "freezer") {
-          // freezer: ≤ -18.0 (let's keep between -18.5 and -21.5)
-          const val1 = -18.5 - Math.random() * 2.8;
-          const val2 = -18.5 - Math.random() * 2.8;
-          t1 = val1.toFixed(1);
-          t2 = val2.toFixed(1);
-        } else {
-          // fridge: 0 to +4 (let's keep between 1.2 and 3.8)
-          const val1 = 1.2 + Math.random() * 2.5;
-          const val2 = 1.2 + Math.random() * 2.5;
-          t1 = val1.toFixed(1);
-          t2 = val2.toFixed(1);
-        }
+        // Стойности в нормата на съоръжението (вкл. зададена от потребителя)
+        const t1 = sampleTempInNorm(unit.norm);
+        const t2 = sampleTempInNorm(unit.norm);
 
         newRows[d] = {
           ...(newRows[d] || {}),
@@ -2070,7 +2056,7 @@ function TempEditor({
 
       return {
         ...prev,
-        units: { ...prevUnits, [unit.name]: { type: unit.type, rows: newRows } }
+        units: { ...prevUnits, [unit.name]: { type: unit.type, norm: unit.norm, rows: newRows } }
       };
     });
   };
@@ -2094,7 +2080,7 @@ function TempEditor({
                   : "bg-white text-brand-dark/60 border-brand-green/15 hover:border-brand-gold"
               }`}
             >
-              {u.type === "freezer" ? <Snowflake className="h-3 w-3" /> : <Thermometer className="h-3 w-3" />}
+              {u.type === "freezer" ? <Snowflake className="h-3 w-3" /> : u.type === "storage" ? <StorageIcon className="h-3 w-3" /> : <Thermometer className="h-3 w-3" />}
               {u.name}
               {canMark && <span className={`w-1.5 h-1.5 rounded-full ${filledOnDay ? "bg-green-400" : "bg-red-400"}`} />}
             </button>
@@ -2104,7 +2090,7 @@ function TempEditor({
 
       <div className="flex flex-wrap items-center justify-between gap-2 bg-brand-light/40 border border-brand-green/10 rounded-xl px-4 py-2.5">
         <span className="text-[11px] font-bold text-brand-green">
-          {unit.name} — норма: {normLabel}
+          {unit.name} — норма: {unitNormLabel}
         </span>
         {!readOnly && (
           <div className="flex flex-wrap gap-2">
@@ -2169,8 +2155,8 @@ function TempEditor({
             {days.map((d) => {
               const row = rows[d] || {};
               const isSelected = d === selectedDay;
-              const t1bad = tempOutOfNorm(row.t1 || "", unit.type);
-              const t2bad = tempOutOfNorm(row.t2 || "", unit.type);
+              const t1bad = tempOutOfNorm(row.t1 || "", unit.norm);
+              const t2bad = tempOutOfNorm(row.t2 || "", unit.norm);
               return (
                 <tr key={d} className={`border-b border-brand-green/5 ${isSelected ? "bg-brand-gold/10" : "hover:bg-brand-light/20"}`}>
                   <td className="p-1.5 text-center font-bold text-brand-dark/60">
@@ -2650,7 +2636,65 @@ function SurveyEditor({
 /*  Модал: оборудване и персонал                                        */
 /* ------------------------------------------------------------------ */
 
+type NormText = { min: string; max: string };
+
+const normToText = (n: TempNorm): NormText => ({
+  min: n.min === undefined ? "" : String(n.min).replace(".", ","),
+  max: n.max === undefined ? "" : String(n.max).replace(".", ","),
+});
+
+/** "" → undefined; невалидно число → NaN (за валидация при запис). */
+const textToNum = (t: string): number | undefined => {
+  const v = t.trim().replace(",", ".").replace("−", "-");
+  return v === "" ? undefined : Number(v);
+};
+
+/** Ред „съоръжение + собствена мин./макс. температура" в модала за оборудване. */
+function UnitNormRow({
+  name,
+  type,
+  value,
+  onChange,
+  onRemove,
+}: {
+  name: string;
+  type: TempUnitType;
+  value: NormText;
+  onChange: (v: NormText) => void;
+  onRemove: () => void;
+}) {
+  const def = DEFAULT_TEMP_NORMS[type];
+  const custom = JSON.stringify(value) !== JSON.stringify(normToText(def));
+  const field = "w-16 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-xs text-white text-center placeholder:text-white/25 focus:outline-none focus:border-brand-gold/50";
+  return (
+    <div className="bg-white/5 hover:bg-white/10 rounded-xl px-3 py-2.5 transition-colors space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm text-white/85 truncate">{name}</span>
+        <button onClick={onRemove} className="text-red-400/60 hover:text-red-400 cursor-pointer p-1 shrink-0" aria-label={`Премахни ${name}`}>
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="flex flex-wrap items-center gap-2 text-[11px] text-white/50">
+        <span>Норма °C:</span>
+        <label className="flex items-center gap-1">мин
+          <input className={field} inputMode="decimal" value={value.min} placeholder="—" onChange={(e) => onChange({ ...value, min: e.target.value })} aria-label={`Минимална температура за ${name}`} />
+        </label>
+        <label className="flex items-center gap-1">макс
+          <input className={field} inputMode="decimal" value={value.max} placeholder="—" onChange={(e) => onChange({ ...value, max: e.target.value })} aria-label={`Максимална температура за ${name}`} />
+        </label>
+        {custom && (
+          <button type="button" onClick={() => onChange(normToText(def))} className="text-brand-gold/80 hover:text-brand-gold underline cursor-pointer">
+            по подразбиране ({normLabel(def)})
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function EquipmentModal({
+  storages,
+  unitNorms,
   fridges,
   freezers,
   employees,
@@ -2661,6 +2705,8 @@ function EquipmentModal({
   onSave,
   onClose,
 }: {
+  storages: string[];
+  unitNorms?: TempNormEntry[];
   fridges: string[];
   freezers: string[];
   employees: Employee[];
@@ -2671,6 +2717,8 @@ function EquipmentModal({
   onSave: (patch: {
     customFridges: string[];
     customFreezers: string[];
+    customStorages: string[];
+    unitNorms: TempNormEntry[];
     customEmployees: Employee[];
     hasHotPoint: boolean;
     hotAppliances: string[];
@@ -2681,6 +2729,22 @@ function EquipmentModal({
 }) {
   const [localFridges, setLocalFridges] = useState<string[]>(fridges);
   const [localFreezers, setLocalFreezers] = useState<string[]>(freezers);
+  const [localStorages, setLocalStorages] = useState<string[]>(storages);
+  const [newStorage, setNewStorage] = useState("");
+  // Нормите като текст (за да може да се пише „-", „2,5"…), по име на съоръжение.
+  const initialNorms = useMemo(() => {
+    const out: Record<string, NormText> = {};
+    const byName = normsByName(unitNorms);
+    const add = (n: string, t: TempUnitType) => {
+      const c = byName[n];
+      out[n] = normToText(c && isValidNorm(c) ? c : DEFAULT_TEMP_NORMS[t]);
+    };
+    fridges.forEach((n) => add(n, "fridge"));
+    freezers.forEach((n) => add(n, "freezer"));
+    storages.forEach((n) => add(n, "storage"));
+    return out;
+  }, [fridges, freezers, storages, unitNorms]);
+  const [localNorms, setLocalNorms] = useState<Record<string, NormText>>(initialNorms);
   const [localEmployees, setLocalEmployees] = useState<Employee[]>(employees);
   const [localHotPoint, setLocalHotPoint] = useState<boolean>(hotPoint);
   const [localAppliances, setLocalAppliances] = useState<string[]>(hotAppliances);
@@ -2698,6 +2762,9 @@ function EquipmentModal({
   const hasChanges =
     JSON.stringify(localFridges) !== JSON.stringify(fridges) ||
     JSON.stringify(localFreezers) !== JSON.stringify(freezers) ||
+    JSON.stringify(localStorages) !== JSON.stringify(storages) ||
+    JSON.stringify(localNorms) !== JSON.stringify(initialNorms) ||
+    newStorage.trim() !== "" ||
     JSON.stringify(localEmployees) !== JSON.stringify(employees) ||
     localHotPoint !== hotPoint ||
     JSON.stringify(localAppliances) !== JSON.stringify(hotAppliances) ||
@@ -2716,10 +2783,41 @@ function EquipmentModal({
   };
 
   const save = async () => {
+    const fridgesToSave = newFridge.trim() ? [...localFridges, newFridge.trim()] : localFridges;
+    const freezersToSave = newFreezer.trim() ? [...localFreezers, newFreezer.trim()] : localFreezers;
+    const storagesToSave = newStorage.trim() ? [...localStorages, newStorage.trim()] : localStorages;
+
+    const allNames = [...fridgesToSave, ...freezersToSave, ...storagesToSave];
+    const dup = allNames.find((n, i) => allNames.indexOf(n) !== i);
+    if (dup) {
+      alert(`Името „${dup}“ се среща повече от веднъж. Всяко съоръжение трябва да има уникално име.`);
+      return;
+    }
+
+    // Пазим само нормите, различни от тези по подразбиране.
+    const normsToSave: TempNormEntry[] = [];
+    const typed: [string, TempUnitType][] = [
+      ...fridgesToSave.map((n) => [n, "fridge"] as [string, TempUnitType]),
+      ...freezersToSave.map((n) => [n, "freezer"] as [string, TempUnitType]),
+      ...storagesToSave.map((n) => [n, "storage"] as [string, TempUnitType]),
+    ];
+    for (const [name, type] of typed) {
+      const t = localNorms[name];
+      if (!t) continue;
+      const min = textToNum(t.min);
+      const max = textToNum(t.max);
+      const norm: TempNorm = {};
+      if (min !== undefined) norm.min = min;
+      if (max !== undefined) norm.max = max;
+      if (Number.isNaN(min) || Number.isNaN(max) || !isValidNorm(norm)) {
+        alert(`Невалидна норма за „${name}“. Въведете поне една граница, като минималната е по-ниска от максималната (напр. мин 2, макс 6).`);
+        return;
+      }
+      if (JSON.stringify(norm) !== JSON.stringify(DEFAULT_TEMP_NORMS[type])) normsToSave.push({ name, ...norm });
+    }
+
     setSaving(true);
     try {
-      const fridgesToSave = newFridge.trim() ? [...localFridges, newFridge.trim()] : localFridges;
-      const freezersToSave = newFreezer.trim() ? [...localFreezers, newFreezer.trim()] : localFreezers;
       const employeesToSave = newEmpName.trim()
         ? [...localEmployees, { name: newEmpName.trim(), role: newEmpRole.trim() }]
         : localEmployees;
@@ -2731,6 +2829,8 @@ function EquipmentModal({
       await onSave({
         customFridges: fridgesToSave,
         customFreezers: freezersToSave,
+        customStorages: storagesToSave,
+        unitNorms: normsToSave,
         customEmployees: employeesToSave,
         hasHotPoint: localHotPoint,
         hotAppliances: localHotPoint ? localAppliances : [],
@@ -2908,86 +3008,56 @@ function EquipmentModal({
             </div>
           )}
 
-          {/* Хладилни + Фризери */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {/* Хладилни */}
-            <div className="rounded-2xl border border-white/8 bg-white/2 p-4 space-y-3">
-              {sectionTitle(<Thermometer className="h-4 w-4" />, "Хладилни уреди и студени витрини (0…+4°C)")}
-              <div className="space-y-1.5 min-h-[40px]">
-                {localFridges.length === 0 && (
-                  <p className="text-xs text-white/25 italic px-1">Няма добавени хладилни</p>
-                )}
-                {localFridges.map((f, i) => (
-                  <div key={i}>{listRow(f, () => setLocalFridges(localFridges.filter((_, j) => j !== i)))}</div>
-                ))}
-              </div>
-              <div className="flex gap-2 pt-1">
-                <input
-                  className={inputStyle}
-                  placeholder="напр. Хладилник №1, Студена витрина, Хладилна камера"
-                  value={newFridge}
-                  onChange={(e) => setNewFridge(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const v = newFridge.trim();
-                      if (!v) return;
-                      setLocalFridges([...localFridges, v]);
-                      setNewFridge("");
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    const v = newFridge.trim();
-                    if (!v) return;
-                    setLocalFridges([...localFridges, v]);
-                    setNewFridge("");
-                  }}
-                  className="shrink-0 bg-brand-gold text-brand-dark rounded-xl px-3.5 cursor-pointer border-0 hover:bg-brand-gold-light transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Фризери */}
-            <div className="rounded-2xl border border-white/8 bg-white/2 p-4 space-y-3">
-              {sectionTitle(<Snowflake className="h-4 w-4" />, "Фризери (≤ −18°C)")}
-              <div className="space-y-1.5 min-h-[40px]">
-                {localFreezers.length === 0 && (
-                  <p className="text-xs text-white/25 italic px-1">Няма добавени фризери</p>
-                )}
-                {localFreezers.map((f, i) => (
-                  <div key={i}>{listRow(f, () => setLocalFreezers(localFreezers.filter((_, j) => j !== i)))}</div>
-                ))}
-              </div>
-              <div className="flex gap-2 pt-1">
-                <input
-                  className={inputStyle}
-                  placeholder="напр. Фризер №1"
-                  value={newFreezer}
-                  onChange={(e) => setNewFreezer(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const v = newFreezer.trim();
-                      if (!v) return;
-                      setLocalFreezers([...localFreezers, v]);
-                      setNewFreezer("");
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    const v = newFreezer.trim();
-                    if (!v) return;
-                    setLocalFreezers([...localFreezers, v]);
-                    setNewFreezer("");
-                  }}
-                  className="shrink-0 bg-brand-gold text-brand-dark rounded-xl px-3.5 cursor-pointer border-0 hover:bg-brand-gold-light transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
+          {/* Температурни съоръжения: хладилни, фризери, складови помещения */}
+          <div className="space-y-2">
+            <p className="text-xs text-white/45 leading-relaxed">
+              Всяко съоръжение получава свой температурен чек-лист. Нормата е по подразбиране според вида, но можете да
+              зададете собствена минимална и максимална граница — стойностите извън нея се маркират в червено.
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {([
+                { type: "fridge" as const, list: localFridges, setList: setLocalFridges, draft: newFridge, setDraft: setNewFridge, icon: <Thermometer className="h-4 w-4" />, placeholder: "напр. Хладилник №1, Хладилна камера" },
+                { type: "freezer" as const, list: localFreezers, setList: setLocalFreezers, draft: newFreezer, setDraft: setNewFreezer, icon: <Snowflake className="h-4 w-4" />, placeholder: "напр. Фризер №1" },
+                { type: "storage" as const, list: localStorages, setList: setLocalStorages, draft: newStorage, setDraft: setNewStorage, icon: <StorageIcon className="h-4 w-4" />, placeholder: "напр. Склад за сухи храни" },
+              ]).map((sec) => {
+                const addItem = () => {
+                  const v = sec.draft.trim();
+                  if (!v) return;
+                  sec.setList([...sec.list, v]);
+                  setLocalNorms((prev) => ({ ...prev, [v]: prev[v] ?? normToText(DEFAULT_TEMP_NORMS[sec.type]) }));
+                  sec.setDraft("");
+                };
+                return (
+                  <div key={sec.type} className="rounded-2xl border border-white/8 bg-white/2 p-4 space-y-3">
+                    {sectionTitle(sec.icon, `${TEMP_UNIT_LABELS[sec.type]} (${normLabel(DEFAULT_TEMP_NORMS[sec.type])})`)}
+                    <div className="space-y-1.5 min-h-[40px]">
+                      {sec.list.length === 0 && <p className="text-xs text-white/25 italic px-1">Няма добавени</p>}
+                      {sec.list.map((name, i) => (
+                        <UnitNormRow
+                          key={`${name}-${i}`}
+                          name={name}
+                          type={sec.type}
+                          value={localNorms[name] ?? normToText(DEFAULT_TEMP_NORMS[sec.type])}
+                          onChange={(v) => setLocalNorms((prev) => ({ ...prev, [name]: v }))}
+                          onRemove={() => sec.setList(sec.list.filter((_, j) => j !== i))}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <input
+                        className={inputStyle}
+                        placeholder={sec.placeholder}
+                        value={sec.draft}
+                        onChange={(e) => sec.setDraft(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") addItem(); }}
+                      />
+                      <button onClick={addItem} className="shrink-0 bg-brand-gold text-brand-dark rounded-xl px-3.5 cursor-pointer border-0 hover:bg-brand-gold-light transition-colors" aria-label="Добави">
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -3118,6 +3188,10 @@ function EquipmentModal({
 
 interface RegistersTabProps {
   email: string;
+  /** Складови помещения (норма по подразбиране 0…+25°C) */
+  storages?: string[];
+  /** Собствени температурни граници по съоръжение */
+  unitNorms?: TempNormEntry[];
   /** Обектът на фирмата, чиито дневници се показват ("main" / липсва = основният). */
   siteId?: string;
   firm: PrintFirmInfo;
@@ -3150,6 +3224,8 @@ interface RegistersTabProps {
   onSaveEquipment?: (patch: {
     customFridges?: string[];
     customFreezers?: string[];
+    customStorages?: string[];
+    unitNorms?: TempNormEntry[];
     customEmployees?: Employee[];
     hasHotPoint?: boolean;
     hotAppliances?: string[];
@@ -3196,6 +3272,8 @@ const DAILY_USAGE_ID = "daily-usage";
 
 export default function RegistersTab({
   email,
+  storages = [],
+  unitNorms,
   siteId,
   firm,
   fridges,
@@ -3404,13 +3482,18 @@ export default function RegistersTab({
     [hotPoint, ownedAppliances, meat, allowedIds]
   );
 
-  const units = useMemo(
-    () => [
-      ...fridges.map((n) => ({ name: n, type: "fridge" as const })),
-      ...freezers.map((n) => ({ name: n, type: "freezer" as const })),
-    ],
-    [fridges, freezers]
-  );
+  const units = useMemo<TempUnit[]>(() => {
+    const byName = normsByName(unitNorms);
+    const make = (name: string, type: TempUnitType): TempUnit => {
+      const custom = byName[name];
+      return { name, type, norm: custom && isValidNorm(custom) ? custom : DEFAULT_TEMP_NORMS[type] };
+    };
+    return [
+      ...fridges.map((n) => make(n, "fridge")),
+      ...freezers.map((n) => make(n, "freezer")),
+      ...storages.map((n) => make(n, "storage")),
+    ];
+  }, [fridges, freezers, storages, unitNorms]);
 
   useEffect(() => {
     if (units.length > 0 && !units.some((u) => u.name === activeTempUnit)) {
@@ -3566,22 +3649,15 @@ export default function RegistersTab({
           const t2h_h = Math.random() > 0.5 ? "18" : "17";
           const t2h = `${t2h_h}:${t2h_h === "18" ? String(Math.floor(Math.random() * 31)).padStart(2, "0") : t2h_m}`;
 
-          let t1 = "";
-          let t2 = "";
-          if (unit.type === "freezer") {
-            t1 = (-18.5 - Math.random() * 2.8).toFixed(1);
-            t2 = (-18.5 - Math.random() * 2.8).toFixed(1);
-          } else {
-            t1 = (1.2 + Math.random() * 2.5).toFixed(1);
-            t2 = (1.2 + Math.random() * 2.5).toFixed(1);
-          }
+          const t1 = sampleTempInNorm(unit.norm);
+          const t2 = sampleTempInNorm(unit.norm);
 
           newRows[dayStr] = { t1h, t1, t2h, t2, action: "", result: "Норма", sign: "✓" };
           unitChanged = true;
         }
 
         if (unitChanged) {
-          updatedUnits[unit.name] = { ...u, rows: newRows };
+          updatedUnits[unit.name] = { ...u, type: unit.type, norm: unit.norm, rows: newRows };
           tempChanged = true;
         }
       });
@@ -5119,6 +5195,8 @@ export default function RegistersTab({
 
       {showSettings && !readOnly && (
         <EquipmentModal
+          storages={storages}
+          unitNorms={unitNorms}
           fridges={fridges}
           freezers={freezers}
           employees={employees}

@@ -10,6 +10,7 @@
 
 import type { HygieneRoom } from "@/components/registers/weeklyHygiene";
 import type { CleaningTemplate } from "@/components/registers/cleaningChecklist";
+import type { TempNormEntry } from "@/components/registers/tempUnits";
 
 export const MAIN_SITE_ID = "main";
 
@@ -20,6 +21,8 @@ export interface SiteFields {
   manager?: string;
   customFridges?: string[];
   customFreezers?: string[];
+  customStorages?: string[];
+  unitNorms?: TempNormEntry[];
   customEmployees?: { name: string; role: string }[];
   hasHotPoint?: boolean;
   hotAppliances?: string[];
@@ -43,7 +46,7 @@ export interface SiteFields {
 
 export const SITE_FIELD_KEYS: (keyof SiteFields)[] = [
   "niche", "address", "manager",
-  "customFridges", "customFreezers", "customEmployees",
+  "customFridges", "customFreezers", "customStorages", "unitNorms", "customEmployees",
   "hasHotPoint", "hotAppliances", "restDays",
   "hygieneLayout", "cleaningLayout", "cleaningTemplate",
   "autoDuner", "autoPrework", "autoTemps", "autoStaffHygiene", "autoCleaning",

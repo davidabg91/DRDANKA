@@ -26,6 +26,7 @@ import SitesBar, { type SiteFormData } from "@/components/registers/SitesBar";
 import { MAIN_SITE_ID, sitesOf, siteCountOf, siteProfilePatch, newSiteId, withoutUndefined, type ExtraSite } from "@/lib/sites";
 import type { HygieneRoom } from "@/components/registers/weeklyHygiene";
 import type { CleaningTemplate } from "@/components/registers/cleaningChecklist";
+import type { TempNormEntry } from "@/components/registers/tempUnits";
 import BankTransferNotice from "@/components/BankTransferNotice";
 import { defaultHotPointForSector, isMeatShopNiche, STORE_REGISTER_IDS, REGISTER_BY_ID, registersForMeat, registersFor } from "@/data/storeRegisters";
 import { PLANS, PLAN_BY_ID, PLAN_RANK, PlanId, effectivePlan, planFeeEur, formatEur, EXTRA_SITE_DISCOUNT, planHasChat, planHasExtras, isExtraRegister, addMonthsISO, LEGACY_PLAN, planDelta } from "@/lib/plans";
@@ -164,6 +165,10 @@ export interface DankaUser {
   customFridges?: string[];
   /** Freezers (≤ −18°C) — separate from fridges (0…+4°C) for the temperature check-lists. */
   customFreezers?: string[];
+  /** Складови помещения в температурните чек-листове (норма по подразбиране 0…+25°C). */
+  customStorages?: string[];
+  /** Собствени температурни граници по съоръжение (масив — презаписва се изцяло; вж. registers/tempUnits.ts). */
+  unitNorms?: TempNormEntry[];
   /** Staff list used across the self-control registers (staff hygiene card, health books, trainings, workwear). */
   customEmployees?: { name: string; role: string }[];
   /** Обектът има топла точка (скара, фритюрник, дюнер…) — включва допълнителните контролни карти.
@@ -6293,6 +6298,8 @@ export default function ProfilePage() {
                               }}
                               fridges={auditSv?.customFridges ?? []}
                               freezers={auditSv?.customFreezers ?? []}
+                              storages={auditSv?.customStorages ?? []}
+                              unitNorms={auditSv?.unitNorms}
                               employees={auditSv?.customEmployees ?? []}
                               meat={isMeatShopNiche(auditNiche)}
                               hotPoint={auditSv?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(auditNiche))}
@@ -6438,6 +6445,8 @@ export default function ProfilePage() {
                   }}
                   fridges={sv?.customFridges ?? ["Хладилна витрина №1"]}
                   freezers={sv?.customFreezers ?? ["Фризер №1"]}
+                  storages={sv?.customStorages ?? []}
+                  unitNorms={sv?.unitNorms}
                   employees={sv?.customEmployees ?? []}
                   meat={isMeatShopNiche(niche)}
                   hotPoint={sv?.hasHotPoint ?? defaultHotPointForSector(getSectorForNiche(niche))}
