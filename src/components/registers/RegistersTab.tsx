@@ -1143,34 +1143,6 @@ function RowsEditor({
 
         const invoiceDate = result.date || refDate;
         
-        // Generate automatic dummy/fictitious values for empty ones
-        const randomBatch = `L-${String(Math.floor(10000 + Math.random() * 90000))}`;
-        const foodLower = String(item.foodName || "").toLowerCase();
-        
-        // Expiry date calculation
-        let calculatedExpiry = item.expiryDate || "";
-        if (!calculatedExpiry) {
-          const dObj = new Date(invoiceDate);
-          if (foodLower.includes("месо") || foodLower.includes("мляко") || foodLower.includes("пиле") || foodLower.includes("сирене") || foodLower.includes("кашкавал")) {
-            dObj.setDate(dObj.getDate() + 10); // 10 days for fresh meat/dairy
-          } else if (foodLower.includes("замразен") || foodLower.includes("фризер") || foodLower.includes("риба")) {
-            dObj.setDate(dObj.getDate() + 180); // 6 months for frozen
-          } else {
-            dObj.setDate(dObj.getDate() + 365); // 1 year for dry
-          }
-          calculatedExpiry = getLocalDateISO(dObj);
-        }
-
-        // Temperature calculation
-        let calculatedTemp = "";
-        if (foodLower.includes("замразен") || foodLower.includes("сладолед") || foodLower.includes("фризер")) {
-          calculatedTemp = (-18.2 - Math.random() * 2.5).toFixed(1);
-        } else if (foodLower.includes("месо") || foodLower.includes("мляко") || foodLower.includes("пиле") || foodLower.includes("сирене") || foodLower.includes("кашкавал") || foodLower.includes("яйца")) {
-          calculatedTemp = (1.5 + Math.random() * 2.2).toFixed(1);
-        } else {
-          calculatedTemp = (15.0 + Math.random() * 3.5).toFixed(1); // ambient/dry temp
-        }
-
         row.date = invoiceDate;
         row.supplier = result.supplier || "";
         // Скрити полета (не са колони): ИИ прочита адреса/телефона на доставчика
@@ -1183,13 +1155,15 @@ function RowsEditor({
         if (aiContact) row.supplierContact = aiContact;
         const aiGoods = String(result.supplierGoods || "").trim();
         if (aiGoods) row.supplierGoods = aiGoods;
+        // Само прочетеното от документа. Партида, срок, количество и № на документ
+        // остават празни, ако ги няма на него; температурата и подписът винаги се
+        // въвеждат от човек след реално измерване и проверка — дневникът е
+        // официален документ и не бива да съдържа измислени стойности.
         row.food = item.foodName || "";
-        row.batch = item.batch || randomBatch;
-        row.expiry = calculatedExpiry;
-        row.qty = item.quantity || `${Math.floor(2 + Math.random() * 10)} бр.`;
-        row.docRef = result.documentNumber || `Ф-№${String(Math.floor(100000 + Math.random() * 900000))}`;
-        row.temp = calculatedTemp;
-        row.sign = "✓";
+        row.batch = item.batch || "";
+        row.expiry = item.expiryDate || "";
+        row.qty = item.quantity || "";
+        row.docRef = result.documentNumber || "";
 
         return row;
       });
@@ -1462,6 +1436,17 @@ function RowsEditor({
             </div>
           )}
 
+          {def.id === "incoming" && !readOnly && (() => {
+            const missing = entries.filter((r) => r.food && !String(r.temp || "").trim()).length;
+            return missing > 0 ? (
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-[11px] rounded-xl px-4 py-2">
+                Въведете измерената температура при приемане за {missing}{" "}
+                {missing === 1 ? "доставка" : "доставки"} (маркирани в жълто). Температурата не се попълва автоматично —
+                въвежда се след реално измерване.
+              </div>
+            ) : null;
+          })()}
+
           {menuScanError && (
             <div className="bg-red-50 border border-red-200 text-red-700 text-[10px] rounded-xl px-4 py-2 flex items-center justify-between animate-fadeIn">
               <span>{menuScanError}</span>
@@ -1715,7 +1700,14 @@ function RowsEditor({
                 <tr key={idx} className="border-b border-brand-green/5 hover:bg-brand-light/20 align-top">
                   <td className="p-2 text-center font-bold text-brand-dark/50">{idx + 1}</td>
                   {cols.map((c) => (
-                    <td key={c.key} className="p-1.5">
+                    <td
+                      key={c.key}
+                      className={
+                        def.id === "incoming" && c.key === "temp" && row.food && !String(row.temp || "").trim()
+                          ? "p-1.5 bg-amber-100/70 rounded"
+                          : "p-1.5"
+                      }
+                    >
                       <CellInput
                         col={c}
                         value={row[c.key] || ""}

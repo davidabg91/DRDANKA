@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useAuth, useDankaUsers, useCourses, useTrainings, useEnrollments, useMyEnrollments, useBookings, useMyBookings } from "@/lib/firebaseHooks";
 import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { doc, setDoc, deleteDoc, updateDoc, deleteField } from "firebase/firestore";
+import { doc, setDoc, getDoc, deleteDoc, updateDoc, deleteField, writeBatch, serverTimestamp } from "firebase/firestore";
+import { isValidEik, normalizeEik } from "@/lib/eik";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
@@ -137,6 +138,8 @@ export interface DankaUser {
    */
   subscriptionStatus?: 'none' | 'pending' | 'awaiting_payment' | 'approved' | 'expired' | 'trial';
   trialStartedAt?: string;
+  /** Epoch ms of trial start — checked by firestore.rules against request.time. */
+  trialStartedAtMs?: number;
   /** Subscription fee in EUR set by admin upon approval. 0 = paid offline (cash). */
   subscriptionFeeEur?: number;
   /** ISO timestamp when subscription was actually paid (online or marked-cash). */
@@ -1036,6 +1039,8 @@ export default function ProfilePage() {
   };
 
   // Register & Apply handler
+  const TRIAL_USED_MSG =
+    "Безплатният пробен период вече е използван за този ЕИК. За достъп изберете абонаментен пакет или се свържете с д-р Николова на 0887 902 198.";
   const handleRegisterAndApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regEmail || !regPassword || !applyFirmName || !applyContact || !applyPhone || !applyAddress || !applyDesc) {
@@ -1046,6 +1051,23 @@ export default function ProfilePage() {
       alert("Паролите не съвпадат.");
       return;
     }
+    const eik = normalizeEik(applyEik);
+    if (!isValidEik(eik)) {
+      alert("Моля, въведете валиден ЕИК / Булстат на фирмата (9 или 13 цифри).");
+      return;
+    }
+
+    // Безплатният пробен период е един на ЕИК. Проверяваме преди да създадем
+    // акаунта, за да не остане осиротял вход в Firebase Auth.
+    const trialRef = doc(db, "trialClaims", eik);
+    try {
+      if ((await getDoc(trialRef)).exists()) {
+        alert(TRIAL_USED_MSG);
+        return;
+      }
+    } catch {
+      // При грешка при четенето продължаваме — правилата пак ще спрат повторна проба.
+    }
 
     try {
       const cleanRegEmail = regEmail.trim().toLowerCase();
@@ -1053,7 +1075,7 @@ export default function ProfilePage() {
       const newUser: DankaUser = {
         email: cleanRegEmail,
         firmName: applyFirmName,
-        eik: applyEik || "Няма въведен",
+        eik,
         contact: applyContact,
         phone: applyPhone,
         sector: applySector,
@@ -1064,13 +1086,26 @@ export default function ProfilePage() {
         status: "approved",
         subscriptionStatus: "trial",
         trialStartedAt: new Date().toISOString(),
+        trialStartedAtMs: Date.now(),
         role: "user",
         assignedDocs: [],
         messages: []
       };
-      
-      const ok = await setFullUser(cleanRegEmail, newUser);
-      if (!ok) return;
+
+      // Профилът и „ЕИК е използвал проба" се записват заедно — правилата
+      // отказват пробен профил без нов запис в trialClaims за същия ЕИК.
+      try {
+        const { password: _omitPassword, ...safeUser } = newUser;
+        const batch = writeBatch(db);
+        batch.set(doc(db, "users", cleanRegEmail), safeUser);
+        batch.set(trialRef, { createdAt: serverTimestamp() });
+        await batch.commit();
+      } catch (writeErr) {
+        console.error("Trial registration failed:", writeErr);
+        await auth.currentUser?.delete().catch(() => {});
+        alert(TRIAL_USED_MSG);
+        return;
+      }
 
       // Clean registration form fields:
       setRegEmail("");
@@ -1219,7 +1254,7 @@ export default function ProfilePage() {
       const sub = me?.subscriptionStatus ?? "approved";
       const activeNow = me?.status === "approved" && (
         (sub === "approved" && (me?.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true)) ||
-        (sub === "trial" && trialDaysLeft(me?.trialStartedAt) >= 0)
+        (sub === "trial" && trialDaysLeft(me?.trialStartedAt, me?.trialStartedAtMs) >= 0)
       );
       const updates: Partial<DankaUser> = {
         requestedPlan: planId,
@@ -1352,9 +1387,10 @@ export default function ProfilePage() {
     return Math.ceil((exp - Date.now()) / (1000 * 60 * 60 * 24));
   };
 
-  const trialDaysLeft = (trialStartedAt?: string): number => {
-    if (!trialStartedAt) return 0;
-    const start = new Date(trialStartedAt).getTime();
+  const trialDaysLeft = (trialStartedAt?: string, trialStartedAtMs?: number): number => {
+    // trialStartedAtMs е проверен от правилата спрямо сървърното време — ползваме него, когато го има.
+    const start = typeof trialStartedAtMs === "number" ? trialStartedAtMs : trialStartedAt ? new Date(trialStartedAt).getTime() : NaN;
+    if (Number.isNaN(start)) return 0;
     const fourteenDays = 14 * 24 * 60 * 60 * 1000;
     const exp = start + fourteenDays;
     const diff = exp - Date.now();
@@ -1436,7 +1472,7 @@ export default function ProfilePage() {
     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
     if (!me) return;
     
-    const hasTrial = me.status === "approved" && me.subscriptionStatus === "trial" && trialDaysLeft(me.trialStartedAt) >= 0;
+    const hasTrial = me.status === "approved" && me.subscriptionStatus === "trial" && trialDaysLeft(me.trialStartedAt, me.trialStartedAtMs) >= 0;
     const hasSub = me.status === "approved" && (me.subscriptionStatus ?? "approved") === "approved" && (me.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true);
     const isSubscribed = hasSub || hasTrial;
 
@@ -3173,12 +3209,14 @@ export default function ProfilePage() {
 
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1 col-span-2 sm:col-span-1">
-                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">ЕИК / Булстат</label>
+                                <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">ЕИК / Булстат <span className="text-red-400">*</span></label>
                                 <input 
                                   type="text" 
+                                  inputMode="numeric"
+                                  required
                                   value={applyEik} 
                                   onChange={(e) => setApplyEik(e.target.value)} 
-                                  placeholder="207654321" 
+                                  placeholder="9 или 13 цифри" 
                                   className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold bg-black/20 backdrop-blur-md transition-all text-white placeholder-white/30 shadow-sm font-mono"
                                 />
                               </div>
@@ -3648,7 +3686,7 @@ export default function ProfilePage() {
                   ) : (() => {
                     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
                     const subStatus = me?.subscriptionStatus ?? "approved"; // legacy default
-                    const hasTrial = me?.status === "approved" && subStatus === "trial" && trialDaysLeft(me?.trialStartedAt) >= 0;
+                    const hasTrial = me?.status === "approved" && subStatus === "trial" && trialDaysLeft(me?.trialStartedAt, me?.trialStartedAtMs) >= 0;
                     const hasSub = me?.status === "approved" && subStatus === "approved" && (me?.expiresAt ? (daysUntilExpiry(me.expiresAt) ?? 0) >= 0 : true);
                     const isSubscribed = hasSub || hasTrial;
                     const pendingCount = (me?.assignedDocs || []).filter(d => d.status === "pending").length;
@@ -4230,7 +4268,7 @@ export default function ProfilePage() {
                                           Чака плащане ({u.subscriptionFeeEur} €)
                                         </span>
                                       ) : u.subscriptionStatus === "trial" ? (() => {
-                                        const d = trialDaysLeft(u.trialStartedAt);
+                                        const d = trialDaysLeft(u.trialStartedAt, u.trialStartedAtMs);
                                         return d >= 0 ? (
                                           <span className="inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-blue-100 text-blue-800 animate-pulse">
                                             Тест период ({d} дни)
@@ -6159,7 +6197,7 @@ export default function ProfilePage() {
                     const currentUser = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
                     const status = currentUser?.status ?? "pending";
                     const subStatus = currentUser?.subscriptionStatus ?? "approved"; // legacy default = approved
-                    const hasTrial = status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt) >= 0;
+                    const hasTrial = status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt, currentUser?.trialStartedAtMs) >= 0;
                     const hasSub = status === "approved" && subStatus === "approved" && (currentUser?.expiresAt ? (daysUntilExpiry(currentUser.expiresAt) ?? 0) >= 0 : true);
                     const isSubscribed = hasSub || hasTrial;
 
@@ -7069,7 +7107,7 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt) < 0 && (
+                  {status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt, currentUser?.trialStartedAtMs) < 0 && (
                     <div className="bg-red-50 border border-red-200 text-red-900 rounded-2xl p-5 flex items-start gap-4">
                       <AlertTriangle className="h-6 w-6 text-red-600 shrink-0 mt-0.5 animate-pulse" />
                       <div className="space-y-1 text-sm font-sans text-left">
@@ -7081,13 +7119,13 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  {status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt) >= 0 && (
+                  {status === "approved" && subStatus === "trial" && trialDaysLeft(currentUser?.trialStartedAt, currentUser?.trialStartedAtMs) >= 0 && (
                     <div className="bg-emerald-50 border border-emerald-200 text-emerald-950 rounded-2xl p-5 flex items-start gap-4">
                       <CheckCircle className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
                       <div className="space-y-1 text-sm font-sans text-left">
                         <p className="font-bold text-base">Вие сте в безплатен пробен период!</p>
                         <p className="text-xs text-emerald-900/80 leading-relaxed">
-                          Остават Ви още <strong className="text-emerald-700 font-black">{trialDaysLeft(currentUser?.trialStartedAt)} дни</strong> безплатен пробен достъп с възможностите на план „{PLAN_BY_ID.standard.name}“. За да си осигурите дългосрочно съответствие и сигурност, можете да изберете абонаментен пакет от предложените по-долу по всяко време.
+                          Остават Ви още <strong className="text-emerald-700 font-black">{trialDaysLeft(currentUser?.trialStartedAt, currentUser?.trialStartedAtMs)} дни</strong> безплатен пробен достъп с възможностите на план „{PLAN_BY_ID.standard.name}“. За да си осигурите дългосрочно съответствие и сигурност, можете да изберете абонаментен пакет от предложените по-долу по всяко време.
                         </p>
                       </div>
                     </div>
