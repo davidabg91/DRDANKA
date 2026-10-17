@@ -540,10 +540,10 @@ export default function HaccpSistemaPage() {
                 Одит преди проверка от БАБХ
               </span>
               <span className="font-serif text-2xl font-black text-brand-green block">
-                600 €
+                150–300 €
               </span>
               <p className="text-xs text-brand-dark/70 leading-relaxed">
-                Фиксирана цена за независим одит на място с писмен доклад и план
+                Според обекта — независим одит на място с писмен доклад и план
                 с коригиращи действия.{" "}
                 <Link
                   href="/services#proverka-predi-proverkata"

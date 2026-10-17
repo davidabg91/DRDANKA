@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { PLANS } from "@/lib/plans";
 import {
@@ -25,7 +24,6 @@ import {
   Tag,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
-import PackagePurchaseModal from "@/components/PackagePurchaseModal";
 
 interface ServiceItem {
   title: string;
@@ -135,7 +133,6 @@ const SERVICES: ServiceItem[] = [
 ];
 
 export default function ServicesClient() {
-  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen pb-16">
@@ -278,8 +275,8 @@ export default function ServicesClient() {
                     </h3>
                   </div>
                   <div className="text-right shrink-0 bg-white/10 border border-brand-gold/40 rounded-xl px-3.5 py-2 backdrop-blur-sm">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-brand-gold block">Еднократно</span>
-                    <span className="font-serif text-2xl font-black text-white">600 <span className="text-sm font-sans text-brand-gold">€</span></span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-brand-gold block">Според обекта</span>
+                    <span className="font-serif text-2xl font-black text-white whitespace-nowrap">150–300 <span className="text-sm font-sans text-brand-gold">€</span></span>
                   </div>
                 </div>
 
@@ -317,12 +314,12 @@ export default function ServicesClient() {
                 <span className="text-[10px] text-white/50 flex items-center gap-1">
                   <ShieldCheck className="h-3.5 w-3.5 text-brand-gold" /> Извършва се лично от д-р Данка Николова
                 </span>
-                <button
-                  onClick={() => setIsAuditModalOpen(true)}
+                <Link
+                  href={`/contact?service=${encodeURIComponent("Проверка преди проверката")}`}
                   className="w-full sm:w-auto px-6 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl bg-brand-gold hover:bg-brand-gold-light text-brand-dark shadow-md hover:-translate-y-0.5 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  Заявете одит (600 €) <ChevronRight className="h-4 w-4" />
-                </button>
+                  Заявете одит <ChevronRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
 
@@ -454,16 +451,6 @@ export default function ServicesClient() {
 
       </div>
 
-      {/* Package Purchase Modal for Проверка преди проверката */}
-      <PackagePurchaseModal
-        open={isAuditModalOpen}
-        onClose={() => setIsAuditModalOpen(false)}
-        packageId="proverka-predi-proverkata"
-        packageTitle="Проверка преди проверката (Одит на място)"
-        packageKind="training"
-        contentType="video"
-        priceEur={600}
-      />
     </div>
   );
 }

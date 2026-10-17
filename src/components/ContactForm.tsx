@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Send, CheckCircle2, AlertCircle } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
-import BankTransferNotice from "@/components/BankTransferNotice";
 
 export default function ContactForm() {
   const searchParams = useSearchParams();
@@ -63,8 +62,9 @@ export default function ContactForm() {
     const nowIso = new Date().toISOString();
 
     const isAuditService = serviceTitle.includes("Проверка преди проверката");
-    const servicePriceEur = isAuditService ? 600 : 0;
-    const servicePriceLabel = isAuditService ? "600 €" : "По запитване";
+    // Audit price depends on the site (150–300 €) — confirmed by Dr. Nikolova after the request.
+    const servicePriceEur = 0;
+    const servicePriceLabel = isAuditService ? "150–300 € (според обекта)" : "По запитване";
 
     const payload = {
       id: bookingId,
@@ -146,7 +146,7 @@ export default function ContactForm() {
           <p className="text-brand-dark/80 text-sm leading-relaxed max-w-md mx-auto">
             {isAudit ? (
               <>
-                Вашата заявка за <strong className="text-brand-green">„Проверка преди проверката“</strong> е записана. За да потвърдите датата за одит на място, направете банков превод по сметката по-долу:
+                Вашата заявка за <strong className="text-brand-green">„Проверка преди проверката“</strong> е записана. Цената е от 150 до 300 € в зависимост от обекта — д-р Данка Николова ще се свърже с Вас в рамките на 24 часа, за да уточни точната сума и датата за одит на място.
               </>
             ) : (
               <>
@@ -156,13 +156,6 @@ export default function ContactForm() {
           </p>
         </div>
 
-        {isAudit && (
-          <BankTransferNotice
-            amount="600 €"
-            reference="Проверка преди проверката"
-            variant="dark"
-          />
-        )}
 
         <button
           onClick={() => setStatus("idle")}

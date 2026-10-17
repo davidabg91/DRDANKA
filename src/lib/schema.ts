@@ -135,8 +135,15 @@ export function offerCatalogSchema() {
         provider: { "@id": ORG_ID },
         areaServed: { "@type": "Country", name: "България" },
       },
-      ...("priceEur" in service && service.priceEur != null
-        ? { price: service.priceEur, priceCurrency: "EUR" }
+      ...("priceMinEur" in service && service.priceMinEur != null
+        ? {
+            priceSpecification: {
+              "@type": "PriceSpecification",
+              minPrice: service.priceMinEur,
+              maxPrice: service.priceMaxEur,
+              priceCurrency: "EUR",
+            },
+          }
         : {}),
     })),
   };
