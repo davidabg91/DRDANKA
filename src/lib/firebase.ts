@@ -17,6 +17,8 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
 export const auth = getAuth(app);
+// Firebase emails (password reset, verification) and its action pages in Bulgarian.
+auth.languageCode = "bg";
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 

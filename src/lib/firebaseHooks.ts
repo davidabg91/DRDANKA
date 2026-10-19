@@ -134,7 +134,8 @@ export function useDankaUsers() {
 
   // Send a password reset email through Firebase Auth.
   const sendPasswordReset = async (email: string) => {
-    await sendPasswordResetEmail(auth, email);
+    // After setting the new password, the Firebase page offers a "Продължи" link back to the login.
+    await sendPasswordResetEmail(auth, email, { url: "https://www.haccpspokoystvie.bg/profile" });
   };
 
   return { users, loading, updateUser, setFullUser, sendPasswordReset };
