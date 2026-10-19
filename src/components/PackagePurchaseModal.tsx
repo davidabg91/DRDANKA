@@ -12,6 +12,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import BankTransferNotice from "@/components/BankTransferNotice";
+import PasswordInput from "@/components/PasswordInput";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/fpixel";
 
 /**
@@ -409,11 +410,11 @@ export default function PackagePurchaseModal({
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Парола *</label>
-                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Мин. 6 символа" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                        <PasswordInput iconClassName="text-brand-dark/40 hover:text-brand-green" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Мин. 6 символа" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Потвърди парола *</label>
-                        <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Повтори паролата" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
+                        <PasswordInput iconClassName="text-brand-dark/40 hover:text-brand-green" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Повтори паролата" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
                       </div>
                     </div>
 

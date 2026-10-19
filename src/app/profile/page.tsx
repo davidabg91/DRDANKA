@@ -85,6 +85,7 @@ import {
   FilePlus,
   UserCheck
 } from "lucide-react";
+import PasswordInput from "@/components/PasswordInput";
 
 export interface AssignedMaterial {
   id: string;
@@ -1033,7 +1034,18 @@ export default function ProfilePage() {
         }
       }
     } catch (err: any) {
-      alert("Грешка при вход. Моля проверете имейл и парола.");
+      // Firebase returns one code per failure — show the real reason, not a generic message.
+      const code: string = err?.code || "";
+      const reasons: Record<string, string> = {
+        "auth/invalid-credential": "Грешен имейл или парола. Ако не помните паролата, натиснете „Забравена парола“.",
+        "auth/wrong-password": "Грешна парола. Ако не я помните, натиснете „Забравена парола“.",
+        "auth/user-not-found": "Няма регистриран профил с този имейл.",
+        "auth/invalid-email": "Имейлът не е във валиден формат.",
+        "auth/user-disabled": "Този профил е деактивиран. Свържете се с д-р Николова на 0887 902 198.",
+        "auth/too-many-requests": "Профилът е временно блокиран след няколко неуспешни опита за вход. Изчакайте 15–30 минути или сменете паролата чрез „Забравена парола“.",
+        "auth/network-request-failed": "Няма връзка с интернет. Проверете връзката и опитайте отново.",
+      };
+      alert(reasons[code] || `Грешка при вход${code ? ` (${code})` : ""}. Моля, опитайте отново.`);
     }
   };
 
@@ -3214,8 +3226,7 @@ export default function ProfilePage() {
                           </div>
                           <div className="space-y-1.5">
                             <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Парола</label>
-                            <input 
-                              type="password" 
+                            <PasswordInput 
                               required 
                               value={authPassword} 
                               onChange={(e) => setAuthPassword(e.target.value)} 
@@ -3269,8 +3280,7 @@ export default function ProfilePage() {
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
                                 <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Парола *</label>
-                                <input 
-                                  type="password" 
+                                <PasswordInput 
                                   required 
                                   value={regPassword} 
                                   onChange={(e) => setRegPassword(e.target.value)} 
@@ -3280,8 +3290,7 @@ export default function ProfilePage() {
                               </div>
                               <div className="space-y-1">
                                 <label className="text-[10px] font-black text-white/70 uppercase tracking-widest block pl-0.5">Повторете парола *</label>
-                                <input 
-                                  type="password" 
+                                <PasswordInput 
                                   required 
                                   value={regConfirmPassword} 
                                   onChange={(e) => setRegConfirmPassword(e.target.value)} 
