@@ -810,13 +810,59 @@ function RowsEditor({
   const [labelShelfHours, setLabelShelfHours] = useState(36);
   const [labelTemp, setLabelTemp] = useState("0°C до +4°C");
 
+  // Дневници, попълвани по дни (входящ контрол): по подразбиране се виждат
+  // само записите за избрания от календара ден, най-новите — най-горе.
+  const dateKey = recordDateKey(def);
+  const dayFilterable = def.id === "incoming" && !!dateKey;
+  const [showAllDays, setShowAllDays] = useState(false);
+  const dayView = dayFilterable && !showAllDays;
+  const dayCount = dayFilterable ? entries.filter((e) => e[dateKey!] === refDate).length : 0;
+  const visibleRows = useMemo(() => {
+    const all = entries.map((row, idx) => ({ row, idx }));
+    if (!dayView) return all;
+    return all.filter(({ row }) => row[dateKey!] === refDate).reverse();
+  }, [entries, dayView, dateKey, refDate]);
+
+  // След добавяне страницата превърта до новия ред и курсорът застава в него.
+  const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
+  const [scrollToIdx, setScrollToIdx] = useState<number | null>(null);
+  const [flashIdx, setFlashIdx] = useState<number | null>(null);
+  useEffect(() => {
+    if (scrollToIdx === null) return;
+    const el = rowRefs.current.get(scrollToIdx);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    const input = el.querySelector<HTMLElement>(
+      "input:not([type=date]):not([type=hidden]):not([readonly]), textarea, select"
+    );
+    input?.focus({ preventScroll: true });
+    setFlashIdx(scrollToIdx);
+    setScrollToIdx(null);
+    const t = setTimeout(() => setFlashIdx(null), 1600);
+    return () => clearTimeout(t);
+  }, [scrollToIdx, entries]);
+
   const addRow = () => {
     const blank: Record<string, string> = {};
     cols.forEach((c) => {
       blank[c.key] = "";
       if (c.type === "date" && (c.key === "date" || c.key === "from")) blank[c.key] = refDate;
     });
-    onUpdate((prev) => ({ ...prev, entries: [...(prev.entries || []), blank] }));
+    // При дневниците по дни новият ред се вмъква след последния запис до избрания
+    // ден включително — така месецът остава подреден хронологично и при печат.
+    let pos = entries.length;
+    if (dayFilterable) {
+      pos = 0;
+      entries.forEach((e, i) => {
+        if (String(e[dateKey!] || "") <= refDate) pos = i + 1;
+      });
+    }
+    onUpdate((prev) => {
+      const list = [...(prev.entries || [])];
+      list.splice(pos, 0, blank);
+      return { ...prev, entries: list };
+    });
+    setScrollToIdx(pos);
   };
 
   const autoFillDunerMonth = () => {
@@ -1171,6 +1217,9 @@ function RowsEditor({
         ...prev,
         entries: [...(prev.entries || []), ...newEntries],
       }));
+      // Документ с дата, различна от избрания ден, иначе би останал скрит от филтъра.
+      if (newEntries.some((r: Record<string, string>) => r.date !== refDate)) setShowAllDays(true);
+      setScrollToIdx(entries.length);
     } catch (err: any) {
       console.error("AI Scan Error:", err);
       setScanError(err.message || "Грешка при сканиране. Моля, опитайте пак.");
@@ -1674,6 +1723,33 @@ function RowsEditor({
           </div>
         </div>
       )}
+      {dayFilterable && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-xl border border-brand-green/15 bg-white p-0.5">
+            <button
+              onClick={() => setShowAllDays(false)}
+              className={`text-[10px] uppercase font-black px-3 py-1.5 rounded-lg cursor-pointer border-0 transition-colors ${
+                dayView ? "bg-brand-green text-white" : "bg-transparent text-brand-dark/60 hover:text-brand-green"
+              }`}
+            >
+              Само {dayLbl} · {dayCount}
+            </button>
+            <button
+              onClick={() => setShowAllDays(true)}
+              className={`text-[10px] uppercase font-black px-3 py-1.5 rounded-lg cursor-pointer border-0 transition-colors ${
+                !dayView ? "bg-brand-green text-white" : "bg-transparent text-brand-dark/60 hover:text-brand-green"
+              }`}
+            >
+              Целия месец · {entries.length}
+            </button>
+          </div>
+          {dayView && (
+            <span className="text-[10px] font-bold text-brand-dark/45">
+              Изберете друг ден от календара, за да видите или добавите неговите доставки.
+            </span>
+          )}
+        </div>
+      )}
       <div className="overflow-x-auto rounded-xl border border-brand-green/10">
         <table className="w-full text-xs border-collapse bg-white">
           <thead>
@@ -1688,15 +1764,24 @@ function RowsEditor({
             </tr>
           </thead>
           <tbody>
-            {entries.length === 0 ? (
+            {visibleRows.length === 0 ? (
               <tr>
                 <td colSpan={cols.length + 2} className="p-6 text-center text-brand-dark/40 italic">
-                  Няма записи. {readOnly ? "" : "Натиснете „Добави запис“."}
+                  {dayView ? `Няма записи за ${dayLbl}.` : "Няма записи."} {readOnly ? "" : "Натиснете „Добави запис“."}
                 </td>
               </tr>
             ) : (
-              entries.map((row, idx) => (
-                <tr key={idx} className="border-b border-brand-green/5 hover:bg-brand-light/20 align-top">
+              visibleRows.map(({ row, idx }) => (
+                <tr
+                  key={idx}
+                  ref={(el) => {
+                    if (el) rowRefs.current.set(idx, el);
+                    else rowRefs.current.delete(idx);
+                  }}
+                  className={`border-b border-brand-green/5 hover:bg-brand-light/20 align-top transition-colors duration-700 ${
+                    flashIdx === idx ? "bg-brand-gold/20" : ""
+                  }`}
+                >
                   <td className="p-2 text-center font-bold text-brand-dark/50">{idx + 1}</td>
                   {cols.map((c) => (
                     <td
