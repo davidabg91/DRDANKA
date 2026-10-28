@@ -48,6 +48,7 @@
 ## Полезни статии (блог)
 
 - [Блог за безопасност на храните](https://www.haccpspokoystvie.bg/blog): Всички статии.
+- [БАБХ затвори кухня майка на търговска верига — хигиена и проследимост (28.10.2026)](https://www.haccpspokoystvie.bg/blog/babh-zatvori-kuhnya-mayka-prosledimost): Анализ на затварянето на централна кухня в Пловдив и два свързани обекта; какво е проследимост по чл. 18 от Регламент (ЕО) № 178/2002, кои дневници я доказват, примерна цена на едно затваряне и 10 въпроса за самопроверка.
 - [Как да регистрирам обект за храни в БАБХ — стъпка по стъпка](https://www.haccpspokoystvie.bg/blog/kak-da-registiram-obekt-babh)
 - [Система за самоконтрол: какви дневници изисква БАБХ](https://www.haccpspokoystvie.bg/blog/sistema-za-samokontrol-dnevnici)
 - [Контрол на суровините при производство на храни](https://www.haccpspokoystvie.bg/blog/kontrol-surovini-babh)

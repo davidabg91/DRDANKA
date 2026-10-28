@@ -399,6 +399,11 @@ export function articleSchema(input: {
   path: string;
   image?: string;
   datePublished?: string;
+  dateModified?: string;
+  section?: string;
+  keywords?: readonly string[];
+  /** External sources the post is based on — lets an answer engine see the claim is grounded. */
+  citations?: ReadonlyArray<{ name: string; url: string }>;
 }) {
   return {
     "@context": "https://schema.org",
@@ -410,8 +415,37 @@ export function articleSchema(input: {
     inLanguage: "bg-BG",
     author: { "@id": PERSON_ID },
     publisher: { "@id": ORG_ID },
+    isPartOf: { "@id": WEBSITE_ID },
     ...(input.datePublished ? { datePublished: input.datePublished } : {}),
+    ...(input.dateModified ?? input.datePublished
+      ? { dateModified: input.dateModified ?? input.datePublished }
+      : {}),
+    ...(input.section ? { articleSection: input.section } : {}),
+    ...(input.keywords?.length ? { keywords: input.keywords.join(", ") } : {}),
+    ...(input.citations?.length
+      ? {
+          citation: input.citations.map((c) => ({
+            "@type": "CreativeWork",
+            name: c.name,
+            url: c.url,
+          })),
+        }
+      : {}),
     mainEntityOfPage: absoluteUrl(input.path),
+  };
+}
+
+/** ItemList of blog posts for the /blog index (CollectionPage companion). */
+export function blogListSchema(posts: ReadonlyArray<{ title: string; path: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: posts.map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: absoluteUrl(p.path),
+      name: p.title,
+    })),
   };
 }
 

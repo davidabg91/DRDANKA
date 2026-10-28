@@ -2,18 +2,40 @@ import Link from "next/link";
 import Image from "next/image";
 import { Calendar, Clock, ArrowRight, FileText } from "lucide-react";
 import type { Metadata } from "next";
-import { BLOG_POSTS } from "@/data/blogPosts";
+import { BLOG_POSTS, postIsoDate } from "@/data/blogPosts";
 import PageHero from "@/components/PageHero";
+import JsonLd from "@/components/JsonLd";
+import { blogListSchema, breadcrumbSchema, webPageSchema } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "Блог за безопасност на храните",
   description: "Практическа информация, експертни анализи на законите на БАБХ, НАССР системи и съвети за Вашия сигурен и безпроблемен бизнес с храни.",
   alternates: { canonical: "/blog" },
+  openGraph: {
+    title: "Блог за безопасност на храните",
+    description: "Практическа информация, експертни анализи на законите на БАБХ, НАССР системи и съвети за Вашия сигурен и безпроблемен бизнес с храни.",
+    url: "/blog",
+  },
 };
 
 export default function Blog() {
   return (
     <div className="min-h-screen pb-24">
+      <JsonLd
+        data={[
+          webPageSchema({
+            name: "Блог за безопасност на храните",
+            description: "Практическа информация, експертни анализи на законите на БАБХ, НАССР системи и съвети за бизнеса с храни.",
+            path: "/blog",
+            type: "CollectionPage",
+          }),
+          blogListSchema(BLOG_POSTS.map((p) => ({ title: p.title, path: `/blog/${p.id}` }))),
+          breadcrumbSchema([
+            { name: "Начало", path: "/" },
+            { name: "Блог", path: "/blog" },
+          ]),
+        ]}
+      />
       {/* Header section */}
       <PageHero
         badgeText="ПОЛЕЗНИ СЪВЕТИ И СТАТИИ"
@@ -25,7 +47,7 @@ export default function Blog() {
       {/* Grid of articles */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {BLOG_POSTS.map((post) => (
+          {BLOG_POSTS.map((post, i) => (
             <article 
               key={post.id}
               className="bg-white border border-brand-green/5 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:border-brand-gold/30 transition-all duration-300 flex flex-col justify-between group"
@@ -34,18 +56,24 @@ export default function Blog() {
                 <div className="relative aspect-video w-full overflow-hidden bg-brand-light">
                   <Image 
                     src={post.image} 
-                    alt={post.title}
+                    alt={post.imageAlt ?? post.title}
                     fill
+                    priority={i === 0}
                     sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  {i === 0 && (
+                    <span className="absolute top-3 left-3 px-2.5 py-1 rounded bg-red-600 text-white text-[10px] font-black uppercase tracking-wider shadow">
+                      Ново
+                    </span>
+                  )}
                 </div>
                 
                 <div className="p-6 space-y-3">
                   <div className="flex items-center space-x-4 text-[10px] sm:text-xs text-brand-dark/50">
                     <span className="flex items-center">
                       <Calendar className="h-3.5 w-3.5 mr-1 text-brand-gold/80" />
-                      {post.date}
+                      <time dateTime={postIsoDate(post)}>{post.date}</time>
                     </span>
                     <span className="flex items-center">
                       <Clock className="h-3.5 w-3.5 mr-1 text-brand-gold/80" />

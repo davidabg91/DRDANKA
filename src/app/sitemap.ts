@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/siteConfig";
-import { BLOG_POSTS } from "@/data/blogPosts";
+import { BLOG_POSTS, postIsoDate } from "@/data/blogPosts";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { LIVE_COURSES } from "@/data/live-courses";
 
@@ -47,9 +47,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     entry("/terms", 0.3, "yearly"),
   ];
 
-  const blogRoutes = BLOG_POSTS.map((post) =>
-    entry(`/blog/${post.id}`, 0.6, "monthly"),
-  );
+  // Real publish dates instead of "now": a lastmod that changes on every
+  // crawl teaches Google to ignore it.
+  const blogRoutes = BLOG_POSTS.map((post) => {
+    const iso = postIsoDate(post);
+    return entry(`/blog/${post.id}`, 0.6, "monthly", iso ? new Date(iso) : undefined);
+  });
 
   const libraryRoutes = LIBRARY_MATERIALS.map((m) =>
     entry(`/library/${m.slug}`, 0.8, "monthly"),

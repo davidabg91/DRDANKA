@@ -28,7 +28,11 @@ import { Suspense } from "react";
 import RemotionVideoWidget from "@/remotion/RemotionVideoWidget";
 import HeroTrainingCarousel from "@/components/HeroTrainingCarousel";
 import SectionHeading from "@/components/SectionHeading";
+import { BLOG_POSTS } from "@/data/blogPosts";
 export default function Home() {
+  // Newest post tagged "Актуално" gets the news strip under the hero ribbon.
+  const news = BLOG_POSTS.find((p) => p.tags.includes("Актуално"));
+
   const industries = [
     {
       title: "Ресторанти и заведения",
@@ -230,6 +234,25 @@ export default function Home() {
         </div>
       </section>
 
+
+      {news && (
+        <section className="bg-[#081410] border-b border-brand-gold/20">
+          <Link
+            href={`/blog/${news.id}`}
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-4 text-center md:text-left group"
+          >
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-600 text-white text-[10px] font-black uppercase tracking-wider shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> Актуално
+            </span>
+            <span className="text-sm text-white/90 font-medium">
+              {news.seoTitle ?? news.title}. Би ли издържал Вашият обект същата проверка?
+            </span>
+            <span className="inline-flex items-center text-brand-gold font-bold text-xs uppercase tracking-wider whitespace-nowrap group-hover:underline">
+              Прочетете анализа <ArrowRight className="h-3.5 w-3.5 ml-1.5 transition-transform group-hover:translate-x-1" />
+            </span>
+          </Link>
+        </section>
+      )}
 
       {/* 3. Emotional Value Proposition (Authority) */}
       <section className="py-20 md:py-28 bg-gradient-to-r from-[#FAF6EE] via-[#F3EAD9] to-[#E9D9BF] border-b border-brand-gold/25">

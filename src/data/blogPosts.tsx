@@ -1,19 +1,444 @@
 import React from "react";
 import Link from "next/link";
-import { BookOpen, GraduationCap, Video, ArrowRight } from "lucide-react";
+import { BookOpen, GraduationCap, Video, ArrowRight, Phone, ClipboardCheck, SearchCheck } from "lucide-react";
 
 export interface BlogPost {
   id: string;
   title: string;
+  /** Shorter <title> for search results (≤ ~60 chars). Falls back to `title`. */
+  seoTitle?: string;
   summary: string;
+  /** Human-readable Bulgarian date, e.g. "28 октомври 2026 г." — see postIsoDate(). */
   date: string;
   readTime: string;
   image: string;
+  imageAlt?: string;
   tags: string[];
+  keywords?: string[];
+  /** Rendered under the article and mirrored as FAQPage JSON-LD. */
+  faq?: { question: string; answer: string }[];
+  /** External sources the post is based on — rendered and emitted as `citation`. */
+  sources?: { name: string; url: string }[];
   content: React.ReactNode;
 }
 
+const BG_MONTHS: Record<string, string> = {
+  януари: "01", февруари: "02", март: "03", април: "04", май: "05", юни: "06",
+  юли: "07", август: "08", септември: "09", октомври: "10", ноември: "11", декември: "12",
+};
+
+/** "28 октомври 2026 г." → "2026-10-28" (for <time>, JSON-LD and the sitemap). */
+export function postIsoDate(post: Pick<BlogPost, "date">): string | undefined {
+  const m = post.date.match(/(\d{1,2})\s+([а-я]+)\s+(\d{4})/i);
+  const month = m && BG_MONTHS[m[2].toLowerCase()];
+  return m && month ? `${m[3]}-${month}-${m[1].padStart(2, "0")}` : undefined;
+}
+
 export const BLOG_POSTS: BlogPost[] = [
+  {
+    id: "babh-zatvori-kuhnya-mayka-prosledimost",
+    title: "БАБХ затвори кухня майка на търговска верига. Ще издържи ли Вашият обект същата проверка?",
+    seoTitle: "БАБХ затвори кухня майка: хигиена и проследимост",
+    summary: "На 27 октомври 2026 г. БАБХ затвори кухнята майка на търговска верига в Пловдив и два свързани обекта в София и Пазарджик заради лоша хигиена и липса на проследимост. Д-р Данка Николова обяснява какво точно е проверено, колко струва едно затваряне и как да подготвите обекта си за същата проверка.",
+    date: "28 октомври 2026 г.",
+    readTime: "10 мин. четене",
+    image: "/blog_kuhnya_mayka_babh.webp",
+    imageAlt: "Схема: суровини, кухня майка в Пловдив и обекти в София и Пазарджик с прекъсната проследимост и печат „Затворено“ от БАБХ",
+    tags: ["Актуално", "БАБХ проверка", "Проследимост", "Хигиена", "Санкции"],
+    keywords: [
+      "БАБХ затвори кухня майка",
+      "проследимост на храните",
+      "проверка БАБХ 2026",
+      "затваряне на обект за храни",
+      "Регламент 178/2002 проследимост",
+      "дневник за входящ контрол",
+      "производствен дневник партида",
+      "система за самоконтрол",
+      "HACCP проверка",
+    ],
+    sources: [
+      {
+        name: "NOVA — „Затвориха заради лоша хигиена кухня майка на търговска верига“ (27.10.2026)",
+        url: "https://nova.bg/news/view/2026/10/27/557037/",
+      },
+      {
+        name: "Регламент (ЕО) № 178/2002 — общи принципи на законодателството в областта на храните (чл. 18, проследимост)",
+        url: "https://eur-lex.europa.eu/legal-content/BG/TXT/?uri=CELEX:32002R0178",
+      },
+      {
+        name: "Регламент (ЕО) № 852/2004 — хигиена на храните",
+        url: "https://eur-lex.europa.eu/legal-content/BG/TXT/?uri=CELEX:32004R0852",
+      },
+    ],
+    faq: [
+      {
+        question: "Какво означава „липса на проследимост“ при проверка от БАБХ?",
+        answer: "Че обектът не може да докаже с документи от кои суровини (доставчик, партида, срок) е приготвена дадена храна и къде е изпратена готовата продукция. Регламент (ЕО) № 178/2002, чл. 18, изисква всеки бизнес с храни да знае „една стъпка назад“ — от кого е получил — и „една стъпка напред“ — на кого е доставил.",
+      },
+      {
+        question: "Може ли БАБХ да затвори обект веднага, още при проверката?",
+        answer: "Да. При сериозни несъответствия с хигиената или при риск за здравето на потребителите БАБХ може да спре дейността на обекта с принудителна административна мярка до отстраняване на нарушенията. Ако обектът снабдява други обекти, спирането може да обхване и тях — както се случи с кухнята майка в Пловдив и двата свързани обекта в София и Пазарджик.",
+      },
+      {
+        question: "Кои дневници доказват проследимостта в заведение или цех?",
+        answer: "Дневникът за входящ контрол (доставчик, документ, партида, срок на годност, температура при приемане), списъкът на одобрените доставчици, производствените дневници и контролните карти с партида и срок на приготвените храни, записите за експедиция до други обекти и етикетите с партида. Към тях се добавят дневниците за бракувана продукция, хигиена и температури.",
+      },
+      {
+        question: "Задължително ли е дневниците да се водят дигитално?",
+        answer: "Не. Хартиените дневници са законни. Дигиталните обаче напомнят кога да се попълни запис, пазят реалните дати и часове, не се губят и се показват на инспектора за минути. Така не изглеждат попълнени наведнъж преди проверката.",
+      },
+      {
+        question: "Колко струва да подготвя обекта си за такава проверка?",
+        answer: "Дигиталните дневници „БАБХ Спокойствие“ започват от 19 € на месец (Старт), а за обект с топла точка пакетът е 29 € (Оптимум). За всеки следващ обект на същата фирма има 30% отстъпка, а първите 14 дни са безплатни. Еднократният одит „Проверка преди проверката“ струва 150–300 € според обекта и включва писмен доклад с план за коригиращи действия.",
+      },
+    ],
+    content: (
+      <div className="space-y-6 text-sm sm:text-base text-brand-dark/95 leading-relaxed">
+        <div className="bg-red-50 border-l-4 border-red-600 p-4 sm:p-5 rounded-r-lg flex items-start gap-3">
+          <span className="text-xl shrink-0">🚨</span>
+          <p className="text-sm font-semibold text-red-900 leading-relaxed">
+            АКТУАЛНО, 27.10.2026: БАБХ затвори кухнята майка на търговска верига в Пловдив и два обекта в София и Пазарджик, които тя зарежда. Причините са лоша хигиена и липса на данни за проследяване на приготвените храни.
+          </p>
+        </div>
+
+        <p>
+          Новината обиколи медиите за часове. Става дума за <strong>централна кухня на голяма търговска верига</strong>, с отдели по качество, процедури и бюджети, която въпреки това е затворена при проверка. Ако това може да се случи на верига, може да се случи и на всеки ресторант, сладкарница, магазин с топла витрина или кетъринг.
+        </p>
+        <p>
+          В тази статия разглеждам какво точно са установили инспекторите и защо „проследимостта“ спира цели вериги. Ще видите и колко струва едно затваряне, и как с 10 въпроса да проверите още днес дали Вашият обект би издържал същата проверка.
+        </p>
+
+        <div className="bg-brand-light border border-brand-gold/30 rounded-2xl p-5 sm:p-6">
+          <h2 className="font-serif text-lg sm:text-xl font-bold text-brand-green mb-3">Накратко: какво беше установено</h2>
+          <ul className="space-y-2 text-sm text-brand-dark/85">
+            <li className="flex gap-2"><span className="text-red-600 font-bold shrink-0">✕</span><span><strong>Затворени 3 обекта:</strong> кухнята майка в Пловдив и 2 обекта в София и Пазарджик, които тя снабдява с готови кулинарни изделия.</span></li>
+            <li className="flex gap-2"><span className="text-red-600 font-bold shrink-0">✕</span><span><strong>Причини:</strong> лоша хигиена и <strong>липса на данни за проследимост</strong>. Не е ясно от какви суровини е приготвена храната, нито по какъв път готовите изделия са стигнали до магазините.</span></li>
+            <li className="flex gap-2"><span className="text-red-600 font-bold shrink-0">✕</span><span><strong>В други обекти:</strong> около 50 кг храни с изтекъл срок на годност, храни с променен произход и нарушения в етикетирането.</span></li>
+            <li className="flex gap-2"><span className="text-red-600 font-bold shrink-0">✕</span><span><strong>В склад на друга верига:</strong> храни с изтекъл срок, съхранявани заедно с годни за консумация.</span></li>
+            <li className="flex gap-2"><span className="text-red-600 font-bold shrink-0">✕</span><span><strong>КЗП:</strong> 4 наказателни постановления на големи вериги за общо 110 000 € за заблуждаващи търговски практики. Обявената цена се различава от маркираната на касата, а част от промоциите са фалшиви.</span></li>
+            <li className="flex gap-2"><span className="text-brand-gold font-bold shrink-0">→</span><span><strong>Проверките продължават.</strong> БАБХ, КЗП и НАП обикалят складовете и обектите на търговските вериги.</span></li>
+          </ul>
+          <p className="text-xs text-brand-dark/55 mt-4">
+            Данните са от съвместния брифинг на д-р Кремена Стоева, директор на Дирекция „Контрол на храните“ към БАБХ, и Мая Манолова, председател на КЗП, по информация на{" "}
+            <a href="https://nova.bg/news/view/2026/10/27/557037/" target="_blank" rel="noopener" className="underline hover:text-brand-gold">NOVA</a>.
+          </p>
+        </div>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Какво е „кухня майка“ и защо една грешка там спира няколко обекта</h2>
+        <p>
+          Кухнята майка, или централната кухня, приготвя храна, която после се разпраща до много обекти: магазини, щандове, кафенета, кетъринг точки. Икономически моделът е отличен. От гледна точка на безопасността обаче <strong>всяка грешка в кухнята се умножава по броя на обектите</strong>, които тя зарежда.
+        </p>
+        <p>
+          Затова БАБХ не спира само кухнята. Щом не може да се докаже какво е влязло в храната и къде е отишла тя, рискът се приема за целия път на продукта. Така два обекта в други градове затварят заради документи, които дори не се водят при тях.
+        </p>
+
+        <div className="bg-brand-light border-l-4 border-brand-gold p-6 rounded-r-xl my-8">
+          <span className="text-xs font-bold text-brand-gold uppercase tracking-wider block mb-1">💡 Съвет от експерта</span>
+          <p className="font-serif text-sm sm:text-base italic text-brand-green leading-relaxed">
+            &ldquo;Ако приготвяте храна за повече от един обект, проследимостта е основата на бизнеса Ви, а не формалност. Без нея инспекторът не може да ограничи проблема до една партида и спира всичко.&rdquo;
+          </p>
+          <span className="text-xs font-semibold block text-brand-gold mt-2">— д-р Данка Николова</span>
+        </div>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Проследимост: изискването, което провали проверката</h2>
+        <p>
+          Проследимостта е изискване на <strong>чл. 18 от Регламент (ЕО) № 178/2002</strong> и важи за всеки бизнес с храни, от павилиона до хлебозавода. Принципът е „една стъпка назад, една стъпка напред“. Трябва да можете да докажете <strong>от кого сте получили</strong> всяка суровина и <strong>на кого сте предали</strong> всеки продукт.
+        </p>
+        <p>
+          На практика инспекторът взима продукт от витрината и пита: <em>„От кои партиди суровини е приготвено това и кога? В кои обекти е изпратено същото?“</em> Ако отговорът е „ще проверя“ или „някъде в папките“, проследимост няма.
+        </p>
+
+        <div className="overflow-x-auto mt-4">
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-brand-green/20">
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tl-lg">Звено</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light">Какво трябва да докажете</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tr-lg">С какъв запис</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm divide-y divide-brand-green/10">
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Стъпка назад</td>
+                <td className="py-3 px-4 text-brand-dark/80">Доставчик, документ, партида, срок на годност и температура на всяка приета суровина</td>
+                <td className="py-3 px-4 text-brand-dark/80">Дневник за входящ контрол + списък на доставчиците</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Вътре в обекта</td>
+                <td className="py-3 px-4 text-brand-dark/80">Коя партида суровина в коя партида готов продукт е влязла, кога и при каква температура е обработена</td>
+                <td className="py-3 px-4 text-brand-dark/80">Производствен дневник / контролни карти с партида и срок</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Стъпка напред</td>
+                <td className="py-3 px-4 text-brand-dark/80">Къде, кога и в какво количество е изпратен всеки готов продукт</td>
+                <td className="py-3 px-4 text-brand-dark/80">Записи за експедиция + етикет с партида и срок</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Отклонения</td>
+                <td className="py-3 px-4 text-brand-dark/80">Какво е бракувано, отделено или изтеглено и защо</td>
+                <td className="py-3 px-4 text-brand-dark/80">Дневник за бракувана продукция</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">„Лоша хигиена“ означава и липса на доказателства</h2>
+        <p>
+          Когато в протокола пише „лоша хигиена“, рядко става дума само за мръсен под. Инспекторът проверява дали хигиената се <strong>управлява</strong>: има ли график за почистване и дезинфекция, записвано ли е кой, кога и с какъв препарат е почистил, валидни ли са здравните книжки, има ли договор и записи за ДДД обработки.
+        </p>
+        <p>
+          Показателна е и находката в склада на друга верига: <strong>храни с изтекъл срок, съхранявани заедно с годни</strong>. Решението е просто — обозначена зона за блокирана продукция и запис в дневника за брак в момента, в който срокът изтече. Без такава процедура един пропуснат кашон може да стане акт.
+        </p>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Колко струва едно затваряне: сметката, която никой не прави</h2>
+        <p>
+          Глобата е най-малкият разход. Ето <strong>примерна сметка</strong> за малко заведение с топла кухня, спряно за 10 дни, докато отстрани нарушенията и мине повторна проверка:
+        </p>
+
+        <div className="overflow-x-auto mt-4">
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-brand-green/20">
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tl-lg">Разход</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tr-lg text-right">Примерна сума</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm divide-y divide-brand-green/10">
+              <tr><td className="py-3 px-4 text-brand-dark/85">Пропуснат оборот (1 500 € на ден × 10 дни)</td><td className="py-3 px-4 text-right font-semibold">15 000 €</td></tr>
+              <tr><td className="py-3 px-4 text-brand-dark/85">Заплати на персонал, който не работи</td><td className="py-3 px-4 text-right font-semibold">3 000 €</td></tr>
+              <tr><td className="py-3 px-4 text-brand-dark/85">Наем и сметки за затворен обект</td><td className="py-3 px-4 text-right font-semibold">800 €</td></tr>
+              <tr><td className="py-3 px-4 text-brand-dark/85">Бракувани суровини и готова храна</td><td className="py-3 px-4 text-right font-semibold">2 000 €</td></tr>
+              <tr><td className="py-3 px-4 text-brand-dark/85">Имуществена санкция за юридическо лице (от)</td><td className="py-3 px-4 text-right font-semibold">1 000 €</td></tr>
+              <tr className="bg-red-50"><td className="py-3 px-4 font-bold text-red-900">Общо, без загубата на репутация</td><td className="py-3 px-4 text-right font-black text-red-900">≈ 21 800 €</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-brand-dark/55">Сумите са илюстративни и зависят от обекта. Загубата на доверие след новина с името на обекта не се вижда в таблицата, но често е най-голямата.</p>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-5 sm:p-6 rounded-2xl my-6">
+          <p className="text-sm sm:text-base text-brand-dark/90 leading-relaxed">
+            📊 <strong>За сравнение:</strong> дигиталните дневници за обект с топла точка (пакет „Оптимум“) струват <strong>29 € на месец, или 348 € годишно</strong>. В горния пример 10 дни затворен обект струват колкото <strong>над 60 години</strong> водене на системата.
+          </p>
+        </div>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Самопроверка: бихте ли издържали тази проверка днес?</h2>
+        <p>Отговорете честно с „да“ или „не“. Ако поне на един въпрос отговорът е „не“ или „не съм сигурен“, рискът при Вас е същият.</p>
+
+        <ol className="space-y-3 mt-4">
+          {[
+            "Можете ли за 5 минути да покажете от кой доставчик и от коя партида е всяка суровина в хладилника Ви?",
+            "Записвате ли партидата, срока на годност и температурата при всяка доставка, а не „после“?",
+            "Имат ли приготвените от Вас храни записана партида, дата на производство и срок на годност?",
+            "Ако снабдявате и други обекти, знаете ли коя партида къде и в какво количество е изпратена?",
+            "Отделени и обозначени ли са храните с изтекъл срок от годните, и записани ли са като брак?",
+            "Попълвани ли са температурните дневници всеки ден, а не наведнъж в края на месеца?",
+            "Има ли записан график за почистване и дезинфекция с име на отговорника и използвания препарат?",
+            "Валидни ли са личните здравни книжки на всички служители, включително на новоназначените?",
+            "Актуален ли е договорът за ДДД обработки и пазите ли записите от последните обработки?",
+            "Знае ли персоналът какво да направи при отклонение (висока температура, повредена опаковка) и записва ли го?",
+          ].map((q, i) => (
+            <li key={i} className="flex gap-3 bg-white border border-brand-green/10 rounded-xl p-3 sm:p-4">
+              <span className="font-serif font-black text-brand-gold text-lg leading-none w-7 shrink-0">{String(i + 1).padStart(2, "0")}</span>
+              <span className="text-sm text-brand-dark/85">{q}</span>
+            </li>
+          ))}
+        </ol>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Как „БАБХ Спокойствие“ затваря всеки от тези пропуски</h2>
+        <p>
+          Платформата я създадох след 27 години в официалния контрол на храните. Знам какво иска инспекторът и в какъв вид. Ето как нарушенията от тази проверка се покриват в системата:
+        </p>
+
+        <div className="overflow-x-auto mt-4">
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-brand-green/20">
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tl-lg">Нарушение от проверката</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light">Какво прави системата</th>
+                <th className="py-3 px-4 font-bold text-brand-green bg-brand-light rounded-tr-lg">Пакет</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm divide-y divide-brand-green/10">
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Няма данни за използваните суровини</td>
+                <td className="py-3 px-4 text-brand-dark/80">Дневник за входящ контрол с доставчик, документ, партида, срок и температура. Снимате фактурата или стоковата разписка и системата сама попълва продуктите, партидите и сроковете. Списъкът на доставчиците също се попълва сам.</td>
+                <td className="py-3 px-4 text-brand-dark/80 whitespace-nowrap">от Старт</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Няма данни за пътя на готовите изделия</td>
+                <td className="py-3 px-4 text-brand-dark/80">Контролни карти и производствени дневници с партида и срок (скара, готвени ястия, супи, печива), плюс допълнителни записи според дейността на обекта</td>
+                <td className="py-3 px-4 text-brand-dark/80 whitespace-nowrap">Оптимум / Професионал</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Лоша хигиена</td>
+                <td className="py-3 px-4 text-brand-dark/80">Чек-лист за хигиена преди работа; ежедневен, седмичен и месечен контрол на хигиената; списък на препаратите; записи за ДДД</td>
+                <td className="py-3 px-4 text-brand-dark/80 whitespace-nowrap">Старт / Оптимум</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Храни с изтекъл срок сред годните</td>
+                <td className="py-3 px-4 text-brand-dark/80">Дневник за бракувана продукция и ежедневни напомняния. Блокираната храна се отделя и записва веднага.</td>
+                <td className="py-3 px-4 text-brand-dark/80 whitespace-nowrap">от Старт</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Персонал и срокове</td>
+                <td className="py-3 px-4 text-brand-dark/80">Лична хигиена, здравни книжки с напомняне преди изтичане, обучения. От „Оптимум“ нагоре и срокове на договорите за ДДД и други.</td>
+                <td className="py-3 px-4 text-brand-dark/80 whitespace-nowrap">от Старт</td>
+              </tr>
+              <tr className="hover:bg-brand-light/50 transition-colors">
+                <td className="py-3 px-4 font-semibold text-brand-dark">Неподготвен обект при внезапна проверка</td>
+                <td className="py-3 px-4 text-brand-dark/80">Онлайн подготовка за проверка от БАБХ на всеки 4 месеца и директна връзка с мен. Във VIP — месечна проверка на записите и съдействие след проверка.</td>
+                <td className="py-3 px-4 text-brand-dark/80 whitespace-nowrap">Професионал / VIP</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 className="font-serif text-lg sm:text-xl font-bold text-brand-green mt-10">Ползите за Вас като собственик</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+          {[
+            ["🔔", "Никога не пропускате запис", "Системата Ви казва всеки ден какво да попълните: температури, хигиена, доставки."],
+            ["⚙️", "Рутината се попълва сама", "Повтарящите се записи се попълват автоматично и персоналът губи минути, не часове."],
+            ["🔎", "Проследимост за минути", "Партида, доставчик и срок на всяка суровина са на едно място, подредени по дни. Показвате ги веднага, без да ровите в папки."],
+            ["🖨️", "Готови документи за БАБХ", "Всеки дневник се разпечатва като официален документ с един клик."],
+            ["🏪", "Няколко обекта в един профил", "За вериги и кухни майки: всеки следващ обект е с 30% отстъпка."],
+            ["👩‍⚕️", "Експерт до Вас", "Не сте сами с предписанието. От „Професионал“ нагоре имате пряка връзка с д-р Николова."],
+          ].map(([icon, title, text]) => (
+            <div key={title} className="bg-white border border-brand-green/10 rounded-xl p-4 flex gap-3">
+              <span className="text-xl shrink-0">{icon}</span>
+              <div>
+                <h4 className="font-bold text-brand-green text-sm">{title}</h4>
+                <p className="text-xs sm:text-sm text-brand-dark/75 mt-1">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Пакетите: изберете нивото на защита</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+          {[
+            { name: "Старт", price: 19, text: "Основните дневници по самоконтрол: входящ контрол, температури, персонал, брак." },
+            { name: "Оптимум", price: 29, text: "За обекти с топла точка: скара, фритюрник, фурна, витрини, пълна хигиена, ДДД." },
+            { name: "Професионал", price: 49, text: "Записи според дейността, подготовка за проверка на всеки 4 месеца, връзка с експерт.", featured: true },
+            { name: "VIP Спокойствие", price: 88, text: "Всичко, плюс месечна проверка на документацията и съдействие след проверка от БАБХ." },
+          ].map((p) => (
+            <div key={p.name} className={`rounded-xl p-4 border flex flex-col ${p.featured ? "bg-brand-green text-white border-brand-gold" : "bg-white border-brand-green/10"}`}>
+              <span className={`text-[10px] font-black uppercase tracking-wider ${p.featured ? "text-brand-gold" : "text-brand-gold-dark"}`}>{p.featured ? "Най-избиран" : "Пакет"}</span>
+              <h4 className={`font-serif font-bold text-base mt-1 ${p.featured ? "text-white" : "text-brand-green"}`}>{p.name}</h4>
+              <p className={`font-black text-2xl mt-1 ${p.featured ? "text-brand-gold" : "text-brand-green"}`}>{p.price} €<span className="text-xs font-semibold opacity-70"> / месец</span></p>
+              <p className={`text-xs mt-2 leading-relaxed ${p.featured ? "text-white/80" : "text-brand-dark/70"}`}>{p.text}</p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-brand-dark/60">
+          Първите 14 дни са безплатни. Пълно сравнение на пакетите има на страницата{" "}
+          <Link href="/babh-sistema#paketi" className="text-brand-green font-semibold underline hover:text-brand-gold">Автоматични БАБХ дневници</Link>.
+        </p>
+
+        <div className="bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] text-white rounded-2xl p-6 sm:p-8 border border-brand-gold/20 shadow-xl my-8">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-dark bg-brand-gold px-2.5 py-1 rounded">
+            ⚡ Започнете днес, не след проверката
+          </span>
+          <h3 className="font-serif text-lg sm:text-xl font-bold mt-3 mb-2">14 дни безплатно, без банкова карта</h3>
+          <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
+            Регистрирайте обекта си и системата сама подбира нужните дневници според вида му: магазин, топла точка, месо. Още от първия ден водите записи, които ще покажете на инспектора.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 mt-5">
+            <Link
+              href="/profile"
+              className="inline-flex items-center justify-center bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer group"
+            >
+              Изпробвайте безплатно 14 дни
+              <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/babh-sistema"
+              className="inline-flex items-center justify-center border border-white/25 hover:border-brand-gold text-white hover:text-brand-gold font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer"
+            >
+              Как работи системата
+            </Link>
+          </div>
+        </div>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Не само софтуер: експерт, който познава проверките отвътре</h2>
+        <p>
+          Дневниците показват, че работите правилно всеки ден. Понякога обаче трябва някой да погледне обекта отстрани, преди да го е направил инспекторът. Затова системата е част от цялостно обслужване:
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <div className="bg-white border border-brand-gold/30 rounded-xl p-5 flex flex-col justify-between">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold"><SearchCheck className="h-3.5 w-3.5" /> 150–300 €</span>
+              <h4 className="font-bold text-brand-green text-sm mt-1">„Проверка преди проверката“</h4>
+              <p className="text-xs text-brand-dark/70 mt-1">Одит на обекта на място по чек-листа на инспектора: системи, потоци, дневници, етикети, проследимост. Получавате писмен доклад и план за коригиращи действия.</p>
+            </div>
+            <Link href="/services#proverka-predi-proverkata" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-4">Заявете одит <ArrowRight className="h-3 w-3 ml-1" /></Link>
+          </div>
+          <div className="bg-white border border-brand-green/10 rounded-xl p-5 flex flex-col justify-between">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-green"><ClipboardCheck className="h-3.5 w-3.5" /> 5–10 работни дни</span>
+              <h4 className="font-bold text-brand-green text-sm mt-1">HACCP система за Вашия обект</h4>
+              <p className="text-xs text-brand-dark/70 mt-1">Анализ на опасностите, ККТ, проследимост и процедура за изтегляне, разработени за Вашето меню и Вашата технология. Без шаблони от интернет.</p>
+            </div>
+            <Link href="/haccp-sistema" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-4">Вижте услугата <ArrowRight className="h-3 w-3 ml-1" /></Link>
+          </div>
+          <div className="bg-white border border-brand-green/10 rounded-xl p-5 flex flex-col justify-between">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-green"><Video className="h-3.5 w-3.5" /> Онлайн, на живо</span>
+              <h4 className="font-bold text-brand-green text-sm mt-1">Обучение на екипа</h4>
+              <p className="text-xs text-brand-dark/70 mt-1">Персонал, който разбира защо пише партидата, я пише. Курсове по НАССР и ДПХП с Вашите реални казуси.</p>
+            </div>
+            <Link href="/live/haccp-osnovi" className="inline-flex items-center text-xs font-bold text-brand-gold hover:underline mt-4">Курсът НАССР основи <ArrowRight className="h-3 w-3 ml-1" /></Link>
+          </div>
+        </div>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Какво да направите още тази седмица</h2>
+        <ol className="list-decimal pl-5 space-y-3 mt-4 text-brand-dark/85">
+          <li><strong>Направете тест за проследимост.</strong> Вземете един готов продукт и засечете колко време Ви трябва, за да покажете суровините и партидите му. Ако е повече от 10 минути, имате проблем.</li>
+          <li><strong>Прегледайте хладилниците и склада.</strong> Изтекли срокове вън, обозначена зона за брак, запис в дневника.</li>
+          <li><strong>Проверете сроковете</strong> на здравните книжки, договора за ДДД и последното обучение на персонала.</li>
+          <li><strong>Спрете попълването „наведнъж“.</strong> Записите трябва да носят реалната дата и час. Пробвайте дигиталните дневници <Link href="/profile" className="text-brand-green font-semibold underline hover:text-brand-gold">14 дни безплатно</Link>.</li>
+          <li><strong>Ако не сте сигурни, попитайте.</strong> Десетминутният разговор е безплатен и често спестява хиляди евро.</li>
+        </ol>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-5 rounded-xl my-6">
+          <p className="text-sm text-brand-dark/85 leading-relaxed">
+            📌 Прочетете още:{" "}
+            <Link href="/blog/sistema-za-samokontrol-dnevnici" className="text-brand-green font-bold underline hover:text-brand-gold">какви дневници изисква БАБХ и как да ги водите</Link>,{" "}
+            <Link href="/blog/kontrol-surovini-babh" className="text-brand-green font-bold underline hover:text-brand-gold">защо контролът започва от суровините</Link> и{" "}
+            <Link href="/blog/haccp-dokumenti-babh" className="text-brand-green font-bold underline hover:text-brand-gold">защо попълването „на око“ не работи</Link>.
+          </p>
+        </div>
+
+        <h2 className="font-serif text-xl sm:text-2xl font-bold text-brand-green mt-10">Заключение</h2>
+        <p>
+          Случаят с кухнята майка показва нещо, което виждам от години: обектите рядко затварят заради една голяма грешка. Затварят, защото <strong>не могат да докажат</strong>, че работят правилно. Проследимостта и хигиената се доказват с ежедневни записи, а не се „оправят“ в деня на проверката.
+        </p>
+        <p>
+          Добрата новина е, че това вече не изисква папки, химикалки и вечери над дневниците. С правилната система, обучен екип и експерт до Вас следващата проверка минава спокойно.
+        </p>
+
+        <div className="bg-brand-gold/10 border border-brand-gold/30 p-6 rounded-2xl my-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center sm:text-left">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-brand-gold bg-brand-green px-2.5 py-1 rounded">
+              <Phone className="h-3.5 w-3.5" /> Безплатен разговор
+            </span>
+            <h4 className="font-serif text-base sm:text-lg font-bold text-brand-green">
+              Не сте сигурни дали обектът Ви би издържал?
+            </h4>
+            <p className="text-xs text-brand-dark/80 max-w-md">
+              Обадете се на <a href="tel:0887902198" className="font-bold text-brand-green underline">0887 902 198</a> или запазете 10-минутен разговор. Ще Ви кажа откъде да започнете.
+            </p>
+          </div>
+          <Link
+            href="/consultations#booking"
+            className="inline-flex items-center justify-center bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 hover:text-white group"
+          >
+            Запазете разговор
+            <ArrowRight className="h-3.5 w-3.5 ml-2 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </div>
+      </div>
+    )
+  },
   {
     id: "abonamentna-sistema-babh",
     title: "ЕКСКЛУЗИВНО: Първата в България цялостна абонаментна система за безопасност на храните",
