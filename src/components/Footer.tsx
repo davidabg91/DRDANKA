@@ -155,12 +155,12 @@ export default function Footer() {
             </Link>
             <CookieSettingsLink className="hover:text-brand-gold transition-colors" />
             <a
-              href="https://transitflow.org/"
+              href="https://davidax.org/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-brand-gold transition-colors flex items-center"
             >
-              Изработка: <span className="font-bold text-white/60 hover:text-brand-gold ml-1 transition-colors">TransitFlow</span>
+              Изработка: <span className="font-bold text-white/60 hover:text-brand-gold ml-1 transition-colors">DavidaX</span>
             </a>
           </div>
         </div>
