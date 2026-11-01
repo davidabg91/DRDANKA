@@ -45,6 +45,8 @@ export default function LibraryViewerPage() {
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(0.5);
   const [isBundleHub, setIsBundleHub] = useState(false);
+  // Title of the extra file (e.g. a bonus) opened via ?file=, if any.
+  const [extraFileTitle, setExtraFileTitle] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const pdfOptions = useMemo(() => ({
@@ -61,8 +63,15 @@ export default function LibraryViewerPage() {
     const preferred = resolveType(slug, typeOverrides, codeType);
     const order: Array<"pdf" | "video"> = preferred === "video" ? ["video", "pdf"] : ["pdf", "video"];
 
+    // ?file=<path> opens one of the material's extra files (e.g. a bonus) in
+    // this same protected reader. Only paths declared in material.files count.
+    const requested = new URLSearchParams(window.location.search).get("file");
+    const extraFile = material?.files?.find((f) => f.path === requested && f.path !== "file.pdf");
+    const pdfName = extraFile?.path ?? "file.pdf";
+
     const unsub = onAuthStateChanged(auth, async (user) => {
       setAuthReady(true);
+      setExtraFileTitle(extraFile?.title ?? null);
       if (!user || !user.email) {
         setPdfFile(null);
         setVideoUrl(null);
@@ -166,7 +175,7 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
 }
 
       const tryLoad = async (kind: "pdf" | "video") => {
-        const fileName = kind === "pdf" ? "file.pdf" : "file.mp4";
+        const fileName = kind === "pdf" ? pdfName : "file.mp4";
         const cacheKey = `library_${slug}_${fileName}`;
 
         // 1. Try local cache first for PDF
@@ -205,7 +214,7 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
         const candidatePaths: string[] = [];
 
         // Dynamic items uploaded via course editor (e.g. courses/slug/items/item_....pdf)
-        if (courseData?.items && Array.isArray(courseData.items)) {
+        if (!extraFile && courseData?.items && Array.isArray(courseData.items)) {
           for (const it of courseData.items) {
             if (it.filePath) {
               const lower = it.filePath.toLowerCase();
@@ -219,7 +228,7 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
         }
 
         // Legacy course single filePath
-        if (courseData?.filePath) {
+        if (!extraFile && courseData?.filePath) {
           const lower = courseData.filePath.toLowerCase();
           const isPdf = lower.endsWith(".pdf") || courseData.type === "pdf";
           const isVid = lower.endsWith(".mp4") || lower.endsWith(".mov") || lower.endsWith(".webm") || courseData.type === "video";
@@ -549,7 +558,7 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
           <ArrowLeft className="h-3.5 w-3.5" />
           Към профила
         </Link>
-        <div className="font-serif text-sm font-bold truncate flex-1 text-center px-3">{material.title}</div>
+        <div className="font-serif text-sm font-bold truncate flex-1 text-center px-3">{extraFileTitle ?? material.title}</div>
         {mediaKind === "pdf" ? (
           <div className="flex items-center gap-2">
             <button onClick={() => setScale(s => Math.max(0.2, Math.round((s - 0.1) * 10) / 10))} className="text-white/80 hover:text-brand-gold p-1 cursor-pointer" aria-label="Намали"><ZoomOut className="h-4 w-4" /></button>

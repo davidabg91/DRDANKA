@@ -41,16 +41,15 @@ export interface LibraryMaterial {
     url: string;
   };
   /**
-   * Optional downloadable files hosted in Firebase Storage under
-   * library/<slug>/<path>. Storage rules let only buyers read them, and the
-   * profile shows one download button per file after purchase.
+   * Optional extra PDFs (e.g. bonuses) beside the main library/<slug>/file.pdf,
+   * hosted in Firebase Storage under library/<slug>/<path>. Storage rules let
+   * only buyers read them; the profile opens each one in the protected viewer
+   * via /library/<slug>/viewer?file=<path> — never as a download.
    */
   files?: {
     title: string;
     /** File name inside library/<slug>/, e.g. "bonus-1.pdf". */
     path: string;
-    /** Name the buyer's browser saves the file as. */
-    downloadName: string;
   }[];
   /** Catalog card visuals. */
   card: {

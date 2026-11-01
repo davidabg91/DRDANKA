@@ -94,9 +94,8 @@ export const kuchetoNeMojeDaOstavaSamo: LibraryMaterial = {
   category: "book",
   contentUrl: "#",
   files: [
-    { title: "Книгата", path: "file.pdf", downloadName: "Когато кучето не може да остава само.pdf" },
-    { title: "Бонус: „Трябва да изляза“", path: "bonus-1.pdf", downloadName: "Бонус - Трябва да изляза.pdf" },
-    { title: "Бонус: „10 спокойни занимания у дома“", path: "bonus-2.pdf", downloadName: "Бонус - 10 спокойни занимания у дома.pdf" },
+    { title: "Бонус „Трябва да изляза“", path: "bonus-1.pdf" },
+    { title: "Бонус „10 спокойни занимания у дома“", path: "bonus-2.pdf" },
   ],
   card: {
     cover: "/cover-kniga-kucheto-samo.webp",
