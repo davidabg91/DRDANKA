@@ -2992,25 +2992,69 @@ export default function ProfilePage() {
       )}
       
       {/* 1. Header Hero Banner - Hidden on print */}
-      <section className={`${!isLoggedIn ? "bg-transparent border-b border-white/5 pt-16 pb-8" : "bg-brand-green border-b border-brand-gold/15 py-10"} text-center relative overflow-hidden print:hidden`}>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-gold/5 via-transparent to-transparent opacity-75 pointer-events-none"></div>
+      <section className={`${!isLoggedIn ? "bg-transparent border-b border-white/5 pt-16 pb-8 text-center" : "bg-[#0A1F18] text-white"} relative overflow-hidden print:hidden`}>
         {isLoggedIn ? (
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 space-y-2">
-            <span className="text-[10px] font-bold uppercase text-brand-gold tracking-widest block">
-              СИСТЕМА ЗА ХРАНИТЕЛНА БЕЗОПАСНОСТ
-            </span>
-            <h1 className="font-serif text-2xl sm:text-4xl font-bold text-white tracking-tight">
-              {userRole === "admin" ? "Административен Панел & Управление" : "Клиентски Портал и Записи"}
-            </h1>
-            <p className="text-xs text-white/80 max-w-2xl mx-auto font-medium">
-              {userRole === "admin" ? (
-                <>Администратор: <span className="text-brand-gold font-bold">д-р Данка Николова</span></>
-              ) : (
-                <>Обект: <span className="text-brand-gold font-bold">{firmInfo.name || "Неконфигуриран"}</span> ({firmInfo.niche})</>
-              )}
-            </p>
-          </div>
+          <>
+            {/* Продължение на навигацията: същият тъмнозелен фон, фина златиста мрежа и меки отблясъци */}
+            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(197,168,128,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(197,168,128,0.07)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_75%_100%_at_75%_0%,black,transparent)]" />
+            <div className="absolute -top-40 -right-24 w-[560px] h-[560px] rounded-full bg-brand-gold/15 blur-[120px] pointer-events-none" />
+            <div className="absolute -bottom-48 -left-24 w-[460px] h-[460px] rounded-full bg-emerald-400/10 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-brand-gold/40 to-transparent" />
+            {(() => {
+              const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+              const isAdminView = userRole === "admin";
+              const planName = me ? PLAN_BY_ID[effectivePlan(me)]?.name : undefined;
+              const trialLeft = me?.subscriptionStatus === "trial" ? trialDaysLeft(me.trialStartedAt, me.trialStartedAtMs) : null;
+              const expires = me?.expiresAt ? `${me.expiresAt.slice(8, 10)}.${me.expiresAt.slice(5, 7)}.${me.expiresAt.slice(0, 4)}` : "";
+              const today = new Date().toLocaleDateString("bg-BG", { weekday: "long", day: "numeric", month: "long" });
+              const chips = isAdminView
+                ? ["д-р Данка Николова", "Администратор"]
+                : [
+                    firmInfo.niche,
+                    trialLeft !== null
+                      ? `Пробен период · ${Math.max(0, trialLeft)} ${trialLeft === 1 ? "ден" : "дни"}`
+                      : planName ? `План „${planName}“${expires ? ` · до ${expires}` : ""}` : "",
+                  ].filter(Boolean);
+              return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-9 sm:py-12 relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+                  <div className="space-y-3.5 min-w-0">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-brand-gold/30 bg-brand-gold/10 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-gold">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      {isAdminView ? "Административен панел" : "Клиентски портал"}
+                    </span>
+                    <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight leading-[1.08] break-words">
+                      {isAdminView ? (
+                        <>Управление на <span className="bg-gradient-to-r from-brand-gold via-[#EAD7B2] to-brand-gold bg-clip-text text-transparent">системата</span></>
+                      ) : (
+                        <span className="bg-gradient-to-r from-white via-white to-[#EAD7B2] bg-clip-text text-transparent">
+                          {firmInfo.name || "Вашият обект"}
+                        </span>
+                      )}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {chips.map((c) => (
+                        <span key={c} className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-[11px] font-semibold text-white/80">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="shrink-0 self-start md:self-auto flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.05] backdrop-blur-sm px-4 py-3">
+                    <span className="p-2 rounded-xl bg-brand-gold/15 text-brand-gold">
+                      <Calendar className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <span className="block text-[9px] font-bold uppercase tracking-[0.18em] text-white/45">Днес</span>
+                      <span className="block text-sm font-semibold text-white first-letter:uppercase">{today}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </>
         ) : (
+          <>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand-gold/5 via-transparent to-transparent opacity-75 pointer-events-none"></div>
           <div className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 space-y-6 animate-fade-in">
             <div className="inline-block relative">
               <div className="absolute inset-0 bg-brand-gold/20 blur-3xl rounded-full"></div>
@@ -3038,6 +3082,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+          </>
         )}
       </section>
 
