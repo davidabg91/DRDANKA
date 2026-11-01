@@ -6,7 +6,8 @@
  */
 
 import { useMemo, useState } from "react";
-import { BookmarkCheck, ChevronLeft, ChevronRight, Copy, Settings, Wand2 } from "lucide-react";
+import { BookmarkCheck, ChevronLeft, ChevronRight, Copy, Settings } from "lucide-react";
+import { MonthFillIcon } from "./icons";
 import type { RegisterDocData } from "./registerPrint";
 import { getLocalDateISO } from "@/lib/dateUtils";
 import RoomLayoutEditor from "./RoomLayoutEditor";
@@ -230,7 +231,7 @@ export default function CleaningChecklistEditor({
               className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
               title="Попълва празните работни дни до днес по образеца"
             >
-              <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни до днес по образеца
+              <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни до днес по образеца
             </button>
           )}
           {onToggleAutoFill && (

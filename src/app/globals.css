@@ -255,3 +255,24 @@ main > article.bg-brand-light {
 @media (prefers-reduced-motion: reduce) {
   .animate-hero-card { animation: none; }
 }
+
+/* Дневен план в дневниците: отметка „готово", поява на ред, изрисуване на знака */
+@keyframes plan-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+@keyframes plan-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes plan-draw {
+  from { stroke-dasharray: 40; stroke-dashoffset: 40; }
+  to { stroke-dasharray: 40; stroke-dashoffset: 0; }
+}
+.plan-pop { animation: plan-pop 420ms cubic-bezier(.2,.8,.2,1) both; }
+.plan-in { animation: plan-in 300ms ease-out both; }
+.plan-draw { animation: plan-draw 600ms 200ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .plan-pop, .plan-in, .plan-draw { animation: none; }
+}

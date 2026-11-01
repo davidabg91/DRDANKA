@@ -76,8 +76,20 @@ import {
   weekKeyFor,
 } from "./weeklyHygiene";
 import { DEFAULT_TEMP_NORMS, TEMP_UNIT_LABELS, isValidNorm, normLabel, sampleTempInNorm, tempOutOfNorm, normsByName, type TempNorm, type TempNormEntry, type TempUnit, type TempUnitType } from "./tempUnits";
+import { MonthFillIcon } from "./icons";
+import TodayPlan, { type PlanAdminTask, type PlanNotice, type PlanTempUnit } from "./TodayPlan";
 import {
-  Bell,
+  buildDayTasks,
+  cleaningSource,
+  lastTempBefore,
+  quickFillCleaning,
+  quickFillGridDay,
+  quickFillPrework,
+  quickFillStaff,
+  quickFillTemps,
+  type QuickKind,
+} from "./dayTasks";
+import {
   Check,
   CheckCircle,
   ChevronLeft,
@@ -100,7 +112,6 @@ import {
   Calculator,
   CheckCheck,
   ScanLine,
-  Wand2,
   UtensilsCrossed,
   X,
   Flame,
@@ -284,8 +295,8 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: "reminders",
     emoji: "🔔",
-    title: "Напомнянията — Вашият дневен списък",
-    text: "Тук виждате какво чака попълване днес: температури, хигиена, преглед на персонала… Кликнете върху напомняне и отивате направо в съответния дневник.",
+    title: "Днешен план — какво остава за деня",
+    text: "Най-отгоре виждате колко задачи остават днес, подредени „Преди отваряне“, „През деня“ и „След затваряне“. Когато всичко е наред, потвърдете с един бутон направо оттук, а температурите въведете в полетата. При отклонение отворете дневника.",
   },
   {
     target: "cards",
@@ -1333,7 +1344,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично изпичанията на дюнер за всеки ден от месеца с нормални градуси и часове"
               >
-                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "staff-hygiene" && employees.length > 0 && (
@@ -1351,7 +1362,7 @@ function RowsEditor({
                   className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                   title="Попълва автоматично личната хигиена на служителите за целия месец"
                 >
-                  <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                  <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
                 </button>
               </>
             )}
@@ -1411,7 +1422,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично подмяната на олио на всеки 3 дни за целия месец"
               >
-                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "baking" && (
@@ -1420,7 +1431,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично изпичанията на тестени изделия за целия месец"
               >
-                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "cooked-meals" && (
@@ -1429,7 +1440,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично температурния контрол на готвените ястия за целия месец"
               >
-                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "disinfectant-residue" && (
@@ -1438,7 +1449,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично тестването на дезинфектанти на всеки 3 дни за целия месец"
               >
-                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {def.id === "hygiene-monthly" && (
@@ -1447,7 +1458,7 @@ function RowsEditor({
                 className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
                 title="Попълва автоматично месечния контрол на хигиената"
               >
-                <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+                <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
               </button>
             )}
             {["duner", "staff-hygiene", "fryer-oil-destroy", "baking", "cooked-meals", "disinfectant-residue", "hygiene-monthly"].includes(def.id) && (
@@ -1964,7 +1975,7 @@ function GridEditor({
             className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-md shadow-brand-gold/15 transition-all hover:scale-[1.02]"
             title="Попълва автоматично целия месец с отметки ✓"
           >
-            <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
+            <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни автоматично за месеца
           </button>
           <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
             <input
@@ -2201,7 +2212,7 @@ function TempEditor({
               className="text-[9px] font-black uppercase px-3 py-1.5 rounded-lg bg-brand-gold hover:bg-brand-gold-light text-brand-dark cursor-pointer flex items-center gap-1.5 border-0 shadow-sm transition-all hover:scale-[1.02]"
               title="Попълва автоматично целия месец с нормални градуси и часове"
             >
-              <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Автоматично попълване за месеца
+              <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Автоматично попълване за месеца
             </button>
             <label className="flex items-center gap-2 text-[10px] uppercase font-black text-brand-green/80 cursor-pointer select-none bg-brand-light/50 border border-brand-green/10 rounded-xl px-3 py-2 transition-all hover:bg-brand-light">
               <input
@@ -4154,82 +4165,38 @@ export default function RegistersTab({
   );
 
   /* ------------------ Задължения за конкретен ден ------------------ */
-  /** Ежедневните задължения, липсващи за дадена дата — за календара и напомнянията. */
+  const preworkLayout = useMemo(
+    () => hygieneLayout ?? defaultHygieneLayout(fridges, freezers),
+    [hygieneLayout, fridges, freezers]
+  );
+  const cleaningLayoutNow = useMemo(() => cleaningLayout ?? defaultCleaningLayout(), [cleaningLayout]);
+
+  /** Всички ежедневни задължения за дата — и свършените (за „Днешен план“). */
+  const dayTasks = useCallback(
+    (dateISO: string) =>
+      buildDayTasks({
+        dateISO,
+        docs,
+        units,
+        employees,
+        restDays,
+        dailyTriggers,
+        dailyUsageId: DAILY_USAGE_ID,
+        registerById: REGISTER_BY_ID,
+        recordDateKey,
+        allowedIds,
+        canQuickCleaning: !!cleaningSource(docs["cleaning-checklist"], dateISO, cleaningLayoutNow, cleaningTemplate),
+      }),
+    [docs, units, employees, dailyTriggers, allowedIds, restDays, cleaningLayoutNow, cleaningTemplate]
+  );
+
+  /** Ежедневните задължения, липсващи за дадена дата — за календара. */
   const dayObligations = useCallback(
-    (dateISO: string): { registerId: string; text: string }[] => {
-      const dayNum = String(parseInt(dateISO.slice(8, 10), 10));
-      const missing: { registerId: string; text: string }[] = [];
-
-      const tempDoc = docs["temps"] || {};
-      const missingUnits = units.filter((u) => {
-        const row = tempDoc.units?.[u.name]?.rows?.[dayNum];
-        return !(row && (String(row.t1 || "").trim() !== "" || String(row.t2 || "").trim() !== ""));
-      });
-      if (units.length > 0 && missingUnits.length > 0) {
-        missing.push({
-          registerId: "temps",
-          text: `Температури: непопълнени ${missingUnits.length} от ${units.length} съоръжения (${missingUnits.map((u) => u.name).join(", ")}).`,
-        });
-      }
-
-      if (!isRowFilled(docs["hygiene-daily"]?.rows?.[dayNum])) {
-        missing.push({
-          registerId: "hygiene-daily",
-          text: "Дневникът за хигиена на обекта не е попълнен (попълва се след приключване на почистването).",
-        });
-      }
-
-      if (employees.length > 0) {
-        const checked = new Set(
-          (docs["staff-hygiene"]?.entries || []).filter((e) => e.date === dateISO).map((e) => String(e.employee || ""))
-        );
-        const miss = employees.filter((e) => !checked.has(e.name));
-        if (miss.length > 0) {
-          missing.push({
-            registerId: "staff-hygiene",
-            text: `Контролната карта за лична хигиена липсва за: ${miss.map((e) => e.name).join(", ")} (попълва се преди започване на работа).`,
-          });
-        }
-      }
-
-      // Почистване и дезинфекция — всеки работен ден.
-      if (!restDays.includes(weekdayOfISO(dateISO)) && !isCleaningDayFilled(docs["cleaning-checklist"]?.rows, dateISO)) {
-        missing.push({
-          registerId: "cleaning-checklist",
-          text: "Чек-листът за почистване, измиване и дезинфекция не е попълнен (попълва се след почистването).",
-        });
-      }
-
-      if (!isHygieneDayFilled(docs["prework-check"]?.rows, dateISO)) {
-        missing.push({
-          registerId: "prework-check",
-          text: "Чек-листът „Хигиена на обекта“ (техническо състояние и хигиена) не е попълнен — попълва се преди започване на работа.",
-        });
-      }
-
-      // Отбелязани дейности/уреди за деня → изискват своите карти.
-      const used = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
-      dailyTriggers.forEach((trig) => {
-        if (used[trig.id] !== "1") return;
-        trig.registers.forEach((regId) => {
-          const def = REGISTER_BY_ID[regId];
-          if (!def) return;
-          const dk = recordDateKey(def) || "date";
-          if (!(docs[regId]?.entries || []).some((e) => e[dk] === dateISO)) {
-            const isActivity = DAILY_ACTIVITIES.some((a) => a.id === trig.id);
-            missing.push({
-              registerId: regId,
-              text: isActivity
-                ? `${trig.emoji} Отбелязахте „${trig.label}“ — попълнете картата „${def.shortTitle}“.`
-                : `${trig.emoji} Използван е „${trig.label}“ — попълнете картата „${def.shortTitle}“.`,
-            });
-          }
-        });
-      });
-
-      return missing.filter((m) => allowedIds.has(m.registerId));
-    },
-    [docs, units, employees, hotPoint, dailyTriggers, allowedIds, restDays]
+    (dateISO: string): { registerId: string; text: string }[] =>
+      dayTasks(dateISO)
+        .filter((t) => !t.done)
+        .map((t) => ({ registerId: t.registerId, text: t.text })),
+    [dayTasks]
   );
 
   /* ------------------ Напомняния ------------------ */
@@ -4251,8 +4218,7 @@ export default function RegistersTab({
     // Напомнянията важат за избрания ден; за бъдещи дни не се показват.
     if (!refDate.startsWith(month) || refDate > today) return list;
 
-    // Ежедневни задължения за избрания ден
-    dayObligations(refDate).forEach((m) => list.push({ level: "urgent", ...m }));
+    // Ежедневните задължения са в „Днешен план“ (dayTasks), тук са само периодичните.
     // Периодичните проверки (седмични, месечни, срокове) важат само за днешния ден.
     if (!isRefToday) return list;
 
@@ -4448,7 +4414,7 @@ export default function RegistersTab({
     }
 
     return list.filter((r) => r.level === "admin" || !r.registerId || allowedIds.has(r.registerId));
-  }, [docs, loading, month, refDate, refDay, isRefToday, dayObligations, employees, hotPoint, hotAppliances, allowedIds]);
+  }, [docs, loading, month, refDate, refDay, isRefToday, employees, hotPoint, hotAppliances, allowedIds]);
 
   /* ------------------ Статус на регистър за картите ------------------ */
   const registerStatus = useCallback(
@@ -4580,7 +4546,66 @@ export default function RegistersTab({
 
   /* ------------------ Изглед ------------------ */
   const openDef = openId ? activeRegisters.find((r) => r.id === openId) : null;
-  const urgentCount = reminders.filter((r) => r.level === "urgent").length;
+
+  /* ------------------ Днешен план ------------------ */
+  const planVisible = !readOnly && !loading && refDate.startsWith(month) && refDate <= todayISO();
+  const planTasks = useMemo(() => (planVisible ? dayTasks(refDate) : []), [planVisible, dayTasks, refDate]);
+  const planAdmin: PlanAdminTask[] = reminders
+    .filter((r) => r.level === "admin" && r.adminId)
+    .map((r) => ({ id: r.adminId as string, text: r.text, registerId: r.registerId }));
+  const planNotices: PlanNotice[] = reminders
+    .filter((r) => r.level !== "admin")
+    .map((r) => ({ level: r.level as PlanNotice["level"], text: r.text, registerId: r.registerId }));
+  const planTempUnits: PlanTempUnit[] = units.map((u) => {
+    const row = docs["temps"]?.units?.[u.name]?.rows?.[refDay] || {};
+    return {
+      unit: u,
+      measured: [String(row.t1 || "").trim(), String(row.t2 || "").trim()],
+      last: lastTempBefore(docs["temps"], u.name, parseInt(refDay, 10)),
+    };
+  });
+  const planCleaning = cleaningSource(docs["cleaning-checklist"], refDate, cleaningLayoutNow, cleaningTemplate);
+  const planCleaningHint = planCleaning
+    ? planCleaning.from === "template"
+      ? "По образеца на обекта — препарат и изпълнител"
+      : `Като ${planCleaning.from.slice(8, 10)}.${planCleaning.from.slice(5, 7)} — същите препарати и изпълнители`
+    : undefined;
+  // Изрядни работни дни в месеца до избрания ден (почивните не се броят).
+  const planCleanDays = useMemo(() => {
+    if (!planVisible) return { clean: 0, total: 0 };
+    const last = parseInt(refDate.slice(8, 10), 10);
+    let clean = 0;
+    let total = 0;
+    for (let d = 1; d <= last; d++) {
+      const iso = `${month}-${String(d).padStart(2, "0")}`;
+      if (restDays.includes(weekdayOfISO(iso))) continue;
+      total++;
+      if (dayObligations(iso).length === 0) clean++;
+    }
+    return { clean, total };
+  }, [planVisible, refDate, month, restDays, dayObligations]);
+  const planDateLong = new Date(`${refDate}T00:00:00`).toLocaleDateString("bg-BG", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
+  const runQuick = (kind: Exclude<QuickKind, "temps">) => {
+    if (kind === "staff") {
+      makeUpdater("staff-hygiene")((prev) => quickFillStaff(prev, employees, refDate));
+    } else if (kind === "grid") {
+      const def = REGISTER_BY_ID["hygiene-daily"];
+      makeUpdater("hygiene-daily")((prev) => quickFillGridDay(prev, def?.columns || [], refDay, refDate));
+    } else if (kind === "prework") {
+      makeUpdater("prework-check")((prev) => quickFillPrework(prev, refDate, preworkLayout, restDays));
+    } else if (kind === "cleaning" && planCleaning) {
+      makeUpdater("cleaning-checklist")((prev) => quickFillCleaning(prev, refDate, cleaningLayoutNow, planCleaning.template));
+    }
+  };
+
+  const saveQuickTemps = (values: Record<string, { temp: string; action?: string }>) => {
+    makeUpdater("temps")((prev) => quickFillTemps(prev, units, refDay, values, nowTime()));
+  };
 
   return (
     <SignatureContext.Provider value={signatureMode === "draw" ? signature : undefined}>
@@ -4630,6 +4655,28 @@ export default function RegistersTab({
           </button>
         </div>
       </div>
+
+      {/* Днешен план — какво остава за деня, с бързо потвърждение */}
+      {planVisible && (
+        <TodayPlan
+          tasks={planTasks}
+          adminTasks={planAdmin}
+          notices={planNotices}
+          tempUnits={planTempUnits}
+          dayLabel={dayLabel}
+          dateLong={planDateLong}
+          isToday={isRefToday}
+          isRestDay={restDays.includes(weekdayOfISO(refDate))}
+          cleanDays={planCleanDays}
+          cleaningHint={planCleaningHint}
+          compact={!!openDef}
+          iconFor={(id: string) => REGISTER_ICONS[id] || FileText}
+          onOpen={setOpenId}
+          onQuick={runQuick}
+          onSaveTemps={saveQuickTemps}
+          onAdminDone={markAdminReminderDone}
+        />
+      )}
 
       {/* Календар на месеца: статус по дни */}
       {!loading && (() => {
@@ -4856,83 +4903,6 @@ export default function RegistersTab({
         );
       })()}
 
-      {/* Напомняния */}
-      {!readOnly && reminders.length > 0 && (
-        <div
-          data-tour="reminders"
-          className={`rounded-3xl border p-5 space-y-2.5 ${urgentCount > 0 ? "bg-red-50/70 border-red-200" : "bg-amber-50/70 border-amber-200"}`}
-        >
-          <div className="flex items-center gap-2">
-            <Bell className={`h-4 w-4 ${urgentCount > 0 ? "text-red-500" : "text-amber-500"}`} />
-            <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
-              Напомняния за {dayLabel} ({reminders.length})
-            </h3>
-          </div>
-          <div className="space-y-1.5">
-            {reminders.map((r, i) =>
-              r.level === "admin" ? (
-                <div
-                  key={i}
-                  className="w-full flex items-start gap-2 text-[11px] leading-snug rounded-xl px-3 py-2.5 border bg-brand-gold/10 border-brand-gold/40 text-brand-dark/85"
-                >
-                  <span className="shrink-0 mt-0.5 text-sm leading-none">📌</span>
-                  <div className="flex-1 min-w-0">
-                    <span className="block text-[8px] font-black uppercase tracking-widest text-brand-gold/90 mb-0.5">
-                      Задача от д-р Николова
-                    </span>
-                    <span className="block">{r.text}</span>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      {r.registerId && REGISTER_BY_ID[r.registerId] && (
-                        <button
-                          onClick={() => setOpenId(r.registerId)}
-                          className="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-white border border-brand-green/15 hover:border-brand-gold text-brand-green cursor-pointer"
-                        >
-                          Отвори картата →
-                        </button>
-                      )}
-                      <button
-                        onClick={() => r.adminId && markAdminReminderDone(r.adminId)}
-                        className="text-[9px] font-black uppercase px-2.5 py-1 rounded-lg bg-brand-green text-white border-0 cursor-pointer flex items-center gap-1"
-                      >
-                        <Check className="h-3 w-3" /> Готово
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  key={i}
-                  onClick={() => r.registerId && setOpenId(r.registerId)}
-                  className={`w-full text-left flex items-start gap-2 text-[11px] leading-snug rounded-xl px-3 py-2 cursor-pointer transition-colors border ${
-                    r.level === "urgent"
-                      ? "bg-white border-red-200 text-red-800 hover:border-red-400"
-                      : r.level === "warn"
-                        ? "bg-white border-amber-200 text-amber-800 hover:border-amber-400"
-                        : "bg-white border-brand-green/10 text-brand-dark/60 hover:border-brand-gold"
-                  }`}
-                >
-                  {r.level === "urgent" ? (
-                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                  ) : (
-                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                  )}
-                  <span className="flex-1">{r.text}</span>
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0 mt-0.5 opacity-50" />
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      )}
-      {!readOnly && !loading && reminders.length === 0 && refDate.startsWith(month) && refDate <= todayISO() &&
-        Object.keys(docs[DAILY_USAGE_ID]?.rows?.[refDay] || {}).length > 0 && (
-        <div className="rounded-3xl border border-green-200 bg-green-50/70 p-4 flex items-center gap-3">
-          <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />
-          <p className="text-xs text-green-800 font-bold">
-            Всичко за {dayLabel} е попълнено — обектът е изряден! Системата ще напомни при следващо задължение.
-          </p>
-        </div>
-      )}
 
       {loading ? (
         <div className="flex items-center justify-center py-20 gap-3 text-brand-dark/40">

@@ -9,7 +9,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { CheckCheck, ChevronLeft, ChevronRight, History, Settings, Wand2 } from "lucide-react";
+import { CheckCheck, ChevronLeft, ChevronRight, History, Settings } from "lucide-react";
+import { MonthFillIcon } from "./icons";
 import RoomLayoutEditor from "./RoomLayoutEditor";
 import SignatureCell from "./SignatureCell";
 import type { RegisterDocData } from "./registerPrint";
@@ -200,7 +201,7 @@ export default function WeeklyHygieneEditor({
               className="bg-brand-gold hover:bg-brand-gold-light text-brand-dark text-[10px] uppercase font-black px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer border-0 shadow-sm"
               title="Попълва празните клетки до днес с „-“ (добър), а почивните дни — с „П“"
             >
-              <Wand2 className="h-3.5 w-3.5 text-brand-green" /> Попълни седмицата до днес
+              <MonthFillIcon className="h-3.5 w-3.5 text-brand-green" /> Попълни седмицата до днес
             </button>
           )}
           {onToggleAutoFill && (
