@@ -24,6 +24,7 @@ export default function LibraryMaterialPage() {
 
   // Hooks must be called unconditionally — declare them before any early return.
   const [buyOpen, setBuyOpen] = useState(false);
+  const backHref = material?.category === "book" ? "/books" : "/library";
 
   useEffect(() => {
     if (material) {
@@ -90,7 +91,7 @@ export default function LibraryMaterialPage() {
             
             {/* Left content (Title, details) */}
             <div className="lg:col-span-7 space-y-8">
-              <Link href="/library" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-gold hover:text-white transition-colors cursor-pointer backdrop-blur-sm bg-black/20 px-3.5 py-2 rounded-full border border-white/10 w-fit">
+              <Link href={backHref} className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-gold hover:text-white transition-colors cursor-pointer backdrop-blur-sm bg-black/20 px-3.5 py-2 rounded-full border border-white/10 w-fit">
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Към каталога
               </Link>
@@ -173,7 +174,7 @@ export default function LibraryMaterialPage() {
   return (
     <div className="bg-brand-light min-h-screen pb-24">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        <Link href="/library" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark/60 hover:text-brand-gold transition-colors cursor-pointer">
+        <Link href={backHref} className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-brand-dark/60 hover:text-brand-gold transition-colors cursor-pointer">
           <ArrowLeft className="h-3.5 w-3.5" />
           Към книжарницата
         </Link>

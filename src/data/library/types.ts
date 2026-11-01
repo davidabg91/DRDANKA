@@ -24,7 +24,7 @@ export interface LibraryMaterial {
   /** Delivery format. */
   type: LibraryMaterialType;
   /** Logical category for the UI separation (trainings vs documents). */
-  category?: "training" | "document";
+  category?: "training" | "document" | "book";
   contentUrl: string;
   /** Multi-lesson items for structured video courses or modules */
   items?: import("@/lib/courseTypes").CourseMaterialItem[];
@@ -40,6 +40,18 @@ export interface LibraryMaterial {
     title: string;
     url: string;
   };
+  /**
+   * Optional downloadable files hosted in Firebase Storage under
+   * library/<slug>/<path>. Storage rules let only buyers read them, and the
+   * profile shows one download button per file after purchase.
+   */
+  files?: {
+    title: string;
+    /** File name inside library/<slug>/, e.g. "bonus-1.pdf". */
+    path: string;
+    /** Name the buyer's browser saves the file as. */
+    downloadName: string;
+  }[];
   /** Catalog card visuals. */
   card: {
     /** Path to cover image in /public, or an absolute URL. */

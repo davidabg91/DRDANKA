@@ -7,7 +7,7 @@ import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc, updateDoc, deleteField, writeBatch, serverTimestamp } from "firebase/firestore";
 import { isValidEik, normalizeEik } from "@/lib/eik";
-import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
+import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata, getBlob } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
 import { Training, Enrollment } from "@/lib/trainingTypes";
@@ -502,6 +502,29 @@ export default function ProfilePage() {
   const [videoLinkDraft, setVideoLinkDraft] = useState<Record<string, string>>({});
   // Which purchased video (external link) the buyer is watching in a modal.
   const [watchLinkSlug, setWatchLinkSlug] = useState<string | null>(null);
+  // Storage path of the purchased file currently being downloaded.
+  const [downloadingPath, setDownloadingPath] = useState<string | null>(null);
+
+  // Fetches a purchased file through the SDK (so storage rules gate it) and
+  // saves it under a readable name instead of opening a public token URL.
+  const handleDownloadLibraryFile = async (slug: string, path: string, downloadName: string) => {
+    const fullPath = `library/${slug}/${path}`;
+    setDownloadingPath(fullPath);
+    try {
+      const blob = await getBlob(storageRef(storage, fullPath));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = downloadName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("Файлът не можа да бъде изтеглен. Опитайте отново или се свържете с нас.");
+    } finally {
+      setDownloadingPath(null);
+    }
+  };
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
   const [usersList, setUsersList] = useState<DankaUser[]>([]);
   const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "bookings" | "users" | "materials" | "courses" | "trainings" | "enrollments" | "messages" | "logs">("candidates");
@@ -6785,6 +6808,23 @@ export default function ProfilePage() {
                                         <Gift className="h-3.5 w-3.5 text-brand-gold" /> Бонус: {m.bonus.title}
                                       </a>
                                     )}
+
+                                    {m.files?.map(f => {
+                                      const busy = downloadingPath === `library/${m.slug}/${f.path}`;
+                                      return (
+                                        <button
+                                          key={f.path}
+                                          onClick={() => handleDownloadLibraryFile(m.slug, f.path, f.downloadName)}
+                                          disabled={busy}
+                                          className="inline-flex items-center justify-center gap-1.5 bg-brand-gold/10 hover:bg-brand-gold/20 disabled:opacity-60 text-brand-dark font-bold text-[11px] uppercase py-2.5 px-3 rounded-xl transition-colors w-full cursor-pointer text-center border border-brand-gold/30"
+                                        >
+                                          {busy
+                                            ? <Loader2 className="h-3.5 w-3.5 text-brand-gold animate-spin" />
+                                            : <Download className="h-3.5 w-3.5 text-brand-gold" />}
+                                          {busy ? "Изтегляне…" : `Изтегли: ${f.title}`}
+                                        </button>
+                                      );
+                                    })}
                                   </>
                                 )}
 

@@ -57,6 +57,7 @@ export default function Header() {
     { name: "БАБХ Система", href: "/babh-sistema", badge: "ВИП" },
     { name: "Консултации", href: "/consultations" },
     { name: "Обучения", href: "/training" },
+    { name: "Книги", href: "/books" },
     { name: "За мен", href: "/about" },
     { name: "Блог", href: "/blog" },
     { name: "Контакти", href: "/contact" },

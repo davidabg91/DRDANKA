@@ -19,6 +19,7 @@ import { prakticheskaBibliaChast1 } from "./prakticheska-biblia-chast-1";
 import { prakticheskaBibliaChast2 } from "./prakticheska-biblia-chast-2";
 import { prakticheskaBibliaChast3 } from "./prakticheska-biblia-chast-3";
 import { registraciaProizvodstvoTargovia } from "./registracia-proizvodstvo-targovia";
+import { kuchetoNeMojeDaOstavaSamo } from "./kucheto-ne-moje-da-ostava-samo";
 
 export const LIBRARY_MATERIALS: ReadonlyArray<LibraryMaterial> = [
   registraciaProizvodstvoTargovia,
@@ -31,6 +32,7 @@ export const LIBRARY_MATERIALS: ReadonlyArray<LibraryMaterial> = [
   videoEtiketirane,
   mesoIMesniProdukti,
   etiketiraneKontrolZashtita,
+  kuchetoNeMojeDaOstavaSamo,
 ];
 
 /** Convenience lookup by slug. Returns undefined if not found. */
