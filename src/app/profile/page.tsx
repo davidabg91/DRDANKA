@@ -3717,19 +3717,22 @@ export default function ProfilePage() {
             {/* Left Sidebar Menu - Hidden on print */}
             <aside
               style={{ top: siteHeaderH + 8 }}
-              className="sticky z-30 lg:static lg:z-auto bg-white/95 backdrop-blur-sm border border-brand-green/10 rounded-2xl lg:rounded-3xl p-2 lg:p-6 shadow-xl print:hidden">
+              className="sticky z-30 lg:relative lg:z-auto overflow-hidden bg-gradient-to-b from-[#0A1F18] via-[#0D271E] to-[#0F2E23] text-white border border-brand-gold/20 rounded-2xl lg:rounded-3xl p-2 lg:p-5 shadow-2xl shadow-brand-green/25 print:hidden">
+              {/* Златист отблясък и фина линия — като навигацията и „Днешен план" */}
+              <div className="pointer-events-none absolute -top-24 -right-20 w-64 h-64 rounded-full bg-brand-gold/15 blur-3xl" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-gold/50 to-transparent" />
               {/* Мобилна лента: текущ раздел + бутон „Меню" */}
-              <div ref={mobileBarRef} className="lg:hidden flex items-center gap-3 pl-3">
+              <div ref={mobileBarRef} className="relative lg:hidden flex items-center gap-3 pl-3">
                 <div className="flex-1 min-w-0">
-                  <span className="block text-[9px] font-black uppercase tracking-[0.15em] text-brand-dark/45">Раздел</span>
-                  <span className="block text-sm font-bold text-brand-green truncate">{currentSectionLabel}</span>
+                  <span className="block text-[9px] font-black uppercase tracking-[0.15em] text-white/50">Раздел</span>
+                  <span className="block text-sm font-bold text-white truncate">{currentSectionLabel}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setMobileNavOpen((o) => !o)}
                   aria-expanded={mobileNavOpen}
                   aria-controls="profile-mobile-nav"
-                  className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider border-0 cursor-pointer transition-colors ${mobileNavOpen ? "bg-brand-gold text-brand-dark" : "bg-brand-green text-white"}`}
+                  className={`relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider border-0 cursor-pointer transition-colors ${mobileNavOpen ? "bg-white/10 text-white" : "bg-brand-gold text-brand-dark"}`}
                 >
                   {mobileNavOpen ? <X className="h-4 w-4" /> : <List className="h-4 w-4" />}
                   {mobileNavOpen ? "Затвори" : "Меню"}
@@ -3741,24 +3744,24 @@ export default function ProfilePage() {
 
               <div
                 id="profile-mobile-nav"
-                className={`${mobileNavOpen ? "block" : "hidden"} lg:block mt-2 lg:mt-0 max-h-[70vh] overflow-y-auto lg:max-h-none lg:overflow-visible px-2 pb-2 lg:p-0 space-y-6`}
+                className={`relative ${mobileNavOpen ? "block" : "hidden"} lg:block mt-2 lg:mt-0 max-h-[70vh] overflow-y-auto lg:max-h-none lg:overflow-visible px-2 pb-2 lg:p-0 space-y-5`}
               >
               <div className="space-y-3">
-                <div className="flex items-center gap-2.5 pb-2 border-b border-brand-green/5">
-                  <div className="w-8 h-8 rounded-full bg-brand-green/10 flex items-center justify-center text-brand-green font-bold text-sm">
-                    {userRole === "admin" ? "A" : firmInfo.name?.substring(0, 1) || "K"}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.05] border border-white/10">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-gold to-[#E8D3AE] flex items-center justify-center text-brand-dark font-serif font-bold text-lg shrink-0 shadow-md shadow-brand-gold/20">
+                    {userRole === "admin" ? "Д" : firmInfo.name?.substring(0, 1) || "К"}
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-brand-dark truncate max-w-[150px]">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-white truncate">
                       {userRole === "admin" ? "д-р Данка Николова" : firmInfo.name || "Клиент"}
                     </h4>
-                    <span className="text-[9px] font-black uppercase text-brand-gold tracking-wider">
-                      {userRole === "admin" ? "Администратор" : "БАБХ Обект"}
+                    <span className="text-[9px] font-black uppercase text-brand-gold tracking-[0.15em]">
+                      {userRole === "admin" ? "Администратор" : "Клиентски портал"}
                     </span>
                   </div>
                 </div>
-                
-                <span className="text-[9px] font-black uppercase text-brand-dark/45 tracking-[0.15em] block pt-2 pl-1">
+
+                <span className="text-[9px] font-black uppercase text-white/40 tracking-[0.2em] block pt-1 pl-1">
                   Навигация
                 </span>
                 <nav
@@ -3771,9 +3774,9 @@ export default function ProfilePage() {
                     <>
                       <button
                         onClick={() => setActiveAdminTab("candidates")}
-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "candidates" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "candidates" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <Clock className={`h-4 w-4 ${activeAdminTab === "candidates" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <Clock className={`h-4 w-4 ${activeAdminTab === "candidates" ? "text-brand-gold" : "text-white/45"}`} />
                         Кандидати
                         {pendingCandidatesCount > 0 && (
                           <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm animate-pulse">
@@ -3783,9 +3786,9 @@ export default function ProfilePage() {
                       </button>
                       <button
                         onClick={() => setActiveAdminTab("bookings")}
-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "bookings" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "bookings" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <Calendar className={`h-4 w-4 ${activeAdminTab === "bookings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <Calendar className={`h-4 w-4 ${activeAdminTab === "bookings" ? "text-brand-gold" : "text-white/45"}`} />
                         Консултации & Срещи
                         {pendingBookingsCount > 0 && (
                           <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-brand-gold text-brand-dark text-[9px] font-black leading-none shadow-sm animate-pulse">
@@ -3795,37 +3798,37 @@ export default function ProfilePage() {
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("users")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "users" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "users" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <Users className={`h-4 w-4 ${activeAdminTab === "users" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <Users className={`h-4 w-4 ${activeAdminTab === "users" ? "text-brand-gold" : "text-white/45"}`} />
                         Потребители
                       </button>
                       <button
                         onClick={() => setActiveAdminTab("materials")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "materials" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "materials" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <FileCheck className={`h-4 w-4 ${activeAdminTab === "materials" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <FileCheck className={`h-4 w-4 ${activeAdminTab === "materials" ? "text-brand-gold" : "text-white/45"}`} />
                         Материали & Тестове
                       </button>
                       <button
                         onClick={() => setActiveAdminTab("courses")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "courses" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "courses" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <BookOpen className={`h-4 w-4 ${activeAdminTab === "courses" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <BookOpen className={`h-4 w-4 ${activeAdminTab === "courses" ? "text-brand-gold" : "text-white/45"}`} />
                         Курсове (Книжарница)
                       </button>
                       <button
                         onClick={() => setActiveAdminTab("trainings")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "trainings" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "trainings" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <Video className={`h-4 w-4 ${activeAdminTab === "trainings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <Video className={`h-4 w-4 ${activeAdminTab === "trainings" ? "text-brand-gold" : "text-white/45"}`} />
                         Курсове на живо
                       </button>
                       <button
                         onClick={() => setActiveAdminTab("enrollments")}
-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "enrollments" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "enrollments" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <UserCheck className={`h-4 w-4 ${activeAdminTab === "enrollments" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <UserCheck className={`h-4 w-4 ${activeAdminTab === "enrollments" ? "text-brand-gold" : "text-white/45"}`} />
                         Записани
                         {pendingEnrollmentsCount > 0 && (
                           <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm animate-pulse">
@@ -3835,9 +3838,9 @@ export default function ProfilePage() {
                       </button>
                       <button
                         onClick={() => setActiveAdminTab("messages")}
-                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <MessageSquare className={`h-4 w-4 ${activeAdminTab === "messages" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <MessageSquare className={`h-4 w-4 ${activeAdminTab === "messages" ? "text-brand-gold" : "text-white/45"}`} />
                         Чат с Клиенти
                         {hasUnreadAdminMessages && (
                           <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
@@ -3845,9 +3848,9 @@ export default function ProfilePage() {
                       </button>
                       <button 
                         onClick={() => setActiveAdminTab("logs")}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "logs" ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "logs" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
-                        <Search className={`h-4 w-4 ${activeAdminTab === "logs" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                        <Search className={`h-4 w-4 ${activeAdminTab === "logs" ? "text-brand-gold" : "text-white/45"}`} />
                         Одит на Дневници
                       </button>
                     </>
@@ -3862,18 +3865,18 @@ export default function ProfilePage() {
                     const lockedClick = () => {
                       setActiveTab("packages");
                     };
-                    const lockedStyle = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-not-allowed text-left border-0 w-full bg-transparent text-brand-dark/35 hover:bg-brand-dark/5";
+                    const lockedStyle = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-not-allowed text-left border-0 w-full bg-transparent text-white/30 hover:bg-white/[0.04]";
                     const activeStyle = (active: boolean) =>
-                      `flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${active ? "bg-brand-green text-white border-l-4 border-brand-gold rounded-l-none pl-5 shadow-md shadow-brand-green/15" : "bg-transparent text-brand-dark/70 hover:text-brand-green hover:bg-brand-green/5 hover:pl-5 duration-300"}`;
+                      `flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${active ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`;
 
-                    const LockBadge = () => <Lock className="h-3 w-3 text-brand-dark/30 ml-auto" />;
+                    const LockBadge = () => <Lock className="h-3 w-3 text-white/30 ml-auto" />;
 
                     return (
                       <>
                         {/* Premium tab: БАБХ Дневници */}
                         {isSubscribed ? (
                           <button onClick={() => setActiveTab("logs")} className={activeStyle(activeTab === "logs")}>
-                            <Calendar className={`h-4 w-4 ${activeTab === "logs" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            <Calendar className={`h-4 w-4 ${activeTab === "logs" ? "text-brand-gold" : "text-white/45"}`} />
                             БАБХ Дневници
                           </button>
                         ) : (
@@ -3889,7 +3892,7 @@ export default function ProfilePage() {
                         {isSubscribed ? (
                           <button onClick={() => setActiveTab("assigned")} className={activeStyle(activeTab === "assigned")}>
                             <span className="relative inline-flex">
-                              <FileCheck className={`h-4 w-4 ${activeTab === "assigned" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                              <FileCheck className={`h-4 w-4 ${activeTab === "assigned" ? "text-brand-gold" : "text-white/45"}`} />
                               {pendingCount > 0 && (
                                 <span className="absolute -top-1.5 -right-2 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none border border-white shadow-sm animate-pulse">
                                   {pendingCount > 9 ? "9+" : pendingCount}
@@ -3913,20 +3916,29 @@ export default function ProfilePage() {
 
                         {/* ALWAYS OPEN: Моите курсове (paid content) */}
                         <button onClick={() => setActiveTab("courses")} className={activeStyle(activeTab === "courses")}>
-                          <BookOpen className={`h-4 w-4 ${activeTab === "courses" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                          <BookOpen className={`h-4 w-4 ${activeTab === "courses" ? "text-brand-gold" : "text-white/45"}`} />
                           Моите Обучения
                         </button>
 
-                        {/* ALWAYS OPEN: Абонаментни Пакети */}
-                        <button onClick={() => setActiveTab("packages")} className={activeStyle(activeTab === "packages")}>
-                          <Building className={`h-4 w-4 ${activeTab === "packages" ? "text-brand-gold" : "text-brand-dark/50"}`} />
-                          Абонаментни Пакети
+                        {/* ALWAYS OPEN: Абонаментни Пакети — златен, винаги се отличава */}
+                        <button
+                          onClick={() => setActiveTab("packages")}
+                          className={`group relative flex items-center gap-3 px-4 py-3 my-1 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full overflow-hidden bg-gradient-to-r from-brand-gold via-[#E3CB9F] to-brand-gold text-brand-dark shadow-lg shadow-brand-gold/25 hover:shadow-brand-gold/40 hover:brightness-105 ${
+                            activeTab === "packages" ? "ring-2 ring-white/70 ring-offset-2 ring-offset-[#0D271E]" : ""
+                          }`}
+                        >
+                          <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12" />
+                          <Star className="h-4 w-4 relative fill-brand-dark/15" />
+                          <span className="relative flex-1">Абонаментни пакети</span>
+                          {!isSubscribed && (
+                            <span className="relative text-[8px] font-black px-1.5 py-0.5 rounded-md bg-brand-dark text-brand-gold">Избери</span>
+                          )}
                         </button>
 
                         {/* Premium tab: Чат — писане само за „Професионал" и VIP; останалите четат съобщенията от админа */}
                         {isSubscribed ? (
                           <button onClick={handleOpenUserChat} className={`relative ${activeStyle(activeTab === "chat")}`}>
-                            <MessageSquare className={`h-4 w-4 ${activeTab === "chat" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            <MessageSquare className={`h-4 w-4 ${activeTab === "chat" ? "text-brand-gold" : "text-white/45"}`} />
                             Чат с Администратор
                             {hasUnreadUserMessages && (
                               <span className="absolute right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-sm"></span>
@@ -3943,7 +3955,7 @@ export default function ProfilePage() {
                         {/* Premium tab: Инструменти */}
                         {isSubscribed ? (
                           <button onClick={() => setActiveTab("tools")} className={activeStyle(activeTab === "tools")}>
-                            <Activity className={`h-4 w-4 ${activeTab === "tools" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            <Activity className={`h-4 w-4 ${activeTab === "tools" ? "text-brand-gold" : "text-white/45"}`} />
                             Инструменти
                           </button>
                         ) : (
@@ -3957,7 +3969,7 @@ export default function ProfilePage() {
                         {/* Premium tab: Фирма и Профил */}
                         {isSubscribed ? (
                           <button onClick={() => setActiveTab("settings")} className={activeStyle(activeTab === "settings")}>
-                            <Settings className={`h-4 w-4 ${activeTab === "settings" ? "text-brand-gold" : "text-brand-dark/50"}`} />
+                            <Settings className={`h-4 w-4 ${activeTab === "settings" ? "text-brand-gold" : "text-white/45"}`} />
                             Фирма и Профил
                           </button>
                         ) : (
@@ -3973,10 +3985,10 @@ export default function ProfilePage() {
                 </nav>
               </div>
 
-              <div className="border-t border-brand-green/5 pt-4">
-                <button 
+              <div className="border-t border-white/10 pt-4">
+                <button
                   onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold uppercase text-red-600 hover:bg-red-50 hover:pl-5 duration-300 transition-all w-full cursor-pointer border-0 bg-transparent text-left font-sans"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold uppercase text-red-300 hover:text-red-200 hover:bg-red-500/10 duration-200 transition-all w-full cursor-pointer border-0 bg-transparent text-left font-sans"
                 >
                   <LogOut className="h-4 w-4" />
                   Излизане
