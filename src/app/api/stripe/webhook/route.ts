@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { stripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
 import { grantAccess } from "@/lib/grantAccess";
+import { grantPaidEnrollment } from "@/lib/enrollmentPayments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +35,19 @@ export async function POST(req: NextRequest) {
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
+
+  // Заявки за наръчници, книги, обучения и live курсове (плащане с карта).
+  if (session.metadata?.kind === "enrollment") {
+    try {
+      await grantPaidEnrollment(session);
+      return NextResponse.json({ ok: true });
+    } catch (err) {
+      console.error("grantPaidEnrollment failed in webhook:", err);
+      // 500 → Stripe опитва отново; отключването е идемпотентно.
+      return NextResponse.json({ error: "grant_failed", detail: err instanceof Error ? err.message : String(err) }, { status: 500 });
+    }
+  }
+
   const courseId = session.metadata?.courseId;
   const buyerEmail = (session.customer_email || session.metadata?.buyerEmail || "").trim().toLowerCase();
   const amountPaidEur = (session.amount_total || 0) / 100;

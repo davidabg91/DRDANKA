@@ -28,6 +28,8 @@ import type { HygieneRoom } from "@/components/registers/weeklyHygiene";
 import type { CleaningTemplate } from "@/components/registers/cleaningChecklist";
 import type { TempNormEntry } from "@/components/registers/tempUnits";
 import BankTransferNotice from "@/components/BankTransferNotice";
+import CardPayButton, { useCardPayments } from "@/components/CardPayButton";
+import { BANK_DETAILS } from "@/lib/paymentInfo";
 import { defaultHotPointForSector, isMeatShopNiche, STORE_REGISTER_IDS, REGISTER_BY_ID, registersForMeat, registersFor } from "@/data/storeRegisters";
 import { PLANS, PLAN_BY_ID, PLAN_RANK, PlanId, effectivePlan, planFeeEur, formatEur, EXTRA_SITE_DISCOUNT, planHasChat, planHasExtras, isExtraRegister, addMonthsISO, LEGACY_PLAN, planDelta } from "@/lib/plans";
 
@@ -500,6 +502,7 @@ export default function ProfilePage() {
   const { enrollments: myEnrollments } = useMyEnrollments(currentUserEmail);
   // Which awaiting-payment package's bank-transfer details are open in a modal.
   const [payEnrollment, setPayEnrollment] = useState<Enrollment | null>(null);
+  const cardPayments = useCardPayments();
   // Draft external video URL per material slug while admin edits it inline.
   const [videoLinkDraft, setVideoLinkDraft] = useState<Record<string, string>>({});
   // Which purchased video (external link) the buyer is watching in a modal.
@@ -3629,15 +3632,21 @@ export default function ProfilePage() {
                 <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
                   <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане по банков път</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">{cardPayments ? "Плащане" : "Плащане по банков път"}</div>
                     <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{payEnrollment.trainingTitle}</div>
                   </div>
                   <button onClick={() => setPayEnrollment(null)} aria-label="Затвори" className="absolute top-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"><X className="h-5 w-5" /></button>
                 </div>
                 <div className="p-6 space-y-4">
+                  <CardPayButton enrollmentId={payEnrollment.id} amountLabel={`${payEnrollment.priceEur.toFixed(2)} €`} returnPath="/profile" />
+                  {cardPayments && (
+                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-brand-dark/40">
+                      <span className="flex-1 h-px bg-brand-green/10" /> или по банков път <span className="flex-1 h-px bg-brand-green/10" />
+                    </div>
+                  )}
                   <BankTransferNotice amount={`${payEnrollment.priceEur.toFixed(2)} €`} reference={`${payEnrollment.email} — ${payEnrollment.trainingTitle}`} />
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
-                    <strong>Активиране:</strong> До <strong>24 часа</strong> след постъпване на плащането пакетът се отключва в „Моите обучения".
+                    <strong>{cardPayments ? "При банков превод:" : "Активиране:"}</strong> До <strong>24 часа</strong> след постъпване на плащането пакетът се отключва в „Моите обучения".
                   </div>
                   <button onClick={() => setPayEnrollment(null)} className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
                 </div>
@@ -7044,8 +7053,8 @@ export default function ProfilePage() {
                                   onClick={() => setPayEnrollment(enr)}
                                   className="mt-6 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-gold to-amber-500 hover:from-amber-500 hover:to-brand-gold text-brand-dark font-bold text-xs uppercase py-3 rounded-xl transition-all w-full cursor-pointer text-center shadow-md shadow-brand-gold/20 border-0"
                                 >
-                                  <Landmark className="h-4 w-4 text-brand-dark" />
-                                  Данни за банков превод
+                                  {cardPayments ? <CreditCard className="h-4 w-4 text-brand-dark" /> : <Landmark className="h-4 w-4 text-brand-dark" />}
+                                  {cardPayments ? "Плати сега" : "Данни за банков превод"}
                                 </button>
                               )}
                             </div>
@@ -7528,19 +7537,19 @@ export default function ProfilePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2 font-mono text-xs sm:text-sm text-left">
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">Получател</span>
-                        <span className="font-bold text-white">Данка Василева Николова</span>
+                        <span className="font-bold text-white">{BANK_DETAILS.holder}</span>
                       </div>
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">Банка</span>
-                        <span className="font-bold text-white">ЦКБ АД – Клон Плевен</span>
+                        <span className="font-bold text-white">{BANK_DETAILS.bank}</span>
                       </div>
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10 col-span-1 md:col-span-2 lg:col-span-1">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">IBAN</span>
-                        <span className="font-bold text-brand-gold select-all">BG98 CECB 9790 1008 5533 00</span>
+                        <span className="font-bold text-brand-gold select-all">{BANK_DETAILS.iban}</span>
                       </div>
                       <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                         <span className="text-[9px] font-bold uppercase tracking-wider text-white/50 block font-sans">BIC</span>
-                        <span className="font-bold text-white select-all">CECBBGSF</span>
+                        <span className="font-bold text-white select-all">{BANK_DETAILS.bic}</span>
                       </div>
                     </div>
                   </div>
@@ -7928,19 +7937,19 @@ export default function ProfilePage() {
                   <div className="space-y-3 text-xs sm:text-sm">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">Получател</span>
-                      <span className="font-bold text-brand-dark/90">Данка Василева Николова</span>
+                      <span className="font-bold text-brand-dark/90">{BANK_DETAILS.holder}</span>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">Банка</span>
-                      <span className="font-semibold text-brand-dark/95">ЦКБ АД – Клон Плевен</span>
+                      <span className="font-semibold text-brand-dark/95">{BANK_DETAILS.bank}</span>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">IBAN</span>
-                      <span className="font-mono font-bold text-brand-green text-sm select-all bg-white px-2.5 py-1 rounded border border-brand-green/5 inline-block">BG98 CECB 9790 1008 5533 00</span>
+                      <span className="font-mono font-bold text-brand-green text-sm select-all bg-white px-2.5 py-1 rounded border border-brand-green/5 inline-block">{BANK_DETAILS.iban}</span>
                     </div>
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/45 block">BIC</span>
-                      <span className="font-mono font-semibold text-brand-dark/95 select-all bg-white px-2.5 py-1 rounded border border-brand-green/5 inline-block">CECBBGSF</span>
+                      <span className="font-mono font-semibold text-brand-dark/95 select-all bg-white px-2.5 py-1 rounded border border-brand-green/5 inline-block">{BANK_DETAILS.bic}</span>
                     </div>
                   </div>
                 </div>

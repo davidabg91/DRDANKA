@@ -12,6 +12,7 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import BankTransferNotice from "@/components/BankTransferNotice";
+import CardPayButton, { useCardPayments } from "@/components/CardPayButton";
 import PasswordInput from "@/components/PasswordInput";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/fpixel";
 
@@ -69,6 +70,9 @@ export default function PackagePurchaseModal({
 
   const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [error, setError] = useState("");
+  // Заявката, която се плаща с карта на екрана за успех.
+  const [enrollmentId, setEnrollmentId] = useState("");
+  const cardPayments = useCardPayments();
 
   useEffect(() => {
     if (!open) return;
@@ -228,6 +232,7 @@ export default function PackagePurchaseModal({
         status: "awaiting_payment",
         createdAt: new Date().toISOString(),
       });
+      setEnrollmentId(id);
 
       // Dispatch instant Telegram notification to admin
       fetch("/api/notify-telegram", {
@@ -298,14 +303,26 @@ export default function PackagePurchaseModal({
                 <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
                 <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
                 <p className="text-sm text-brand-dark/70 leading-relaxed">
-                  За да получите достъп до <strong>{packageTitle}</strong>, направете банков превод по сметката по-долу. Заявката вече е добавена в профила Ви.
+                  {cardPayments ? (
+                    <>Платете <strong>{packageTitle}</strong> с карта и достъпът се отключва веднага — или направете банков превод.</>
+                  ) : (
+                    <>За да получите достъп до <strong>{packageTitle}</strong>, направете банков превод по сметката по-долу.</>
+                  )}{" "}
+                  Заявката вече е добавена в профила Ви.
                 </p>
               </div>
+
+              <CardPayButton enrollmentId={enrollmentId} amountLabel={`${priceEur.toFixed(2)} €`} />
+              {cardPayments && (
+                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-brand-dark/40">
+                  <span className="flex-1 h-px bg-brand-green/10" /> или по банков път <span className="flex-1 h-px bg-brand-green/10" />
+                </div>
+              )}
 
               <BankTransferNotice amount={`${priceEur.toFixed(2)} €`} reference={`${cleanEmail} — ${packageTitle}`} />
 
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left text-xs text-amber-900 leading-relaxed">
-                <strong>Активиране:</strong> До <strong>24 часа</strong> след постъпване на плащането д-р Данка Николова
+                <strong>{cardPayments ? "При банков превод:" : "Активиране:"}</strong> До <strong>24 часа</strong> след постъпване на плащането д-р Данка Николова
                 активира пакета и той се появява в профила Ви за четене.
               </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Calendar as CalendarIcon, Clock, CheckCircle, ArrowRight, ArrowLeft, Landmark, Loader2 } from "lucide-react";
 import { getLocalDateISO } from "@/lib/dateUtils";
+import { BANK_DETAILS } from "@/lib/paymentInfo";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 
@@ -584,19 +585,19 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                 <div className="mt-4 space-y-2.5 relative">
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                     <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">Получател</span>
-                    <span className="font-semibold text-sm">Данка Василева Николова</span>
+                    <span className="font-semibold text-sm">{BANK_DETAILS.holder}</span>
                   </div>
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                     <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">Банка</span>
-                    <span className="font-semibold text-sm">ЦКБ АД – Клон Плевен</span>
+                    <span className="font-semibold text-sm">{BANK_DETAILS.bank}</span>
                   </div>
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                     <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">IBAN</span>
-                    <span className="font-bold text-sm text-brand-gold font-mono select-all">BG98 CECB 9790 1008 5533 00</span>
+                    <span className="font-bold text-sm text-brand-gold font-mono select-all">{BANK_DETAILS.iban}</span>
                   </div>
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/10">
                     <span className="block text-[9px] font-bold uppercase tracking-wider text-white/50">BIC</span>
-                    <span className="font-bold text-sm font-mono select-all">CECBBGSF</span>
+                    <span className="font-bold text-sm font-mono select-all">{BANK_DETAILS.bic}</span>
                   </div>
                 </div>
               </div>

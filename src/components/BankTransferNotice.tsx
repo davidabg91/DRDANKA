@@ -1,4 +1,5 @@
 import { Landmark } from "lucide-react";
+import { BANK_DETAILS } from "@/lib/paymentInfo";
 
 /**
  * Reusable bank-transfer instructions block shown after a booking / purchase
@@ -22,10 +23,10 @@ export default function BankTransferNotice({
 }) {
   const dark = variant === "dark";
   const rows: Array<{ label: string; value: string; mono?: boolean; accent?: boolean }> = [
-    { label: "Получател", value: "Данка Василева Николова" },
-    { label: "Банка", value: "ЦКБ АД – Клон Плевен" },
-    { label: "IBAN", value: "BG98 CECB 9790 1008 5533 00", mono: true, accent: true },
-    { label: "BIC", value: "CECBBGSF", mono: true },
+    { label: "Получател", value: BANK_DETAILS.holder },
+    { label: "Банка", value: BANK_DETAILS.bank },
+    { label: "IBAN", value: BANK_DETAILS.iban, mono: true, accent: true },
+    { label: "BIC", value: BANK_DETAILS.bic, mono: true },
   ];
 
   return (

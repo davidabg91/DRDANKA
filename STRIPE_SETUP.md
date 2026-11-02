@@ -137,3 +137,17 @@ STRIPE_WEBHOOK_SECRET=whsec_...           # ще го получиш в стъп
 
 **Buyer не получава email от Firebase Auth**
 → Провери Firebase Console → Authentication → Templates → Password reset. По подразбиране email идва от `noreply@<project>.firebaseapp.com`. Може да configure-неш custom SMTP за по-добър branding.
+
+---
+
+## 8. Плащане с карта на заявки (наръчници, книги, обучения, live курсове)
+
+Потокът е изключен, докато няма `STRIPE_SECRET_KEY` (бутонът „Плати с карта" не се показва, `/api/pay/*` връщат `not_configured`).
+
+1. Клиентът прави заявка както досега (`enrollments`, статус `awaiting_payment`).
+2. Бутонът `CardPayButton` вика `POST /api/pay/enrollment` → Stripe Checkout (карта, Apple Pay, Google Pay, Link — каквото е включено в Stripe → Settings → Payment methods). Цената се смята на сървъра от каталога + `priceOverrides`, не от заявката.
+3. След плащане:
+   - Stripe вика `POST /api/stripe/webhook` (`checkout.session.completed`, `metadata.kind = "enrollment"`) → `grantPaidEnrollment` добавя пакета в `users/{email}.purchasedCourseIds`, заявката става `access_granted` (`paidVia: "card"`), записва `purchases/{sessionId}` и праща известие в Telegram;
+   - клиентът се връща на `/pay/success`, която проверява сесията в Stripe през `GET /api/pay/status` и отключва веднага, ако webhook-ът закъснее (идемпотентно).
+
+Env във Vercel: `STRIPE_SECRET_KEY` (restricted key: Checkout Sessions — write), `STRIPE_WEBHOOK_SECRET` (от webhook endpoint `https://www.haccpspokoystvie.bg/api/stripe/webhook`, събитие `checkout.session.completed`). Банковите данни за превод са в `src/lib/paymentInfo.ts`.

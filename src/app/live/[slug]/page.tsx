@@ -14,6 +14,7 @@ import {
   ShieldCheck, CheckCircle, Calendar, Users, MessageSquare,
 } from "lucide-react";
 import BankTransferNotice from "@/components/BankTransferNotice";
+import CardPayButton, { useCardPayments } from "@/components/CardPayButton";
 
 export default function LiveCourseDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -29,6 +30,9 @@ export default function LiveCourseDetailPage() {
   const [company, setCompany] = useState("");
   const [status, setStatus] = useState<"idle" | "processing" | "success" | "error">("idle");
   const [error, setError] = useState("");
+  // Заявката, която се плаща с карта на екрана за успех.
+  const [enrollmentId, setEnrollmentId] = useState("");
+  const cardPayments = useCardPayments();
 
   useEffect(() => {
     if (course) {
@@ -114,6 +118,7 @@ export default function LiveCourseDetailPage() {
         value: livePrice,
         currency: "EUR",
       });
+      setEnrollmentId(id);
       setStatus("success");
     } catch (err: any) {
       console.error("Live enrollment error:", err);
@@ -281,8 +286,14 @@ export default function LiveCourseDetailPage() {
                   <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
                   <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
                   <p className="text-sm text-brand-dark/70 leading-relaxed">
-                    Благодарим за заявката за <strong>{course.title}</strong>. За да потвърдите мястото си, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще се свърже с Вас</strong> за уточняване на датите на live сесиите и достъпа.
+                    Благодарим за заявката за <strong>{course.title}</strong>. За да потвърдите мястото си, {cardPayments ? "платете с карта или направете банков превод" : "направете банков превод по сметката по-долу"}. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще се свърже с Вас</strong> за уточняване на датите на live сесиите и достъпа.
                   </p>
+                  <CardPayButton enrollmentId={enrollmentId} amountLabel={`${livePrice.toFixed(2)} €`} />
+                  {cardPayments && (
+                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-brand-dark/40">
+                      <span className="flex-1 h-px bg-brand-green/10" /> или по банков път <span className="flex-1 h-px bg-brand-green/10" />
+                    </div>
+                  )}
                   <BankTransferNotice amount={`${livePrice.toFixed(2)} €`} reference={`${name.trim()} — ${course.title}`} />
                   <button onClick={() => { setEnrollOpen(false); setStatus("idle"); }} className="px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
                 </div>
