@@ -4519,15 +4519,59 @@ export default function RegistersTab({
     printHtml(buildPrintDocument(`Дневници по самоконтрол — ${monthLabelBg(month)}`, sections));
   };
 
+  /* ------------------ Карти от задачи на д-р Николова ------------------ */
+  // Д-р Николова може да насочи задача към карта извън плана/вида на обекта —
+  // тогава картата се зарежда при нужда и се отваря, за да може да се попълни.
+  const taskRegisterIds = useMemo(() => {
+    const ids = new Set<string>();
+    ((docs[ADMIN_REMINDERS_ID]?.entries || []) as AdminReminder[]).forEach((a) => {
+      if (!a.done && a.registerId && REGISTER_BY_ID[a.registerId] && !allowedIds.has(a.registerId)) ids.add(a.registerId);
+    });
+    return ids;
+  }, [docs, allowedIds]);
+
+  useEffect(() => {
+    if (loading || !email) return;
+    const missing = [...taskRegisterIds].filter((id) => !(id in docs));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const loaded: Record<string, RegisterDocData> = {};
+      await Promise.all(
+        missing.map(async (id) => {
+          try {
+            const snap = await getDoc(doc(db, "logs", siteKey(id, periodFor(REGISTER_BY_ID[id], month))));
+            loaded[id] = snap.exists() ? (snap.data() as RegisterDocData) : {};
+          } catch (err) {
+            console.error("Register load error", id, err);
+            loaded[id] = {};
+          }
+        })
+      );
+      // Вече редактираното (prev) има предимство пред зареденото.
+      if (!cancelled) setDocs((prev) => ({ ...loaded, ...prev }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, email, taskRegisterIds, docs, month]);
+
   /* ------------------ Изглед ------------------ */
-  const openDef = openId ? activeRegisters.find((r) => r.id === openId) : null;
+  const openDef = openId
+    ? activeRegisters.find((r) => r.id === openId) ?? (taskRegisterIds.has(openId) ? REGISTER_BY_ID[openId] : null)
+    : null;
 
   /* ------------------ Днешен план ------------------ */
   const planVisible = !readOnly && !loading && refDate.startsWith(month) && refDate <= todayISO();
   const planTasks = useMemo(() => (planVisible ? dayTasks(refDate) : []), [planVisible, dayTasks, refDate]);
   const planAdmin: PlanAdminTask[] = reminders
     .filter((r) => r.level === "admin" && r.adminId)
-    .map((r) => ({ id: r.adminId as string, text: r.text, registerId: r.registerId }));
+    .map((r) => ({
+      id: r.adminId as string,
+      text: r.text,
+      // Бутонът „Отвори картата" се показва само ако картата наистина може да се отвори.
+      registerId: r.registerId && (allowedIds.has(r.registerId) || taskRegisterIds.has(r.registerId)) ? r.registerId : "",
+    }));
   const planNotices: PlanNotice[] = reminders
     .filter((r) => r.level !== "admin")
     .map((r) => ({ level: r.level as PlanNotice["level"], text: r.text, registerId: r.registerId }));
