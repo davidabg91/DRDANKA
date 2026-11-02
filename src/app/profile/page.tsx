@@ -727,6 +727,8 @@ export default function ProfilePage() {
 
   // Navigation tabs in profile
   const [activeTab, setActiveTab] = useState("logs"); // logs, haccp, assigned, courses, chat, tools, settings
+  // „Оборудване и персонал" — бутонът е в картата на обекта, прозорецът е в дневниците.
+  const [equipmentOpen, setEquipmentOpen] = useState(false);
   // Избраният обект в „Дневници" (за фирми с няколко обекта). Помни се за браузъра.
   const [activeSiteId, setActiveSiteIdState] = useState<string>(MAIN_SITE_ID);
   const [auditSiteId, setAuditSiteId] = useState<string>(MAIN_SITE_ID);
@@ -6487,6 +6489,9 @@ export default function ProfilePage() {
                         onAdd={handleAddSite}
                         onEdit={handleEditSite}
                         onRemove={handleRemoveSite}
+                        onOpenEquipment={() => setEquipmentOpen(true)}
+                        signatureMode={currentUser.signatureMode ?? "manual"}
+                        hasSignature={!!currentUser.signature}
                       />
                     )}
                 <RegistersTab
@@ -6530,6 +6535,8 @@ export default function ProfilePage() {
                   autoHygieneMonthly={sv?.autoHygieneMonthly ?? false}
                   onTourDone={async () => { await updateUser(currentUserEmail, { registersTourSeen: true }); }}
                   emailReminders={currentUser?.emailReminders !== false}
+                  equipmentOpen={currentUser ? equipmentOpen : undefined}
+                  onEquipmentOpenChange={currentUser ? setEquipmentOpen : undefined}
                   onToggleEmailReminders={async (on) => { await updateUser(currentUserEmail, { emailReminders: on }); }}
                   onSaveEquipment={async (patch) => {
                     const me = meForSites();

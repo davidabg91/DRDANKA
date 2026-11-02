@@ -74,6 +74,7 @@ import {
 } from "./weeklyHygiene";
 import { DEFAULT_TEMP_NORMS, TEMP_UNIT_LABELS, isValidNorm, normLabel, sampleTempInNorm, tempOutOfNorm, normsByName, type TempNorm, type TempNormEntry, type TempUnit, type TempUnitType } from "./tempUnits";
 import { MonthFillIcon } from "./icons";
+import PanelHeader from "./PanelHeader";
 import { DAILY_USAGE_ID, dailyTriggersFor, filterByPlan } from "@/lib/registerReminders";
 import TodayPlan, { type PlanAdminTask, type PlanNotice, type PlanTempUnit } from "./TodayPlan";
 import {
@@ -276,25 +277,25 @@ const TOUR_STEPS: TourStep[] = [
     target: "equipment",
     emoji: "⚙️",
     title: "Стъпка 1: Настройте обекта си",
-    text: "Започнете оттук! Въведете хладилниците, фризерите и служителите си — а ако имате топла точка, отбележете и уредите (скара, фритюрник…). Системата ги използва автоматично във всички дневници.",
+    text: "Започнете оттук! В картата на обекта натиснете „Оборудване и персонал“ и въведете хладилниците, фризерите и служителите си — а ако имате топла точка, и уредите (скара, фритюрник…). Системата ги използва автоматично във всички дневници.",
+  },
+  {
+    target: "reminders",
+    emoji: "🔔",
+    title: "Днешен план — какво остава за деня",
+    text: "Тук виждате колко задачи остават днес, подредени „Преди отваряне“, „През деня“ и „След затваряне“. Когато всичко е наред, потвърдете с един бутон направо оттук, а температурите въведете в полетата. При отклонение отворете дневника.",
+  },
+  {
+    target: "usage",
+    emoji: "🔥",
+    title: "Кажете какво правихте днес",
+    text: "Доставка, брак, ремонт, използван уред от топлата точка — натиснете го с едно докосване. Нужната карта се появява сама в „Днешен план“.",
   },
   {
     target: "calendar",
     emoji: "📅",
     title: "Календарът Ви пази",
     text: "Всеки ден свети зелено (всичко е попълнено) или червено (има пропуски). Кликнете върху ден, за да видите какво липсва и да го попълните — дори със задна дата.",
-  },
-  {
-    target: "usage",
-    emoji: "🔥",
-    title: "Кажете какво използвахте днес",
-    text: "Отбележете с едно докосване кои уреди от топлата точка са работили днес. Системата сама ще Ви напомни кои контролни карти трябва да попълните за тях.",
-  },
-  {
-    target: "reminders",
-    emoji: "🔔",
-    title: "Днешен план — какво остава за деня",
-    text: "Най-отгоре виждате колко задачи остават днес, подредени „Преди отваряне“, „През деня“ и „След затваряне“. Когато всичко е наред, потвърдете с един бутон направо оттук, а температурите въведете в полетата. При отклонение отворете дневника.",
   },
   {
     target: "cards",
@@ -3362,6 +3363,9 @@ interface RegistersTabProps {
   /** Вечерен имейл, ако нещо липсва за деня или наближава срок (по подразбиране включен). */
   emailReminders?: boolean;
   onToggleEmailReminders?: (on: boolean) => void | Promise<void>;
+  /** „Оборудване и персонал" се отваря отвън (от картата на обекта). Без тях — бутон в заглавната лента. */
+  equipmentOpen?: boolean;
+  onEquipmentOpenChange?: (open: boolean) => void;
 }
 
 /** Псевдо-регистър за отбелязване кои уреди са използвани през деня. */
@@ -3405,6 +3409,8 @@ export default function RegistersTab({
   onTourDone,
   emailReminders = true,
   onToggleEmailReminders,
+  equipmentOpen,
+  onEquipmentOpenChange,
 }: RegistersTabProps) {
   const [month, setMonth] = useState(currentMonth());
   /** Избраният ден — календарът, напомнянията и бързите действия работят спрямо него. */
@@ -3413,7 +3419,9 @@ export default function RegistersTab({
   const [loading, setLoading] = useState(true);
   const [openId, setOpenId] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<Record<string, "dirty" | "saving" | "saved">>({});
-  const [showSettings, setShowSettings] = useState(false);
+  const [localShowSettings, setLocalShowSettings] = useState(false);
+  const showSettings = equipmentOpen ?? localShowSettings;
+  const setShowSettings = (open: boolean) => (onEquipmentOpenChange ? onEquipmentOpenChange(open) : setLocalShowSettings(open));
   const [activeTempUnit, setActiveTempUnit] = useState<string>("");
   const [showTour, setShowTour] = useState(false);
   const [showRestMenu, setShowRestMenu] = useState(false);
@@ -4630,49 +4638,49 @@ export default function RegistersTab({
     <SignatureContext.Provider value={signatureMode === "draw" ? signature : undefined}>
     <div className="space-y-6">
       {/* Заглавна лента */}
-      <div data-tour="header" className="bg-white border border-brand-green/10 p-5 rounded-3xl shadow-xl flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-brand-green/10 text-brand-green rounded-xl border border-brand-green/10">
-            <ClipboardList className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="font-serif text-lg font-bold text-brand-green leading-snug">
-              Дневници по самоконтрол — търговия с храни
-            </h2>
-            <p className="text-[10px] text-brand-dark/50">
-              Попълвайте онлайн — системата пази всичко автоматично и напомня какво предстои. Печат по всяко време.
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-[10px] font-black text-brand-dark/70 uppercase tracking-wider">Месец:</label>
-            <input
-              type="month"
-              value={month}
-              onChange={(e) => e.target.value && setMonth(e.target.value)}
-              className="text-xs border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold rounded-xl px-3 py-2 bg-brand-light font-medium text-brand-dark"
-            />
-          </div>
-          {!readOnly && (
-            <button
-              data-tour="equipment"
-              onClick={() => setShowSettings(true)}
-              className="bg-brand-green/10 hover:bg-brand-green/20 border border-brand-green/30 hover:border-brand-green/60 text-brand-green font-black text-xs uppercase px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98] duration-150"
-            >
-              <Settings className="h-4 w-4 text-brand-green" />
-              Оборудване и персонал
-            </button>
-          )}
-          <button
-            data-tour="print"
-            onClick={printAll}
-            className="bg-brand-gold hover:bg-brand-gold-light hover:scale-[1.02] active:scale-[0.98] text-brand-dark font-black text-xs uppercase px-5 py-2.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-brand-gold/10 border-0 duration-150"
-          >
-            <Printer className="h-4 w-4" />
-            Печат на всичко попълнено
-          </button>
-        </div>
+      <div data-tour="header" className="bg-white border border-brand-green/10 px-5 py-4 rounded-3xl shadow-md">
+        <PanelHeader
+          icon={ClipboardList}
+          title="Дневници по самоконтрол"
+          description="Всичко, което попълвате, се записва само. Сменете месеца, за да видите или допълните стари записи."
+          howTo={[
+            <>„Днешен план“ по-долу показва какво да попълните днес — започнете оттам.</>,
+            <>За минал месец изберете го в полето „Месец“ — планът, календарът и дневниците се превключват към него.</>,
+            <>„Печат за проверка“ разпечатва всички попълнени дневници за месеца в официален вид А4 — готови за инспектора от БАБХ.</>,
+          ]}
+          right={
+            <>
+              <label className="flex flex-col gap-0.5">
+                <span className="text-[9px] font-black text-brand-dark/50 uppercase tracking-wider">Месец</span>
+                <input
+                  type="month"
+                  value={month}
+                  onChange={(e) => e.target.value && setMonth(e.target.value)}
+                  className="text-xs border border-brand-green/15 focus:outline-none focus:ring-2 focus:ring-brand-gold/30 focus:border-brand-gold rounded-xl px-3 py-2 bg-brand-light font-medium text-brand-dark"
+                />
+              </label>
+              {!readOnly && !onEquipmentOpenChange && (
+                <button
+                  data-tour="equipment"
+                  onClick={() => setShowSettings(true)}
+                  className="self-end bg-brand-green/10 hover:bg-brand-green/20 border border-brand-green/30 text-brand-green font-black text-[11px] uppercase px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Settings className="h-4 w-4" />
+                  Оборудване и персонал
+                </button>
+              )}
+              <button
+                data-tour="print"
+                onClick={printAll}
+                title="Всички попълнени дневници за избрания месец, в официален вид за проверка"
+                className="self-end bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-black text-[11px] uppercase px-4 py-2.5 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-md shadow-brand-gold/10 border-0"
+              >
+                <Printer className="h-4 w-4" />
+                Печат за проверка
+              </button>
+            </>
+          }
+        />
       </div>
 
       {/* Днешен план — какво остава за деня, с бързо потвърждение */}
@@ -4699,19 +4707,139 @@ export default function RegistersTab({
         />
       )}
 
+      {/* Какво се случи през избрания ден — дейности + уреди (топла точка) */}
+      {!loading && refDate.startsWith(month) && refDate <= todayISO() && (() => {
+        const dayNum = refDay;
+        const marked = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
+        const markedCount = dailyTriggers.filter((t) => marked[t.id] === "1").length;
+        const nothingMarked = Object.keys(marked).length === 0;
+        const toggle = (id: string) => {
+          if (readOnly) return;
+          makeUpdater(DAILY_USAGE_ID)((prev) => {
+            const day = { ...((prev.rows || {})[dayNum] || {}) };
+            day[id] = day[id] === "1" ? "0" : "1";
+            return { ...prev, rows: { ...(prev.rows || {}), [dayNum]: day } };
+          });
+        };
+        const chip = (t: typeof dailyTriggers[number]) => {
+          const on = marked[t.id] === "1";
+          return (
+            <button
+              key={t.id}
+              disabled={readOnly}
+              onClick={() => toggle(t.id)}
+              title={
+                on
+                  ? `Отбелязано ${dayLabel} — изискват се: ${t.registers.map((r) => REGISTER_BY_ID[r]?.shortTitle).filter(Boolean).join(", ")}`
+                  : `Кликнете, ако това се е случило ${dayLabel}`
+              }
+              className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors cursor-pointer disabled:cursor-default flex items-center gap-1.5 ${
+                on
+                  ? "bg-brand-gold text-brand-dark border-brand-gold shadow-md shadow-brand-gold/20"
+                  : "bg-white text-brand-dark/55 border-brand-green/15 hover:border-brand-gold"
+              }`}
+            >
+              <span className="text-sm leading-none">{t.emoji}</span>
+              {t.label}
+              {on && <Check className="h-3 w-3" />}
+            </button>
+          );
+        };
+        const applianceChips = hotPoint ? dailyTriggers.filter((t) => HOT_APPLIANCE_BY_ID[t.id]) : [];
+        const meatChips = dailyTriggers.filter((t) => MEAT_ACTIVITY_IDS.has(t.id));
+        const activityChips = dailyTriggers.filter(
+          (t) => !HOT_APPLIANCE_BY_ID[t.id] && !MEAT_ACTIVITY_IDS.has(t.id)
+        );
+        return (
+          <div
+            data-tour="usage"
+            className={`rounded-3xl border p-5 space-y-3 bg-white ${
+              nothingMarked && !readOnly ? "border-brand-gold/50 shadow-lg shadow-brand-gold/10" : "border-brand-green/10 shadow-md"
+            }`}
+          >
+            <PanelHeader
+              icon={HelpCircle}
+              tone="gold"
+              title={`Какво правихте ${dayLabel}?`}
+              description={
+                readOnly
+                  ? markedCount > 0
+                    ? `${markedCount} отбеляза${markedCount === 1 ? "но" : "ни"} за ${dayLabel}`
+                    : `Няма отбелязани дейности за ${dayLabel}`
+                  : "Натиснете всичко, което се е случило днес — доставка, брак, ремонт, използван уред… Нужният дневник се появява сам в „Днешен план“."
+              }
+              howTo={
+                readOnly
+                  ? undefined
+                  : [
+                      <>Натиснете бутона на дейността, щом се случи (например „Доставка на продукти“). Става златист с отметка.</>,
+                      <>В „Днешен план“ се появява картата, която законът изисква за тази дейност — попълнете я оттам.</>,
+                      <>Ако сте натиснали по погрешка, натиснете пак — отметката се маха.</>,
+                    ]
+              }
+              right={
+                markedCount > 0 && !readOnly ? (
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-brand-gold/15 text-brand-gold-dark">
+                    {markedCount} отбеляза{markedCount === 1 ? "но" : "ни"}
+                  </span>
+                ) : undefined
+              }
+            />
+
+            {/* Дейности (за всеки обект) */}
+            <div className="space-y-1.5">
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-dark/40">Дейности</span>
+              <div className="flex flex-wrap gap-2">{activityChips.map(chip)}</div>
+            </div>
+
+            {/* Производство / обработка на месо */}
+            {meat && meatChips.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[9px] font-black uppercase tracking-widest text-brand-green/70 flex items-center gap-1">
+                  🥩 Производство и обработка на месо
+                </span>
+                <div className="flex flex-wrap gap-2">{meatChips.map(chip)}</div>
+              </div>
+            )}
+
+            {/* Уреди от топлата точка */}
+            {hotPoint && applianceChips.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <span className="text-[9px] font-black uppercase tracking-widest text-brand-gold/70 flex items-center gap-1">
+                  <Flame className="h-3 w-3" /> Топла точка — използвани уреди
+                </span>
+                <div className="flex flex-wrap gap-2">{applianceChips.map(chip)}</div>
+              </div>
+            )}
+
+            {hotPoint && hotAppliances.length === 0 && !readOnly && (
+              <p className="text-[10px] text-brand-dark/40 leading-snug">
+                Съвет: изберете кои уреди реално има в обекта от „Оборудване и персонал“ — списъкът тук и картите ще се
+                съобразят автоматично.
+              </p>
+            )}
+          </div>
+        );
+      })()}
+
+
       {/* Календар на месеца: статус по дни */}
       {!loading && (() => {
         const today = todayISO();
         const n = daysInMonth(month);
         return (
           <div data-tour="calendar" className="bg-white border border-brand-green/10 rounded-3xl p-5 shadow-md space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <CalendarDays className="h-4 w-4 text-brand-green/70" />
-                <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
-                  Календар — {monthLabelBg(month)}
-                </h3>
-                {!readOnly && (
+            <PanelHeader
+              icon={CalendarDays}
+              title={`Календар — ${monthLabelBg(month)}`}
+              description="Всеки ден показва дали дневниците са попълнени. Натиснете ден, за да го видите или допълните."
+              howTo={[
+                <>Зелено — всичко за деня е попълнено. Червено с число — колко неща липсват (задръжте мишката за списък).</>,
+                <>Натиснете ден — „Днешен план“ и дневниците се превключват към него, за да го допълните със задна дата.</>,
+                <>„Работна седмица“ — отбележете почивните дни. В тях не се изисква нищо и не се пращат напомняния.</>,
+              ]}
+              right={
+                !readOnly && (
                   <div className="relative">
                     <button
                       onClick={() => setShowRestMenu((v) => !v)}
@@ -4723,7 +4851,7 @@ export default function RegistersTab({
                     {showRestMenu && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={() => setShowRestMenu(false)} />
-                        <div className="absolute left-0 top-full mt-1.5 z-20 bg-white border border-brand-green/15 rounded-xl shadow-xl p-3 w-56 space-y-2">
+                        <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-brand-green/15 rounded-xl shadow-xl p-3 w-56 space-y-2">
                           <p className="text-[9px] font-black uppercase tracking-wide text-brand-dark/50">
                             Почивни дни на обекта
                           </p>
@@ -4753,14 +4881,14 @@ export default function RegistersTab({
                       </>
                     )}
                   </div>
-                )}
-              </div>
-              <div className="flex items-center gap-3 text-[9px] font-bold text-brand-dark/50">
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-green-400" /> всичко попълнено</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-500" /> почивен ден</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-red-400" /> има непопълнено</span>
-                <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-brand-light border border-brand-green/15" /> предстоящ ден</span>
-              </div>
+                )
+              }
+            />
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] font-bold text-brand-dark/50">
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-green-400" /> всичко попълнено</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-emerald-500" /> почивен ден</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-red-400" /> има непопълнено</span>
+              <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-brand-light border border-brand-green/15" /> предстоящ ден</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {Array.from({ length: n }, (_, i) => {
@@ -4821,109 +4949,6 @@ export default function RegistersTab({
           </div>
         );
       })()}
-
-      {/* Какво се случи през избрания ден — дейности + уреди (топла точка) */}
-      {!loading && refDate.startsWith(month) && refDate <= todayISO() && (() => {
-        const dayNum = refDay;
-        const marked = docs[DAILY_USAGE_ID]?.rows?.[dayNum] || {};
-        const markedCount = dailyTriggers.filter((t) => marked[t.id] === "1").length;
-        const nothingMarked = Object.keys(marked).length === 0;
-        const toggle = (id: string) => {
-          if (readOnly) return;
-          makeUpdater(DAILY_USAGE_ID)((prev) => {
-            const day = { ...((prev.rows || {})[dayNum] || {}) };
-            day[id] = day[id] === "1" ? "0" : "1";
-            return { ...prev, rows: { ...(prev.rows || {}), [dayNum]: day } };
-          });
-        };
-        const chip = (t: typeof dailyTriggers[number]) => {
-          const on = marked[t.id] === "1";
-          return (
-            <button
-              key={t.id}
-              disabled={readOnly}
-              onClick={() => toggle(t.id)}
-              title={
-                on
-                  ? `Отбелязано ${dayLabel} — изискват се: ${t.registers.map((r) => REGISTER_BY_ID[r]?.shortTitle).filter(Boolean).join(", ")}`
-                  : `Кликнете, ако това се е случило ${dayLabel}`
-              }
-              className={`px-3.5 py-2 rounded-xl text-[10px] font-black uppercase tracking-wide border transition-colors cursor-pointer disabled:cursor-default flex items-center gap-1.5 ${
-                on
-                  ? "bg-brand-gold text-brand-dark border-brand-gold shadow-md shadow-brand-gold/20"
-                  : "bg-white text-brand-dark/55 border-brand-green/15 hover:border-brand-gold"
-              }`}
-            >
-              <span className="text-sm leading-none">{t.emoji}</span>
-              {t.label}
-              {on && <Check className="h-3 w-3" />}
-            </button>
-          );
-        };
-        const applianceChips = hotPoint ? dailyTriggers.filter((t) => HOT_APPLIANCE_BY_ID[t.id]) : [];
-        const meatChips = dailyTriggers.filter((t) => MEAT_ACTIVITY_IDS.has(t.id));
-        const activityChips = dailyTriggers.filter(
-          (t) => !HOT_APPLIANCE_BY_ID[t.id] && !MEAT_ACTIVITY_IDS.has(t.id)
-        );
-        return (
-          <div
-            data-tour="usage"
-            className={`rounded-3xl border p-5 space-y-3 bg-white ${
-              nothingMarked && !readOnly ? "border-brand-gold/50 shadow-lg shadow-brand-gold/10" : "border-brand-green/10 shadow-md"
-            }`}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5">
-                <HelpCircle className="h-4 w-4 text-brand-gold" />
-                <h3 className="text-xs font-black uppercase tracking-wider text-brand-dark/80">
-                  Какво се случи {dayLabel}?
-                </h3>
-              </div>
-              <span className="text-[10px] font-bold text-brand-dark/45">
-                {markedCount > 0
-                  ? `${markedCount} отбеляза${markedCount === 1 ? "но" : "ни"} за ${dayLabel}`
-                  : readOnly
-                    ? `Няма отбелязани дейности за ${dayLabel}`
-                    : "Отбележете и системата ще Ви напомни кои карти да попълните"}
-              </span>
-            </div>
-
-            {/* Дейности (за всеки обект) */}
-            <div className="space-y-1.5">
-              <span className="text-[9px] font-black uppercase tracking-widest text-brand-dark/40">Дейности</span>
-              <div className="flex flex-wrap gap-2">{activityChips.map(chip)}</div>
-            </div>
-
-            {/* Производство / обработка на месо */}
-            {meat && meatChips.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[9px] font-black uppercase tracking-widest text-brand-green/70 flex items-center gap-1">
-                  🥩 Производство и обработка на месо
-                </span>
-                <div className="flex flex-wrap gap-2">{meatChips.map(chip)}</div>
-              </div>
-            )}
-
-            {/* Уреди от топлата точка */}
-            {hotPoint && applianceChips.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[9px] font-black uppercase tracking-widest text-brand-gold/70 flex items-center gap-1">
-                  <Flame className="h-3 w-3" /> Топла точка — използвани уреди
-                </span>
-                <div className="flex flex-wrap gap-2">{applianceChips.map(chip)}</div>
-              </div>
-            )}
-
-            {hotPoint && hotAppliances.length === 0 && !readOnly && (
-              <p className="text-[10px] text-brand-dark/40 leading-snug">
-                Съвет: изберете кои уреди реално има в обекта от „Оборудване и персонал“ — списъкът тук и картите ще се
-                съобразят автоматично.
-              </p>
-            )}
-          </div>
-        );
-      })()}
-
 
       {loading ? (
         <div className="flex items-center justify-center py-20 gap-3 text-brand-dark/40">
@@ -5207,6 +5232,19 @@ export default function RegistersTab({
       ) : (
         /* ------------------ Списък с карти ------------------ */
         <div data-tour="cards" className="space-y-6">
+          <div className="bg-white border border-brand-green/10 rounded-3xl px-5 py-4 shadow-md">
+            <PanelHeader
+              icon={FileText}
+              title={`Всички дневници (${visibleRegisters.length})`}
+              description="Тук е цялата папка на обекта. Ежедневните се попълват от „Днешен план“, а останалите — когато се случи нещо: доставка, обучение, проверка, нов договор."
+              howTo={[
+                <>Натиснете карта, за да я отворите. Всичко, което напишете, се записва само — няма бутон „Запази“.</>,
+                <>Етикетът долу на всяка карта казва какво е състоянието: зелено — попълнено, червено — нещо липсва.</>,
+                <>Горе вдясно на картата пише колко често се попълва — ежедневно, при доставка, седмично…</>,
+                <>Вътре в картата има „Кога се попълва“ и „Инструкция за попълване“, ако не сте сигурни.</>,
+              ]}
+            />
+          </div>
           {cardGroups.map((group) => (
             <div key={group.title} className="space-y-3">
               {cardGroups.length > 1 && (

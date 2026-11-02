@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, MapPin } from "lucide-react";
+import { Plus, Pencil, Trash2, X, MapPin, Settings } from "lucide-react";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { MAIN_SITE_ID, type SiteView } from "@/lib/sites";
 import { EXTRA_SITE_DISCOUNT, PLAN_BY_ID, extraSitePriceEur, formatEur, planFeeEur, type PlanId } from "@/lib/plans";
@@ -12,6 +12,9 @@ export interface SiteFormData {
   address: string;
   manager: string;
 }
+
+/** „1 хладилник" / „3 хладилника". */
+const count1 = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 /** Малка икона „сграда с навес" за обект. */
 function SiteIcon({ className }: { className?: string }) {
@@ -34,6 +37,9 @@ export default function SitesBar({
   onAdd,
   onEdit,
   onRemove,
+  onOpenEquipment,
+  signatureMode,
+  hasSignature,
 }: {
   sites: SiteView[];
   activeId: string;
@@ -44,6 +50,11 @@ export default function SitesBar({
   onAdd: (data: SiteFormData) => Promise<boolean>;
   onEdit: (id: string, data: SiteFormData) => Promise<boolean>;
   onRemove: (id: string) => Promise<boolean>;
+  /** Отваря „Оборудване и персонал" на избрания обект (в дневниците). */
+  onOpenEquipment?: () => void;
+  /** Подписът е общ за фирмата — за обобщението под обекта. */
+  signatureMode?: "draw" | "manual";
+  hasSignature?: boolean;
 }) {
   const [modal, setModal] = useState<{ mode: "add" } | { mode: "edit"; site: SiteView } | null>(null);
   const [form, setForm] = useState<SiteFormData>({ name: "", niche: defaultNiche, address: "", manager: "" });
@@ -86,59 +97,157 @@ export default function SitesBar({
   const inputCls = "w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white";
   const labelCls = "text-[10px] font-bold uppercase tracking-wider text-brand-dark/60";
 
+  const active = sites.find((s) => s.id === activeId) ?? sites[0];
+  // Същите стойности по подразбиране като дневниците за нов обект.
+  const fridges = active?.customFridges ?? ["Хладилна витрина №1"];
+  const freezers = active?.customFreezers ?? ["Фризер №1"];
+  const storages = active?.customStorages ?? [];
+  const employees = active?.customEmployees ?? [];
+  const appliances = active?.hasHotPoint ? (active.hotAppliances?.length ?? 0) : 0;
+  const summary: { label: string; missing?: boolean }[] = [
+    { label: count1(fridges.length, "хладилник", "хладилника"), missing: fridges.length === 0 },
+    { label: count1(freezers.length, "фризер", "фризера") },
+    ...(storages.length ? [{ label: count1(storages.length, "склад", "склада") }] : []),
+    { label: count1(employees.length, "служител", "служители"), missing: employees.length === 0 },
+    ...(active?.hasHotPoint ? [{ label: appliances ? `Топла точка · ${count1(appliances, "уред", "уреда")}` : "Топла точка · всички уреди" }] : []),
+    ...(signatureMode ? [{ label: signatureMode === "draw" && hasSignature ? "Електронен подпис" : "Подпис на ръка" }] : []),
+  ];
+  const needsSetup = employees.length === 0;
+
   return (
-    <div className="bg-white border border-brand-green/10 rounded-2xl p-3 sm:p-4 mb-4 shadow-sm">
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <SiteIcon className="h-5 w-5 text-brand-gold shrink-0" />
-          <p className="text-xs font-bold text-brand-green uppercase tracking-wider truncate">
-            {count > 1 ? `Обекти на фирмата (${count})` : "Вашият обект"}
-          </p>
+    <div className="relative bg-white border border-brand-gold/35 rounded-3xl mb-5 shadow-lg shadow-brand-green/5 overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-brand-gold/70 via-brand-gold to-brand-gold/40" />
+      <div className="p-4 sm:p-6 space-y-4">
+        {/* Заглавие + превключване между обекти */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="p-2 rounded-xl bg-brand-gold/15 text-brand-gold-dark shrink-0">
+              <SiteIcon className="h-5 w-5" />
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-gold-dark">
+              {count > 1 ? `Обекти на фирмата (${count})` : "Вашият обект"}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => open({ mode: "add" })}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-brand-green/15 text-brand-green text-[10px] font-black uppercase tracking-wider hover:border-brand-gold hover:bg-brand-light/60 transition-colors shrink-0 cursor-pointer"
+            title="Още един обект на същата фирма (кафене, склад, втори магазин…) със свои дневници"
+          >
+            <Plus className="h-3.5 w-3.5" /> Добави обект
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => open({ mode: "add" })}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-brand-green text-white text-[11px] font-bold uppercase tracking-wider hover:bg-brand-green/90 transition-colors shrink-0"
-        >
-          <Plus className="h-3.5 w-3.5" /> Добави обект
-        </button>
-      </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-        {sites.map((s) => {
-          const active = s.id === activeId;
-          return (
-            <div
-              key={s.id}
-              className={`group shrink-0 flex items-center rounded-xl border transition-colors ${active ? "bg-brand-green border-brand-green text-white" : "bg-brand-light/50 border-brand-green/15 text-brand-green hover:border-brand-gold/60"}`}
-            >
-              <button type="button" onClick={() => onSelect(s.id)} className="text-left pl-3 pr-2 py-2 max-w-[220px]" aria-pressed={active}>
-                <span className="block text-xs font-bold truncate">{s.name}</span>
-                <span className={`block text-[10px] truncate ${active ? "text-white/70" : "text-brand-dark/50"}`}>{s.niche || "—"}</span>
-              </button>
-              {active && (
-                <div className="flex items-center pr-1.5">
-                  <button type="button" onClick={() => open({ mode: "edit", site: s })} className="p-1.5 rounded-lg hover:bg-white/15" title="Редактирай обекта" aria-label={`Редактирай ${s.name}`}>
-                    <Pencil className="h-3.5 w-3.5" />
+        {count > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="tablist" aria-label="Обекти">
+            {sites.map((s) => {
+              const isActive = s.id === activeId;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => onSelect(s.id)}
+                  className={`shrink-0 text-left px-3.5 py-2 rounded-xl border transition-colors max-w-[220px] cursor-pointer ${
+                    isActive
+                      ? "bg-brand-green border-brand-green text-white shadow-md"
+                      : "bg-brand-light/50 border-brand-green/15 text-brand-green hover:border-brand-gold/60"
+                  }`}
+                >
+                  <span className="block text-xs font-bold truncate">{s.name}</span>
+                  <span className={`block text-[10px] truncate ${isActive ? "text-white/70" : "text-brand-dark/50"}`}>{s.niche || "—"}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {active && (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            {/* Избраният обект */}
+            <div className="lg:col-span-2 min-w-0 space-y-1.5">
+              <h2 className="font-serif text-2xl font-bold text-brand-green leading-tight break-words">{active.name}</h2>
+              <p className="text-xs text-brand-dark/60 leading-snug">
+                {active.niche || "Вид на дейността не е избран"}
+                {active.address ? ` · ${active.address}` : ""}
+              </p>
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => open({ mode: "edit", site: active })}
+                  className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-brand-dark/50 hover:text-brand-green cursor-pointer"
+                >
+                  <Pencil className="h-3 w-3" /> Име и адрес
+                </button>
+                {active.id !== MAIN_SITE_ID && (
+                  <button
+                    type="button"
+                    onClick={() => remove(active)}
+                    disabled={busy}
+                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-brand-dark/40 hover:text-red-600 cursor-pointer"
+                  >
+                    <Trash2 className="h-3 w-3" /> Премахни
                   </button>
-                  {s.id !== MAIN_SITE_ID && (
-                    <button type="button" onClick={() => remove(s)} disabled={busy} className="p-1.5 rounded-lg hover:bg-white/15" title="Премахни обекта" aria-label={`Премахни ${s.name}`}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          );
-        })}
-      </div>
 
-      {count > 1 && (
-        <p className="text-[11px] text-brand-dark/55 mt-2">
-          Всеки обект има свои дневници, оборудване и персонал. Месечна такса за {count} обекта по план „{PLAN_BY_ID[plan].name}“:{" "}
-          <strong className="text-brand-green">{formatEur(planFeeEur(plan, count))}</strong>
-        </p>
-      )}
+            {/* Оборудване и персонал */}
+            {onOpenEquipment && (
+              <div
+                className={`lg:col-span-3 rounded-2xl border p-4 space-y-3 ${
+                  needsSetup ? "border-brand-gold/60 bg-brand-gold/10" : "border-brand-green/10 bg-brand-light/50"
+                }`}
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1 basis-56">
+                    <p className="text-sm font-black text-brand-green">Оборудване и персонал</p>
+                    <p className="text-[11px] text-brand-dark/60 leading-snug mt-0.5">
+                      Хладилниците, фризерите и служителите от тук се появяват сами във всички дневници — температури,
+                      лична хигиена, здравни книжки. Въвеждат се веднъж и се сменят само при промяна.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    data-tour="equipment"
+                    onClick={onOpenEquipment}
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand-green hover:bg-brand-green/90 text-white text-[11px] font-black uppercase tracking-wider shadow-md shadow-brand-green/20 cursor-pointer shrink-0"
+                  >
+                    <Settings className="h-4 w-4" /> {needsSetup ? "Настрой сега" : "Промени"}
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {summary.map((it) => (
+                    <span
+                      key={it.label}
+                      className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                        it.missing
+                          ? "bg-white border-brand-gold/60 text-brand-gold-dark"
+                          : "bg-white border-brand-green/10 text-brand-dark/65"
+                      }`}
+                    >
+                      {it.label}
+                    </span>
+                  ))}
+                </div>
+                {needsSetup && (
+                  <p className="text-[11px] font-bold text-brand-gold-dark leading-snug">
+                    Добавете служителите си — без тях картата за лична хигиена и здравните книжки остават празни.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {count > 1 && (
+          <p className="text-[11px] text-brand-dark/55 border-t border-brand-green/5 pt-3">
+            Всеки обект има свои дневници, оборудване и персонал. Месечна такса за {count} обекта по план „{PLAN_BY_ID[plan].name}“:{" "}
+            <strong className="text-brand-green">{formatEur(planFeeEur(plan, count))}</strong>
+          </p>
+        )}
+      </div>
 
       {modal && (
         <div className="fixed inset-0 z-[90] bg-black/40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => !busy && setModal(null)}>
