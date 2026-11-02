@@ -9,7 +9,7 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 import {
-  AlertTriangle, Check, ChevronDown, ChevronRight, Clock, Info, Moon, Sun, Sunrise, Thermometer, Snowflake,
+  AlertTriangle, Check, ChevronDown, ChevronRight, Clock, Info, Mail, Moon, Sun, Sunrise, Thermometer, Snowflake,
 } from "lucide-react";
 import { MOMENT_LABELS, type PlanMoment, type PlanTask, type QuickKind } from "./dayTasks";
 import { normLabel, tempOutOfNorm, type TempUnit } from "./tempUnits";
@@ -58,6 +58,9 @@ interface TodayPlanProps {
   onQuick: (kind: Exclude<QuickKind, "temps">) => void;
   onSaveTemps: (values: Record<string, { temp: string; action?: string }>) => void;
   onAdminDone: (id: string) => void;
+  /** Вечерен имейл, ако нещо липсва или наближава срок. */
+  emailReminders?: boolean;
+  onToggleEmailReminders?: (on: boolean) => void | Promise<void>;
 }
 
 const MOMENT_ICONS: Record<PlanMoment, IconType> = { before: Sunrise, during: Sun, after: Moon };
@@ -264,7 +267,11 @@ export default function TodayPlan(props: TodayPlanProps) {
   const {
     tasks, adminTasks, notices, tempUnits, dayLabel, dateLong, isToday, isRestDay, cleanDays,
     cleaningHint, compact, iconFor, onOpen, onQuick, onSaveTemps, onAdminDone,
+    emailReminders = true, onToggleEmailReminders,
   } = props;
+  // Превключвателят реагира веднага; записът в профила върви отзад.
+  const [mailChoice, setMailOn] = useState<boolean | null>(null);
+  const mailOn = mailChoice ?? emailReminders;
   const [tempsOpen, setTempsOpen] = useState(false);
   const [showPeriodic, setShowPeriodic] = useState(false);
   const [panelVisible, setPanelVisible] = useState(true);
@@ -576,6 +583,33 @@ export default function TodayPlan(props: TodayPlanProps) {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Имейл напомняне вечер */}
+          {onToggleEmailReminders && (
+            <div className="flex items-center gap-3 rounded-2xl border border-brand-green/10 bg-brand-light/40 px-4 py-3">
+              <Mail className="h-4 w-4 text-brand-green/60 shrink-0" />
+              <p className="flex-1 text-[11px] leading-snug text-brand-dark/65">
+                <span className="font-black text-brand-dark/80">Имейл напомняне вечер</span> — само ако нещо за деня липсва
+                или наближава срок на ЛЗК или договор.
+              </p>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={mailOn}
+                aria-label="Имейл напомняне вечер"
+                onClick={() => {
+                  const next = !mailOn;
+                  setMailOn(next);
+                  void onToggleEmailReminders(next);
+                }}
+                className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer border-0 shrink-0 ${mailOn ? "bg-brand-green" : "bg-brand-dark/20"}`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${mailOn ? "translate-x-5" : ""}`}
+                />
+              </button>
             </div>
           )}
         </div>

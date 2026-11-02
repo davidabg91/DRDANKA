@@ -181,6 +181,8 @@ export interface DankaUser {
   restDays?: number[];
   /** Обиколката на дневниците е показана веднъж — не се повтаря. */
   registersTourSeen?: boolean;
+  /** Вечерни имейл напомняния за дневниците (липсва = включени). */
+  emailReminders?: boolean;
   autoDuner?: boolean;
   autoPrework?: boolean;
   autoTemps?: boolean;
@@ -6527,6 +6529,8 @@ export default function ProfilePage() {
                   autoHygieneWeekly={sv?.autoHygieneWeekly ?? false}
                   autoHygieneMonthly={sv?.autoHygieneMonthly ?? false}
                   onTourDone={async () => { await updateUser(currentUserEmail, { registersTourSeen: true }); }}
+                  emailReminders={currentUser?.emailReminders !== false}
+                  onToggleEmailReminders={async (on) => { await updateUser(currentUserEmail, { emailReminders: on }); }}
                   onSaveEquipment={async (patch) => {
                     const me = meForSites();
                     if (!me) return;

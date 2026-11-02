@@ -14,7 +14,6 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   STORE_REGISTERS,
-  STORE_REGISTER_IDS,
   CORE_REGISTER_IDS,
   REGISTER_BY_ID,
   registersFor,
@@ -35,7 +34,6 @@ import {
   SurveyGroup,
   HOT_APPLIANCES,
   HOT_APPLIANCE_BY_ID,
-  DAILY_ACTIVITIES,
   TRIGGER_BY_ID,
   REGISTER_APPLIANCE,
   recordDateKey,
@@ -43,7 +41,6 @@ import {
   registersForMeat,
   MEAT_REGISTERS,
   MEAT_SHARED_HOT_IDS,
-  MEAT_ACTIVITIES,
   MEAT_ACTIVITY_IDS,
   ADMIN_REMINDERS_ID,
   AdminReminder,
@@ -77,6 +74,7 @@ import {
 } from "./weeklyHygiene";
 import { DEFAULT_TEMP_NORMS, TEMP_UNIT_LABELS, isValidNorm, normLabel, sampleTempInNorm, tempOutOfNorm, normsByName, type TempNorm, type TempNormEntry, type TempUnit, type TempUnitType } from "./tempUnits";
 import { MonthFillIcon } from "./icons";
+import { DAILY_USAGE_ID, dailyTriggersFor, filterByPlan } from "@/lib/registerReminders";
 import TodayPlan, { type PlanAdminTask, type PlanNotice, type PlanTempUnit } from "./TodayPlan";
 import {
   buildDayTasks,
@@ -164,7 +162,7 @@ function grillMatchesIncomingFood(item: string, food: string): boolean {
 }
 
 import { getLocalDateISO } from "@/lib/dateUtils";
-import { PlanId, planAllowsRegister, planHasExtras } from "@/lib/plans";
+import { PlanId } from "@/lib/plans";
 
 type Updater = (updater: (prev: RegisterDocData) => RegisterDocData) => void;
 
@@ -3361,10 +3359,13 @@ interface RegistersTabProps {
   tourSeen?: boolean;
   /** Извиква се, когато обиколката приключи/бъде пропусната — за траен запис */
   onTourDone?: () => void | Promise<void>;
+  /** Вечерен имейл, ако нещо липсва за деня или наближава срок (по подразбиране включен). */
+  emailReminders?: boolean;
+  onToggleEmailReminders?: (on: boolean) => void | Promise<void>;
 }
 
 /** Псевдо-регистър за отбелязване кои уреди са използвани през деня. */
-const DAILY_USAGE_ID = "daily-usage";
+
 
 export default function RegistersTab({
   email,
@@ -3402,6 +3403,8 @@ export default function RegistersTab({
   readOnly = false,
   tourSeen = false,
   onTourDone,
+  emailReminders = true,
+  onToggleEmailReminders,
 }: RegistersTabProps) {
   const [month, setMonth] = useState(currentMonth());
   /** Избраният ден — календарът, напомнянията и бързите действия работят спрямо него. */
@@ -3496,24 +3499,13 @@ export default function RegistersTab({
     return () => clearTimeout(t);
   }, [openId]);
 
-  /** Всички регистри за зареждане на данни (пълният комплект при топла точка / месо). */
+  // Ръчно избраните от д-р Николова записи се добавят дори ако не следват
+  // от вида на обекта (напр. месна карта за заведение).
   const planFilter = useCallback(
-    (defs: RegisterDef[]) => {
-      // Ръчно избраните от д-р Николова записи се добавят дори ако не следват
-      // от вида на обекта (напр. месна карта за заведение).
-      let all = defs;
-      if (extraRegisters && planHasExtras(plan)) {
-        const have = new Set(defs.map((d) => d.id));
-        const added = extraRegisters
-          .filter((id) => !have.has(id))
-          .map((id) => REGISTER_BY_ID[id])
-          .filter(Boolean);
-        all = [...defs, ...added];
-      }
-      return all.filter((d) => planAllowsRegister(plan, d.id, STORE_REGISTER_IDS, extraRegisters));
-    },
+    (defs: RegisterDef[]) => filterByPlan(defs, plan, extraRegisters),
     [plan, extraRegisters]
   );
+  /** Всички регистри за зареждане на данни (пълният комплект при топла точка / месо). */
   const activeRegisters = useMemo(
     () => planFilter(meat ? registersForMeat(hotPoint) : registersFor(hotPoint)),
     [hotPoint, meat, planFilter]
@@ -3555,27 +3547,10 @@ export default function RegistersTab({
     }
     return groups.filter((g) => g.defs.length > 0);
   }, [visibleRegisters, meat, hotPoint]);
-  /** Уредите от топлата точка, които панелът показва. */
-  const ownedAppliances = useMemo(
-    () =>
-      hotAppliances.length > 0
-        ? HOT_APPLIANCES.filter((a) => hotAppliances.includes(a.id))
-        : HOT_APPLIANCES,
-    [hotAppliances]
-  );
-
   /** Всички ежедневни тригери: дейности (винаги) + месо + уреди (при топла точка). */
   const dailyTriggers = useMemo(
-    () =>
-      [
-        ...DAILY_ACTIVITIES,
-        ...(meat ? MEAT_ACTIVITIES : []),
-        ...(hotPoint ? ownedAppliances : []),
-      ]
-        // Тригерът има смисъл само ако планът включва поне една от картите му.
-        .map((t) => ({ ...t, registers: t.registers.filter((r) => allowedIds.has(r)) }))
-        .filter((t) => t.registers.length > 0),
-    [hotPoint, ownedAppliances, meat, allowedIds]
+    () => dailyTriggersFor({ meat, hotPoint, hotAppliances, allowedIds }),
+    [meat, hotPoint, hotAppliances, allowedIds]
   );
 
   const units = useMemo<TempUnit[]>(() => {
@@ -4675,6 +4650,8 @@ export default function RegistersTab({
           onQuick={runQuick}
           onSaveTemps={saveQuickTemps}
           onAdminDone={markAdminReminderDone}
+          emailReminders={emailReminders}
+          onToggleEmailReminders={onToggleEmailReminders}
         />
       )}
 
