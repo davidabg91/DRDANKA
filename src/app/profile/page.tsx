@@ -1129,7 +1129,17 @@ export default function ProfilePage() {
 
     try {
       const cleanRegEmail = regEmail.trim().toLowerCase();
-      await createUserWithEmailAndPassword(auth, cleanRegEmail, regPassword);
+      // Вход без профил (профилът е изтрит преди изтриването да маха и входа) —
+      // със същата парола регистрацията продължава върху съществуващия вход.
+      let reusedLogin = false;
+      try {
+        await createUserWithEmailAndPassword(auth, cleanRegEmail, regPassword);
+      } catch (err: any) {
+        if (err?.code !== "auth/email-already-in-use") throw err;
+        const cred = await signInWithEmailAndPassword(auth, cleanRegEmail, regPassword).catch(() => null);
+        if (!cred || (await getDoc(doc(db, "users", cleanRegEmail))).exists()) throw err;
+        reusedLogin = true;
+      }
       const newUser: DankaUser = {
         email: cleanRegEmail,
         firmName: applyFirmName,
@@ -1160,7 +1170,8 @@ export default function ProfilePage() {
         await batch.commit();
       } catch (writeErr) {
         console.error("Trial registration failed:", writeErr);
-        await auth.currentUser?.delete().catch(() => {});
+        if (reusedLogin) await signOut(auth).catch(() => {});
+        else await auth.currentUser?.delete().catch(() => {});
         alert(TRIAL_USED_MSG);
         return;
       }
@@ -1519,11 +1530,24 @@ export default function ProfilePage() {
   };
 
   // Admin deletes user
+  // Сървърът трие и входа (Firebase Auth), и месечното плащане в Stripe —
+  // профил, изтрит само тук, оставаше вход, който не може да се регистрира наново.
   const handleDeleteUser = async (email: string) => {
-    if (!confirm(`Сигурни ли сте, че искате да изтриете потребител ${email}?`)) return;
+    const cleanEmail = email.trim().toLowerCase();
+    const target = usersList.find(u => u.email.toLowerCase() === cleanEmail);
+    const warnings = [
+      target?.purchasedCourseIds?.length ? `• губи достъпа до ${target.purchasedCourseIds.length} купени материала` : "",
+      target?.stripeSubscriptionId ? "• автоматичното месечно плащане с карта се спира" : "",
+    ].filter(Boolean).join("\n");
+    if (!confirm(`Да изтрия ли изцяло ${email}?\nПрофилът и входът се изтриват — с този имейл може да се регистрира наново.${warnings ? "\n\n" + warnings : ""}`)) return;
     try {
-      const cleanEmail = email.trim().toLowerCase();
-      await deleteDoc(doc(db, "users", cleanEmail));
+      const token = await firebaseUser?.getIdToken();
+      const res = await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ email: cleanEmail }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `HTTP ${res.status}`);
       const updatedUsers = usersList.filter(u => u.email.toLowerCase() !== cleanEmail);
       setUsersList(updatedUsers);
     } catch (err: any) {
