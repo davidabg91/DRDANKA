@@ -2,22 +2,46 @@
 
 /**
  * Връщане от платежната страница на Stripe. Проверява плащането (и отключва
- * веднага, ако webhook-ът още не е пристигнал) и води клиента към купеното.
+ * веднага, ако webhook-ът още не е пристигнал) и отваря купеното направо.
+ * Ако няма какво да се отвори веднага (live курс, консултация, некачен файл),
+ * показва какво следва.
  */
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, CheckCircle, Loader2, AlertTriangle } from "lucide-react";
 import { trackPurchase } from "@/lib/fpixel";
 
 type State =
   | { kind: "checking" }
-  | { kind: "paid"; title: string | null; href: string; subscription?: boolean; deferred?: boolean }
+  | { kind: "paid"; title: string | null; href: string; next?: string; subscription?: boolean; deferred?: boolean }
   | { kind: "pending" }
   | { kind: "error" };
 
+/** Секунди до автоматичното отваряне на купения материал. */
+const OPEN_DELAY_S = 3;
+
 export default function PaySuccessPage() {
+  const router = useRouter();
   const [state, setState] = useState<State>({ kind: "checking" });
+  const [countdown, setCountdown] = useState(OPEN_DELAY_S);
+  // Само вътрешен път от сървъра (напр. /library/<slug>/viewer) — не външен адрес.
+  const openHref =
+    state.kind === "paid" && !state.subscription && !state.next && /^\/(library|courses)\//.test(state.href)
+      ? state.href
+      : null;
+  const opensMaterial = !!openHref;
+
+  useEffect(() => {
+    if (!openHref) return;
+    if (countdown <= 0) {
+      router.replace(openHref);
+      return;
+    }
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [openHref, countdown, router]);
 
   useEffect(() => {
     const sessionId = new URLSearchParams(window.location.search).get("session_id") || "";
@@ -45,6 +69,7 @@ export default function PaySuccessPage() {
             kind: "paid",
             title: data.title,
             href: data.href || "/profile",
+            next: data.next || undefined,
             subscription: !!data.subscription,
             deferred: !!data.deferred,
           });
@@ -105,23 +130,29 @@ export default function PaySuccessPage() {
                   )}{" "}
                   Stripe ще Ви изпрати разписка на имейла.
                 </p>
+              ) : state.next ? (
+                <div className="space-y-3 text-left">
+                  {state.title && <p className="text-sm text-center font-bold text-brand-green">{state.title}</p>}
+                  <div className="rounded-2xl bg-brand-gold/10 border border-brand-gold/30 p-4">
+                    <div className="text-[10px] font-black uppercase tracking-[0.18em] text-brand-gold mb-1.5">Какво следва</div>
+                    <p className="text-sm text-brand-dark/80 leading-relaxed">{state.next}</p>
+                  </div>
+                  <p className="text-xs text-center text-brand-dark/55">Stripe ще Ви изпрати разписка на имейла.</p>
+                </div>
               ) : (
-              <p className="text-sm text-brand-dark/75 leading-relaxed">
-                {state.title ? (
-                  <>
-                    <strong>{state.title}</strong> е отключен в профила Ви.
-                  </>
-                ) : (
-                  "Покупката е отключена в профила Ви."
-                )}{" "}
-                Stripe ще Ви изпрати и разписка на имейла.
-              </p>
+                <p className="text-sm text-brand-dark/75 leading-relaxed">
+                  {state.title ? <strong>{state.title}</strong> : "Покупката"} е отключен
+                  {opensMaterial ? <> — отваряме го след {Math.max(countdown, 0)} сек.</> : " в профила Ви."}{" "}
+                  Stripe ще Ви изпрати разписка на имейла.
+                </p>
               )}
               <Link
                 href={state.href}
+                replace={opensMaterial}
                 className="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-green hover:bg-brand-green/90 text-white font-black text-xs uppercase tracking-wider"
               >
-                Към профила <ArrowRight className="h-4 w-4" />
+                {opensMaterial ? "Отвори сега" : state.href.startsWith("/profile?tab=courses") ? "Към „Моите обучения“" : "Към профила"}{" "}
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </>
           )}

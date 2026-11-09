@@ -7,6 +7,9 @@ import { auth, db, storage } from "@/lib/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc, updateDoc, deleteField, writeBatch, serverTimestamp } from "firebase/firestore";
 import { isValidEik, normalizeEik } from "@/lib/eik";
+import AdminPurchasesPanel from "@/components/admin/AdminPurchasesPanel";
+import AdminReviewsPanel from "@/components/admin/AdminReviewsPanel";
+import { useUnseenCount } from "@/components/admin/adminInbox";
 import { ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject, getMetadata } from "firebase/storage";
 import { BUSINESS_CATEGORIES, getSectorForNiche } from "@/data/businessCategories";
 import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
@@ -86,7 +89,8 @@ import {
   Layers,
   Film,
   FilePlus,
-  UserCheck
+  UserCheck,
+  ShoppingBag
 } from "lucide-react";
 import PasswordInput from "@/components/PasswordInput";
 
@@ -532,7 +536,7 @@ export default function ProfilePage() {
     userRole === "admin",
     usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase())?.purchasedCourseIds ?? [],
   );
-  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "bookings" | "users" | "materials" | "courses" | "trainings" | "enrollments" | "messages" | "logs">("candidates");
+  const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "bookings" | "users" | "materials" | "courses" | "trainings" | "enrollments" | "purchases" | "reviews" | "messages" | "logs">("candidates");
 
   const [lastSeenEnrollmentsAt, setLastSeenEnrollmentsAt] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
@@ -601,6 +605,9 @@ export default function ProfilePage() {
     (b) => b.status === "pending" || (b.status as any) === "awaiting_payment"
   ).length;
 
+  // Невидени покупки с карта и нови оценки — баджове в админ менюто.
+  const unseenPurchases = useUnseenCount("purchases", userRole === "admin");
+  const unseenReviews = useUnseenCount("reviews", userRole === "admin");
   const pendingEnrollmentsCount = allEnrollments
     .filter((e) => e.packageKind !== "consultation" && e.trainingType !== "consultation")
     .filter((e) => {
@@ -753,6 +760,11 @@ export default function ProfilePage() {
 
   // Navigation tabs in profile
   const [activeTab, setActiveTab] = useState("logs"); // logs, haccp, assigned, courses, chat, tools, settings
+  // /profile?tab=courses — след плащане за live курс клиентът идва направо в „Моите обучения“.
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab === "courses" || tab === "packages" || tab === "chat") setActiveTab(tab);
+  }, []);
   // „Оборудване и персонал" — бутонът е в картата на обекта, прозорецът е в дневниците.
   const [equipmentOpen, setEquipmentOpen] = useState(false);
   // Избраният обект в „Дневници" (за фирми с няколко обекта). Помни се за браузъра.
@@ -3915,6 +3927,30 @@ export default function ProfilePage() {
                         )}
                       </button>
                       <button
+                        onClick={() => setActiveAdminTab("purchases")}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "purchases" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
+                      >
+                        <ShoppingBag className={`h-4 w-4 ${activeAdminTab === "purchases" ? "text-brand-gold" : "text-white/45"}`} />
+                        Нови покупки
+                        {unseenPurchases > 0 && (
+                          <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm animate-pulse">
+                            {unseenPurchases}
+                          </span>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setActiveAdminTab("reviews")}
+                        className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "reviews" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
+                      >
+                        <Star className={`h-4 w-4 ${activeAdminTab === "reviews" ? "text-brand-gold" : "text-white/45"}`} />
+                        Оценки
+                        {unseenReviews > 0 && (
+                          <span className="absolute right-3 inline-flex items-center justify-center min-w-[18px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-black leading-none shadow-sm animate-pulse">
+                            {unseenReviews}
+                          </span>
+                        )}
+                      </button>
+                      <button
                         onClick={() => setActiveAdminTab("messages")}
                         className={`relative flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer text-left border-0 w-full ${activeAdminTab === "messages" ? "relative bg-white/[0.09] text-white ring-1 ring-brand-gold/40 shadow-lg shadow-black/20 before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-1 before:rounded-r-full before:bg-brand-gold" : "bg-transparent text-white/70 hover:text-white hover:bg-white/[0.06] duration-200"}`}
                       >
@@ -6248,6 +6284,9 @@ export default function ProfilePage() {
                   )}
 
                   {/* ADMIN TAB 4: MESSAGES/CHAT */}
+                  {activeAdminTab === "purchases" && <AdminPurchasesPanel />}
+                  {activeAdminTab === "reviews" && <AdminReviewsPanel />}
+
                   {activeAdminTab === "messages" && (() => {
                     const chatUsers = usersList.filter(u => u.role === "user" && u.status === "approved");
                     const activeChatUser = chatUsers.find(u => u.email.toLowerCase() === adminActiveChatEmail.toLowerCase());

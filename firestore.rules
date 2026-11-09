@@ -152,6 +152,27 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // /reviews/{slug}__{email} — оценка (1–5) и коментар на купен материал
+    // (MaterialRating). Един отзив на клиент за материал; само за притежаван
+    // пакет. Вижда го админът и авторът; `seenByAdmin` го сменя само админът.
+    match /reviews/{reviewId} {
+      allow read: if isAdmin() || (isSignedIn() && (resource == null || resource.data.email == authEmail()));
+      allow create, update: if isAdmin() || (
+        isSignedIn() &&
+        request.resource.data.keys().hasOnly(["slug", "title", "email", "name", "rating", "comment", "createdAt", "updatedAt", "seenByAdmin"]) &&
+        request.resource.data.email == authEmail() &&
+        reviewId == request.resource.data.slug + "__" + authEmail() &&
+        request.resource.data.slug in get(/databases/$(database)/documents/users/$(authEmail())).data.get("purchasedCourseIds", []) &&
+        request.resource.data.rating is int &&
+        request.resource.data.rating >= 1 && request.resource.data.rating <= 5 &&
+        request.resource.data.comment is string && request.resource.data.comment.size() <= 1500 &&
+        request.resource.data.title is string && request.resource.data.title.size() <= 300 &&
+        request.resource.data.name is string && request.resource.data.name.size() <= 200 &&
+        request.resource.data.seenByAdmin == false
+      );
+      allow delete: if isAdmin();
+    }
+
     // /enrollments/{id} — package purchase requests (bookstore + trainings).
     //   - create: public signup form (buyer may be mid-registration).
     //   - read:   admin (review queue) OR the buyer reading their own requests

@@ -14,6 +14,7 @@ import { findLibraryMaterial, isBundle } from "@/data/library";
 import { useTypeOverrides, resolveType } from "@/lib/typeOverrides";
 import { findMatchingCourse } from "@/lib/courseTypes";
 import { isVideoEmbed, formatVideoEmbedUrl } from "@/lib/videoUtils";
+import MaterialRating from "@/components/MaterialRating";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock, Download, BookOpen, Gift, CheckCheck } from "lucide-react";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -534,6 +535,8 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
               </div>
             </div>
           </div>
+
+          <MaterialRating candidates={[slug]} title={material.title} tone="light" />
         </div>
       </div>
     );
@@ -643,6 +646,10 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="px-4 pb-12">
+        <MaterialRating candidates={[slug]} title={material.title} />
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
 import { Course, CourseMaterialItem, findMatchingCourse } from "@/lib/courseTypes";
 import { findLibraryMaterial } from "@/data/library";
 import { isVideoEmbed, formatVideoEmbedUrl } from "@/lib/videoUtils";
+import MaterialRating from "@/components/MaterialRating";
 import {
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock,
   Video, FileText, ExternalLink, PlayCircle, List
@@ -634,6 +635,10 @@ export default function CourseViewerPage() {
             </div>
           </aside>
         )}
+      </div>
+
+      <div className="px-4 py-8 border-t border-white/5">
+        <MaterialRating candidates={[courseId, course?.slug, course?.id]} title={course?.title || "Обучение"} />
       </div>
 
       <footer className="text-center text-[10px] text-white/40 py-3 border-t border-white/5 px-4 print:hidden">

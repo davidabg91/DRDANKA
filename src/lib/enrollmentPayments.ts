@@ -13,7 +13,7 @@
 
 import { FieldValue } from "firebase-admin/firestore";
 import type Stripe from "stripe";
-import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
+import { adminAuth, adminDb, adminStorage } from "@/lib/firebaseAdmin";
 import { stripe } from "@/lib/stripe";
 import { sendTelegramNotification } from "@/lib/telegram";
 import { SITE_URL } from "@/lib/siteConfig";
@@ -55,9 +55,28 @@ interface Product {
   consentKind: "digital" | "service";
   /** Идентификаторите, които отключват продукта в профила. */
   grantIds: string[];
-  /** Къде да отиде клиентът след плащане. */
+  /** Къде да отиде клиентът след плащане — направо в купеното, ако е готово. */
   href: string;
+  /** Няма какво да се отвори веднага (live курс, консултация, още некачен файл) — какво следва. */
+  next?: string;
 }
+
+const MY_COURSES = "/profile?tab=courses";
+
+/** Качен ли е поне един файл за материала (PDF/видео в Storage). */
+async function hasUploadedFile(...ids: string[]): Promise<boolean> {
+  const bucket = adminStorage().bucket();
+  for (const id of ids) {
+    for (const prefix of [`library/${id}/`, `courses/${id}/`]) {
+      const [files] = await bucket.getFiles({ prefix, maxResults: 1 }).catch(() => [[]] as [unknown[]]);
+      if (files.length) return true;
+    }
+  }
+  return false;
+}
+
+const NOT_UPLOADED_NEXT =
+  "Материалът се подготвя за качване. Д-р Николова е уведомена и ще Ви пише в чата на профила, щом е готов — ще го намерите в „Моите обучения“.";
 
 async function priceOverride(slug: string): Promise<number | undefined> {
   const snap = await adminDb().collection("priceOverrides").doc(slug).get();
@@ -70,7 +89,17 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
   const id = enr.trainingId;
   if (isBooking(enr)) {
     const pkg = findBookingPackage(id);
-    return pkg ? { title: pkg.name, priceEur: bookingPriceEur(pkg), grantIds: [], href: "/profile", consentKind: "service" } : null;
+    const when = enr.date ? ` за ${enr.date}${enr.time ? ` в ${enr.time}` : ""}` : "";
+    return pkg
+      ? {
+          title: pkg.name,
+          priceEur: bookingPriceEur(pkg),
+          grantIds: [],
+          href: "/profile",
+          consentKind: "service",
+          next: `Часът${when} е запазен. Д-р Николова ще го потвърди и ще получите линк за срещата на имейла и в чата на профила.`,
+        }
+      : null;
   }
   const bundle = resolveBundleIds(id);
 
@@ -80,8 +109,15 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
       title: material.title,
       priceEur: (await priceOverride(material.slug)) ?? material.priceEur,
       grantIds: [material.slug, ...bundle],
-      href: "/profile",
+      // Същите пътища като бутоните „Отвори“ в „Моите обучения“.
+      href:
+        (material.items && material.items.length > 1) || material.slug === "video-etiketirane"
+          ? `/courses/${material.slug}/viewer`
+          : `/library/${material.slug}/viewer`,
       consentKind: "digital",
+      ...(bundle.length || material.items?.length || (material.downloadUrl && material.downloadUrl !== "#") || (await hasUploadedFile(material.slug))
+        ? {}
+        : { next: NOT_UPLOADED_NEXT }),
     };
   }
 
@@ -91,8 +127,9 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
       title: live.title,
       priceEur: (await priceOverride(live.slug)) ?? live.priceEur,
       grantIds: [live.slug],
-      href: "/profile",
+      href: MY_COURSES,
       consentKind: "service",
+      next: `Мястото Ви в групата е запазено. Когато групата се събере, ще получите датата и линк за ${live.platform === "google-meet" ? "Google Meet" : "Zoom"} на имейла и в чата на профила.${live.nextBatch ? ` Следващ поток: ${live.nextBatch}.` : ""}`,
     };
   }
 
@@ -105,21 +142,33 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
   if (tr.exists) {
     const t = tr.data() as { id?: string; slug?: string; title?: string; priceEur?: number; type?: string };
     if (typeof t.priceEur !== "number") return null;
+    const video = t.type === "video";
     return {
       title: t.title || enr.trainingTitle,
       priceEur: t.priceEur,
       grantIds: [id, tr.id, t.slug].filter((x): x is string => !!x),
-      href: "/profile",
-      consentKind: t.type === "video" ? "digital" : "service",
+      href: video ? `/courses/${t.slug || tr.id}/viewer` : MY_COURSES,
+      consentKind: video ? "digital" : "service",
+      ...(video
+        ? (await hasUploadedFile(t.slug || tr.id, tr.id)) ? {} : { next: NOT_UPLOADED_NEXT }
+        : { next: "Мястото Ви е запазено. Д-р Николова ще Ви изпрати датата и линк за обучението на имейла и в чата на профила." }),
     };
   }
 
   // Старият каталог /courses/[id] (Firestore `courses`).
   const course = await db.collection("courses").doc(id).get();
   if (course.exists) {
-    const c = course.data() as { title?: string; priceEur?: number; published?: boolean };
+    const c = course.data() as { title?: string; priceEur?: number; published?: boolean; slug?: string; items?: unknown[]; filePath?: string; externalUrl?: string };
     if (typeof c.priceEur !== "number" || c.published === false) return null;
-    return { title: c.title || enr.trainingTitle, priceEur: c.priceEur, grantIds: [id], href: "/profile", consentKind: "digital" };
+    const ready = !!(c.items?.length || c.filePath || c.externalUrl) || (await hasUploadedFile(c.slug || id, id));
+    return {
+      title: c.title || enr.trainingTitle,
+      priceEur: c.priceEur,
+      grantIds: [id],
+      href: `/courses/${c.slug || id}/viewer`,
+      consentKind: "digital",
+      ...(ready ? {} : { next: NOT_UPLOADED_NEXT }),
+    };
   }
   return null;
 }
@@ -287,7 +336,9 @@ export async function revokeRefundedEnrollment(charge: Stripe.Charge): Promise<v
  * Отключва платената заявка. Вика се от webhook-а и от страницата за успех
  * (която проверява сесията директно в Stripe, ако webhook-ът закъснее).
  */
-export async function grantPaidEnrollment(session: Stripe.Checkout.Session): Promise<{ title: string; href: string } | null> {
+export async function grantPaidEnrollment(
+  session: Stripe.Checkout.Session
+): Promise<{ title: string; href: string; next?: string } | null> {
   if (session.metadata?.kind !== "enrollment" || session.payment_status !== "paid") return null;
   const enrollmentId = session.metadata.enrollmentId;
   const db = adminDb();
@@ -296,7 +347,7 @@ export async function grantPaidEnrollment(session: Stripe.Checkout.Session): Pro
   if (!enrSnap.exists) throw new Error(`Enrollment not found: ${enrollmentId}`);
   const enr = { ...(enrSnap.data() as EnrollmentDoc), id: enrSnap.id };
   const product = await productForEnrollment(enr);
-  const result = { title: product?.title || enr.trainingTitle, href: product?.href || "/profile" };
+  const result = { title: product?.title || enr.trainingTitle, href: product?.href || "/profile", next: product?.next };
 
   const purchaseRef = db.collection("purchases").doc(session.id);
   if ((await purchaseRef.get()).exists) return result; // вече отключено
@@ -324,12 +375,17 @@ export async function grantPaidEnrollment(session: Stripe.Checkout.Session): Pro
       kind: "enrollment",
       enrollmentId: enr.id,
       courseId: enr.trainingId,
+      title: result.title,
+      itemKind: isBooking(enr) ? "booking" : enr.packageKind || enr.trainingType || "",
       buyerEmail: email,
+      buyerName: enr.fullName || "",
       stripeSessionId: session.id,
       amountPaidEur,
       status: "paid",
       paidAt: now,
       createdAt: now,
+      // Новите покупки светят в админ менюто, докато админът не ги отвори.
+      seenByAdmin: false,
     });
   } catch {
     return result;
@@ -337,7 +393,11 @@ export async function grantPaidEnrollment(session: Stripe.Checkout.Session): Pro
 
   await sendTelegramNotification(
     `💳 <b>Платено с карта</b>\n${result.title}\n${enr.fullName || ""} — ${email}\n${amountPaidEur.toFixed(2)} € · ` +
-      (isBooking(enr) ? `час ${enr.date || "?"} ${enr.time || ""} — потвърдете го на клиента` : "отключено автоматично")
+      (isBooking(enr)
+        ? `час ${enr.date || "?"} ${enr.time || ""} — потвърдете го на клиента`
+        : result.next === NOT_UPLOADED_NEXT
+          ? "⚠️ файлът още НЕ е качен — качете го и пишете на клиента"
+          : "отключено автоматично")
   ).catch(() => false);
   return result;
 }

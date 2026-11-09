@@ -35,6 +35,8 @@ interface SubscriberDoc {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   autoRenew?: boolean;
+  contact?: string;
+  manager?: string;
 }
 
 const ACTIVE_SUB_STATUSES: Stripe.Subscription.Status[] = ["active", "trialing", "past_due"];
@@ -248,7 +250,9 @@ export async function applyPaidInvoice(invoice: Stripe.Invoice): Promise<{ title
     await purchaseRef.create({
       id: invoice.id,
       kind: "subscription",
+      title,
       buyerEmail: u.email,
+      buyerName: u.contact || u.manager || "",
       plan,
       stripeSubscriptionId: sub.id,
       amountPaidEur,
@@ -256,6 +260,7 @@ export async function applyPaidInvoice(invoice: Stripe.Invoice): Promise<{ title
       status: "paid",
       paidAt: now,
       createdAt: now,
+      seenByAdmin: false,
     });
   } catch {
     return { title }; // webhook-ът и страницата за успех стигнаха дотук едновременно

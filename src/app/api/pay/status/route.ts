@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
       paid: true,
       title: granted?.title ?? null,
       href: granted?.href ?? "/profile",
+      next: granted?.next ?? null,
       amountEur: (session.amount_total || 0) / 100,
     });
   } catch (err) {
