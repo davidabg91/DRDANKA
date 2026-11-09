@@ -13,7 +13,7 @@
 
 import { FieldValue } from "firebase-admin/firestore";
 import type Stripe from "stripe";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { adminAuth, adminDb } from "@/lib/firebaseAdmin";
 import { stripe } from "@/lib/stripe";
 import { sendTelegramNotification } from "@/lib/telegram";
 import { SITE_URL } from "@/lib/siteConfig";
@@ -30,6 +30,7 @@ interface EnrollmentDoc {
   trainingTitle: string;
   email: string;
   fullName?: string;
+  phone?: string;
   status?: string;
   trainingType?: string;
   packageKind?: string;
@@ -163,6 +164,42 @@ export async function createEnrollmentCheckout(enrollmentId: string, returnPath:
 }
 
 /** Отключва платения пакет в профила — като бутона „Получено плащане" в админ панела. */
+/**
+ * `users/{email}` за купувача. Ако записът липсва, но има акаунт за вход
+ * (напр. профилът е изтрит от админ панела, а входът е останал), се създава
+ * наново — иначе платеното няма къде да се запише. Без акаунт → null: празен
+ * профил тук би се сблъскал с регистрацията (тя създава записа сама).
+ */
+async function ensureUserDoc(email: string, enr?: Pick<EnrollmentDoc, "fullName" | "phone">) {
+  const clean = email.trim().toLowerCase();
+  const userRef = adminDb().collection("users").doc(clean);
+  if ((await userRef.get()).exists) return userRef;
+  const account = await adminAuth().getUserByEmail(clean).catch(() => null);
+  // Току-що създаден акаунт: регистрацията още пише профила си — не се пречи.
+  if (!account || Date.now() - new Date(account.metadata.creationTime).getTime() < 10 * 60_000) return null;
+  const name = enr?.fullName?.trim() || account.displayName || "";
+  await userRef.create({
+    email: clean,
+    firmName: "",
+    eik: "",
+    contact: name,
+    phone: enr?.phone?.trim() || "",
+    sector: "",
+    niche: "",
+    desc: "",
+    address: "",
+    manager: name,
+    status: "approved",
+    subscriptionStatus: "none",
+    role: "user",
+    assignedDocs: [],
+    messages: [],
+    purchasedCourseIds: [],
+    createdAt: new Date().toISOString(),
+  }).catch(() => null); // създаден междувременно — пак става
+  return userRef;
+}
+
 async function unlockEnrollment(
   enr: EnrollmentDoc,
   product: Product | null,
@@ -170,12 +207,10 @@ async function unlockEnrollment(
 ): Promise<void> {
   const db = adminDb();
   const grantIds = Array.from(new Set([enr.trainingId, ...(product?.grantIds || [])]));
-  // Профилът се допълва само ако съществува — live курсът може да е заявен без
-  // акаунт, а празен профил тук би се презаписал при по-късна регистрация.
-  const userRef = db.collection("users").doc(enr.email.trim().toLowerCase());
-  if ((await userRef.get()).exists) {
-    await userRef.update({ purchasedCourseIds: FieldValue.arrayUnion(...grantIds) });
-  }
+  // Без профил (live курс, заявен като гост) отключването се довършва при
+  // регистрацията — `syncPaidAccess`.
+  const userRef = await ensureUserDoc(enr.email, enr);
+  if (userRef) await userRef.update({ purchasedCourseIds: FieldValue.arrayUnion(...grantIds) });
   await db
     .collection("enrollments")
     .doc(enr.id)
@@ -191,12 +226,12 @@ async function unlockEnrollment(
 export async function syncPaidAccess(email: string): Promise<number> {
   const db = adminDb();
   const clean = email.trim().toLowerCase();
-  const userRef = db.collection("users").doc(clean);
-  const userSnap = await userRef.get();
-  if (!userSnap.exists) return 0;
-  const owned = new Set<string>(((userSnap.data() as { purchasedCourseIds?: string[] }).purchasedCourseIds) || []);
-
   const paid = await db.collection("enrollments").where("email", "==", clean).where("paidVia", "==", "card").get();
+  if (paid.empty) return 0;
+  const userRef = await ensureUserDoc(clean, paid.docs[0].data() as EnrollmentDoc);
+  if (!userRef) return 0;
+  const owned = new Set<string>((((await userRef.get()).data() as { purchasedCourseIds?: string[] }).purchasedCourseIds) || []);
+
   const missing = new Set<string>();
   for (const d of paid.docs) {
     const enr = { ...(d.data() as EnrollmentDoc), id: d.id };

@@ -204,6 +204,8 @@ export default function PackagePurchaseModal({
       }
 
       const userRef = doc(db, "users", cleanEmail);
+      // Вход без профил (профилът е изтрит от админ панела) — създава се наново.
+      if (!isNewAccount && !(await getDoc(userRef)).exists()) isNewAccount = true;
 
       if (isNewAccount) {
         await setDoc(userRef, {

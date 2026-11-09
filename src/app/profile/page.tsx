@@ -456,17 +456,17 @@ export default function ProfilePage() {
   }, [authLoading, usersLoading, firebaseUser, firebaseUsers]);
 
   // Веднъж на вход: сървърът довършва отключването на платеното с карта,
-  // ако плащането е минало преди профилът да съществува (напр. като гост).
+  // ако плащането е минало преди профилът да съществува (напр. като гост),
+  // и възстановява изтрит профил, на който е останал входът.
   const accessSyncedFor = useRef("");
-  const hasOwnDoc = !!firebaseUser?.email && firebaseUsers.some(u => u.email.toLowerCase() === firebaseUser.email!.toLowerCase());
   useEffect(() => {
-    if (!firebaseUser || !hasOwnDoc || accessSyncedFor.current === firebaseUser.uid) return;
+    if (!firebaseUser || usersLoading || accessSyncedFor.current === firebaseUser.uid) return;
     accessSyncedFor.current = firebaseUser.uid;
     firebaseUser
       .getIdToken()
       .then((token) => fetch("/api/pay/sync-access", { method: "POST", headers: { Authorization: `Bearer ${token}` } }))
       .catch(() => null);
-  }, [firebaseUser, hasOwnDoc]);
+  }, [firebaseUser, usersLoading]);
 
   useEffect(() => {
     if (!authLoading) {
