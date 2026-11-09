@@ -20,6 +20,7 @@ import { SITE_URL } from "@/lib/siteConfig";
 import { LIBRARY_MATERIALS } from "@/data/library";
 import { resolveBundleIds } from "@/data/library/bundles";
 import { findLiveCourse } from "@/data/live-courses";
+import { bookingPriceEur, findBookingPackage } from "@/data/consultations";
 
 export const CARD_PAYMENTS_ENABLED = () => !!process.env.STRIPE_SECRET_KEY;
 
@@ -30,6 +31,17 @@ interface EnrollmentDoc {
   email: string;
   fullName?: string;
   status?: string;
+  trainingType?: string;
+  packageKind?: string;
+  /** Записът в `bookings` за консултациите от календара. */
+  bookingId?: string;
+  date?: string;
+  time?: string;
+}
+
+/** Консултация / присъствено обучение от календара — плащането не отключва нищо, а потвърждава часа. */
+function isBooking(enr: EnrollmentDoc): boolean {
+  return enr.trainingType === "consultation" || enr.packageKind === "consultation";
 }
 
 interface Product {
@@ -50,6 +62,10 @@ async function priceOverride(slug: string): Promise<number | undefined> {
 /** Продуктът зад заявката — с цена от каталога, не от заявката. */
 export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product | null> {
   const id = enr.trainingId;
+  if (isBooking(enr)) {
+    const pkg = findBookingPackage(id);
+    return pkg ? { title: pkg.name, priceEur: bookingPriceEur(pkg), grantIds: [], href: "/profile" } : null;
+  }
   const bundle = resolveBundleIds(id);
 
   const material = LIBRARY_MATERIALS.find((m) => m.slug === id);
@@ -96,7 +112,7 @@ export async function createEnrollmentCheckout(enrollmentId: string, returnPath:
   const snap = await adminDb().collection("enrollments").doc(enrollmentId).get();
   if (!snap.exists) throw new Error("enrollment_not_found");
   const enr = { ...(snap.data() as EnrollmentDoc), id: snap.id };
-  if (enr.status === "access_granted") throw new Error("already_paid");
+  if (enr.status === "access_granted" || (enr as { paidVia?: string }).paidVia === "card") throw new Error("already_paid");
 
   const product = await productForEnrollment(enr);
   if (!product || !(product.priceEur > 0)) throw new Error("product_not_found");
@@ -127,6 +143,26 @@ export async function createEnrollmentCheckout(enrollmentId: string, returnPath:
   return session.url;
 }
 
+/** Отключва платения пакет в профила — като бутона „Получено плащане" в админ панела. */
+async function unlockEnrollment(
+  enr: EnrollmentDoc,
+  product: Product | null,
+  paid: { paidAt: string } & Record<string, unknown>
+): Promise<void> {
+  const db = adminDb();
+  const grantIds = Array.from(new Set([enr.trainingId, ...(product?.grantIds || [])]));
+  // Профилът се допълва само ако съществува — live курсът може да е заявен без
+  // акаунт, а празен профил тук би се презаписал при по-късна регистрация.
+  const userRef = db.collection("users").doc(enr.email.trim().toLowerCase());
+  if ((await userRef.get()).exists) {
+    await userRef.update({ purchasedCourseIds: FieldValue.arrayUnion(...grantIds) });
+  }
+  await db
+    .collection("enrollments")
+    .doc(enr.id)
+    .set({ status: "access_granted", accessGrantedAt: paid.paidAt, ...paid }, { merge: true });
+}
+
 /**
  * Отключва платената заявка. Вика се от webhook-а и от страницата за успех
  * (която проверява сесията директно в Stripe, ако webhook-ът закъснее).
@@ -146,20 +182,19 @@ export async function grantPaidEnrollment(session: Stripe.Checkout.Session): Pro
   if ((await purchaseRef.get()).exists) return result; // вече отключено
 
   const email = enr.email.trim().toLowerCase();
-  const grantIds = Array.from(new Set([enr.trainingId, ...(product?.grantIds || [])]));
   const amountPaidEur = (session.amount_total || 0) / 100;
   const now = new Date().toISOString();
+  const paid = { paidVia: "card", paidAt: now, stripeSessionId: session.id, amountPaidEur };
 
-  // Профилът се допълва само ако съществува — live курсът може да е заявен без
-  // акаунт, а празен профил тук би се презаписал при по-късна регистрация.
-  const userRef = db.collection("users").doc(email);
-  if ((await userRef.get()).exists) {
-    await userRef.update({ purchasedCourseIds: FieldValue.arrayUnion(...grantIds) });
+  if (isBooking(enr)) {
+    // Часът още чака потвърждение от д-р Николова — статусът не се пипа,
+    // само се отбелязва платено (в заявката и в записа в `bookings`).
+    await enrRef.set(paid, { merge: true });
+    if (enr.bookingId) await db.collection("bookings").doc(enr.bookingId).set(paid, { merge: true });
+  } else {
+    await unlockEnrollment(enr, product, paid);
   }
-  await enrRef.set(
-    { status: "access_granted", accessGrantedAt: now, paidVia: "card", stripeSessionId: session.id, amountPaidEur },
-    { merge: true }
-  );
+
   // Webhook-ът и страницата за успех може да стигнат дотук едновременно —
   // отключването по-горе е безопасно да мине два пъти, а `create` пропуска
   // втория запис, така че известието излиза веднъж.
@@ -181,7 +216,8 @@ export async function grantPaidEnrollment(session: Stripe.Checkout.Session): Pro
   }
 
   await sendTelegramNotification(
-    `💳 <b>Платено с карта</b>\n${result.title}\n${enr.fullName || ""} — ${email}\n${amountPaidEur.toFixed(2)} € · отключено автоматично`
+    `💳 <b>Платено с карта</b>\n${result.title}\n${enr.fullName || ""} — ${email}\n${amountPaidEur.toFixed(2)} € · ` +
+      (isBooking(enr) ? `час ${enr.date || "?"} ${enr.time || ""} — потвърдете го на клиента` : "отключено автоматично")
   ).catch(() => false);
   return result;
 }

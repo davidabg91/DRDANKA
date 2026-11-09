@@ -29,6 +29,7 @@ import type { CleaningTemplate } from "@/components/registers/cleaningChecklist"
 import type { TempNormEntry } from "@/components/registers/tempUnits";
 import BankTransferNotice from "@/components/BankTransferNotice";
 import CardPayButton, { useCardPayments } from "@/components/CardPayButton";
+import SubscriptionCardPay, { AutoRenewControl, syncAutoPay } from "@/components/SubscriptionCardPay";
 import { BANK_DETAILS } from "@/lib/paymentInfo";
 import { defaultHotPointForSector, isMeatShopNiche, STORE_REGISTER_IDS, REGISTER_BY_ID, registersForMeat, registersFor } from "@/data/storeRegisters";
 import { PLANS, PLAN_BY_ID, PLAN_RANK, PlanId, effectivePlan, planFeeEur, formatEur, EXTRA_SITE_DISCOUNT, planHasChat, planHasExtras, isExtraRegister, addMonthsISO, LEGACY_PLAN, planDelta } from "@/lib/plans";
@@ -156,6 +157,11 @@ export interface DankaUser {
   plan?: PlanId;
   /** План, заявен от клиента и чакащ потвърждение на плащането. */
   requestedPlan?: PlanId;
+  /** Автоматичното месечно плащане с карта (пише ги само сървърът — subscriptionPayments.ts). */
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  /** true = следващият месец се таксува автоматично от картата. */
+  autoRenew?: boolean;
   /** ISO timestamp на заявката за план. */
   planRequestedAt?: string;
   /** Допълнителни записи („Професионал"/VIP), избрани ръчно от д-р Николова. Липсва → всички приложими. */
@@ -1306,6 +1312,7 @@ export default function ProfilePage() {
     const sites = [...(me.sites ?? []), site];
     const ok = await updateUser(me.email, { sites, ...feePatchFor(me, sites.length + 1) });
     if (!ok) return false;
+    if (me.autoRenew) syncAutoPay();
     setActiveSiteId(site.id);
     const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     fetch("/api/notify-telegram", {
@@ -1348,6 +1355,7 @@ export default function ProfilePage() {
     if (!me || id === MAIN_SITE_ID) return false;
     const sites = (me.sites ?? []).filter(s => s.id !== id);
     const ok = await updateUser(me.email, { sites, ...feePatchFor(me, sites.length + 1) });
+    if (ok && me.autoRenew) syncAutoPay();
     if (ok && activeSiteId === id) setActiveSiteId(MAIN_SITE_ID);
     return ok;
   };
@@ -1468,8 +1476,10 @@ export default function ProfilePage() {
   };
 
   // Admin changes a client's plan directly (without payment flow).
-  const handleSetPlan = (email: string, plan: PlanId) => {
-    updateUser(email, { plan });
+  const handleSetPlan = async (email: string, plan: PlanId) => {
+    const ok = await updateUser(email, { plan });
+    // Автоматичното плащане с карта таксува вече новия план.
+    if (ok && usersList.find(u => u.email.toLowerCase() === email.toLowerCase())?.stripeSubscriptionId) syncAutoPay(email);
   };
 
   // One-off migration: clients from before the plans existed → VIP for 1 month.
@@ -3611,14 +3621,18 @@ export default function ProfilePage() {
                     {reqName ? `Заявихте план „${reqName}“` : "Заявлението Ви за абонамент е одобрено!"}
                   </p>
                   <p className="text-xs text-brand-dark/70">
-                    За да активирате плана, моля направете банков превод на стойност <strong className="text-brand-green">{fee.toFixed(2)} €</strong> (1 месец). Достъпът се активира след получаване на превода.
+                    {cardPayments ? (
+                      <>Платете <strong className="text-brand-green">{fee.toFixed(2)} €</strong> / месец с карта — планът се активира веднага. Можете да платите и с банков превод.</>
+                    ) : (
+                      <>За да активирате плана, моля направете банков превод на стойност <strong className="text-brand-green">{fee.toFixed(2)} €</strong> (1 месец). Достъпът се активира след получаване на превода.</>
+                    )}
                   </p>
                 </div>
                 <button
                   onClick={() => { setSubPayOpen(true); }}
                   className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap shadow-md shadow-brand-gold/20 border-0"
                 >
-                  Данни за превод
+                  {cardPayments ? "Плати" : "Данни за превод"}
                 </button>
               </div>
             );
@@ -4484,6 +4498,14 @@ export default function ProfilePage() {
                                         {u.requestedPlan && (
                                           <span className="text-[9px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full" title={u.planRequestedAt ? `Заявен на ${u.planRequestedAt.slice(0, 10)}` : undefined}>
                                             Заявен: {PLAN_BY_ID[u.requestedPlan]?.name ?? u.requestedPlan}
+                                          </span>
+                                        )}
+                                        {u.stripeSubscriptionId && (
+                                          <span
+                                            className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${u.autoRenew ? "text-emerald-800 bg-emerald-100" : "text-slate-600 bg-slate-100"}`}
+                                            title={u.autoRenew ? "Плаща автоматично с карта всеки месец — срокът се удължава сам" : "Автоматичното плащане с карта е спряно"}
+                                          >
+                                            💳 {u.autoRenew ? "авто" : "авто спряно"}
                                           </span>
                                         )}
                                       </div>
@@ -7397,8 +7419,21 @@ export default function ProfilePage() {
                       <div className="space-y-1 text-sm font-sans text-left">
                         <p className="font-bold text-base">Активен план „{PLAN_BY_ID[effectivePlan(currentUser)].name}“</p>
                         <p className="text-xs text-brand-dark/70 leading-relaxed">
-                          Абонаментът Ви е платен до: <strong className="font-mono text-brand-gold-dark font-bold">{currentUser?.expiresAt || "—"}</strong>. За подновяване направете нов превод преди тази дата.
+                          Абонаментът Ви е платен до: <strong className="font-mono text-brand-gold-dark font-bold">{currentUser?.expiresAt || "—"}</strong>.{" "}
+                          {currentUser?.autoRenew ? "Подновява се автоматично с карта." : "За подновяване направете нов превод преди тази дата."}
                         </p>
+                        {currentUser?.stripeSubscriptionId ? (
+                          <div className="pt-1"><AutoRenewControl autoRenew={!!currentUser.autoRenew} expiresAt={currentUser.expiresAt} /></div>
+                        ) : cardPayments && !currentUser?.requestedPlan && (
+                          <div className="pt-2 max-w-sm">
+                            <SubscriptionCardPay amountLabel={formatEur(planFeeEur(effectivePlan(currentUser), siteCountOf(currentUser)))} hasAutoPay={false} />
+                            <p className="text-[10px] text-brand-dark/50 mt-1">
+                              {(daysUntilExpiry(currentUser?.expiresAt ?? "") ?? 0) >= 4
+                                ? `Първото таксуване е на ${currentUser?.expiresAt} — платеният месец не се губи.`
+                                : "Таксува се сега и после автоматично всеки месец."}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -7410,7 +7445,11 @@ export default function ProfilePage() {
                       Всички дневници по самоконтрол — онлайн, с напомняния и готови за проверка от БАБХ
                     </h3>
                     <p className="text-sm text-brand-dark/75 leading-relaxed mt-3 max-w-3xl">
-                      Изберете пакет според дейността на обекта. Плащането е <strong className="text-brand-green">месечно, по банков път</strong> — достъпът се активира след получаване на превода. Можете да надградите пакета по всяко време.
+                      Изберете пакет според дейността на обекта. {cardPayments ? (
+                        <>Плащането е <strong className="text-brand-green">месечно — с карта</strong> (активира се веднага и се подновява автоматично) или по банков път.</>
+                      ) : (
+                        <>Плащането е <strong className="text-brand-green">месечно, по банков път</strong> — достъпът се активира след получаване на превода.</>
+                      )} Можете да надградите пакета по всяко време.
                     </p>
                   </div>
 
@@ -7924,7 +7963,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане</div>
-                    <div className="font-serif text-lg font-bold">Данни за банков превод</div>
+                    <div className="font-serif text-lg font-bold">{cardPayments ? "Месечен абонамент" : "Данни за банков превод"}</div>
                   </div>
                 </div>
                 <button
@@ -7941,6 +7980,13 @@ export default function ProfilePage() {
                   <span className="text-sm font-bold text-brand-green">{me?.requestedPlan ? `План „${PLAN_BY_ID[me.requestedPlan].name}“ — 1 месец` : "Месечен абонамент"}</span>
                   <span className="font-serif text-2xl font-bold text-brand-gold">{fee.toFixed(2)} €</span>
                 </div>
+
+                <SubscriptionCardPay amountLabel={formatEur(fee)} hasAutoPay={!!me?.autoRenew} />
+                {cardPayments && (
+                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-brand-dark/40">
+                    <span className="flex-1 h-px bg-brand-green/10" /> или по банков път <span className="flex-1 h-px bg-brand-green/10" />
+                  </div>
+                )}
 
                 <div className="bg-brand-green/5 border border-brand-green/10 rounded-2xl p-5 space-y-4 text-brand-dark">
                   <div className="text-center font-bold text-sm uppercase tracking-wider text-brand-green pb-2 border-b border-brand-green/10">
@@ -7967,7 +8013,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl p-4 leading-relaxed space-y-1.5">
-                  <p className="font-bold">💡 Важно:</p>
+                  <p className="font-bold">💡 {cardPayments ? "При банков превод:" : "Важно:"}</p>
                   <p>
                     След като направите банков превод по посочената сметка, администраторът ще активира Вашите права в профила и ще бъдете известени по имейл и с чат съобщение.
                   </p>
@@ -8004,7 +8050,9 @@ export default function ProfilePage() {
                 <p className="text-brand-gold font-bold text-lg font-mono">{pkgConfirmModal.fee} € <span className="text-brand-dark/40 text-xs font-sans font-normal">/ месечно</span></p>
               </div>
               <p className="text-xs text-brand-dark/65 leading-relaxed text-center">
-                Вашият акаунт ще бъде регистриран за плащане по банков път. Администраторът ще активира достъпа Ви веднага след получаване на превода.
+                {cardPayments
+                  ? "На следващата стъпка платете с карта — планът се активира веднага и се подновява автоматично всеки месец. Можете да платите и по банков път."
+                  : "Вашият акаунт ще бъде регистриран за плащане по банков път. Администраторът ще активира достъпа Ви веднага след получаване на превода."}
               </p>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setPkgConfirmModal(null)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-brand-dark/70 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0">Отказ</button>
@@ -8033,10 +8081,14 @@ export default function ProfilePage() {
                 <p className="font-serif text-2xl font-bold text-brand-green">{pkgSuccessModal.name}</p>
                 <p className="text-brand-gold font-bold text-lg font-mono">{pkgSuccessModal.fee} € <span className="text-brand-dark/40 text-xs font-sans font-normal">/ месечно</span></p>
               </div>
+              {(() => {
+                const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
+                return <SubscriptionCardPay amountLabel={formatEur(pkgSuccessModal.fee)} hasAutoPay={!!me?.autoRenew} />;
+              })()}
               <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
                 <p className="text-emerald-800 font-bold text-xs flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                  Следващи стъпки:
+                  {cardPayments ? "Или по банков път:" : "Следващи стъпки:"}
                 </p>
                 <ol className="text-xs text-emerald-700 space-y-1.5 pl-6 list-decimal leading-relaxed">
                   <li>Направете банков превод по сметката по-долу на тази страница.</li>

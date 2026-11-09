@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { stripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
 import { grantAccess } from "@/lib/grantAccess";
 import { grantPaidEnrollment } from "@/lib/enrollmentPayments";
+import { applyPaidInvoice, notifyFailedInvoice, syncSubscriptionState } from "@/lib/subscriptionPayments";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,12 +30,37 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
+  // Месечните абонаменти с карта: всяко платено/неуспешно таксуване и спиране.
+  try {
+    switch (event.type) {
+      case "invoice.paid":
+        await applyPaidInvoice(event.data.object as Stripe.Invoice);
+        return NextResponse.json({ ok: true });
+      case "invoice.payment_failed":
+        await notifyFailedInvoice(event.data.object as Stripe.Invoice);
+        return NextResponse.json({ ok: true });
+      case "customer.subscription.updated":
+      case "customer.subscription.deleted":
+        await syncSubscriptionState(event.data.object as Stripe.Subscription);
+        return NextResponse.json({ ok: true });
+    }
+  } catch (err) {
+    console.error(`Subscription webhook ${event.type} failed:`, err);
+    // 500 → Stripe опитва отново; обработката е идемпотентна.
+    return NextResponse.json({ error: "subscription_failed" }, { status: 500 });
+  }
+
   if (event.type !== "checkout.session.completed") {
     // Not an event we care about — ack so Stripe doesn't retry.
     return NextResponse.json({ ok: true, ignored: event.type });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
+
+  // Абонаментът се активира от `invoice.paid`, който Stripe праща отделно.
+  if (session.metadata?.kind === "subscription") {
+    return NextResponse.json({ ok: true });
+  }
 
   // Заявки за наръчници, книги, обучения и live курсове (плащане с карта).
   if (session.metadata?.kind === "enrollment") {

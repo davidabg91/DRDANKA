@@ -37,12 +37,15 @@ export default function CardPayButton({
   enrollmentId,
   amountLabel,
   returnPath,
+  hint = "достъпът се отключва веднага",
 }: {
   enrollmentId: string;
   /** „11,11 €" — показва се на бутона. */
   amountLabel?: string;
   /** Къде да се върне клиентът, ако се откаже на платежната страница. */
   returnPath?: string;
+  /** Какво става след плащането — под бутона. */
+  hint?: string;
 }) {
   const enabled = useCardPayments();
   const [busy, setBusy] = useState(false);
@@ -97,7 +100,7 @@ export default function CardPayButton({
         ))}
       </div>
       <p className="flex items-center justify-center gap-1 text-[10px] text-brand-dark/50">
-        <Lock className="h-3 w-3" /> Защитено плащане през Stripe · достъпът се отключва веднага
+        <Lock className="h-3 w-3" /> Защитено плащане през Stripe · {hint}
       </p>
       {error && <p className="text-xs font-bold text-red-600 text-center">{error}</p>}
     </div>

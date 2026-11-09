@@ -94,6 +94,10 @@ service cloud.firestore {
         unchanged("extraRegisters") &&
         unchanged("expiresAt") &&
         unchanged("subscriptionPaidAt") &&
+        // Автоматичното плащане с карта — пише го само сървърът (Stripe webhook).
+        unchanged("stripeCustomerId") &&
+        unchanged("stripeSubscriptionId") &&
+        unchanged("autoRenew") &&
         (unchanged("requestedPlan") || request.resource.data.requestedPlan in ["basic", "standard", "pro", "vip"])
       );
 

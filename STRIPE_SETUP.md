@@ -150,4 +150,27 @@ STRIPE_WEBHOOK_SECRET=whsec_...           # ще го получиш в стъп
    - Stripe вика `POST /api/stripe/webhook` (`checkout.session.completed`, `metadata.kind = "enrollment"`) → `grantPaidEnrollment` добавя пакета в `users/{email}.purchasedCourseIds`, заявката става `access_granted` (`paidVia: "card"`), записва `purchases/{sessionId}` и праща известие в Telegram;
    - клиентът се връща на `/pay/success`, която проверява сесията в Stripe през `GET /api/pay/status` и отключва веднага, ако webhook-ът закъснее (идемпотентно).
 
-Env във Vercel: `STRIPE_SECRET_KEY` (restricted key: Checkout Sessions — write), `STRIPE_WEBHOOK_SECRET` (от webhook endpoint `https://www.haccpspokoystvie.bg/api/stripe/webhook`, събитие `checkout.session.completed`). Банковите данни за превод са в `src/lib/paymentInfo.ts`.
+Консултациите и присъствените обучения от календара (`BookingCalendar`) също се плащат с карта: цената е от `src/data/consultations.ts`, а платената заявка остава със своя статус (часът се потвърждава от д-р Николова), само се отбелязва `paidVia: "card"` в `enrollments` и `bookings`.
+
+## 9. Месечен абонамент с карта (автоматично всеки месец)
+
+`src/lib/subscriptionPayments.ts` + `POST /api/pay/subscription` (с Firebase ID token):
+
+- `checkout` → Stripe Checkout в режим `subscription`. Сумата е `planFeeEur(план, брой обекти)` от сървъра. Ако текущият месец вече е платен (по банков път) и планът не се сменя, първото таксуване е в деня на `expiresAt`.
+- Всяко платено таксуване (`invoice.paid`) активира плана и удължава `expiresAt` до края на платения период, пише съобщение в чата и известява в Telegram. Идемпотентно по id на фактурата (`purchases/{invoiceId}`).
+- `sync` — след смяна на плана (клиентът потвърждава с „Смени плана с карта") или на броя обекти; разликата за текущия месец се таксува веднага. Админът я вика автоматично при ръчна смяна на плана.
+- `cancel` / `resume` — спира/пуска автоматичното таксуване от следващия месец (достъпът остава до `expiresAt`).
+- `invoice.payment_failed` → съобщение до клиента + Telegram; Stripe опитва отново сам.
+- В профила: `stripeCustomerId`, `stripeSubscriptionId`, `autoRenew` (само сървърът ги пише — firestore.rules). Админ списъкът показва „💳 авто".
+
+## 10. Какво трябва във Vercel (Production)
+
+| Променлива | Откъде |
+|---|---|
+| `FIREBASE_SERVICE_ACCOUNT_BASE64` | Firebase Console → Project settings → Service accounts → Generate new private key → base64 |
+| `STRIPE_SECRET_KEY` | Stripe → Developers → API keys → Secret key (`sk_live_...`) |
+| `STRIPE_WEBHOOK_SECRET` | Stripe → Developers → Webhooks → endpoint `https://www.haccpspokoystvie.bg/api/stripe/webhook` → Signing secret (`whsec_...`) |
+
+Събития на webhook-а: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`.
+
+Банковите данни за превод са в `src/lib/paymentInfo.ts` (фирмената сметка в ОББ).

@@ -6,69 +6,8 @@ import { getLocalDateISO } from "@/lib/dateUtils";
 import { BANK_DETAILS } from "@/lib/paymentInfo";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
-
-interface Package {
-  id: string;
-  name: string;
-  duration: string;
-  price: string;
-  desc: string;
-}
-
-const CONSULTATION_PACKAGES: Package[] = [
-  {
-    id: "free-intro",
-    name: "Безплатен опознавателен разговор",
-    duration: "10 минути",
-    price: "0 €",
-    desc: "Кратък безплатен разговор за насоки и уточняване на нуждите на Вашия бизнес, за да изберем най-подходящата услуга (консултация или обучение).",
-  },
-  {
-    id: "basic",
-    name: "Експресна консултация",
-    duration: "30 минути",
-    price: "35 €",
-    desc: "Бърза сесия за конкретен казус, тълкуване на наредба или подготовка за предстояща внезапна проверка.",
-  },
-  {
-    id: "startup",
-    name: "Стартъп консултация",
-    duration: "60 минути",
-    price: "60 €",
-    desc: "За предприемачи, отварящи нов обект. Обсъждане на изисквания, разпределение на помещенията и необходими документи.",
-  },
-  {
-    id: "audit",
-    name: "Пълен одит на документация",
-    duration: "90 минути",
-    price: "95 €",
-    desc: "Подробен анализ на съществуващи НАССР/ISO системи. Идентификация на пропуски преди проверки от БАБХ.",
-  },
-];
-
-const TRAINING_PACKAGES: Package[] = [
-  {
-    id: "haccp-basics",
-    name: "Основи на хигиената и НАССР за персонал",
-    duration: "4 академични часа",
-    price: "80 €",
-    desc: "Задължително обучение съгласно българското законодателство. Запознава служителите с хигиенните изисквания, избягване на кръстосано замърсяване и правилно водене на дневниците по самоконтрол.",
-  },
-  {
-    id: "babkh-prep",
-    name: "Подготовка за инспекции от БАБХ",
-    duration: "6 академични часа",
-    price: "120 €",
-    desc: "Практически курс за собственици и управители. Как да преминавате инспекции без притеснение и глоби.",
-  },
-  {
-    id: "safety-culture",
-    name: "Култура на безопасност на храните (Food Safety Culture)",
-    duration: "8 академични часа",
-    price: "200 €",
-    desc: "Внедряване на съвременните изисквания за Food Safety Culture съгласно Регламент (ЕС) 2021/382 за производства и цехове.",
-  },
-];
+import { CONSULTATION_PACKAGES, TRAINING_PACKAGES, type Package } from "@/data/consultations";
+import CardPayButton from "@/components/CardPayButton";
 
 const CONSULTATION_TIME_SLOTS = ["09:00", "10:30", "11:30", "14:00", "15:30", "17:00"];
 const TRAINING_TIME_SLOTS = ["14:00"];
@@ -157,6 +96,8 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
   };
 
   const [submitting, setSubmitting] = useState(false);
+  /** Заявката в `enrollments` — по нея се плаща с карта на последната стъпка. */
+  const [enrollmentId, setEnrollmentId] = useState("");
 
   const handleClientInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -206,6 +147,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
       // 2. Direct client Firestore write to /enrollments (guaranteed permission in live rules)
       await setDoc(doc(db, "enrollments", enrollId), {
         id: enrollId,
+        bookingId,
         trainingId: selectedPackage.id,
         trainingTitle: selectedPackage.name,
         trainingType: "consultation",
@@ -220,7 +162,9 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
         note: cleanNote,
         status: "pending",
         createdAt: nowIso,
-      }).catch((e) => console.warn("Client enrollments save warning:", e));
+      })
+        .then(() => setEnrollmentId(enrollId))
+        .catch((e) => console.warn("Client enrollments save warning:", e));
 
       // 3. Direct client Firestore write to /bookings
       await setDoc(doc(db, "bookings", bookingId), bookingPayload).catch((e) =>
@@ -544,7 +488,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                   </>
                 ) : (
                   <>
-                    За да потвърдите Вашия{mode === "training" ? "та заявка" : " час"}, направете банков превод по сметката по-долу. <span className="font-semibold text-brand-green">Веднага след като средствата постъпят, д-р Данка Николова ще се свърже с Вас</span> за организация и потвърждение.
+                    За да потвърдите Вашия{mode === "training" ? "та заявка" : " час"}, платете с карта или с банков превод по сметката по-долу. <span className="font-semibold text-brand-green">Веднага след като средствата постъпят, д-р Данка Николова ще се свърже с Вас</span> за организация и потвърждение.
                   </>
                 )}
               </p>
@@ -570,6 +514,16 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                 <span className="font-bold text-brand-gold">{selectedPackage.price}</span>
               </div>
             </div>
+
+            {!isFree && enrollmentId && (
+              <div className="max-w-md mx-auto mb-5">
+                <CardPayButton
+                  enrollmentId={enrollmentId}
+                  amountLabel={selectedPackage.price}
+                  hint="д-р Николова ще потвърди часа"
+                />
+              </div>
+            )}
 
             {/* Bank transfer details (paid bookings only) */}
             {!isFree && (
@@ -609,6 +563,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                 setSelectedDate("");
                 setSelectedTime("");
                 setClientInfo({ name: "", phone: "", email: "", note: "" });
+                setEnrollmentId("");
               }}
               className="px-6 py-2.5 border border-brand-green/20 text-brand-green text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/5 transition-colors cursor-pointer"
             >
