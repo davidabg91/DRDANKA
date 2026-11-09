@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+import dynamic from "next/dynamic";
 import { auth, storage, db } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { ref as storageRef, getBlob, getDownloadURL } from "firebase/storage";
@@ -17,7 +15,8 @@ import { isVideoEmbed, formatVideoEmbedUrl } from "@/lib/videoUtils";
 import MaterialRating from "@/components/MaterialRating";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, ArrowLeft, Lock, Download, BookOpen, Gift, CheckCheck } from "lucide-react";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// pdf.js работи само в браузъра — без сървърно рендиране (иначе 500).
+const PdfPageView = dynamic(() => import("@/components/PdfPageView"), { ssr: false });
 
 /**
  * Protected reader for library materials (PDF or video).
@@ -50,10 +49,6 @@ export default function LibraryViewerPage() {
   const [extraFileTitle, setExtraFileTitle] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const pdfOptions = useMemo(() => ({
-    disableAutoFetch: true,
-    disableStream: false,
-  }), []);
 
   useEffect(() => {
     if (!slug) return;
@@ -599,14 +594,13 @@ async function setCachedBlob(key: string, blob: Blob): Promise<void> {
 
           {mediaKind === "pdf" && pdfFile && (
             <div className={`pointer-events-none select-none transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}>
-              <Document
+              <PdfPageView
                 file={pdfFile}
-                options={pdfOptions}
+                pageNumber={pageNumber}
+                scale={scale}
                 onLoadSuccess={({ numPages }) => setPageCount(numPages)}
                 onLoadError={(err) => setLoadError(err.message)}
-              >
-                <Page pageNumber={pageNumber} scale={scale} renderTextLayer={false} renderAnnotationLayer={false} />
-              </Document>
+              />
             </div>
           )}
 

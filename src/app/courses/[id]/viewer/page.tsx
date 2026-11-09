@@ -1,11 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+import dynamic from "next/dynamic";
 import { auth, db, storage } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, collection, query, where, getDocs, limit } from "firebase/firestore";
@@ -19,7 +17,8 @@ import {
   Video, FileText, ExternalLink, PlayCircle, List
 } from "lucide-react";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// pdf.js работи само в браузъра — без сървърно рендиране (иначе 500).
+const PdfPageView = dynamic(() => import("@/components/PdfPageView"), { ssr: false });
 
 export default function CourseViewerPage() {
   const params = useParams<{ id: string }>();
@@ -44,10 +43,6 @@ export default function CourseViewerPage() {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const pdfOptions = useMemo(() => ({
-    disableAutoFetch: true,
-    disableStream: false,
-  }), []);
 
   // Load course doc from Firestore
   useEffect(() => {
@@ -509,22 +504,16 @@ export default function CourseViewerPage() {
             <div className="relative overflow-hidden min-h-[500px] flex justify-center w-full">
               <div className={`transition-all duration-200 ${isScreenBlurred ? "opacity-0 blur-xl" : "opacity-100"}`}>
                 {pdfFile && (
-                  <Document
+                  <PdfPageView
                     file={pdfFile}
-                    options={pdfOptions}
+                    pageNumber={pageNumber}
+                    scale={scale}
                     onLoadSuccess={onLoadSuccess}
                     onLoadError={(err) => setLoadError(err.message)}
                     loading={<div className="text-white/60 text-xs py-12">Зареждане на PDF наръчника…</div>}
                     error={<div className="text-red-300 text-xs py-12">Грешка при отваряне на PDF файла.</div>}
-                  >
-                    <Page
-                      pageNumber={pageNumber}
-                      scale={scale}
-                      renderTextLayer={false}
-                      renderAnnotationLayer={false}
-                      className="shadow-2xl rounded-lg overflow-hidden"
-                    />
-                  </Document>
+                    pageClassName="shadow-2xl rounded-lg overflow-hidden"
+                  />
                 )}
               </div>
 
