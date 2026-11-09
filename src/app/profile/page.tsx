@@ -1033,7 +1033,9 @@ export default function ProfilePage() {
     try {
       await signInWithEmailAndPassword(auth, cleanEmail, authPassword);
       const matchedUser = firebaseUsers.find(u => u.email === cleanEmail);
-      if (matchedUser) {
+      // С плащане с карта няма одобрение: чакащ или изтекъл профил влиза и
+      // сам избира и плаща план — достъпът се отключва веднага.
+      if (matchedUser && !cardPayments) {
         if (matchedUser.status === "pending") {
           setPendingEmail(matchedUser.email);
           setPendingFirmName(matchedUser.firmName);
@@ -1392,7 +1394,8 @@ export default function ProfilePage() {
       };
       const ok = await updateUser(currentUserEmail, updates);
       if (ok) {
-        setPkgSuccessModal({ name, fee });
+        // С карта — направо към плащането, без междинни екрани.
+        if (!cardPayments) setPkgSuccessModal({ name, fee });
         const isFirmIncomplete = !me?.firmName || me.firmName.trim() === "" || !me?.address || me.address.trim() === "";
         if (isFirmIncomplete) {
           setApplyFirmName(me?.firmName || "");
@@ -1404,6 +1407,8 @@ export default function ProfilePage() {
           setTimeout(() => {
             setSubApplyOpen(true);
           }, 800);
+        } else if (cardPayments) {
+          setSubPayOpen(true);
         } else {
           setTimeout(() => {
             const el = document.getElementById("bank-details-card");
@@ -2561,7 +2566,8 @@ export default function ProfilePage() {
     }
     const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
     const currentSub = me?.subscriptionStatus ?? "none";
-    const nextSubStatus = (currentSub === "none" || currentSub === "expired") ? "pending" : currentSub;
+    // С карта няма преглед от админа — данните се записват и клиентът плаща план.
+    const nextSubStatus = !cardPayments && (currentSub === "none" || currentSub === "expired") ? "pending" : currentSub;
 
     const ok = await updateUser(currentUserEmail, {
       firmName: applyFirmName.trim(),
@@ -2584,7 +2590,13 @@ export default function ProfilePage() {
       setApplyPhone("");
       setApplyAddress("");
       setApplyDesc("");
-      alert("Заявлението е изпратено! Д-р Николова ще го прегледа и ще получите уведомление след одобрение.");
+      if (cardPayments) {
+        // Избран план → плащане; иначе — към пакетите за избор.
+        if (me?.requestedPlan) setSubPayOpen(true);
+        else setActiveTab("packages");
+      } else {
+        alert("Заявлението е изпратено! Д-р Николова ще го прегледа и ще получите уведомление след одобрение.");
+      }
     }
   };
 
@@ -3618,11 +3630,11 @@ export default function ProfilePage() {
                 <Building className="h-6 w-6 text-brand-gold shrink-0" />
                 <div className="flex-1 text-sm">
                   <p className="font-bold text-brand-green mb-0.5">
-                    {reqName ? `Заявихте план „${reqName}“` : "Заявлението Ви за абонамент е одобрено!"}
+                    {reqName ? `${cardPayments ? "Избрахте" : "Заявихте"} план „${reqName}“` : cardPayments ? "Остава само плащането" : "Заявлението Ви за абонамент е одобрено!"}
                   </p>
                   <p className="text-xs text-brand-dark/70">
                     {cardPayments ? (
-                      <>Платете <strong className="text-brand-green">{fee.toFixed(2)} €</strong> / месец с карта — планът се активира веднага. Можете да платите и с банков превод.</>
+                      <>Платете <strong className="text-brand-green">{fee.toFixed(2)} €</strong> / месец с карта — планът се активира веднага.</>
                     ) : (
                       <>За да активирате плана, моля направете банков превод на стойност <strong className="text-brand-green">{fee.toFixed(2)} €</strong> (1 месец). Достъпът се активира след получаване на превода.</>
                     )}
@@ -3632,7 +3644,7 @@ export default function ProfilePage() {
                   onClick={() => { setSubPayOpen(true); }}
                   className="text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-full bg-brand-gold text-brand-dark hover:bg-brand-gold-light transition-colors cursor-pointer whitespace-nowrap shadow-md shadow-brand-gold/20 border-0"
                 >
-                  {cardPayments ? "Плати" : "Данни за превод"}
+                  {cardPayments ? `Плати ${formatEur(fee)}` : "Данни за превод"}
                 </button>
               </div>
             );
@@ -3644,7 +3656,7 @@ export default function ProfilePage() {
             <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={() => setPayEnrollment(null)}>
               <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl my-8 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                 <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
-                  <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
+                  <div className="p-2.5 bg-white/10 rounded-xl shrink-0">{cardPayments ? <Lock className="h-5 w-5" /> : <Landmark className="h-5 w-5" />}</div>
                   <div className="min-w-0 flex-1">
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">{cardPayments ? "Плащане" : "Плащане по банков път"}</div>
                     <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{payEnrollment.trainingTitle}</div>
@@ -3652,17 +3664,23 @@ export default function ProfilePage() {
                   <button onClick={() => setPayEnrollment(null)} aria-label="Затвори" className="absolute top-4 right-4 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer shrink-0"><X className="h-5 w-5" /></button>
                 </div>
                 <div className="p-6 space-y-4">
-                  <CardPayButton enrollmentId={payEnrollment.id} amountLabel={`${payEnrollment.priceEur.toFixed(2)} €`} returnPath="/profile" />
-                  {cardPayments && (
-                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-brand-dark/40">
-                      <span className="flex-1 h-px bg-brand-green/10" /> или по банков път <span className="flex-1 h-px bg-brand-green/10" />
-                    </div>
+                  {cardPayments ? (
+                    <>
+                      <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
+                        <span className="text-sm font-bold text-brand-green">Общо за плащане</span>
+                        <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{payEnrollment.priceEur.toFixed(2)} €</span>
+                      </div>
+                      <CardPayButton enrollmentId={payEnrollment.id} amountLabel={`${payEnrollment.priceEur.toFixed(2)} €`} returnPath="/profile" />
+                    </>
+                  ) : (
+                    <>
+                      <BankTransferNotice amount={`${payEnrollment.priceEur.toFixed(2)} €`} reference={`${payEnrollment.email} — ${payEnrollment.trainingTitle}`} />
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
+                        <strong>Активиране:</strong> До <strong>24 часа</strong> след постъпване на плащането пакетът се отключва в „Моите обучения".
+                      </div>
+                      <button onClick={() => setPayEnrollment(null)} className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
+                    </>
                   )}
-                  <BankTransferNotice amount={`${payEnrollment.priceEur.toFixed(2)} €`} reference={`${payEnrollment.email} — ${payEnrollment.trainingTitle}`} />
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 leading-relaxed">
-                    <strong>{cardPayments ? "При банков превод:" : "Активиране:"}</strong> До <strong>24 часа</strong> след постъпване на плащането пакетът се отключва в „Моите обучения".
-                  </div>
-                  <button onClick={() => setPayEnrollment(null)} className="w-full px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
                 </div>
               </div>
             </div>
@@ -6445,9 +6463,15 @@ export default function ProfilePage() {
                               {subStatus === "awaiting_payment" ? `Плащане на абонамент` : status === "expired" || subStatus === "expired" ? `Изтекъл абонамент` : `Заключена секция`}
                             </h2>
                             <p className="text-sm text-brand-dark/70 leading-relaxed">
-                              {subStatus === "pending" && `Вашето заявление за абонамент е получено и се преглежда от д-р Николова. След одобрение и заплащане на абонамента, всички функции на портала се отключват.`}
-                              {subStatus === "awaiting_payment" && `Заявлението Ви е одобрено! За да активирате пълния достъп до портала, моля заплатете месечния абонамент по-долу.`}
-                              {(status === "expired" || subStatus === "expired") && `Вашият абонамент „БАБХ Спокойствие" е изтекъл. За да възстановите достъпа си до електронните дневници и НАССР документи, моля свържете се с д-р Николова.`}
+                              {subStatus === "pending" && (cardPayments
+                                ? `Изберете абонаментен план и платете с карта — всички функции на портала се отключват веднага.`
+                                : `Вашето заявление за абонамент е получено и се преглежда от д-р Николова. След одобрение и заплащане на абонамента, всички функции на портала се отключват.`)}
+                              {subStatus === "awaiting_payment" && (cardPayments
+                                ? `Остава само плащането. Платете месечния абонамент с карта и пълният достъп се отключва веднага.`
+                                : `Заявлението Ви е одобрено! За да активирате пълния достъп до портала, моля заплатете месечния абонамент по-долу.`)}
+                              {(status === "expired" || subStatus === "expired") && (cardPayments
+                                ? `Вашият абонамент „БАБХ Спокойствие" е изтекъл. Изберете план и платете с карта — достъпът до дневниците и НАССР документите се възстановява веднага.`
+                                : `Вашият абонамент „БАБХ Спокойствие" е изтекъл. За да възстановите достъпа си до електронните дневници и НАССР документи, моля свържете се с д-р Николова.`)}
                               {status !== "expired" && subStatus !== "expired" && subStatus !== "pending" && subStatus !== "awaiting_payment" && `Тази секция е достъпна само за клиенти с активен абонамент „БАБХ Спокойствие". Закупените от Вас курсове можете да четете в таб „Моите Обучения".`}
                             </p>
                           </div>
@@ -6460,7 +6484,7 @@ export default function ProfilePage() {
                             <p>✓ Инструменти (одит, срокове, етикети)</p>
                           </div>
 
-                          {subStatus === "pending" && (
+                          {subStatus === "pending" && !cardPayments && (
                             <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-xl px-4 py-3">
                               ⏳ Заявлението Ви се обработва — обикновено отнема до 24 часа.
                             </div>
@@ -6482,7 +6506,15 @@ export default function ProfilePage() {
                             </div>
                           )}
 
-                          {(status === "expired" || subStatus === "expired") ? (
+                          {cardPayments && subStatus !== "awaiting_payment" ? (
+                            <button
+                              onClick={() => setActiveTab("packages")}
+                              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-sm uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md shadow-brand-gold/20"
+                            >
+                              {status === "expired" || subStatus === "expired" ? "Поднови абонамента" : "Избери план"}
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                          ) : (status === "expired" || subStatus === "expired") ? (
                             <Link
                               href="/contact"
                               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-brand-gold text-brand-dark font-bold text-sm uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md shadow-brand-gold/20 text-center"
@@ -7033,7 +7065,7 @@ export default function ProfilePage() {
                               </div>
                               <h4 className="font-serif text-base font-bold text-brand-green">{enr.trainingTitle}</h4>
                               <p className="text-xs text-brand-dark/60 leading-normal">
-                                Достъпът до това обучение е потвърден от администратор.
+                                Платено — достъпът е отключен в профила Ви.
                               </p>
                             </div>
                             <div className="space-y-2 mt-6">
@@ -7048,6 +7080,8 @@ export default function ProfilePage() {
                         {pendingEnrollments.map(enr => {
                           const isLive = enr.trainingType === "zoom" || LIVE_COURSES.some(l => l.slug === enr.trainingId);
                           const mat = LIBRARY_MATERIALS.find(m => m.slug === enr.trainingId || m.title === enr.trainingTitle);
+                          // Live курс, който още не е платен — с карта се плаща като останалите.
+                          const liveUnpaid = isLive && cardPayments && enr.status === "awaiting_payment";
                           return (
                             <div key={enr.id} className="border-2 border-amber-200 bg-amber-50/40 rounded-2xl p-5 flex flex-col justify-between hover:border-amber-300 transition-all duration-300 shadow-sm relative overflow-hidden">
                               <div className="space-y-3">
@@ -7065,30 +7099,38 @@ export default function ProfilePage() {
 
                                 <h4 className="font-serif text-base font-bold text-brand-green">{enr.trainingTitle}</h4>
                                 <p className="text-xs text-brand-dark/70 leading-normal">
-                                  {mat?.tagline || (isLive ? "Заявката за Live обучение е приета успешно." : "След извършване на банков превод пакетът се отключва автоматично в профила Ви.")}
+                                  {mat?.tagline || (isLive
+                                    ? "Заявката за Live обучение е приета успешно."
+                                    : cardPayments
+                                      ? "Платете с карта и пакетът се отключва веднага в профила Ви."
+                                      : "След извършване на банков превод пакетът се отключва автоматично в профила Ви.")}
                                 </p>
 
 
                                 <div className="bg-white/80 rounded-xl p-2.5 border border-amber-200/60 text-[11px] text-brand-dark/80 leading-tight space-y-1">
                                   <div className="font-bold flex items-center gap-1 text-brand-green">
                                     <Clock className="h-3.5 w-3.5 text-brand-gold" />
-                                    {isLive ? "Очаквайте връзка за насрочване" : "Чака плащане по банков път"}
+                                    {liveUnpaid ? "Чака плащане" : isLive ? "Очаквайте връзка за насрочване" : cardPayments ? "Чака плащане" : "Чака плащане по банков път"}
                                   </div>
                                   <div>
-                                    {isLive
-                                      ? "Д-р Николова ще се свърже с Вас на посочените телефон и имейл за уточняване на датата и часа на провеждане."
-                                      : "До 24 часа след постъпване на превода обучението ще се отключи в профила Ви."}
+                                    {liveUnpaid
+                                      ? "След плащането мястото Ви е запазено и д-р Николова ще се свърже с Вас за датите."
+                                      : isLive
+                                        ? "Д-р Николова ще се свърже с Вас на посочените телефон и имейл за уточняване на датата и часа на провеждане."
+                                        : cardPayments
+                                          ? "Достъпът се отключва веднага след плащането с карта."
+                                          : "До 24 часа след постъпване на превода обучението ще се отключи в профила Ви."}
                                   </div>
                                 </div>
                               </div>
 
-                              {!isLive && (
+                              {(!isLive || liveUnpaid) && (
                                 <button
                                   onClick={() => setPayEnrollment(enr)}
                                   className="mt-6 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-gold to-amber-500 hover:from-amber-500 hover:to-brand-gold text-brand-dark font-bold text-xs uppercase py-3 rounded-xl transition-all w-full cursor-pointer text-center shadow-md shadow-brand-gold/20 border-0"
                                 >
                                   {cardPayments ? <CreditCard className="h-4 w-4 text-brand-dark" /> : <Landmark className="h-4 w-4 text-brand-dark" />}
-                                  {cardPayments ? "Плати сега" : "Данни за банков превод"}
+                                  {cardPayments ? `Плати ${enr.priceEur.toFixed(2)} €` : "Данни за банков превод"}
                                 </button>
                               )}
                             </div>
@@ -7395,7 +7437,7 @@ export default function ProfilePage() {
                       <div className="space-y-1 text-sm font-sans text-left">
                         <p className="font-bold text-base">Вашият 14-дневен безплатен пробен период изтече!</p>
                         <p className="text-xs text-red-800/90 leading-relaxed">
-                          За да запазите достъпа си до дигиталните самоконтролни дневници и автоматичния НАССР генератор, моля изберете един от абонаментните ни планове по-долу и направете банков превод.
+                          За да запазите достъпа си до дигиталните самоконтролни дневници и автоматичния НАССР генератор, моля изберете един от абонаментните ни планове по-долу и {cardPayments ? "платете с карта — достъпът продължава веднага." : "направете банков превод."}
                         </p>
                       </div>
                     </div>
@@ -7446,7 +7488,7 @@ export default function ProfilePage() {
                     </h3>
                     <p className="text-sm text-brand-dark/75 leading-relaxed mt-3 max-w-3xl">
                       Изберете пакет според дейността на обекта. {cardPayments ? (
-                        <>Плащането е <strong className="text-brand-green">месечно — с карта</strong> (активира се веднага и се подновява автоматично) или по банков път.</>
+                        <>Плащането е <strong className="text-brand-green">месечно с карта</strong> — планът се активира веднага и се подновява автоматично. Можете да го спрете по всяко време.</>
                       ) : (
                         <>Плащането е <strong className="text-brand-green">месечно, по банков път</strong> — достъпът се активира след получаване на превода.</>
                       )} Можете да надградите пакета по всяко време.
@@ -7574,7 +7616,8 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  {/* Bank Account Details */}
+                  {/* Bank Account Details — само докато плащането с карта е изключено */}
+                  {!cardPayments && (
                   <div id="bank-details-card" className="bg-brand-green text-white p-6 sm:p-8 rounded-3xl space-y-4 shadow-xl border border-brand-gold/25 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/10 rounded-full blur-[80px] pointer-events-none"></div>
                     <h3 className="font-serif text-xl font-bold flex items-center gap-2">
@@ -7604,6 +7647,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </div>
+                  )}
                 </div>
               )}
 
@@ -7785,7 +7829,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Абонамент</div>
-                  <div className="font-serif text-lg font-bold">Тествай безплатно 14 дни</div>
+                  <div className="font-serif text-lg font-bold">{cardPayments ? "Данни за обекта" : "Тествай безплатно 14 дни"}</div>
                 </div>
               </div>
               <button onClick={() => setSubApplyOpen(false)} className="text-white/60 hover:text-white p-1 rounded-full cursor-pointer">
@@ -7795,8 +7839,14 @@ export default function ProfilePage() {
 
             <form onSubmit={handleApplyForSubscription} className="p-6 space-y-4">
               <p className="text-xs text-brand-dark/60 leading-relaxed">
-                Попълнете данните за обекта си. Д-р Николова ще прегледа лично заявлението — обикновено до 24 часа.
-                След одобрение всички функции на портала се отключват.
+                {cardPayments ? (
+                  <>Попълнете данните за обекта си — те влизат в дневниците и документите. След това остава само плащането с карта.</>
+                ) : (
+                  <>
+                    Попълнете данните за обекта си. Д-р Николова ще прегледа лично заявлението — обикновено до 24 часа.
+                    След одобрение всички функции на портала се отключват.
+                  </>
+                )}
               </p>
 
               <div className="space-y-1.5">
@@ -7854,7 +7904,7 @@ export default function ProfilePage() {
                   Отказ
                 </button>
                 <button type="submit" className="flex-1 px-5 py-3 rounded-full bg-brand-gold text-brand-dark text-xs font-bold uppercase tracking-wider hover:bg-brand-gold-light transition-colors cursor-pointer shadow-md">
-                  Изпрати заявление
+                  {cardPayments ? "Продължи към плащане" : "Изпрати заявление"}
                 </button>
               </div>
             </form>
@@ -7952,14 +8002,15 @@ export default function ProfilePage() {
       {/* ─────────── CLIENT: SUBSCRIPTION BANK-PAYMENT MODAL ─────────── */}
       {subPayOpen && (() => {
         const me = usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase());
-        const fee = me?.subscriptionFeeEur ?? 0;
+        // С карта сървърът таксува по плана и броя обекти — показваме същата сума.
+        const fee = cardPayments && me ? planFeeEur(feePlanOf(me), siteCountOf(me)) : me?.subscriptionFeeEur ?? 0;
         return (
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden font-sans">
               <div className="bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-white/10 rounded-xl">
-                    <Building className="h-5 w-5" />
+                    {cardPayments ? <Lock className="h-5 w-5" /> : <Building className="h-5 w-5" />}
                   </div>
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Плащане</div>
@@ -7976,17 +8027,27 @@ export default function ProfilePage() {
               </div>
 
               <div className="p-6 space-y-5">
+                {cardPayments && me ? (
+                  <>
+                    <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 space-y-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm font-bold text-brand-green">План „{PLAN_BY_ID[feePlanOf(me)].name}“</span>
+                        <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap">
+                          {formatEur(fee)} <span className="text-xs font-sans font-normal text-brand-dark/45">/ месец</span>
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-brand-dark/55 leading-snug">
+                        {siteCountOf(me) > 1 ? `${siteCountOf(me)} обекта · ` : ""}Подновява се автоматично всеки месец. Спирате го по всяко време от профила.
+                      </p>
+                    </div>
+                    <SubscriptionCardPay amountLabel={formatEur(fee)} hasAutoPay={!!me.autoRenew} />
+                  </>
+                ) : (
+                <>
                 <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
                   <span className="text-sm font-bold text-brand-green">{me?.requestedPlan ? `План „${PLAN_BY_ID[me.requestedPlan].name}“ — 1 месец` : "Месечен абонамент"}</span>
                   <span className="font-serif text-2xl font-bold text-brand-gold">{fee.toFixed(2)} €</span>
                 </div>
-
-                <SubscriptionCardPay amountLabel={formatEur(fee)} hasAutoPay={!!me?.autoRenew} />
-                {cardPayments && (
-                  <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-brand-dark/40">
-                    <span className="flex-1 h-px bg-brand-green/10" /> или по банков път <span className="flex-1 h-px bg-brand-green/10" />
-                  </div>
-                )}
 
                 <div className="bg-brand-green/5 border border-brand-green/10 rounded-2xl p-5 space-y-4 text-brand-dark">
                   <div className="text-center font-bold text-sm uppercase tracking-wider text-brand-green pb-2 border-b border-brand-green/10">
@@ -8013,7 +8074,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl p-4 leading-relaxed space-y-1.5">
-                  <p className="font-bold">💡 {cardPayments ? "При банков превод:" : "Важно:"}</p>
+                  <p className="font-bold">💡 Важно:</p>
                   <p>
                     След като направите банков превод по посочената сметка, администраторът ще активира Вашите права в профила и ще бъдете известени по имейл и с чат съобщение.
                   </p>
@@ -8025,6 +8086,8 @@ export default function ProfilePage() {
                 >
                   Затвори
                 </button>
+                </>
+                )}
               </div>
             </div>
           </div>
@@ -8051,12 +8114,12 @@ export default function ProfilePage() {
               </div>
               <p className="text-xs text-brand-dark/65 leading-relaxed text-center">
                 {cardPayments
-                  ? "На следващата стъпка платете с карта — планът се активира веднага и се подновява автоматично всеки месец. Можете да платите и по банков път."
+                  ? "На следващата стъпка платете с карта — планът се активира веднага и се подновява автоматично всеки месец."
                   : "Вашият акаунт ще бъде регистриран за плащане по банков път. Администраторът ще активира достъпа Ви веднага след получаване на превода."}
               </p>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setPkgConfirmModal(null)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-brand-dark/70 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0">Отказ</button>
-                <button onClick={handleConfirmSelectPackage} className="flex-1 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0 shadow-lg shadow-brand-green/20">Потвърди</button>
+                <button onClick={handleConfirmSelectPackage} className="flex-1 py-3 bg-brand-green hover:bg-brand-green/90 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-colors cursor-pointer border-0 shadow-lg shadow-brand-green/20">{cardPayments ? "Към плащане" : "Потвърди"}</button>
               </div>
             </div>
           </div>

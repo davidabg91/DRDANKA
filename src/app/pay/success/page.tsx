@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle, Loader2, AlertTriangle } from "lucide-react";
+import { trackPurchase } from "@/lib/fpixel";
 
 type State =
   | { kind: "checking" }
@@ -30,6 +31,16 @@ export default function PaySuccessPage() {
         const data = await res.json();
         if (!alive) return;
         if (res.ok && data.paid) {
+          // Отчита покупката веднъж на плащане (при презареждане — не).
+          try {
+            const key = `fb_purchase_${sessionId}`;
+            if (data.amountEur > 0 && !sessionStorage.getItem(key)) {
+              sessionStorage.setItem(key, "1");
+              trackPurchase({ content_name: data.title || undefined, value: data.amountEur, currency: "EUR" });
+            }
+          } catch {
+            // sessionStorage е недостъпен — пропускаме отчитането
+          }
           setState({
             kind: "paid",
             title: data.title,

@@ -28,13 +28,19 @@ export async function GET(req: NextRequest) {
         deferred: session.payment_status === "no_payment_required",
         title: granted?.title ?? null,
         href: "/profile",
+        amountEur: (session.amount_total || 0) / 100,
       });
     }
     if (session.payment_status !== "paid") {
       return NextResponse.json({ paid: false, status: session.status });
     }
     const granted = await grantPaidEnrollment(session);
-    return NextResponse.json({ paid: true, title: granted?.title ?? null, href: granted?.href ?? "/profile" });
+    return NextResponse.json({
+      paid: true,
+      title: granted?.title ?? null,
+      href: granted?.href ?? "/profile",
+      amountEur: (session.amount_total || 0) / 100,
+    });
   } catch (err) {
     console.error("Payment status error:", err);
     return NextResponse.json({ error: "status_failed" }, { status: 500 });

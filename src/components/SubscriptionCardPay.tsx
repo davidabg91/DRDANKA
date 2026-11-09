@@ -9,9 +9,9 @@
  */
 
 import { useState } from "react";
-import { CreditCard, Loader2, Lock, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { auth } from "@/lib/firebase";
-import { useCardPayments } from "@/components/CardPayButton";
+import { useCardPayments, PayButtonFace, SecurePaymentNote, PAY_BUTTON_CLASS } from "@/components/CardPayButton";
 
 async function callSubscription(action: string, email?: string): Promise<{ ok: boolean; data: any }> {
   const token = await auth.currentUser?.getIdToken();
@@ -63,7 +63,7 @@ export default function SubscriptionCardPay({
         setError(
           data.error === "already_subscribed"
             ? "Автоматичното плащане вече е включено — презаредете страницата."
-            : "Плащането с карта не можа да започне. Опитайте отново или платете по банков път."
+            : "Плащането не можа да започне. Опитайте отново след малко."
         );
       }
     } catch {
@@ -81,29 +81,17 @@ export default function SubscriptionCardPay({
   }
 
   return (
-    <div className="space-y-2">
-      <button
-        type="button"
-        onClick={pay}
-        disabled={busy}
-        className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-brand-green hover:bg-brand-green/90 disabled:opacity-70 text-white font-black text-sm uppercase tracking-wider shadow-lg shadow-brand-green/25 cursor-pointer border-0 transition-colors"
-      >
-        {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <CreditCard className="h-5 w-5 text-brand-gold" />}
-        {busy ? "Момент…" : hasAutoPay ? `Смени плана с карта · ${amountLabel} / месец` : `Плати с карта · ${amountLabel} / месец`}
+    <div className="space-y-3">
+      <button type="button" onClick={pay} disabled={busy} className={PAY_BUTTON_CLASS}>
+        <PayButtonFace
+          busy={busy}
+          busyLabel="Момент…"
+          label={hasAutoPay ? `Смени плана · ${amountLabel} / месец` : `Плати ${amountLabel} / месец`}
+        />
       </button>
-      <div className="flex flex-wrap items-center justify-center gap-1.5">
-        {["Visa", "Mastercard", "Apple Pay", "Google Pay"].map((m) => (
-          <span key={m} className="text-[10px] font-bold px-2 py-0.5 rounded-md border border-brand-green/10 bg-white text-brand-dark/60">
-            {m}
-          </span>
-        ))}
-      </div>
-      <p className="flex items-center justify-center gap-1 text-[10px] text-brand-dark/50 text-center">
-        <Lock className="h-3 w-3 shrink-0" />
-        {hasAutoPay
-          ? "Разликата за текущия месец се таксува веднага от картата Ви"
-          : "Защитено плащане през Stripe · активира се веднага · таксува се автоматично всеки месец, спирате го с един клик"}
-      </p>
+      <SecurePaymentNote
+        hint={hasAutoPay ? "разликата за текущия месец се таксува веднага" : "активира се веднага · спирате го с един клик"}
+      />
       {error && <p className="text-xs font-bold text-red-600 text-center">{error}</p>}
     </div>
   );

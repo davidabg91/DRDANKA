@@ -447,7 +447,7 @@ export default function BabhSistemaClient() {
           <SectionTitle
             eyebrow="Пакети и цени"
             title="Изберете пакет за Вашия обект"
-            text={`Месечен абонамент, плащане по банков път. Започнете с 14 дни безплатно — с възможностите на пакет „${PLAN_BY_ID[TRIAL_PLAN].name}“.`}
+            text={`Месечен абонамент с карта — активира се веднага. Започнете с 14 дни безплатно — с възможностите на пакет „${PLAN_BY_ID[TRIAL_PLAN].name}“.`}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-stretch">
             {PLANS.map((p) => {

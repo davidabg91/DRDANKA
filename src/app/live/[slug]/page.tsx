@@ -14,7 +14,9 @@ import {
   ShieldCheck, CheckCircle, Calendar, Users, MessageSquare,
 } from "lucide-react";
 import BankTransferNotice from "@/components/BankTransferNotice";
-import CardPayButton, { useCardPayments } from "@/components/CardPayButton";
+import {
+  useCardPayments, startEnrollmentCheckout, PayButtonFace, SecurePaymentNote, PAY_BUTTON_CLASS,
+} from "@/components/CardPayButton";
 
 export default function LiveCourseDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -67,6 +69,12 @@ export default function LiveCourseDetailPage() {
     }
     setError("");
     setStatus("processing");
+    // Мястото вече е записано (Stripe не се отвори от първия път) — само плащане.
+    if (enrollmentId && cardPayments) {
+      const err = await startEnrollmentCheckout(enrollmentId);
+      if (err) { setError(err); setStatus("idle"); }
+      return;
+    }
     try {
       const id = `enroll_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       await setDoc(doc(db, "enrollments", id), {
@@ -82,6 +90,14 @@ export default function LiveCourseDetailPage() {
         status: "awaiting_payment",
         createdAt: new Date().toISOString(),
       });
+
+      setEnrollmentId(id);
+      if (cardPayments) {
+        // Админът получава известие, когато е платено; покупката се отчита на /pay/success.
+        const err = await startEnrollmentCheckout(id);
+        if (err) { setError(err); setStatus("idle"); }
+        return;
+      }
 
       // Dispatch instant Telegram notification to admin
       fetch("/api/notify-telegram", {
@@ -118,7 +134,6 @@ export default function LiveCourseDetailPage() {
         value: livePrice,
         currency: "EUR",
       });
-      setEnrollmentId(id);
       setStatus("success");
     } catch (err: any) {
       console.error("Live enrollment error:", err);
@@ -270,7 +285,7 @@ export default function LiveCourseDetailPage() {
             <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
               <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Video className="h-5 w-5" /></div>
               <div className="min-w-0 flex-1">
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">Записване</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">{cardPayments ? "Записване и плащане" : "Записване"}</div>
                 <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{course.title}</div>
               </div>
               <button
@@ -286,14 +301,8 @@ export default function LiveCourseDetailPage() {
                   <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
                   <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
                   <p className="text-sm text-brand-dark/70 leading-relaxed">
-                    Благодарим за заявката за <strong>{course.title}</strong>. За да потвърдите мястото си, {cardPayments ? "платете с карта или направете банков превод" : "направете банков превод по сметката по-долу"}. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще се свърже с Вас</strong> за уточняване на датите на live сесиите и достъпа.
+                    Благодарим за заявката за <strong>{course.title}</strong>. За да потвърдите мястото си, направете банков превод по сметката по-долу. <strong className="text-brand-green">Веднага след като плащането постъпи, д-р Данка Николова ще се свърже с Вас</strong> за уточняване на датите на live сесиите и достъпа.
                   </p>
-                  <CardPayButton enrollmentId={enrollmentId} amountLabel={`${livePrice.toFixed(2)} €`} />
-                  {cardPayments && (
-                    <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-brand-dark/40">
-                      <span className="flex-1 h-px bg-brand-green/10" /> или по банков път <span className="flex-1 h-px bg-brand-green/10" />
-                    </div>
-                  )}
                   <BankTransferNotice amount={`${livePrice.toFixed(2)} €`} reference={`${name.trim()} — ${course.title}`} />
                   <button onClick={() => { setEnrollOpen(false); setStatus("idle"); }} className="px-6 py-3 rounded-full bg-brand-green text-white font-bold text-xs uppercase tracking-wider hover:bg-brand-green/90 transition-colors cursor-pointer">Затвори</button>
                 </div>
@@ -321,14 +330,25 @@ export default function LiveCourseDetailPage() {
                     <label className="text-[10px] font-bold uppercase tracking-wider text-brand-dark/60">Фирма (по желание)</label>
                     <input type="text" value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Ресторант Витоша ЕООД" className="w-full text-sm px-3.5 py-2.5 rounded-xl border border-brand-green/15 focus:outline-none focus:border-brand-gold bg-white" disabled={status === "processing"} />
                   </div>
-                  <div className="border-t border-brand-green/5 pt-4 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
-                    <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                    <span>Плащането е по банков път. След изпращане на заявката ще видите данните за превод. Мястото се запазва след постъпване на плащането.</span>
-                  </div>
+                  {!cardPayments && (
+                    <div className="border-t border-brand-green/5 pt-4 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
+                      <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                      <span>Плащането е по банков път. След изпращане на заявката ще видите данните за превод. Мястото се запазва след постъпване на плащането.</span>
+                    </div>
+                  )}
                   {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
+                  {cardPayments ? (
+                    <div className="space-y-3 border-t border-brand-green/5 pt-4">
+                      <button onClick={submitEnrollment} disabled={status === "processing"} className={PAY_BUTTON_CLASS}>
+                        <PayButtonFace busy={status === "processing"} label={`Плати ${livePrice.toFixed(2)} €`} />
+                      </button>
+                      <SecurePaymentNote hint="мястото Ви се запазва веднага" />
+                    </div>
+                  ) : (
                   <button onClick={submitEnrollment} disabled={status === "processing"} className="w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light disabled:opacity-60 disabled:cursor-not-allowed text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 transition-all flex items-center justify-center gap-2 cursor-pointer">
                     {status === "processing" ? (<><Loader2 className="h-4 w-4 animate-spin" /> Изпращане…</>) : (<>Изпрати заявка за записване</>)}
                   </button>
+                  )}
                 </>
               )}
             </div>

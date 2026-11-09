@@ -157,12 +157,12 @@ export default function CourseDetailPage() {
                 onClick={() => setBuyOpen(true)}
                 className="relative overflow-hidden w-full px-6 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-sm uppercase tracking-widest rounded-full shadow-lg shadow-brand-gold/20 hover:shadow-xl hover:shadow-brand-gold/35 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group"
               >
-                Купи с банков превод
+                Купи и започни сега
                 <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <div className="text-[10px] bg-brand-green/5 border border-brand-green/15 text-brand-dark/70 rounded-lg px-3 py-2 leading-relaxed">
-                Плащането е по банков път. След заявката ще видите данните за превод; след одобрение от д-р Николова курсът се отключва в профила Ви за гледане и четене онлайн.
+                Плащане с карта, Apple Pay или Google Pay. Курсът се отключва в профила Ви веднага след плащането — за гледане и четене онлайн.
               </div>
             </div>
           </div>

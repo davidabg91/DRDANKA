@@ -104,6 +104,14 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
       href: "/profile",
     };
   }
+
+  // Старият каталог /courses/[id] (Firestore `courses`).
+  const course = await db.collection("courses").doc(id).get();
+  if (course.exists) {
+    const c = course.data() as { title?: string; priceEur?: number; published?: boolean };
+    if (typeof c.priceEur !== "number" || c.published === false) return null;
+    return { title: c.title || enr.trainingTitle, priceEur: c.priceEur, grantIds: [id], href: "/profile" };
+  }
   return null;
 }
 

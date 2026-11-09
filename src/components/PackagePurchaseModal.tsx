@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   X, Landmark, Loader2, CheckCircle, ShieldCheck, User, Building2,
-  ArrowRight,
+  ArrowRight, Lock,
 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import {
@@ -12,7 +12,9 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 import BankTransferNotice from "@/components/BankTransferNotice";
-import CardPayButton, { useCardPayments } from "@/components/CardPayButton";
+import {
+  useCardPayments, startEnrollmentCheckout, PayButtonFace, SecurePaymentNote, PAY_BUTTON_CLASS,
+} from "@/components/CardPayButton";
 import PasswordInput from "@/components/PasswordInput";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/fpixel";
 
@@ -25,9 +27,10 @@ import { trackInitiateCheckout, trackPurchase } from "@/lib/fpixel";
  *      or if already logged in, uses their existing authenticated session seamlessly.
  *   2. Optional "14 дни безплатно" tab: also fills the business profile and starts
  *      the 14-day дневници trial (subscriptionStatus:'trial').
- *   3. Records an `enrollments` doc with status 'awaiting_payment'. Access is NOT
- *      granted yet — д-р Николова confirms the bank transfer from the admin panel
- *      and adds the package id to the buyer's purchasedCourseIds.
+ *   3. Records an `enrollments` doc with status 'awaiting_payment' and goes straight
+ *      to Stripe Checkout (карта / Apple Pay / Google Pay). The webhook unlocks the
+ *      package automatically. Only while card payments are off (no Stripe key) the
+ *      modal falls back to bank-transfer details and admin confirmation.
  */
 
 const validEmail = (s: string) => /^[^@]+@[^@]+\.[^@]+$/.test(s);
@@ -72,6 +75,7 @@ export default function PackagePurchaseModal({
   const [error, setError] = useState("");
   // Заявката, която се плаща с карта на екрана за успех.
   const [enrollmentId, setEnrollmentId] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
   const cardPayments = useCardPayments();
 
   useEffect(() => {
@@ -123,15 +127,34 @@ export default function PackagePurchaseModal({
     setFullName(""); setEmail(""); setPassword(""); setConfirm("");
     setPhone(""); setCompany(""); setFirmName(""); setEik("");
     setNiche(""); setDesc(""); setAddress(""); setStatus("idle"); setError("");
+    setEnrollmentId(""); setRedirecting(false);
+  };
+
+  /** Към платежната страница на Stripe за вече записаната заявка. */
+  const goToCheckout = async (id: string) => {
+    setRedirecting(true);
+    const err = await startEnrollmentCheckout(id, window.location.pathname);
+    if (err) {
+      setRedirecting(false);
+      setError(err);
+      setStatus("idle");
+    }
   };
 
   const close = () => {
-    if (status === "processing") return;
+    if (status === "processing" || redirecting) return;
     reset();
     onClose();
   };
 
   const submit = async () => {
+    // Заявката вече е записана (напр. Stripe не се отвори от първия път) — само плащане.
+    if (enrollmentId && cardPayments) {
+      setError("");
+      setStatus("processing");
+      await goToCheckout(enrollmentId);
+      return;
+    }
     const cleanEmail = email.trim().toLowerCase();
     if (!fullName.trim() || !validEmail(cleanEmail) || !phone.trim()) {
       setError("Моля попълнете име, валиден email и телефон.");
@@ -234,8 +257,9 @@ export default function PackagePurchaseModal({
       });
       setEnrollmentId(id);
 
-      // Dispatch instant Telegram notification to admin
-      fetch("/api/notify-telegram", {
+      // При плащане с карта админът получава известие чак когато е платено
+      // (enrollmentPayments.ts); тук — само за пробния период и банковия превод.
+      if (withTrial || !cardPayments) fetch("/api/notify-telegram", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -253,6 +277,12 @@ export default function PackagePurchaseModal({
           },
         }),
       }).catch((e) => console.warn("Telegram notification warning:", e));
+
+      if (cardPayments) {
+        // Покупката се отчита на /pay/success, след като Stripe потвърди плащането.
+        await goToCheckout(id);
+        return;
+      }
 
       trackPurchase({
         content_name: packageTitle,
@@ -282,10 +312,10 @@ export default function PackagePurchaseModal({
       <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl my-8 overflow-hidden">
         {/* Header */}
         <div className="relative bg-gradient-to-br from-brand-green to-brand-green/80 text-white p-6 pr-16 flex items-start gap-3">
-          <div className="p-2.5 bg-white/10 rounded-xl shrink-0"><Landmark className="h-5 w-5" /></div>
+          <div className="p-2.5 bg-white/10 rounded-xl shrink-0">{cardPayments ? <Lock className="h-5 w-5" /> : <Landmark className="h-5 w-5" />}</div>
           <div className="min-w-0 flex-1">
             <div className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold">
-              {isLoggedIn ? "Заявка за покупка" : "Регистрация и заявка"}
+              {cardPayments ? (isLoggedIn ? "Плащане" : "Профил и плащане") : isLoggedIn ? "Заявка за покупка" : "Регистрация и заявка"}
             </div>
             <div className="font-serif text-base sm:text-lg font-bold leading-snug break-words">{packageTitle}</div>
           </div>
@@ -303,26 +333,15 @@ export default function PackagePurchaseModal({
                 <CheckCircle className="h-14 w-14 text-green-500 mx-auto" />
                 <h3 className="font-serif text-xl font-bold text-brand-green">Заявката е приета!</h3>
                 <p className="text-sm text-brand-dark/70 leading-relaxed">
-                  {cardPayments ? (
-                    <>Платете <strong>{packageTitle}</strong> с карта и достъпът се отключва веднага — или направете банков превод.</>
-                  ) : (
-                    <>За да получите достъп до <strong>{packageTitle}</strong>, направете банков превод по сметката по-долу.</>
-                  )}{" "}
+                  За да получите достъп до <strong>{packageTitle}</strong>, направете банков превод по сметката по-долу.
                   Заявката вече е добавена в профила Ви.
                 </p>
               </div>
 
-              <CardPayButton enrollmentId={enrollmentId} amountLabel={`${priceEur.toFixed(2)} €`} />
-              {cardPayments && (
-                <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-wider text-brand-dark/40">
-                  <span className="flex-1 h-px bg-brand-green/10" /> или по банков път <span className="flex-1 h-px bg-brand-green/10" />
-                </div>
-              )}
-
               <BankTransferNotice amount={`${priceEur.toFixed(2)} €`} reference={`${cleanEmail} — ${packageTitle}`} />
 
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left text-xs text-amber-900 leading-relaxed">
-                <strong>{cardPayments ? "При банков превод:" : "Активиране:"}</strong> До <strong>24 часа</strong> след постъпване на плащането д-р Данка Николова
+                <strong>Активиране:</strong> До <strong>24 часа</strong> след постъпване на плащането д-р Данка Николова
                 активира пакета и той се появява в профила Ви за четене.
               </div>
 
@@ -343,7 +362,7 @@ export default function PackagePurchaseModal({
             <>
               {/* Price */}
               <div className="bg-brand-light/50 rounded-xl p-4 border border-brand-green/5 flex items-center justify-between">
-                <span className="text-sm font-bold text-brand-green">Цена за пакета</span>
+                <span className="text-sm font-bold text-brand-green">{cardPayments ? "Общо за плащане" : "Цена за пакета"}</span>
                 <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{priceEur.toFixed(2)} €</span>
               </div>
 
@@ -356,7 +375,8 @@ export default function PackagePurchaseModal({
                       <span>Влезли сте с профил: <strong className="font-mono">{email}</strong></span>
                     </div>
                     <p className="text-[11px] text-emerald-800/80 leading-relaxed">
-                      Пакетът <strong>„{packageTitle}“</strong> ще бъде добавен директно към Вашия акаунт след потвърждение на плащането.
+                      Пакетът <strong>„{packageTitle}“</strong>{" "}
+                      {cardPayments ? "се отключва в профила Ви веднага след плащането." : "ще бъде добавен директно към Вашия акаунт след потвърждение на плащането."}
                     </p>
                   </div>
 
@@ -476,15 +496,35 @@ export default function PackagePurchaseModal({
                 </>
               )}
 
-              <div className="border-t border-brand-green/5 pt-4 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
-                <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
-                <span>Плащането е по банков път. След заявката ще видите данните за превод. Достъпът се активира до 24 часа след постъпване на плащането.</span>
-              </div>
+              {!cardPayments && (
+                <div className="border-t border-brand-green/5 pt-4 flex items-start gap-2 text-[11px] text-brand-dark/60 leading-relaxed">
+                  <Landmark className="h-4 w-4 text-brand-gold shrink-0 mt-0.5" />
+                  <span>Плащането е по банков път. След заявката ще видите данните за превод. Достъпът се активира до 24 часа след постъпване на плащането.</span>
+                </div>
+              )}
 
               {error && (
                 <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>
               )}
 
+              {cardPayments ? (
+                <div className="space-y-3 border-t border-brand-green/5 pt-4">
+                  <button onClick={submit} disabled={status === "processing" || redirecting} className={PAY_BUTTON_CLASS}>
+                    <PayButtonFace
+                      busy={status === "processing" || redirecting}
+                      busyLabel={redirecting ? "Отваряне на плащането…" : "Създаване на профила…"}
+                      label={`Плати ${priceEur.toFixed(2)} €`}
+                    />
+                  </button>
+                  <SecurePaymentNote hint="достъпът се отключва веднага" />
+                  {!isLoggedIn && (
+                    <p className="text-[10px] text-center text-brand-dark/50 leading-relaxed">
+                      Профилът Ви се създава автоматично — там четете купеното, без сваляне.
+                    </p>
+                  )}
+                </div>
+              ) : (
+              <>
               <button
                 onClick={submit}
                 disabled={status === "processing"}
@@ -505,6 +545,8 @@ export default function PackagePurchaseModal({
                   ? "Заявката за плащане ще се появи веднага в профила Ви."
                   : "Създаваме Ви защитен профил. Пакетът се чете само в профила — без сваляне."}
               </p>
+              </>
+              )}
             </>
           )}
         </div>

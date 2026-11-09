@@ -7,7 +7,7 @@ import { BANK_DETAILS } from "@/lib/paymentInfo";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { CONSULTATION_PACKAGES, TRAINING_PACKAGES, type Package } from "@/data/consultations";
-import CardPayButton from "@/components/CardPayButton";
+import CardPayButton, { useCardPayments, startEnrollmentCheckout } from "@/components/CardPayButton";
 
 const CONSULTATION_TIME_SLOTS = ["09:00", "10:30", "11:30", "14:00", "15:30", "17:00"];
 const TRAINING_TIME_SLOTS = ["14:00"];
@@ -98,6 +98,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
   const [submitting, setSubmitting] = useState(false);
   /** Заявката в `enrollments` — по нея се плаща с карта на последната стъпка. */
   const [enrollmentId, setEnrollmentId] = useState("");
+  const cardPayments = useCardPayments();
 
   const handleClientInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -117,6 +118,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
     const bookingId = `booking_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const enrollId = `enroll_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const nowIso = new Date().toISOString();
+    let saved = false;
 
     const bookingPayload = {
       id: bookingId,
@@ -163,7 +165,10 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
         status: "pending",
         createdAt: nowIso,
       })
-        .then(() => setEnrollmentId(enrollId))
+        .then(() => {
+          saved = true;
+          setEnrollmentId(enrollId);
+        })
         .catch((e) => console.warn("Client enrollments save warning:", e));
 
       // 3. Direct client Firestore write to /bookings
@@ -172,11 +177,16 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
       );
     } catch (err) {
       console.error("Error saving booking:", err);
-    } finally {
-      setSubmitting(false);
-      setStep(4);
-      scrollToContainerTop();
     }
+    // Платен час → направо към плащането с карта; ако Stripe не се отвори,
+    // последната стъпка показва бутона „Плати" за повторен опит.
+    if (!isFree && cardPayments && saved) {
+      const err = await startEnrollmentCheckout(enrollId);
+      if (!err) return;
+    }
+    setSubmitting(false);
+    setStep(4);
+    scrollToContainerTop();
   };
 
   return (
@@ -460,11 +470,15 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                 {submitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin text-brand-gold" />
-                    Записване...
+                    {!isFree && cardPayments ? "Отваряне на плащането..." : "Записване..."}
                   </>
                 ) : (
                   <>
-                    {mode === "training" ? "Заяви обучението" : (isFree ? "Резервирай консултация" : "Потвърди заявката")}
+                    {isFree
+                      ? "Резервирай консултация"
+                      : cardPayments
+                        ? `Плати ${selectedPackage.price}`
+                        : mode === "training" ? "Заяви обучението" : "Потвърди заявката"}
                     <CheckCircle className="h-4 w-4 ml-2 text-brand-gold" />
                   </>
                 )}
@@ -488,7 +502,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                   </>
                 ) : (
                   <>
-                    За да потвърдите Вашия{mode === "training" ? "та заявка" : " час"}, платете с карта или с банков превод по сметката по-долу. <span className="font-semibold text-brand-green">Веднага след като средствата постъпят, д-р Данка Николова ще се свърже с Вас</span> за организация и потвърждение.
+                    За да потвърдите Вашия{mode === "training" ? "та заявка" : " час"}, {cardPayments ? "платете с карта по-долу." : "направете банков превод по сметката по-долу."} <span className="font-semibold text-brand-green">Веднага след като средствата постъпят, д-р Данка Николова ще се свърже с Вас</span> за организация и потвърждение.
                   </>
                 )}
               </p>
@@ -525,8 +539,8 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
               </div>
             )}
 
-            {/* Bank transfer details (paid bookings only) */}
-            {!isFree && (
+            {/* Bank transfer details (paid bookings, only while card payments are off) */}
+            {!isFree && !cardPayments && (
               <div className="max-w-md mx-auto bg-brand-green text-white rounded-2xl p-6 shadow-xl border border-brand-gold/25 relative overflow-hidden text-left">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-brand-gold/10 rounded-full blur-[60px] pointer-events-none"></div>
                 <h5 className="font-serif text-base font-bold flex items-center gap-2 relative">
