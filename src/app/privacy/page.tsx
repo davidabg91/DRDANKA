@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import CookieSettingsLink from "@/components/CookieSettingsLink";
+import { COMPANY } from "@/lib/siteConfig";
 
 export const metadata: Metadata = {
   title: "Политика за поверителност",
   description:
-    "Как д-р Данка Николова обработва и защитава личните Ви данни — при запитвания, покупки, обучения и регистрация за безплатни уебинари.",
+    "Как „Д-р Николова – Хранконсулт и личностно развитие“ ЕООД обработва и защитава личните Ви данни — при запитвания, покупки, плащания с карта, обучения и регистрация за безплатни уебинари.",
   alternates: { canonical: "/privacy" },
 };
 
-const EMAIL = "d.nikolova.haccp@gmail.com";
+const EMAIL = COMPANY.email;
 
 function H2({ id, children }: { id?: string; children: React.ReactNode }) {
   return (
@@ -58,8 +59,18 @@ const PROCESSORS: { name: string; role: string; where: string }[] = [
   },
   {
     name: "Stripe (Stripe Payments Europe Ltd, Ирландия)",
-    role: "Обработка на онлайн плащания с карта. Ние не виждаме и не съхраняваме данните на картата Ви.",
+    role: "Обработка на плащанията с карта, Apple Pay и Google Pay, вкл. месечния абонамент. Данните на картата се въвеждат директно при Stripe — ние не ги виждаме и не ги съхраняваме; получаваме само имейла, сумата и статуса на плащането. За предотвратяване на измами и по регулаторни изисквания Stripe действа и като самостоятелен администратор.",
     where: "ЕС; отделни подизпълнители може да са извън ЕИП",
+  },
+  {
+    name: "Resend (Resend, Inc., САЩ)",
+    role: "Изпращане на имейл напомняния за дневниците по самоконтрол и сроковете (може да ги изключите от профила).",
+    where: "САЩ / ЕС",
+  },
+  {
+    name: "Google Gemini API (Google Ireland Ltd / Google LLC)",
+    role: "Разпознаване на снимки на касови бележки и менюта, които сами качвате в дневниците, за автоматично попълване.",
+    where: "ЕС и САЩ",
   },
   {
     name: "Bunny.net (BunnyWay d.o.o., Словения)",
@@ -90,7 +101,7 @@ export default function Privacy() {
         </div>
 
         <div className="space-y-4 text-sm text-brand-dark/80 leading-relaxed">
-          <p>Последна промяна: 12 октомври 2026 г.</p>
+          <p>Последна промяна: 9 ноември 2026 г.</p>
           <p>
             Настоящата политика описва как събираме, използваме, съхраняваме и защитаваме Вашите лични данни, когато
             използвате сайта haccpspokoystvie.bg, правите запитване, купувате обучение или материал, или се регистрирате
@@ -116,12 +127,13 @@ export default function Privacy() {
           {/* 1 */}
           <H2 id="administrator">1. Администратор на личните данни</H2>
           <p>
-            Администратор на личните данни е <strong>д-р Данка Николова</strong>, физическо лице, организатор на
-            консултациите, обученията и уебинарите на Академия „Сигурен хранителен бизнес“ и на сайта „HACCP
-            Спокойствие“.
+            Администратор на личните данни е <strong>{COMPANY.name}</strong>
+            {COMPANY.eik ? `, ЕИК ${COMPANY.eik}` : ""}, с управител {COMPANY.manager} — организатор на консултациите,
+            обученията и уебинарите на Академия „Сигурен хранителен бизнес“ и на сайта „HACCP Спокойствие“.
           </p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Адрес за кореспонденция: гр. Плевен 5800, ул. „Данаил Попов“ 12, ет. 2</li>
+            {COMPANY.seat && <li>Седалище и адрес на управление: {COMPANY.seat}</li>}
+            <li>Адрес за кореспонденция: {COMPANY.address}</li>
             <li>Имейл: <Mail /></li>
             <li>
               Телефон:{" "}
@@ -254,7 +266,7 @@ export default function Privacy() {
                 </tr>
                 <tr>
                   <td className="p-2 border-b border-brand-green/10">Покупка на обучение, материал или абонамент</td>
-                  <td className="p-2 border-b border-brand-green/10">име, имейл, телефон, данни за фактура, история на плащанията</td>
+                  <td className="p-2 border-b border-brand-green/10">име, имейл, телефон, данни за фактура, история на плащанията (сума, дата, статус — без данни на картата), дата и час на даденото съгласие преди плащане</td>
                   <td className="p-2 border-b border-brand-green/10">чл. 6, пар. 1, „б“ — договор; „в“ — счетоводни задължения</td>
                 </tr>
                 <tr>
@@ -364,8 +376,11 @@ export default function Privacy() {
           <H3>На сайта haccpspokoystvie.bg</H3>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              <strong>Необходими</strong> (без съгласие): технологии за вход в профила (Firebase), за защитено плащане
-              (Stripe) и за запомняне на избора Ви за бисквитки. Без тях сайтът не може да работи.
+              <strong>Необходими</strong> (без съгласие): технологии за вход в профила (Firebase) и за запомняне на
+              избора Ви за бисквитки. Без тях сайтът не може да работи. Самото плащане се извършва на защитената
+              страница на Stripe (checkout.stripe.com), която използва свои необходими бисквитки за сигурност и
+              предотвратяване на измами — по{" "}
+              <a href="https://stripe.com/bg/legal/cookies-policy" target="_blank" rel="noopener noreferrer" className="text-brand-gold hover:underline">политиката на Stripe</a>.
             </li>
             <li>
               <strong>Статистика без бисквитки</strong>: Vercel Web Analytics брои посещенията обобщено и анонимно, без

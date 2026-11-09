@@ -8,10 +8,11 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/pay/subscription  (Authorization: Bearer <Firebase ID token>)
- * Body: { action: "checkout" | "sync" | "cancel" | "resume"; email?: string }
+ * Body: { action: "checkout" | "change" | "sync" | "cancel" | "resume"; consent?: true; email?: string }
  *
- *   checkout — Stripe Checkout за автоматично месечно плащане → { url }
- *   sync     — след смяна на плана/обектите: сумата в Stripe = профила → { synced }
+ *   checkout — Stripe Checkout за автоматично месечно плащане → { url } (изисква consent)
+ *   change   — клиентът потвърждава смяна на плана; разликата се таксува веднага (изисква consent)
+ *   sync     — нов/премахнат обект или ръчна смяна от админа; новата сума важи от следващия месец
  *   cancel   — спира автоматичното таксуване от следващия месец
  *   resume   — пуска го отново
  *
@@ -41,10 +42,17 @@ export async function POST(req: NextRequest) {
     email = target;
   }
 
+  // Изричното съгласие преди плащане (ЗЗП чл. 57; автоматично подновяване).
+  if ((action === "checkout" || action === "change") && body?.consent !== true) {
+    return NextResponse.json({ error: "consent_required" }, { status: 400 });
+  }
+
   try {
     switch (action) {
       case "checkout":
         return NextResponse.json({ url: await createSubscriptionCheckout(email) });
+      case "change":
+        return NextResponse.json({ synced: await syncSubscription(email, true) });
       case "sync":
         return NextResponse.json({ synced: await syncSubscription(email) });
       case "cancel":

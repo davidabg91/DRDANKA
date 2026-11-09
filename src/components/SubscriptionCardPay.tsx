@@ -12,21 +12,23 @@ import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { useCardPayments, PayButtonFace, SecurePaymentNote, PAY_BUTTON_CLASS } from "@/components/CardPayButton";
+import PurchaseConsent from "@/components/PurchaseConsent";
 
-async function callSubscription(action: string, email?: string): Promise<{ ok: boolean; data: any }> {
+async function callSubscription(action: string, email?: string, consent?: boolean): Promise<{ ok: boolean; data: any }> {
   const token = await auth.currentUser?.getIdToken();
   if (!token) return { ok: false, data: { error: "unauthorized" } };
   const res = await fetch("/api/pay/subscription", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ action, ...(email ? { email } : {}) }),
+    body: JSON.stringify({ action, ...(email ? { email } : {}), ...(consent ? { consent: true } : {}) }),
   });
   return { ok: res.ok, data: await res.json().catch(() => ({})) };
 }
 
 /**
- * След смяна на плана или броя обекти — сумата на автоматичното плащане
- * следва профила. Нищо не прави, ако профилът няма автоматично плащане.
+ * След нов/премахнат обект или ръчна смяна на плана от админа — новата сума
+ * важи от следващото месечно таксуване (без плащане сега). Нищо не прави,
+ * ако профилът няма автоматично плащане.
  */
 export function syncAutoPay(email?: string): void {
   callSubscription("sync", email).catch(() => null);
@@ -45,6 +47,7 @@ export default function SubscriptionCardPay({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+  const [consent, setConsent] = useState(false);
 
   if (!enabled) return null;
 
@@ -52,7 +55,7 @@ export default function SubscriptionCardPay({
     setBusy(true);
     setError("");
     try {
-      const { ok, data } = await callSubscription(hasAutoPay ? "sync" : "checkout");
+      const { ok, data } = await callSubscription(hasAutoPay ? "change" : "checkout", undefined, consent);
       if (ok && data.url) {
         window.location.href = data.url;
         return;
@@ -82,7 +85,8 @@ export default function SubscriptionCardPay({
 
   return (
     <div className="space-y-3">
-      <button type="button" onClick={pay} disabled={busy} className={PAY_BUTTON_CLASS}>
+      <PurchaseConsent kind="subscription" checked={consent} onChange={setConsent} />
+      <button type="button" onClick={pay} disabled={busy || !consent} className={PAY_BUTTON_CLASS}>
         <PayButtonFace
           busy={busy}
           busyLabel="Момент…"

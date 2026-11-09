@@ -49,9 +49,9 @@ async function loadUser(email: string): Promise<SubscriberDoc> {
   return { ...(snap.data() as SubscriberDoc), email: snap.id };
 }
 
-/** Планът и месечната сума, които трябва да плаща профилът сега. */
-function billingFor(u: SubscriberDoc): { plan: PlanId; feeEur: number; name: string } {
-  const plan: PlanId = isPlanId(u.requestedPlan) ? u.requestedPlan : effectivePlan(u);
+/** Планът (заявеният, ако `useRequested`) и месечната сума за профила. */
+function billingFor(u: SubscriberDoc, useRequested = true): { plan: PlanId; feeEur: number; name: string } {
+  const plan: PlanId = useRequested && isPlanId(u.requestedPlan) ? u.requestedPlan : effectivePlan(u);
   const sites = siteCountOf(u as Parameters<typeof siteCountOf>[0]);
   return {
     plan,
@@ -93,7 +93,10 @@ export async function createSubscriptionCheckout(email: string): Promise<string>
   // Stripe приема отложено първо таксуване поне 48 часа напред.
   const firstChargeAt = samePlan && paidUntil > Date.now() / 1000 + 49 * 3600 ? Math.floor(paidUntil) : undefined;
 
-  const metadata = { kind: "subscription", email: u.email, plan };
+  // Изричното съгласие (автоматично таксуване, започване веднага), дадено преди плащането.
+  const consentAt = new Date().toISOString();
+  await userRef(u.email).update({ subscriptionConsentAt: consentAt });
+  const metadata = { kind: "subscription", email: u.email, plan, consent: "subscription", consentAt };
   const session = await stripe().checkout.sessions.create({
     mode: "subscription",
     locale: "bg",
@@ -119,21 +122,25 @@ export async function createSubscriptionCheckout(email: string): Promise<string>
 }
 
 /**
- * Привежда автоматичното плащане в съответствие с профила — след смяна на
- * плана или на броя обекти. Разликата за текущия месец се таксува (или
+ * Привежда автоматичното плащане в съответствие с профила.
+ *
+ * `chargeNow` — клиентът сам потвърди смяна на плана („Смени плана"): сумата
+ * става тази на заявения план и разликата за текущия месец се таксува (или
  * кредитира) веднага; новият план се активира от `invoice.paid`.
+ * Без `chargeNow` (нов/премахнат обект, ръчна смяна от админа) новата сума
+ * важи от следващото месечно таксуване — без изненадващи плащания.
  * Връща false, ако профилът няма активно автоматично плащане.
  */
-export async function syncSubscription(email: string): Promise<boolean> {
+export async function syncSubscription(email: string, chargeNow = false): Promise<boolean> {
   const u = await loadUser(email);
   const sub = await activeSubscription(u);
   if (!sub) return false;
-  const { plan, feeEur, name } = billingFor(u);
+  const { plan, feeEur, name } = billingFor(u, chargeNow);
   const item = sub.items.data[0];
   const sameAmount = item?.price?.unit_amount === Math.round(feeEur * 100);
   if (sameAmount && sub.metadata?.plan === plan) {
     // Заявен е планът, който вече се плаща — заявката е изпълнена.
-    if (u.requestedPlan) {
+    if (chargeNow && u.requestedPlan) {
       await userRef(u.email).update({ requestedPlan: FieldValue.delete(), planRequestedAt: FieldValue.delete() });
     }
     return true;
@@ -152,12 +159,14 @@ export async function syncSubscription(email: string): Promise<boolean> {
         },
       },
     ],
-    metadata: { ...sub.metadata, plan },
+    metadata: { ...sub.metadata, plan, ...(chargeNow ? { planChangeConsentAt: new Date().toISOString() } : {}) },
     // Докато чака първото таксуване (текущият месец е платен по банков път),
-    // смяна на плана се таксува веднага, а само друг брой обекти — от следващия месец.
-    ...(sub.status === "trialing"
-      ? { proration_behavior: "none" as const, ...(sub.metadata?.plan !== plan ? { trial_end: "now" as const } : {}) }
-      : { proration_behavior: "always_invoice" as const }),
+    // потвърдената смяна на плана започва и се таксува веднага.
+    ...(!chargeNow
+      ? { proration_behavior: "none" as const }
+      : sub.status === "trialing"
+        ? { proration_behavior: "none" as const, ...(sub.metadata?.plan !== plan ? { trial_end: "now" as const } : {}) }
+        : { proration_behavior: "always_invoice" as const }),
   });
   return true;
 }

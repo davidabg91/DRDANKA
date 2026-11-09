@@ -98,6 +98,7 @@ service cloud.firestore {
         unchanged("stripeCustomerId") &&
         unchanged("stripeSubscriptionId") &&
         unchanged("autoRenew") &&
+        unchanged("subscriptionConsentAt") &&
         (unchanged("requestedPlan") || request.resource.data.requestedPlan in ["basic", "standard", "pro", "vip"])
       );
 
@@ -198,8 +199,14 @@ service cloud.firestore {
 
     // /videoLinks/{slug} — admin-set external video URL (YouTube/Vimeo) used
     // instead of an uploaded mp4. Public read, admin write.
+    // Скритите YouTube/Vimeo линкове на платените видео курсове — само за купилите.
     match /videoLinks/{slug} {
-      allow read: if true;
+      allow get: if isAdmin() || (
+        isSignedIn() &&
+        exists(/databases/$(database)/documents/users/$(authEmail())) &&
+        slug in get(/databases/$(database)/documents/users/$(authEmail())).data.get("purchasedCourseIds", [])
+      );
+      allow list: if isAdmin();
       allow write: if isAdmin();
     }
 

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { stripe, STRIPE_WEBHOOK_SECRET } from "@/lib/stripe";
-import { grantAccess } from "@/lib/grantAccess";
-import { grantPaidEnrollment } from "@/lib/enrollmentPayments";
+import { grantPaidEnrollment, revokeRefundedEnrollment } from "@/lib/enrollmentPayments";
 import { applyPaidInvoice, notifyFailedInvoice, syncSubscriptionState } from "@/lib/subscriptionPayments";
 
 export const runtime = "nodejs";
@@ -12,8 +11,8 @@ export const dynamic = "force-dynamic";
  * POST /api/stripe/webhook
  *
  * Stripe calls this endpoint after a payment finishes. We verify the signature
- * with STRIPE_WEBHOOK_SECRET, then grant access. Idempotent — grantAccess uses
- * the session id as the purchase doc id, so duplicate deliveries are no-ops.
+ * with STRIPE_WEBHOOK_SECRET, then unlock what was paid for. Every handler is
+ * idempotent (keyed by the session / invoice id), so redeliveries are no-ops.
  */
 export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
@@ -30,7 +29,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
   }
 
-  // Месечните абонаменти с карта: всяко платено/неуспешно таксуване и спиране.
+  // Месечните абонаменти (платено/неуспешно таксуване, спиране) и възстановени плащания.
   try {
     switch (event.type) {
       case "invoice.paid":
@@ -43,14 +42,20 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.deleted":
         await syncSubscriptionState(event.data.object as Stripe.Subscription);
         return NextResponse.json({ ok: true });
+      case "charge.refunded":
+        // Изцяло възстановено плащане за пакет → достъпът се спира.
+        await revokeRefundedEnrollment(event.data.object as Stripe.Charge);
+        return NextResponse.json({ ok: true });
     }
   } catch (err) {
-    console.error(`Subscription webhook ${event.type} failed:`, err);
+    console.error(`Stripe webhook ${event.type} failed:`, err);
     // 500 → Stripe опитва отново; обработката е идемпотентна.
-    return NextResponse.json({ error: "subscription_failed" }, { status: 500 });
+    return NextResponse.json({ error: "handler_failed" }, { status: 500 });
   }
 
-  if (event.type !== "checkout.session.completed") {
+  // Плащане, което се потвърждава по-късно (напр. банково нареждане през Stripe),
+  // идва като async_payment_succeeded — отключва се по същия начин.
+  if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
     // Not an event we care about — ack so Stripe doesn't retry.
     return NextResponse.json({ ok: true, ignored: event.type });
   }
@@ -74,26 +79,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const courseId = session.metadata?.courseId;
-  const buyerEmail = (session.customer_email || session.metadata?.buyerEmail || "").trim().toLowerCase();
-  const amountPaidEur = (session.amount_total || 0) / 100;
-
-  if (!courseId || !buyerEmail) {
-    console.error("Webhook missing courseId/email on session", session.id);
-    return NextResponse.json({ ok: true, ignored: "missing_metadata" });
-  }
-
-  try {
-    await grantAccess({
-      courseId,
-      buyerEmail,
-      stripeSessionId: session.id,
-      amountPaidEur,
-    });
-    return NextResponse.json({ ok: true });
-  } catch (err: any) {
-    console.error("grantAccess failed in webhook:", err);
-    // Return 500 so Stripe retries — eventual delivery is fine since it's idempotent.
-    return NextResponse.json({ error: "grant_failed", detail: err?.message }, { status: 500 });
-  }
+  return NextResponse.json({ ok: true, ignored: "unknown_kind" });
 }

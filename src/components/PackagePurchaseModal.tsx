@@ -16,6 +16,7 @@ import {
   useCardPayments, startEnrollmentCheckout, PayButtonFace, SecurePaymentNote, PAY_BUTTON_CLASS,
 } from "@/components/CardPayButton";
 import PasswordInput from "@/components/PasswordInput";
+import PurchaseConsent, { type ConsentKind } from "@/components/PurchaseConsent";
 import { trackInitiateCheckout, trackPurchase } from "@/lib/fpixel";
 
 /**
@@ -76,7 +77,10 @@ export default function PackagePurchaseModal({
   // Заявката, която се плаща с карта на екрана за успех.
   const [enrollmentId, setEnrollmentId] = useState("");
   const [redirecting, setRedirecting] = useState(false);
+  const [consent, setConsent] = useState(false);
   const cardPayments = useCardPayments();
+  // PDF и видео курсове — достъп веднага; Zoom обученията са услуга.
+  const consentKind: ConsentKind = packageKind === "library" || contentType === "video" ? "digital" : "service";
 
   useEffect(() => {
     if (!open) return;
@@ -133,7 +137,7 @@ export default function PackagePurchaseModal({
   /** Към платежната страница на Stripe за вече записаната заявка. */
   const goToCheckout = async (id: string) => {
     setRedirecting(true);
-    const err = await startEnrollmentCheckout(id, window.location.pathname);
+    const err = await startEnrollmentCheckout(id, consent, window.location.pathname);
     if (err) {
       setRedirecting(false);
       setError(err);
@@ -399,24 +403,9 @@ export default function PackagePurchaseModal({
               ) : (
                 /* Full registration form for LOGGED-OUT users */
                 <>
-                  {/* Tabs */}
-                  <div className="grid grid-cols-2 gap-1 bg-brand-light/60 p-1 rounded-xl">
-                    <button
-                      type="button"
-                      onClick={() => setTab("buy")}
-                      className={`py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 ${tab === "buy" ? "bg-white text-brand-green shadow" : "text-brand-dark/50 hover:text-brand-green"}`}
-                    >
-                      Само покупка
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setTab("trial")}
-                      className={`py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer border-0 ${tab === "trial" ? "bg-white text-brand-green shadow" : "text-brand-dark/50 hover:text-brand-green"}`}
-                    >
-                      + 14 дни безплатно
-                    </button>
-                  </div>
-
+                  {/* Табът „+14 дни безплатно" е махнат: пробата изисква ЕИК и запис
+                      в trialClaims (firestore.rules), които прави само регистрацията
+                      в профила — оттук правилата я отказваха и покупката гърмеше. */}
                   {tab === "trial" && (
                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-900 leading-relaxed flex items-start gap-2">
                       <Building2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600" />
@@ -509,7 +498,8 @@ export default function PackagePurchaseModal({
 
               {cardPayments ? (
                 <div className="space-y-3 border-t border-brand-green/5 pt-4">
-                  <button onClick={submit} disabled={status === "processing" || redirecting} className={PAY_BUTTON_CLASS}>
+                  <PurchaseConsent kind={consentKind} checked={consent} onChange={setConsent} />
+                  <button onClick={submit} disabled={status === "processing" || redirecting || !consent} className={PAY_BUTTON_CLASS}>
                     <PayButtonFace
                       busy={status === "processing" || redirecting}
                       busyLabel={redirecting ? "Отваряне на плащането…" : "Създаване на профила…"}

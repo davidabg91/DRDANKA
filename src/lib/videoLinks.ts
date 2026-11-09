@@ -8,32 +8,52 @@
  * embeds it inline instead of loading the Storage blob.
  *
  * Stored at /videoLinks/{slug} as: { url: string, updatedAt: string }.
- * Mirrors src/lib/priceOverrides.ts (one-time getDocs fetch, public read).
+ * The links are only readable by the admin (whole collection) and by buyers of
+ * that slug (single doc, see firestore.rules) — a paid video's unlisted URL
+ * must not be visible to everyone.
  */
 import { useEffect, useState } from "react";
 import { db } from "./firebase";
-import { collection, doc, getDocs, query, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, query, setDoc, deleteDoc } from "firebase/firestore";
 
 export interface VideoLink {
   url: string;
   updatedAt: string;
 }
 
-export function useVideoLinks() {
+/** Admin: all links. Client: only the links of `purchasedSlugs`. */
+export function useVideoLinks(isAdmin: boolean, purchasedSlugs: string[]) {
   const [links, setLinks] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const slugsKey = purchasedSlugs.slice().sort().join("|");
 
   useEffect(() => {
     let cancelled = false;
+    const keep = (map: Record<string, string>, id: string, data: VideoLink | undefined) => {
+      if (data && typeof data.url === "string" && data.url) map[id] = data.url;
+    };
 
-    getDocs(query(collection(db, "videoLinks")))
-      .then((snap) => {
-        if (cancelled) return;
-        const map: Record<string, string> = {};
-        snap.forEach((d) => {
-          const data = d.data() as VideoLink;
-          if (typeof data.url === "string" && data.url) map[d.id] = data.url;
+    const load = isAdmin
+      ? getDocs(query(collection(db, "videoLinks"))).then((snap) => {
+          const map: Record<string, string> = {};
+          snap.forEach((d) => keep(map, d.id, d.data() as VideoLink));
+          return map;
+        })
+      : Promise.all(
+          (slugsKey ? slugsKey.split("|") : []).map((slug) =>
+            getDoc(doc(db, "videoLinks", slug))
+              .then((d) => [slug, d.exists() ? (d.data() as VideoLink) : undefined] as const)
+              .catch(() => [slug, undefined] as const)
+          )
+        ).then((rows) => {
+          const map: Record<string, string> = {};
+          rows.forEach(([slug, data]) => keep(map, slug, data));
+          return map;
         });
+
+    load
+      .then((map) => {
+        if (cancelled) return;
         setLinks(map);
         setLoading(false);
       })
@@ -44,7 +64,7 @@ export function useVideoLinks() {
       });
 
     return () => { cancelled = true; };
-  }, []);
+  }, [isAdmin, slugsKey]);
 
   return { links, loading };
 }

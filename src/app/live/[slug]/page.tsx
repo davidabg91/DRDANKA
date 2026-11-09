@@ -14,6 +14,7 @@ import {
   ShieldCheck, CheckCircle, Calendar, Users, MessageSquare,
 } from "lucide-react";
 import BankTransferNotice from "@/components/BankTransferNotice";
+import PurchaseConsent from "@/components/PurchaseConsent";
 import {
   useCardPayments, startEnrollmentCheckout, PayButtonFace, SecurePaymentNote, PAY_BUTTON_CLASS,
 } from "@/components/CardPayButton";
@@ -34,6 +35,7 @@ export default function LiveCourseDetailPage() {
   const [error, setError] = useState("");
   // Заявката, която се плаща с карта на екрана за успех.
   const [enrollmentId, setEnrollmentId] = useState("");
+  const [consent, setConsent] = useState(false);
   const cardPayments = useCardPayments();
 
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function LiveCourseDetailPage() {
     setStatus("processing");
     // Мястото вече е записано (Stripe не се отвори от първия път) — само плащане.
     if (enrollmentId && cardPayments) {
-      const err = await startEnrollmentCheckout(enrollmentId);
+      const err = await startEnrollmentCheckout(enrollmentId, consent);
       if (err) { setError(err); setStatus("idle"); }
       return;
     }
@@ -94,7 +96,7 @@ export default function LiveCourseDetailPage() {
       setEnrollmentId(id);
       if (cardPayments) {
         // Админът получава известие, когато е платено; покупката се отчита на /pay/success.
-        const err = await startEnrollmentCheckout(id);
+        const err = await startEnrollmentCheckout(id, consent);
         if (err) { setError(err); setStatus("idle"); }
         return;
       }
@@ -339,7 +341,8 @@ export default function LiveCourseDetailPage() {
                   {error && <div className="text-[11px] bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2">{error}</div>}
                   {cardPayments ? (
                     <div className="space-y-3 border-t border-brand-green/5 pt-4">
-                      <button onClick={submitEnrollment} disabled={status === "processing"} className={PAY_BUTTON_CLASS}>
+                      <PurchaseConsent kind="service" checked={consent} onChange={setConsent} />
+                      <button onClick={submitEnrollment} disabled={status === "processing" || !consent} className={PAY_BUTTON_CLASS}>
                         <PayButtonFace busy={status === "processing"} label={`Плати ${livePrice.toFixed(2)} €`} />
                       </button>
                       <SecurePaymentNote hint="мястото Ви се запазва веднага" />

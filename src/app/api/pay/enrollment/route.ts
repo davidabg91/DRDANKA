@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * POST /api/pay/enrollment
- * Body: { enrollmentId: string; returnPath?: string }
+ * Body: { enrollmentId: string; consent: true; returnPath?: string }
  * Returns: { url } — Stripe Checkout (карта, Apple Pay, Google Pay).
  *
  * Цената се изчислява на сървъра от каталога, а платеното отключва
@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const enrollmentId = String(body?.enrollmentId || "");
     const returnPath = String(body?.returnPath || "/profile");
+    // Изричното съгласие за започване веднага / правото на отказ (ЗЗП чл. 57).
+    if (body?.consent !== true) {
+      return NextResponse.json({ error: "consent_required" }, { status: 400 });
+    }
     if (!/^[A-Za-z0-9_-]{6,80}$/.test(enrollmentId)) {
       return NextResponse.json({ error: "invalid_input" }, { status: 400 });
     }

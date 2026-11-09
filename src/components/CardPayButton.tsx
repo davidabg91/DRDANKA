@@ -12,6 +12,7 @@
 import { useEffect, useState } from "react";
 import { Loader2, Lock } from "lucide-react";
 import PaymentBadges from "@/components/PaymentBadges";
+import PurchaseConsent, { type ConsentKind } from "@/components/PurchaseConsent";
 
 let configPromise: Promise<boolean> | null = null;
 function cardPaymentsEnabled(): Promise<boolean> {
@@ -26,13 +27,15 @@ function cardPaymentsEnabled(): Promise<boolean> {
  * Отваря платежната страница на Stripe за заявката. Връща текст на грешка,
  * ако не е успяло (при успех браузърът вече напуска страницата).
  */
-export async function startEnrollmentCheckout(enrollmentId: string, returnPath?: string): Promise<string> {
+export async function startEnrollmentCheckout(enrollmentId: string, consent: boolean, returnPath?: string): Promise<string> {
+  if (!consent) return "Моля, отбележете съгласието си над бутона за плащане.";
   try {
     const res = await fetch("/api/pay/enrollment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         enrollmentId,
+        consent,
         returnPath: returnPath ?? (typeof window !== "undefined" ? window.location.pathname : "/profile"),
       }),
     });
@@ -63,7 +66,7 @@ export function PayButtonFace({ busy, label, busyLabel = "Отваряне на 
 }
 
 export const PAY_BUTTON_CLASS =
-  "w-full inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl bg-[#0A1F18] hover:bg-black disabled:opacity-70 text-white font-bold text-base tracking-wide shadow-lg shadow-black/20 cursor-pointer border-0 transition-colors";
+  "w-full inline-flex items-center justify-center gap-2.5 px-6 py-4 rounded-xl bg-[#0A1F18] hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-[#0A1F18] text-white font-bold text-base tracking-wide shadow-lg shadow-black/20 cursor-pointer border-0 transition-colors";
 
 /** „Защитено плащане · Visa · Mastercard · Apple Pay · Google Pay" под бутона. */
 export function SecurePaymentNote({ hint }: { hint?: string }) {
@@ -94,6 +97,7 @@ export default function CardPayButton({
   amountLabel,
   returnPath,
   hint = "достъпът се отключва веднага",
+  consentKind = "digital",
 }: {
   enrollmentId: string;
   /** „11,11 €" — показва се на бутона. */
@@ -102,16 +106,19 @@ export default function CardPayButton({
   returnPath?: string;
   /** Какво става след плащането — под бутона. */
   hint?: string;
+  /** Кой текст за съгласие (правото на отказ) да се покаже. */
+  consentKind?: ConsentKind;
 }) {
   const enabled = useCardPayments();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [consent, setConsent] = useState(false);
 
   if (!enabled || !enrollmentId) return null;
 
   const pay = async () => {
     setBusy(true);
-    const err = await startEnrollmentCheckout(enrollmentId, returnPath);
+    const err = await startEnrollmentCheckout(enrollmentId, consent, returnPath);
     // При успех браузърът вече отива към Stripe — бутонът остава „Отваряне…".
     if (err) {
       setError(err);
@@ -121,7 +128,8 @@ export default function CardPayButton({
 
   return (
     <div className="space-y-3">
-      <button type="button" onClick={pay} disabled={busy} className={PAY_BUTTON_CLASS}>
+      <PurchaseConsent kind={consentKind} checked={consent} onChange={setConsent} />
+      <button type="button" onClick={pay} disabled={busy || !consent} className={PAY_BUTTON_CLASS}>
         <PayButtonFace busy={busy} label={`Плати${amountLabel ? ` ${amountLabel}` : ""}`} />
       </button>
       <SecurePaymentNote hint={hint} />

@@ -47,6 +47,11 @@ function isBooking(enr: EnrollmentDoc): boolean {
 interface Product {
   title: string;
   priceEur: number;
+  /**
+   * digital — цифрово съдържание с достъп веднага (губи се правото на отказ);
+   * service — услуга (live обучение, консултация).
+   */
+  consentKind: "digital" | "service";
   /** Идентификаторите, които отключват продукта в профила. */
   grantIds: string[];
   /** Къде да отиде клиентът след плащане. */
@@ -64,7 +69,7 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
   const id = enr.trainingId;
   if (isBooking(enr)) {
     const pkg = findBookingPackage(id);
-    return pkg ? { title: pkg.name, priceEur: bookingPriceEur(pkg), grantIds: [], href: "/profile" } : null;
+    return pkg ? { title: pkg.name, priceEur: bookingPriceEur(pkg), grantIds: [], href: "/profile", consentKind: "service" } : null;
   }
   const bundle = resolveBundleIds(id);
 
@@ -75,6 +80,7 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
       priceEur: (await priceOverride(material.slug)) ?? material.priceEur,
       grantIds: [material.slug, ...bundle],
       href: "/profile",
+      consentKind: "digital",
     };
   }
 
@@ -85,6 +91,7 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
       priceEur: (await priceOverride(live.slug)) ?? live.priceEur,
       grantIds: [live.slug],
       href: "/profile",
+      consentKind: "service",
     };
   }
 
@@ -95,13 +102,14 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
     if (!bySlug.empty) tr = bySlug.docs[0];
   }
   if (tr.exists) {
-    const t = tr.data() as { id?: string; slug?: string; title?: string; priceEur?: number };
+    const t = tr.data() as { id?: string; slug?: string; title?: string; priceEur?: number; type?: string };
     if (typeof t.priceEur !== "number") return null;
     return {
       title: t.title || enr.trainingTitle,
       priceEur: t.priceEur,
       grantIds: [id, tr.id, t.slug].filter((x): x is string => !!x),
       href: "/profile",
+      consentKind: t.type === "video" ? "digital" : "service",
     };
   }
 
@@ -110,7 +118,7 @@ export async function productForEnrollment(enr: EnrollmentDoc): Promise<Product 
   if (course.exists) {
     const c = course.data() as { title?: string; priceEur?: number; published?: boolean };
     if (typeof c.priceEur !== "number" || c.published === false) return null;
-    return { title: c.title || enr.trainingTitle, priceEur: c.priceEur, grantIds: [id], href: "/profile" };
+    return { title: c.title || enr.trainingTitle, priceEur: c.priceEur, grantIds: [id], href: "/profile", consentKind: "digital" };
   }
   return null;
 }
@@ -126,6 +134,9 @@ export async function createEnrollmentCheckout(enrollmentId: string, returnPath:
   if (!product || !(product.priceEur > 0)) throw new Error("product_not_found");
 
   const back = returnPath.startsWith("/") && !returnPath.startsWith("//") ? returnPath : "/profile";
+  // Доказателство за съгласието, дадено преди плащането (ЗЗП чл. 57).
+  const consentAt = new Date().toISOString();
+  await snap.ref.set({ consentAt, consentKind: product.consentKind }, { merge: true });
   // Без payment_method_types Stripe показва всичко, включено в таблото —
   // карти, Apple Pay, Google Pay, Link.
   const session = await stripe().checkout.sessions.create({
@@ -142,8 +153,8 @@ export async function createEnrollmentCheckout(enrollmentId: string, returnPath:
         },
       },
     ],
-    metadata: { kind: "enrollment", enrollmentId: enr.id },
-    payment_intent_data: { metadata: { kind: "enrollment", enrollmentId: enr.id } },
+    metadata: { kind: "enrollment", enrollmentId: enr.id, consent: product.consentKind, consentAt },
+    payment_intent_data: { metadata: { kind: "enrollment", enrollmentId: enr.id, consent: product.consentKind } },
     success_url: `${SITE_URL}/pay/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${SITE_URL}${back}`,
   });
@@ -169,6 +180,72 @@ async function unlockEnrollment(
     .collection("enrollments")
     .doc(enr.id)
     .set({ status: "access_granted", accessGrantedAt: paid.paidAt, ...paid }, { merge: true });
+}
+
+/**
+ * Довършва отключването на всичко, платено с карта от този имейл. Нужно е,
+ * когато плащането е минало преди профилът да съществува (live курс, платен
+ * като гост, или профил, създаден наново) — профилът го вика при вход.
+ * Връща колко нови пакета е добавил.
+ */
+export async function syncPaidAccess(email: string): Promise<number> {
+  const db = adminDb();
+  const clean = email.trim().toLowerCase();
+  const userRef = db.collection("users").doc(clean);
+  const userSnap = await userRef.get();
+  if (!userSnap.exists) return 0;
+  const owned = new Set<string>(((userSnap.data() as { purchasedCourseIds?: string[] }).purchasedCourseIds) || []);
+
+  const paid = await db.collection("enrollments").where("email", "==", clean).where("paidVia", "==", "card").get();
+  const missing = new Set<string>();
+  for (const d of paid.docs) {
+    const enr = { ...(d.data() as EnrollmentDoc), id: d.id };
+    if (isBooking(enr) || enr.status === "refunded") continue;
+    const product = await productForEnrollment(enr);
+    for (const id of [enr.trainingId, ...(product?.grantIds || [])]) if (!owned.has(id)) missing.add(id);
+  }
+  if (missing.size) await userRef.update({ purchasedCourseIds: FieldValue.arrayUnion(...missing) });
+  return missing.size;
+}
+
+/**
+ * Изцяло възстановено плащане (напр. при отказ от договора) → заявката става
+ * `refunded` и пакетът се заключва отново. Пазят се идентификаторите, които
+ * клиентът има и по друга платена/отключена заявка (напр. част от пакет).
+ */
+export async function revokeRefundedEnrollment(charge: Stripe.Charge): Promise<void> {
+  if (!charge.refunded || !charge.payment_intent) return;
+  const piId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent.id;
+  const pi = await stripe().paymentIntents.retrieve(piId);
+  if (pi.metadata?.kind !== "enrollment" || !pi.metadata.enrollmentId) return;
+
+  const db = adminDb();
+  const enrRef = db.collection("enrollments").doc(pi.metadata.enrollmentId);
+  const enrSnap = await enrRef.get();
+  if (!enrSnap.exists || enrSnap.data()?.status === "refunded") return;
+  const enr = { ...(enrSnap.data() as EnrollmentDoc), id: enrSnap.id };
+  const email = enr.email.trim().toLowerCase();
+  await enrRef.set({ status: "refunded", refundedAt: new Date().toISOString() }, { merge: true });
+  if (isBooking(enr)) {
+    if (enr.bookingId) await db.collection("bookings").doc(enr.bookingId).set({ refundedAt: new Date().toISOString() }, { merge: true });
+  } else {
+    const product = await productForEnrollment(enr);
+    const revoke = new Set([enr.trainingId, ...(product?.grantIds || [])]);
+    const others = await db.collection("enrollments").where("email", "==", email).where("status", "==", "access_granted").get();
+    for (const d of others.docs) {
+      if (d.id === enr.id) continue;
+      const other = { ...(d.data() as EnrollmentDoc), id: d.id };
+      const p = await productForEnrollment(other);
+      for (const id of [other.trainingId, ...(p?.grantIds || [])]) revoke.delete(id);
+    }
+    const userRef = db.collection("users").doc(email);
+    if (revoke.size && (await userRef.get()).exists) {
+      await userRef.update({ purchasedCourseIds: FieldValue.arrayRemove(...revoke) });
+    }
+  }
+  await sendTelegramNotification(
+    `↩️ <b>Възстановено плащане</b>\n${enr.trainingTitle}\n${email}\n${((charge.amount_refunded || 0) / 100).toFixed(2)} € · достъпът е спрян`
+  ).catch(() => false);
 }
 
 /**

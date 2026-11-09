@@ -319,7 +319,6 @@ export default function ProfilePage() {
   const { trainings: dbTrainings } = useTrainings(false);
   const { overrides: priceOverrides } = usePriceOverrides();
   const { overrides: typeOverrides } = useTypeOverrides();
-  const { links: videoLinks } = useVideoLinks();
 
   // Catalogs are curated in /src/data/ and merged with Firestore overrides:
   // Admin can hide or delete items, which persists in Firestore and updates in real-time.
@@ -456,6 +455,19 @@ export default function ProfilePage() {
     });
   }, [authLoading, usersLoading, firebaseUser, firebaseUsers]);
 
+  // Веднъж на вход: сървърът довършва отключването на платеното с карта,
+  // ако плащането е минало преди профилът да съществува (напр. като гост).
+  const accessSyncedFor = useRef("");
+  const hasOwnDoc = !!firebaseUser?.email && firebaseUsers.some(u => u.email.toLowerCase() === firebaseUser.email!.toLowerCase());
+  useEffect(() => {
+    if (!firebaseUser || !hasOwnDoc || accessSyncedFor.current === firebaseUser.uid) return;
+    accessSyncedFor.current = firebaseUser.uid;
+    firebaseUser
+      .getIdToken()
+      .then((token) => fetch("/api/pay/sync-access", { method: "POST", headers: { Authorization: `Bearer ${token}` } }))
+      .catch(() => null);
+  }, [firebaseUser, hasOwnDoc]);
+
   useEffect(() => {
     if (!authLoading) {
       if (firebaseUser) {
@@ -515,6 +527,11 @@ export default function ProfilePage() {
   const [watchLinkSlug, setWatchLinkSlug] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<"user" | "admin">("user");
   const [usersList, setUsersList] = useState<DankaUser[]>([]);
+  // Скритите видео линкове: админът вижда всички, клиентът — само на купените пакети.
+  const { links: videoLinks } = useVideoLinks(
+    userRole === "admin",
+    usersList.find(u => u.email.toLowerCase() === currentUserEmail.toLowerCase())?.purchasedCourseIds ?? [],
+  );
   const [activeAdminTab, setActiveAdminTab] = useState<"candidates" | "bookings" | "users" | "materials" | "courses" | "trainings" | "enrollments" | "messages" | "logs">("candidates");
 
   const [lastSeenEnrollmentsAt, setLastSeenEnrollmentsAt] = useState<number>(() => {
@@ -3670,7 +3687,12 @@ export default function ProfilePage() {
                         <span className="text-sm font-bold text-brand-green">Общо за плащане</span>
                         <span className="font-serif text-2xl font-bold text-brand-gold whitespace-nowrap ml-3">{payEnrollment.priceEur.toFixed(2)} €</span>
                       </div>
-                      <CardPayButton enrollmentId={payEnrollment.id} amountLabel={`${payEnrollment.priceEur.toFixed(2)} €`} returnPath="/profile" />
+                      <CardPayButton
+                        enrollmentId={payEnrollment.id}
+                        amountLabel={`${payEnrollment.priceEur.toFixed(2)} €`}
+                        returnPath="/profile"
+                        consentKind={payEnrollment.trainingType === "zoom" || LIVE_COURSES.some(l => l.slug === payEnrollment.trainingId) ? "service" : "digital"}
+                      />
                     </>
                   ) : (
                     <>
@@ -6138,8 +6160,9 @@ export default function ProfilePage() {
                                             "За насрочване"
                                           ) : (
                                             enr.status === "awaiting_payment" ? "Чака плащане" :
-                                            enr.status === "access_granted" ? "Отключен" :
+                                            enr.status === "access_granted" ? ((enr as { paidVia?: string }).paidVia === "card" ? "Отключен · карта" : "Отключен") :
                                             enr.status === "paid" ? "Платено" :
+                                            enr.status === "refunded" ? "Възстановено" :
                                             enr.status
                                           )}
                                         </span>

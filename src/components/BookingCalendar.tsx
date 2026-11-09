@@ -8,6 +8,7 @@ import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { CONSULTATION_PACKAGES, TRAINING_PACKAGES, type Package } from "@/data/consultations";
 import CardPayButton, { useCardPayments, startEnrollmentCheckout } from "@/components/CardPayButton";
+import PurchaseConsent from "@/components/PurchaseConsent";
 
 const CONSULTATION_TIME_SLOTS = ["09:00", "10:30", "11:30", "14:00", "15:30", "17:00"];
 const TRAINING_TIME_SLOTS = ["14:00"];
@@ -99,6 +100,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
   /** Заявката в `enrollments` — по нея се плаща с карта на последната стъпка. */
   const [enrollmentId, setEnrollmentId] = useState("");
   const cardPayments = useCardPayments();
+  const [consent, setConsent] = useState(false);
 
   const handleClientInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -181,7 +183,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
     // Платен час → направо към плащането с карта; ако Stripe не се отвори,
     // последната стъпка показва бутона „Плати" за повторен опит.
     if (!isFree && cardPayments && saved) {
-      const err = await startEnrollmentCheckout(enrollId);
+      const err = await startEnrollmentCheckout(enrollId, consent);
       if (!err) return;
     }
     setSubmitting(false);
@@ -454,6 +456,12 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
               </div>
             </div>
 
+            {!isFree && cardPayments && (
+              <div className="pt-4">
+                <PurchaseConsent kind="service" checked={consent} onChange={setConsent} />
+              </div>
+            )}
+
             <div className="flex justify-between pt-6 border-t border-brand-green/5">
               <button
                 onClick={handlePrev}
@@ -464,7 +472,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
               </button>
               <button
                 onClick={handleBook}
-                disabled={submitting}
+                disabled={submitting || (!isFree && !!cardPayments && !consent)}
                 className="px-6 py-3 bg-brand-green text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-green/90 transition-colors flex items-center disabled:opacity-50 cursor-pointer"
               >
                 {submitting ? (
@@ -535,6 +543,7 @@ export default function BookingCalendar({ mode = "consultation", initialPackageI
                   enrollmentId={enrollmentId}
                   amountLabel={selectedPackage.price}
                   hint="д-р Николова ще потвърди часа"
+                  consentKind="service"
                 />
               </div>
             )}

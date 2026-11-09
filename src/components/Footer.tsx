@@ -1,5 +1,6 @@
 import Link from "next/link";
 import CookieSettingsLink from "@/components/CookieSettingsLink";
+import { COMPANY } from "@/lib/siteConfig";
 import { ShieldCheck, Mail, Clock, MapPin, Phone } from "lucide-react";
 
 
@@ -144,14 +145,14 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-8 mt-8 flex flex-col md:flex-row justify-between items-center text-xs text-white/40">
           <p className="mb-4 md:mb-0">
-            &copy; {currentYear} Д-р Данка Николова. Всички права запазени.
+            &copy; {currentYear} {COMPANY.name}{COMPANY.eik ? `, ЕИК ${COMPANY.eik}` : ""}. Всички права запазени.
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center md:justify-end items-center">
             <Link href="/privacy" className="hover:text-brand-gold transition-colors">
               Поверителност
             </Link>
             <Link href="/terms" className="hover:text-brand-gold transition-colors">
-              Условия за ползване
+              Общи условия
             </Link>
             <CookieSettingsLink className="hover:text-brand-gold transition-colors" />
             <a

@@ -12,41 +12,39 @@ service firebase.storage {
         );
     }
 
-    // Check the buyer's /users/{email}.purchasedCourseIds for the courseId.
-    function hasPurchased(courseId) {
-      let email = request.auth.token.email.lower();
-      let userPath = /databases/(default)/documents/users/$(email);
-      return request.auth != null
-        && firestore.exists(userPath)
-        && (courseId in firestore.get(userPath).data.purchasedCourseIds
-            || "prakticheska-biblia-paket-vsichki-chasti" in firestore.get(userPath).data.purchasedCourseIds);
+    // Купените пакети на влезлия потребител (users/{email}.purchasedCourseIds).
+    function purchasedIds() {
+      let userPath = /databases/(default)/documents/users/$(request.auth.token.email.lower());
+      return firestore.exists(userPath)
+        ? firestore.get(userPath).data.get("purchasedCourseIds", [])
+        : [];
     }
 
+    // Пакетът „Практическа библия — всички части" отключва само своите три части.
+    function hasPurchased(id) {
+      return request.auth != null && (
+        id in purchasedIds()
+        || (id in ["prakticheska-biblia-chast-1", "prakticheska-biblia-chast-2", "prakticheska-biblia-chast-3"]
+            && "prakticheska-biblia-paket-vsichki-chasti" in purchasedIds())
+      );
+    }
+
+    // Качване и триене на файлове — само от администраторите (админ панела).
     match /courses/{courseId}/{allPaths=**} {
       allow read: if allPaths.matches('^cover\\..+')
         || isStaff()
         || hasPurchased(courseId);
-
-      allow write: if request.auth != null;
+      allow write: if isStaff();
     }
 
     match /trainings/{trainingId}/{fileName} {
       allow read: if fileName.matches('^cover\\..+');
-      allow write: if request.auth != null;
-    }
-
-    function hasPurchasedSlug(slug) {
-      let email = request.auth.token.email.lower();
-      let userPath = /databases/(default)/documents/users/$(email);
-      return request.auth != null
-        && firestore.exists(userPath)
-        && (slug in firestore.get(userPath).data.purchasedCourseIds
-            || "prakticheska-biblia-paket-vsichki-chasti" in firestore.get(userPath).data.purchasedCourseIds);
+      allow write: if isStaff();
     }
 
     match /library/{slug}/{allPaths=**} {
-      allow read: if isStaff() || hasPurchasedSlug(slug);
-      allow write: if request.auth != null;
+      allow read: if isStaff() || hasPurchased(slug);
+      allow write: if isStaff();
     }
 
     match /assigned_docs/{recipient}/{fileName} {
@@ -55,7 +53,7 @@ service firebase.storage {
         recipient == "all" ||
         request.auth.token.email.lower() == recipient.lower()
       );
-      allow write: if request.auth != null;
+      allow write: if isStaff();
     }
   }
 }
