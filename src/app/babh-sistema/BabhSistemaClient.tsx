@@ -17,7 +17,6 @@ import {
   Thermometer,
   Users,
   XCircle,
-  Zap,
 } from "lucide-react";
 import { PLANS, PLAN_BY_ID, TRIAL_PLAN, planDelta, extraSitePriceEur, formatEur } from "@/lib/plans";
 import { AUTHOR } from "@/lib/siteConfig";
@@ -148,20 +147,30 @@ export default function BabhSistemaClient() {
   return (
     <div className="bg-white text-brand-dark font-sans overflow-x-hidden">
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative bg-gradient-to-br from-[#0A2318] via-brand-green to-[#0D2B1C] text-white overflow-hidden">
-        <div className="absolute -top-32 -right-24 w-[32rem] h-[32rem] bg-brand-gold/15 rounded-full blur-[110px] pointer-events-none" />
-        <div className="absolute -bottom-40 -left-24 w-[28rem] h-[28rem] bg-emerald-400/10 rounded-full blur-[110px] pointer-events-none" />
+      <section className="relative isolate bg-[#0A1F18] text-white overflow-hidden">
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(60rem 30rem at 100% 0%, rgba(197,168,128,0.16), transparent 60%), radial-gradient(44rem 26rem at 0% 100%, rgba(15,56,43,0.9), transparent 70%)",
+          }}
+        />
+        <div aria-hidden className="absolute -z-10 -right-64 -top-72 w-[52rem] h-[52rem] rounded-full border border-brand-gold/15 pointer-events-none" />
+        <div aria-hidden className="absolute -z-10 -right-40 -top-48 w-[38rem] h-[38rem] rounded-full border border-brand-gold/10 pointer-events-none" />
+        <div aria-hidden className="absolute -z-10 -left-32 -bottom-40 w-[22rem] h-[22rem] rounded-full border border-white/[0.06] pointer-events-none" />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           <div className="lg:col-span-7 space-y-6">
-            <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] bg-white/10 border border-white/15 text-brand-gold px-3.5 py-1.5 rounded-full">
-              <Zap className="h-3.5 w-3.5" fill="currentColor" /> Електронни дневници по самоконтрол
-            </span>
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight">
-              Дневниците за БАБХ —{" "}
-              <span className="bg-gradient-to-r from-brand-gold via-yellow-200 to-brand-gold bg-clip-text text-transparent">
-                без главоболие.
+            <div className="flex items-center gap-3">
+              <span aria-hidden className="h-px w-8 shrink-0 bg-brand-gold" />
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-gold">
+                Електронни дневници по самоконтрол
               </span>
+            </div>
+            <h1 className="font-logo text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.08] tracking-tight text-balance">
+              Дневниците за БАБХ —{" "}
+              <span className="text-brand-gold italic font-medium">без главоболие.</span>
             </h1>
             <p className="text-base sm:text-lg text-white/80 leading-relaxed max-w-xl">
               Не е нужно да сте специалист. Системата знае кои дневници са нужни за Вашия обект, всеки ден Ви казва какво да попълните и пази всичко подредено за проверка.
@@ -169,13 +178,13 @@ export default function BabhSistemaClient() {
             <div className="flex flex-col sm:flex-row gap-3 pt-1">
               <Link
                 href="/profile"
-                className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-black text-sm uppercase tracking-wider shadow-[0_10px_30px_rgba(212,175,55,0.35)] hover:-translate-y-0.5 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-semibold text-base transition-colors"
               >
                 Опитайте 14 дни безплатно <ArrowRight className="h-4 w-4" />
               </Link>
               <a
                 href="#paketi"
-                className="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-sm uppercase tracking-wider transition-all"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full border border-white/25 hover:border-brand-gold hover:text-brand-gold text-white font-semibold text-base transition-colors"
               >
                 Вижте пакетите
               </a>
@@ -191,7 +200,7 @@ export default function BabhSistemaClient() {
 
           {/* Телефон: „Днес попълнете“ */}
           <div className="lg:col-span-5 flex justify-center">
-            <div className="w-full max-w-[340px] rounded-[2.2rem] bg-[#0B1F17] border border-white/15 p-3 shadow-2xl shadow-black/40">
+            <div className="w-full max-w-[340px] rounded-[2.2rem] bg-white/[0.06] border border-brand-gold/25 backdrop-blur-sm p-3 shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
               <div className="rounded-[1.7rem] bg-white text-brand-dark p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>

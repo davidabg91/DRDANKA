@@ -7,38 +7,61 @@ interface PageHeroProps {
   icon?: React.ElementType;
 }
 
+/**
+ * Shared page header. Same visual language as the home and services heroes:
+ * flat deep green, thin gold rings, a gold eyebrow line and a large left-aligned
+ * title. On wide screens the page icon sits in a ringed medallion on the right.
+ */
 export default function PageHero({ badgeText, title, subtitle, icon: Icon }: PageHeroProps) {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] border-b border-brand-gold/20 py-10 sm:py-14 z-10">
-      {/* Glow blobs */}
-      <div className="absolute top-0 right-0 w-72 h-72 bg-brand-gold/15 rounded-full blur-[80px] pointer-events-none translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 left-0 w-72 h-72 bg-brand-green/30 rounded-full blur-[80px] pointer-events-none -translate-x-1/2 translate-y-1/2" />
-      
-      {/* Mesh/grid pattern */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+    <section className="relative isolate overflow-hidden bg-[#0A1F18] z-10">
+      {/* Soft light from the top-right corner */}
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 pointer-events-none"
         style={{
-          backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
+          backgroundImage:
+            "radial-gradient(60rem 28rem at 100% 0%, rgba(197,168,128,0.16), transparent 60%), radial-gradient(40rem 22rem at 0% 100%, rgba(15,56,43,0.9), transparent 70%)",
         }}
       />
+      {/* Gold rings */}
+      <div aria-hidden className="absolute -z-10 -right-64 -top-72 w-[52rem] h-[52rem] rounded-full border border-brand-gold/15 pointer-events-none" />
+      <div aria-hidden className="absolute -z-10 -right-40 -top-48 w-[38rem] h-[38rem] rounded-full border border-brand-gold/10 pointer-events-none" />
+      <div aria-hidden className="absolute -z-10 -left-32 -bottom-40 w-[22rem] h-[22rem] rounded-full border border-white/[0.06] pointer-events-none" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
-        {badgeText && (
-          <div className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold mb-4 shadow-lg shadow-brand-gold/5 backdrop-blur-md">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">{badgeText}</span>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 flex items-center justify-between gap-12">
+        <div className="min-w-0 max-w-3xl">
+          {badgeText && (
+            <div className="flex items-center gap-3 mb-5">
+              <span aria-hidden className="h-px w-8 shrink-0 bg-brand-gold" />
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-gold">
+                {badgeText}
+              </span>
+            </div>
+          )}
+
+          <h1 className="font-logo text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.08] text-balance">
+            {title}
+          </h1>
+
+          {subtitle && (
+            <p className="mt-5 text-base sm:text-lg text-white/75 leading-relaxed max-w-2xl">
+              {subtitle}
+            </p>
+          )}
+        </div>
+
+        {Icon && (
+          <div aria-hidden className="hidden lg:grid shrink-0 place-items-center h-52 w-52 rounded-full border border-brand-gold/20">
+            <div className="grid place-items-center h-36 w-36 rounded-full border border-brand-gold/30 bg-brand-gold/[0.07] backdrop-blur-sm">
+              <Icon className="h-14 w-14 text-brand-gold" strokeWidth={1.25} />
+            </div>
           </div>
         )}
-        
-        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight drop-shadow-md mb-4 max-w-4xl">
-          {title}
-        </h1>
-        
-        {subtitle && (
-          <p className="text-sm sm:text-base text-white/70 max-w-2xl font-light leading-relaxed drop-shadow-sm">
-            {subtitle}
-          </p>
-        )}
       </div>
+
+      {/* Gold hairline that fades out at both ends */}
+      <div aria-hidden className="h-px bg-gradient-to-r from-transparent via-brand-gold/50 to-transparent" />
     </section>
   );
 }
