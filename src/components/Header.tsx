@@ -28,10 +28,12 @@ export default function Header() {
     portalLabel && portalLabel.length > 18 ? portalLabel.slice(0, 17) + "…" : portalLabel;
 
   useEffect(() => {
-    // Two thresholds (on at 24px, off at 8px) so the bar does not flicker
-    // between its two modes around a single scroll position.
+    // The header sits in the page flow, so while its own slot (~76px) is still
+    // on screen a transparent bar would show the light page background behind
+    // it. Float only once that slot has scrolled away. Two thresholds (on at
+    // 96px, off at 80px) keep it from flickering around a single position.
     const handleScroll = () => {
-      setIsScrolled((prev) => (prev ? window.scrollY > 8 : window.scrollY > 24));
+      setIsScrolled((prev) => (prev ? window.scrollY > 80 : window.scrollY > 96));
     };
     handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -65,7 +67,7 @@ export default function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 print:hidden transition-[padding,background-color] duration-300 ${
+        className={`sticky top-0 z-50 print:hidden transition-[padding] duration-300 ${
           isScrolled ? "bg-transparent px-2 sm:px-4 pt-2" : "bg-[#0A1F18] py-2.5"
         }`}
       >
