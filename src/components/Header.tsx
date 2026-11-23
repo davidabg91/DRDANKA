@@ -64,11 +64,17 @@ export default function Header() {
     { name: "Контакти", href: "/contact" },
   ];
 
+  // The floating pill is narrower than the flush bar, so on very wide screens
+  // its links stay a size smaller; otherwise the last one gets clipped.
+  const navSize = isScrolled
+    ? "2xl:text-[13px] 2xl:px-2.5"
+    : "2xl:text-[14px] 2xl:px-3.5";
+
   return (
     <>
       <header
         className={`sticky top-0 z-50 print:hidden transition-[padding] duration-300 ${
-          isScrolled ? "bg-transparent px-2 sm:px-4 pt-2" : "bg-[#0A1F18] py-2.5"
+          isScrolled ? "bg-transparent px-2 xl:px-4 pt-2" : "bg-[#0A1F18] py-2.5"
         }`}
       >
         {/* Two modes: flush with the page at the very top; once the page is
@@ -76,7 +82,7 @@ export default function Header() {
         <div
           className={`w-full relative mx-auto transition-all duration-300 ${
             isScrolled
-              ? "max-w-7xl rounded-full border border-brand-gold/25 bg-[#0A1F18]/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)] px-3 sm:px-4 py-1.5"
+              ? "max-w-7xl 2xl:max-w-[1400px] rounded-full border border-brand-gold/25 bg-[#0A1F18]/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)] px-3 xl:px-4 py-1.5"
               : "max-w-[1536px] border border-transparent px-3 sm:px-5 lg:px-6 xl:px-10 py-1"
           }`}
         >
@@ -89,7 +95,7 @@ export default function Header() {
                 className="h-10 w-10 sm:h-11 sm:w-11 flex-none object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
               />
               <div className="min-w-0 overflow-hidden">
-                <span className="font-logo text-sm sm:text-base lg:text-base xl:text-lg 2xl:text-xl font-bold text-white tracking-wide block leading-none group-hover:text-brand-gold transition-colors whitespace-nowrap">
+                <span className={`font-logo text-sm sm:text-base lg:text-base xl:text-lg ${isScrolled ? "" : "2xl:text-xl"} font-bold text-white tracking-wide block leading-none group-hover:text-brand-gold transition-colors whitespace-nowrap`}>
                   Д-р Данка Николова
                 </span>
                 <span className={`text-[10px] text-brand-gold font-light tracking-wider uppercase mt-0.5 truncate whitespace-nowrap ${isScrolled ? "hidden" : "hidden 2xl:block"}`}>
@@ -99,7 +105,7 @@ export default function Header() {
             </Link>
 
             {/* Desktop Navigation — spreads across full width at larger screens */}
-            <nav className="hidden lg:flex items-center justify-evenly flex-1 min-w-0 overflow-hidden gap-x-0.5 lg:gap-x-1 xl:gap-x-2 px-1 lg:px-2 xl:px-4">
+            <nav className="hidden lg:flex items-center justify-evenly flex-1 min-w-0 overflow-hidden gap-x-0.5 xl:gap-x-2 px-1 xl:px-4">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href;
                 return (
@@ -107,7 +113,7 @@ export default function Header() {
                     key={link.href}
                     href={link.href}
                     aria-current={isActive ? "page" : undefined}
-                    className={`relative text-[11.5px] xl:text-[12.5px] 2xl:text-[14px] font-medium transition-colors duration-200 whitespace-nowrap px-1.5 xl:px-2 2xl:px-3.5 py-2 rounded-full cursor-pointer flex items-center gap-1.5 ${
+                    className={`relative text-[11.5px] xl:text-[12.5px] font-medium transition-colors duration-200 whitespace-nowrap px-1.5 xl:px-2 py-2 rounded-full cursor-pointer flex items-center gap-1.5 ${navSize} ${
                       isActive
                         ? "text-brand-gold bg-white/[0.08]"
                         : "text-white/75 hover:text-white hover:bg-white/[0.06]"
@@ -130,15 +136,21 @@ export default function Header() {
               <Link
                 href="/profile"
                 title={portalLabel || undefined}
-                className="inline-flex items-center justify-center gap-1.5 px-3 xl:px-4 2xl:px-5 py-2 text-[11.5px] xl:text-[12.5px] 2xl:text-[14px] font-semibold text-brand-dark rounded-full bg-brand-gold hover:bg-brand-gold-light transition-colors duration-300 whitespace-nowrap cursor-pointer max-w-[160px] xl:max-w-[210px]"
+                aria-label={portalLabel || "Вход / Портал"}
+                className={`inline-flex items-center justify-center gap-1.5 px-2.5 xl:px-4 py-2 text-[11.5px] xl:text-[12.5px] font-semibold text-brand-dark rounded-full bg-brand-gold hover:bg-brand-gold-light transition-colors duration-300 whitespace-nowrap cursor-pointer max-w-[160px] xl:max-w-[210px] ${isScrolled ? "2xl:text-[13px]" : "2xl:text-[14px] 2xl:px-5"}`}
               >
+                {/* Below xl the bar is tight: the button keeps only its icon
+                    (signed in) or the single word „Вход“, so the last nav
+                    link is never squeezed out. */}
                 {portalLabelShort ? (
                   <>
                     <UserCircle2 className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{portalLabelShort}</span>
+                    <span className="truncate hidden xl:inline">{portalLabelShort}</span>
                   </>
                 ) : (
-                  "Вход / Портал"
+                  <>
+                    Вход<span className="hidden xl:inline">&nbsp;/ Портал</span>
+                  </>
                 )}
               </Link>
             </div>
