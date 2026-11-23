@@ -41,11 +41,9 @@ export default function HeroTrainingCarousel() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="absolute -inset-1 bg-gradient-to-br from-emerald-500/10 via-brand-gold/10 to-amber-400/10 rounded-3xl blur-2xl opacity-50 group-hover:opacity-80 transition-all duration-700" />
-
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm p-6 sm:p-7">
+      <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-white/[0.04] p-4">
         {/* Header + progress dots */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-3">
           <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.14em] text-brand-gold">
             <GraduationCap className="h-4 w-4" />
             Най-ново от Обученията
@@ -68,35 +66,35 @@ export default function HeroTrainingCarousel() {
         <Link
           key={m.slug}
           href={`/library/${m.slug}`}
-          className="animate-hero-card flex items-center gap-5 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-brand-gold/40 hover:bg-white/[0.06] p-4 transition-colors duration-300 cursor-pointer"
+          className="animate-hero-card flex items-center gap-4 rounded-xl hover:bg-white/[0.06] p-2 -mx-2 transition-colors duration-300 cursor-pointer"
         >
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden shrink-0 bg-gradient-to-br from-brand-green/40 to-brand-gold/20 flex items-center justify-center shadow-lg">
+          <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br from-brand-green/40 to-brand-gold/20 flex items-center justify-center">
             {m.card.cover ? (
               <Image
                 src={m.card.cover}
                 alt={m.title}
                 fill
-                sizes="128px"
+                sizes="64px"
                 loading="eager"
                 className="object-cover"
               />
             ) : m.type === "video" ? (
-              <Video className="h-11 w-11 text-brand-gold/60" />
+              <Video className="h-7 w-7 text-brand-gold/60" />
             ) : (
-              <BookOpen className="h-11 w-11 text-brand-gold/60" />
+              <BookOpen className="h-7 w-7 text-brand-gold/60" />
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="font-serif text-base sm:text-lg font-bold text-white leading-snug line-clamp-3">
+            <h4 className="font-serif text-sm sm:text-base font-bold text-white leading-snug line-clamp-2">
               {m.title}
             </h4>
-            <div className="flex items-center gap-2.5 mt-2.5">
+            <div className="flex items-center gap-2 mt-1.5">
               {m.originalPriceEur && (
-                <span className="text-sm text-white/40 line-through">
+                <span className="text-xs text-white/40 line-through">
                   {m.originalPriceEur.toFixed(0)}€
                 </span>
               )}
-              <span className="text-brand-gold font-bold text-xl leading-none">
+              <span className="text-brand-gold font-bold text-base leading-none">
                 {price.toFixed(0)}€
               </span>
             </div>
@@ -107,7 +105,7 @@ export default function HeroTrainingCarousel() {
         {/* View-all button */}
         <Link
           href="/training"
-          className="mt-5 w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-white/10 hover:bg-white/5 text-white/80 hover:text-brand-gold font-bold text-xs uppercase tracking-[0.12em] transition-all duration-300 cursor-pointer"
+          className="mt-3 pt-3 border-t border-white/10 w-full flex lg:[@media(max-height:820px)]:hidden items-center justify-center gap-2 text-white/70 hover:text-brand-gold font-semibold text-sm transition-colors duration-300 cursor-pointer"
         >
           Виж всички обучения
           <ArrowRight className="h-4 w-4" />

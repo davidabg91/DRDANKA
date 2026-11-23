@@ -14,21 +14,18 @@ const RemotionPlayerInner = dynamic(() => import("./RemotionPlayerInner"), {
 export default function RemotionVideoWidget() {
   return (
     <div className="relative group">
-      {/* Ambient glow */}
-      <div className="absolute -inset-1 bg-gradient-to-br from-brand-gold/30 via-amber-400/10 to-emerald-500/20 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 transition-all duration-700"></div>
-
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/8 bg-gradient-to-br from-[#0a1f17] via-[#0d2b1c] to-[#081410] flex flex-col">
+      <div className="relative rounded-2xl overflow-hidden border border-brand-gold/25 bg-gradient-to-br from-[#0a1f17] via-[#0d2b1c] to-[#081410] flex flex-col">
         {/* Remotion Player inside the card - Transparent UI Animation */}
-        <div className="w-full relative h-[300px] sm:h-[360px]">
+        <div className="w-full relative h-[300px] sm:h-[360px] lg:h-[clamp(130px,calc(38svh_-_130px),360px)]">
           <RemotionPlayerInner />
         </div>
 
         {/* Card Content & Buttons */}
-        <div className="px-6 pb-7 sm:px-8 flex flex-col justify-end space-y-4 shrink-0 bg-gradient-to-t from-[#081410] to-transparent relative z-10 -mt-10">
+        <div className="px-6 pb-7 lg:pb-5 sm:px-8 flex flex-col justify-end space-y-4 shrink-0 bg-gradient-to-t from-[#081410] to-transparent relative z-10 -mt-10">
           <div className="text-center">
-            <h3 className="font-serif text-xl sm:text-2xl font-bold text-white leading-tight">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/60 mb-1">
               Абонамент
-            </h3>
+            </p>
             <h3 className="font-serif text-2xl sm:text-3xl font-bold text-brand-gold leading-tight">
               „БАБХ Спокойствие“
             </h3>
@@ -43,9 +40,9 @@ export default function RemotionVideoWidget() {
             </Link>
             <Link
               href="/services#vip-system"
-              className="w-full flex items-center justify-center gap-2.5 py-3 px-6 border border-white/10 hover:bg-white/5 text-white font-bold text-xs uppercase tracking-[0.12em] transition-all duration-300 rounded-xl cursor-pointer"
+              className="w-full flex items-center justify-center text-white/70 hover:text-brand-gold font-semibold text-sm transition-colors duration-300 cursor-pointer"
             >
-              <span>Виж Информация</span>
+              <span>Виж информация →</span>
             </Link>
           </div>
         </div>

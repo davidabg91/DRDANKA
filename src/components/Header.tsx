@@ -28,14 +28,13 @@ export default function Header() {
     portalLabel && portalLabel.length > 18 ? portalLabel.slice(0, 17) + "…" : portalLabel;
 
   useEffect(() => {
+    // Two thresholds (on at 24px, off at 8px) so the bar does not flicker
+    // between its two modes around a single scroll position.
     const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled((prev) => (prev ? window.scrollY > 8 : window.scrollY > 24));
     };
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -66,36 +65,32 @@ export default function Header() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 print:hidden ${
-          isScrolled ? "py-2 shadow-2xl" : "py-3 sm:py-3.5"
+        className={`sticky top-0 z-50 print:hidden transition-[padding,background-color] duration-300 ${
+          isScrolled ? "bg-transparent px-2 sm:px-4 pt-2" : "bg-[#0A1F18] py-2.5"
         }`}
       >
-        {/* Seamless Glassmorphism Background Layer */}
-        <div className="absolute inset-0 pointer-events-none -z-10 transition-all duration-500">
-          <div className="absolute inset-0 bg-[#0A1F18]/85 backdrop-blur-2xl" />
-          <div 
-            className={`absolute inset-0 bg-gradient-to-r from-[#061410]/90 via-[#0A1F18]/95 to-[#081712]/90 border-b border-brand-gold/15 transition-opacity duration-300 ${
-              isScrolled ? "opacity-100" : "opacity-90"
-            }`}
-          />
-          {/* Subtle bottom glowing accent border line */}
-          <div className="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-brand-gold/30 to-transparent" />
-        </div>
-        
-        <div className="w-full max-w-[1536px] px-3 sm:px-5 lg:px-6 xl:px-10 relative mx-auto">
+        {/* Two modes: flush with the page at the very top; once the page is
+            scrolled it becomes a floating glass pill that stays on screen. */}
+        <div
+          className={`w-full relative mx-auto transition-all duration-300 ${
+            isScrolled
+              ? "max-w-7xl rounded-full border border-brand-gold/25 bg-[#0A1F18]/80 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.35)] px-3 sm:px-4 py-1.5"
+              : "max-w-[1536px] border border-transparent px-3 sm:px-5 lg:px-6 xl:px-10 py-1"
+          }`}
+        >
           <div className="flex items-center justify-between">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-2.5 group shrink-0 min-w-0">
               <img
                 src="/logo-icon.png"
                 alt="Д-р Данка Николова Лого"
-                className="h-10 w-10 sm:h-12 sm:w-12 flex-none object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
+                className="h-10 w-10 sm:h-11 sm:w-11 flex-none object-contain rounded-full border border-brand-gold/30 group-hover:border-brand-gold transition-colors duration-300 shadow-md"
               />
               <div className="min-w-0 overflow-hidden">
                 <span className="font-logo text-sm sm:text-base lg:text-base xl:text-lg 2xl:text-xl font-bold text-white tracking-wide block leading-none group-hover:text-brand-gold transition-colors whitespace-nowrap">
                   Д-р Данка Николова
                 </span>
-                <span className="text-[9px] xl:text-[10px] text-brand-gold font-light tracking-wider uppercase hidden xl:block mt-0.5 truncate whitespace-nowrap">
+                <span className={`text-[10px] text-brand-gold font-light tracking-wider uppercase mt-0.5 truncate whitespace-nowrap ${isScrolled ? "hidden" : "hidden 2xl:block"}`}>
                   Академия сигурен хранителен бизнес
                 </span>
               </div>
@@ -109,15 +104,16 @@ export default function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`relative text-[10px] lg:text-[11px] xl:text-[11.5px] 2xl:text-[12px] font-bold tracking-wider transition-all duration-200 uppercase whitespace-nowrap px-2 lg:px-2.5 xl:px-3 py-1.5 rounded-full cursor-pointer flex items-center gap-1 ${
+                    aria-current={isActive ? "page" : undefined}
+                    className={`relative text-[11.5px] xl:text-[12.5px] 2xl:text-[14px] font-medium transition-colors duration-200 whitespace-nowrap px-1.5 xl:px-2 2xl:px-3.5 py-2 rounded-full cursor-pointer flex items-center gap-1.5 ${
                       isActive
-                        ? "text-brand-dark bg-brand-gold shadow-[0_0_12px_rgba(212,175,55,0.4)]"
-                        : "text-white/80 hover:text-white hover:bg-white/10"
+                        ? "text-brand-gold bg-white/[0.08]"
+                        : "text-white/75 hover:text-white hover:bg-white/[0.06]"
                     }`}
                   >
                     <span>{link.name}</span>
-                    {link.badge && !isActive && (
-                      <span className="text-[7.5px] lg:text-[8px] font-black uppercase px-1 py-0.5 rounded bg-brand-gold/20 text-brand-gold border border-brand-gold/40">
+                    {link.badge && (
+                      <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold">
                         {link.badge}
                       </span>
                     )}
@@ -132,11 +128,11 @@ export default function Header() {
               <Link
                 href="/profile"
                 title={portalLabel || undefined}
-                className="inline-flex items-center justify-center gap-1 px-2.5 lg:px-3.5 xl:px-4 py-1.5 text-[10px] lg:text-[11px] xl:text-[12px] font-bold uppercase tracking-wider text-brand-gold rounded-full border border-brand-gold/40 bg-brand-gold/10 backdrop-blur-md hover:bg-brand-gold/20 hover:border-brand-gold transition-all duration-300 shadow-sm whitespace-nowrap cursor-pointer max-w-[130px] lg:max-w-[160px] xl:max-w-[210px]"
+                className="inline-flex items-center justify-center gap-1.5 px-3 xl:px-4 2xl:px-5 py-2 text-[11.5px] xl:text-[12.5px] 2xl:text-[14px] font-semibold text-brand-dark rounded-full bg-brand-gold hover:bg-brand-gold-light transition-colors duration-300 whitespace-nowrap cursor-pointer max-w-[160px] xl:max-w-[210px]"
               >
                 {portalLabelShort ? (
                   <>
-                    <UserCircle2 className="h-3.5 w-3.5 shrink-0 text-brand-gold" />
+                    <UserCircle2 className="h-4 w-4 shrink-0" />
                     <span className="truncate">{portalLabelShort}</span>
                   </>
                 ) : (

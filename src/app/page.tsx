@@ -29,6 +29,27 @@ import RemotionVideoWidget from "@/remotion/RemotionVideoWidget";
 import HeroTrainingCarousel from "@/components/HeroTrainingCarousel";
 import SectionHeading from "@/components/SectionHeading";
 import { BLOG_POSTS } from "@/data/blogPosts";
+// Three proof points under the hero. Rendered twice: inside the text column on
+// mobile (so they come before the cards) and full width below the grid on desktop.
+const HERO_FACTS = [
+  { value: "27 г.", label: "опит в официалния контрол" },
+  { value: "5–10", label: "работни дни за документация" },
+  { value: "Цяла България", label: "обекти от всички сектори" },
+];
+
+function HeroFacts({ className = "" }: { className?: string }) {
+  return (
+    <dl className={`grid grid-cols-3 border-t border-brand-gold/20 pt-6 text-left ${className}`}>
+      {HERO_FACTS.map((fact, i) => (
+        <div key={fact.value} className={i > 0 ? "border-l border-white/10 pl-4 sm:pl-6" : "pr-3"}>
+          <dt className="font-logo text-lg sm:text-2xl lg:text-3xl font-bold text-brand-gold leading-tight">{fact.value}</dt>
+          <dd className="mt-1 text-xs sm:text-sm text-white/60 leading-snug">{fact.label}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 export default function Home() {
   // Newest post tagged "Актуално" gets the news strip under the hero ribbon.
   const news = BLOG_POSTS.find((p) => p.tags.includes("Актуално"));
@@ -134,65 +155,38 @@ export default function Home() {
       />
 
       {/* 1. Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0A1F18] via-[#0D2B1C] to-[#081410] pt-10 pb-20 sm:pt-12 sm:pb-20 md:pt-16 md:pb-28 border-b border-brand-gold/20 z-10">
-        {/* Glow blobs */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-gold/15 rounded-full blur-[120px] pointer-events-none translate-x-1/3 -translate-y-1/3" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-green/30 rounded-full blur-[120px] pointer-events-none -translate-x-1/3 translate-y-1/3" />
-        
-        {/* Subtle mesh pattern for texture */}
-        <div 
-          className="absolute inset-0 pointer-events-none opacity-[0.03]"
-          style={{
-            backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px), repeating-linear-gradient(-45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 20px)"
-          }}
-        />
+      <section className="relative overflow-hidden bg-[#0A1F18] pt-10 pb-12 sm:pt-12 lg:py-[clamp(0.75rem,2.5svh,2rem)] lg:min-h-[calc(100svh_-_4.75rem)] lg:flex lg:flex-col lg:justify-center border-b border-brand-gold/20 z-10">
+        {/* Thin gold rings — the only decoration on the flat green */}
+        <div aria-hidden className="absolute -right-64 -top-56 w-[52rem] h-[52rem] rounded-full border border-brand-gold/15 pointer-events-none" />
+        <div aria-hidden className="absolute -right-40 -top-32 w-[38rem] h-[38rem] rounded-full border border-brand-gold/10 pointer-events-none" />
+        <div aria-hidden className="absolute -right-10 top-0 w-[22rem] h-[22rem] rounded-full bg-brand-gold/[0.06] pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:items-start items-center pt-4 lg:pt-8">
+        {/* On desktop the hero fills exactly one screen under the header: sizes
+            below are tied to the viewport height (svh) so it also fits laptops. */}
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center lg:items-start">
             {/* Hero Content */}
-            <div className="lg:col-span-7 space-y-6 sm:space-y-8 text-center lg:text-left">
-              <span className="inline-flex items-center px-3 py-1 rounded bg-brand-gold/10 border border-brand-gold/30 text-xs font-semibold text-brand-gold uppercase tracking-wider">
-                <Award className="h-3.5 w-3.5 mr-1.5" /> 27 години практика в контрола и безопасността на храните
-              </span>
-              
-              <h1 className="font-logo text-4xl sm:text-5xl lg:text-6xl xl:text-[4rem] font-bold text-white tracking-tight leading-[1.05] max-w-3xl mx-auto lg:mx-0">
+            <div className="lg:col-span-7 text-center lg:text-left lg:pt-2">
+              <div className="flex items-center justify-center lg:justify-start gap-3 mb-5">
+                <span aria-hidden className="hidden sm:block h-px w-8 bg-brand-gold shrink-0" />
+                <span className="text-xs font-semibold text-brand-gold uppercase tracking-[0.16em]">
+                  27 години практика в контрола и безопасността на храните
+                </span>
+              </div>
+
+              <h1 className="font-logo text-4xl sm:text-5xl lg:text-[clamp(2.25rem,min(4.4vw,6.8svh),4rem)] font-bold text-white tracking-tight leading-[1.05] max-w-3xl mx-auto lg:mx-0">
                 Системи за безопасност на храните, които{" "}
                 <span className="text-brand-gold italic font-medium">работят</span> при реални проверки
               </h1>
-              
-              <p className="text-lg sm:text-xl lg:text-2xl text-white/90 font-medium leading-relaxed max-w-2xl mx-auto lg:mx-0">
+
+              <p className="mt-5 text-lg sm:text-xl lg:text-[clamp(1rem,2.6svh,1.25rem)] text-white/75 leading-relaxed max-w-xl mx-auto lg:mx-0">
                 Имате предписание, проблем с етикет, предстои Ви регистрация на хранителен обект или проверка от ОДБХ?
               </p>
 
-              {/* Direct Quick Contact Options: Phone & Viber */}
-              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-1">
-                <a
-                  href="tel:+359887902198"
-                  className="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white/[0.06] hover:bg-white/[0.12] border border-brand-gold/30 hover:border-brand-gold text-white font-medium text-sm sm:text-base transition-all duration-200 shadow-sm group backdrop-blur-sm"
-                >
-                  <span className="text-lg">📞</span>
-                  <span>Обадете се: <strong className="text-brand-gold group-hover:underline font-mono ml-1">0887 902 198</strong></span>
-                </a>
-
-                <a
-                  href="viber://chat?number=%2B359887902198"
-                  className="inline-flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-[#7360F2]/15 hover:bg-[#7360F2]/25 border border-[#7360F2]/40 hover:border-[#7360F2]/80 text-white font-medium text-sm sm:text-base transition-all duration-200 shadow-sm group backdrop-blur-sm"
-                >
-                  <span className="text-lg">💬</span>
-                  <span>Пишете ми във <strong className="text-[#A294FF] group-hover:underline">Viber</strong></span>
-                </a>
-              </div>
-
-              <div className="inline-flex items-center gap-4 border-l-2 border-brand-gold/50 pl-5 text-left max-w-2xl mx-auto lg:mx-0">
-                <p className="italic text-sm sm:text-base text-white/65 font-logo leading-relaxed">
-                  &ldquo;Практически решения, изградени върху 27-годишен реален опит в официалния контрол на храните.&rdquo;
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 pt-2">
+              <div className="mt-7 lg:mt-[clamp(1.25rem,3.5svh,2rem)] flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4">
                 <Link
                   href="/consultations#booking"
-                  className="relative overflow-hidden px-8 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-xs uppercase tracking-widest transition-all duration-300 rounded-full shadow-lg shadow-brand-gold/20 hover:shadow-xl hover:shadow-brand-gold/35 flex items-center justify-center cursor-pointer group"
+                  className="relative overflow-hidden px-8 py-4 bg-brand-gold hover:bg-brand-gold-light text-brand-dark font-bold text-sm transition-all duration-300 rounded-full flex items-center justify-center cursor-pointer group"
                 >
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-500 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 pointer-events-none" />
                   Безплатен 10-минутен разговор
@@ -200,20 +194,38 @@ export default function Home() {
                 </Link>
                 <Link
                   href="/services"
-                  className="px-8 py-4 rounded-full border border-white/20 hover:border-brand-gold/80 text-white/80 hover:text-brand-gold bg-white/5 hover:bg-brand-gold/10 backdrop-blur-sm font-bold text-xs uppercase tracking-widest transition-all duration-300 flex items-center justify-center cursor-pointer"
+                  className="px-8 py-4 rounded-full border border-white/25 hover:border-brand-gold text-white hover:text-brand-gold font-bold text-sm transition-colors duration-300 flex items-center justify-center cursor-pointer"
                 >
                   Разгледайте услугите
                 </Link>
               </div>
 
+              {/* Direct contact: phone & Viber as quiet links */}
+              <div className="mt-6 flex flex-wrap items-center justify-center lg:justify-start gap-x-7 gap-y-3 text-sm sm:text-base text-white/80">
+                <a href="tel:+359887902198" className="inline-flex items-center gap-2 hover:text-brand-gold transition-colors group">
+                  <Phone className="h-[18px] w-[18px] text-brand-gold" />
+                  <span className="font-mono group-hover:underline">0887 902 198</span>
+                </a>
+                <a href="viber://chat?number=%2B359887902198" className="inline-flex items-center gap-2 hover:text-[#A294FF] transition-colors group">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5 text-[#A294FF]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M12 3c-4.97 0-8.5 3.1-8.5 7.6 0 2.5 1.1 4.6 2.9 6v3.9l3.4-2.3c.7.1 1.4.2 2.2.2 4.97 0 8.5-3.1 8.5-7.7S16.97 3 12 3z" />
+                    <path d="M9.3 8.2c-.2 2.9 2 5.5 5.2 5.9" />
+                  </svg>
+                  <span className="group-hover:underline">Пишете ми във Viber</span>
+                </a>
+              </div>
+
+              <HeroFacts className="mt-10 lg:hidden" />
             </div>
 
-            {/* Hero right column: compact subscription card + rotating training deck */}
-            <div className="lg:col-span-5 lg:mt-12 xl:mt-14 z-20 space-y-5">
+            {/* Hero right column: subscription card + rotating training row */}
+            <div className="lg:col-span-5 z-20 space-y-4">
               <RemotionVideoWidget />
               <HeroTrainingCarousel />
             </div>
           </div>
+
+          <HeroFacts className="hidden lg:grid lg:pt-[clamp(0.75rem,2.5svh,1.5rem)] lg:mt-[clamp(0.75rem,3svh,3.5rem)]" />
         </div>
       </section>
 
